@@ -17,7 +17,7 @@ export default function Home() {
   const testSupabaseConnection = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/test')
+      const response = await fetch('/api/test-admin')
       const data = await response.json()
       setTestResult(data)
     } catch (error) {

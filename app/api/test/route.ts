@@ -27,8 +27,8 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('players')
-      .select('id')
-      .limit(1)
+      .select('*')
+      .limit(5)
 
     if (error) {
       return NextResponse.json(
