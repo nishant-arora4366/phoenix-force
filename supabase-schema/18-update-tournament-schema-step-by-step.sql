@@ -1,22 +1,17 @@
--- Update tournament schema to match new requirements
--- This script modifies the tournaments table structure
+-- Step-by-step tournament schema update
+-- This script handles the migration in safe steps
 
--- Add new columns to tournaments table
+-- Step 1: Drop dependent views first
+DROP VIEW IF EXISTS tournament_details CASCADE;
+
+-- Step 2: Add new columns to tournaments table
 ALTER TABLE tournaments 
 ADD COLUMN IF NOT EXISTS format VARCHAR(50),
 ADD COLUMN IF NOT EXISTS selected_teams INTEGER,
 ADD COLUMN IF NOT EXISTS tournament_date DATE,
 ADD COLUMN IF NOT EXISTS description TEXT;
 
--- Drop dependent views first
-DROP VIEW IF EXISTS tournament_details CASCADE;
-
--- Remove bid-related columns (these will be in auction schema)
-ALTER TABLE tournaments 
-DROP COLUMN IF EXISTS min_bid_amount,
-DROP COLUMN IF EXISTS min_increment;
-
--- Update existing tournaments to have default values
+-- Step 3: Update existing tournaments to have default values
 UPDATE tournaments 
 SET 
   format = '8 Team',
@@ -25,7 +20,12 @@ SET
   description = 'Tournament created before schema update'
 WHERE format IS NULL;
 
--- Create a function to get recommended teams based on format
+-- Step 4: Remove bid-related columns (these will be in auction schema)
+ALTER TABLE tournaments 
+DROP COLUMN IF EXISTS min_bid_amount,
+DROP COLUMN IF EXISTS min_increment;
+
+-- Step 5: Create helper functions
 CREATE OR REPLACE FUNCTION get_recommended_teams(tournament_format VARCHAR)
 RETURNS INTEGER AS $$
 BEGIN
@@ -46,7 +46,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create a function to get recommended slots based on format
 CREATE OR REPLACE FUNCTION get_recommended_slots(tournament_format VARCHAR)
 RETURNS INTEGER AS $$
 BEGIN
@@ -67,12 +66,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Add indexes for better performance
+-- Step 6: Add indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_tournaments_format ON tournaments(format);
 CREATE INDEX IF NOT EXISTS idx_tournaments_date ON tournaments(tournament_date);
 CREATE INDEX IF NOT EXISTS idx_tournaments_selected_teams ON tournaments(selected_teams);
 
--- Create a view for tournament details with calculated fields (recreated after column removal)
+-- Step 7: Recreate the tournament_details view
 CREATE OR REPLACE VIEW tournament_details AS
 SELECT 
   t.*,
@@ -88,36 +87,10 @@ SELECT
   END as slot_selection_status
 FROM tournaments t;
 
--- Add comments to document the schema
+-- Step 8: Add comments to document the schema
 COMMENT ON COLUMN tournaments.format IS 'Tournament format: Bilateral, TriSeries, Quad, 6 Team, 8 Team, etc.';
 COMMENT ON COLUMN tournaments.selected_teams IS 'Number of teams selected for this tournament';
 COMMENT ON COLUMN tournaments.tournament_date IS 'Date when the tournament will be held';
 COMMENT ON COLUMN tournaments.description IS 'Description of the tournament';
 COMMENT ON COLUMN tournaments.total_slots IS 'Total number of player slots available';
 COMMENT ON COLUMN tournaments.host_id IS 'User ID of the tournament host';
-
--- Create a function to validate tournament data
-CREATE OR REPLACE FUNCTION validate_tournament_data(
-  p_format VARCHAR,
-  p_selected_teams INTEGER,
-  p_total_slots INTEGER
-) RETURNS BOOLEAN AS $$
-BEGIN
-  -- Check if format is valid
-  IF p_format NOT IN ('Bilateral', 'TriSeries', 'Quad', '6 Team', '8 Team', '10 Team', '12 Team', '16 Team', '20 Team', '24 Team', '32 Team') THEN
-    RETURN FALSE;
-  END IF;
-  
-  -- Check if selected teams matches format
-  IF p_selected_teams != get_recommended_teams(p_format) THEN
-    RETURN FALSE;
-  END IF;
-  
-  -- Check if total slots matches format
-  IF p_total_slots != get_recommended_slots(p_format) THEN
-    RETURN FALSE;
-  END IF;
-  
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql;
