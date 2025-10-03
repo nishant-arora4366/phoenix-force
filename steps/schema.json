@@ -1,0 +1,178 @@
+{
+    "project_name": "phoenix_force",
+    "description": "Cricket auction platform with real-time bidding, tournament management, player registration, and team building",
+    "tables": [
+      {
+        "name": "users",
+        "description": "Core user accounts with role-based access",
+        "columns": [
+          { "name": "id", "type": "uuid", "primary_key": true, "default": "gen_random_uuid()" },
+          { "name": "email", "type": "varchar(255)", "unique": true, "nullable": false },
+          { "name": "role", "type": "varchar(20)", "check": "role IN ('viewer', 'host')", "default": "'viewer'" },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" },
+          { "name": "updated_at", "type": "timestamptz", "default": "now()" }
+        ],
+        "indexes": [
+          { "name": "idx_users_email", "columns": ["email"], "unique": true }
+        ],
+        "rls_enabled": true
+      },
+      {
+        "name": "players",
+        "description": "Player profiles with skills, ratings, and metadata",
+        "columns": [
+          { "name": "id", "type": "uuid", "primary_key": true, "default": "gen_random_uuid()" },
+          { "name": "user_id", "type": "uuid", "foreign_key": { "table": "users", "column": "id", "on_delete": "SET NULL" }, "nullable": true },
+          { "name": "display_name", "type": "varchar(255)", "nullable": false },
+          { "name": "stage_name", "type": "varchar(255)", "nullable": true },
+          { "name": "bio", "type": "text", "nullable": true },
+          { "name": "profile_pic_url", "type": "text", "nullable": true },
+          { "name": "mobile_number", "type": "varchar(20)", "nullable": true },
+          { "name": "cricheroes_profile_url", "type": "text", "nullable": true },
+          { "name": "base_price", "type": "decimal(10,2)", "default": "0" },
+          { "name": "group_name", "type": "varchar(100)", "nullable": true },
+          { "name": "is_bowler", "type": "boolean", "default": false },
+          { "name": "is_batter", "type": "boolean", "default": false },
+          { "name": "is_wicket_keeper", "type": "boolean", "default": false },
+          { "name": "bowling_rating", "type": "integer", "check": "bowling_rating >= 0 AND bowling_rating <= 10", "nullable": true },
+          { "name": "batting_rating", "type": "integer", "check": "batting_rating >= 0 AND batting_rating <= 10", "nullable": true },
+          { "name": "wicket_keeping_rating", "type": "integer", "check": "wicket_keeping_rating >= 0 AND wicket_keeping_rating <= 10", "nullable": true },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" },
+          { "name": "updated_at", "type": "timestamptz", "default": "now()" }
+        ],
+        "indexes": [
+          { "name": "idx_players_user_id", "columns": ["user_id"], "unique": true }
+        ],
+        "rls_enabled": true
+      },
+      {
+        "name": "tags",
+        "description": "Skill/metadata tags (all-rounder, aggressive, etc.)",
+        "columns": [
+          { "name": "id", "type": "uuid", "primary_key": true, "default": "gen_random_uuid()" },
+          { "name": "name", "type": "varchar(100)", "unique": true, "nullable": false }
+        ]
+      },
+      {
+        "name": "player_tags",
+        "description": "Many-to-many relationship between players and tags",
+        "columns": [
+          { "name": "player_id", "type": "uuid", "foreign_key": { "table": "players", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "tag_id", "type": "uuid", "foreign_key": { "table": "tags", "column": "id", "on_delete": "CASCADE" } }
+        ],
+        "primary_key": ["player_id", "tag_id"]
+      },
+      {
+        "name": "tournaments",
+        "description": "Tournament configuration and lifecycle",
+        "columns": [
+          { "name": "id", "type": "uuid", "primary_key": true, "default": "gen_random_uuid()" },
+          { "name": "name", "type": "varchar(255)", "nullable": false },
+          { "name": "host_id", "type": "uuid", "foreign_key": { "table": "users", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "host_player_id", "type": "uuid", "foreign_key": { "table": "players", "column": "id" } },
+          { "name": "status", "type": "varchar(30)", "check": "status IN ('draft','registration_open','registration_closed','auction_started','auction_completed')", "default": "'draft'" },
+          { "name": "total_slots", "type": "integer", "nullable": false },
+          { "name": "min_bid_amount", "type": "decimal(10,2)", "nullable": true },
+          { "name": "min_increment", "type": "decimal(10,2)", "nullable": true },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" },
+          { "name": "updated_at", "type": "timestamptz", "default": "now()" }
+        ],
+        "indexes": [{ "name": "idx_tournaments_host", "columns": ["host_id"] }],
+        "rls_enabled": true
+      },
+      {
+        "name": "tournament_slots",
+        "description": "Slot assignments for tournament registration",
+        "columns": [
+          { "name": "id", "type": "uuid", "primary_key": true, "default": "gen_random_uuid()" },
+          { "name": "tournament_id", "type": "uuid", "foreign_key": { "table": "tournaments", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "slot_number", "type": "integer", "nullable": false },
+          { "name": "player_id", "type": "uuid", "foreign_key": { "table": "players", "column": "id", "on_delete": "SET NULL" }, "nullable": true },
+          { "name": "status", "type": "varchar(20)", "check": "status IN ('empty', 'pending', 'confirmed', 'waitlist')", "default": "'empty'" },
+          { "name": "is_host_assigned", "type": "boolean", "default": false },
+          { "name": "requested_at", "type": "timestamptz", "nullable": true },
+          { "name": "confirmed_at", "type": "timestamptz", "nullable": true },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" }
+        ],
+        "unique_constraints": [
+          { "name": "unique_tournament_slot", "columns": ["tournament_id", "slot_number"] },
+          { "name": "unique_tournament_player", "columns": ["tournament_id", "player_id"] }
+        ],
+        "realtime_enabled": true,
+        "rls_enabled": true
+      },
+      {
+        "name": "waitlist",
+        "description": "Players queued when slots are full",
+        "columns": [
+          { "name": "id", "type": "uuid", "primary_key": true, "default": "gen_random_uuid()" },
+          { "name": "tournament_id", "type": "uuid", "foreign_key": { "table": "tournaments", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "player_id", "type": "uuid", "foreign_key": { "table": "players", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "position", "type": "integer", "nullable": false },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" }
+        ]
+      },
+      {
+        "name": "teams",
+        "description": "Auction-created teams",
+        "columns": [
+          { "name": "id", "type": "uuid", "primary_key": true, "default": "gen_random_uuid()" },
+          { "name": "tournament_id", "type": "uuid", "foreign_key": { "table": "tournaments", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "name", "type": "varchar(255)", "nullable": false },
+          { "name": "captain_id", "type": "uuid", "foreign_key": { "table": "players", "column": "id" }, "nullable": true },
+          { "name": "captain_user_id", "type": "uuid", "foreign_key": { "table": "users", "column": "id" }, "nullable": true },
+          { "name": "initial_budget", "type": "decimal(10,2)", "nullable": true },
+          { "name": "budget_remaining", "type": "decimal(10,2)", "nullable": true },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" }
+        ]
+      },
+      {
+        "name": "auction_config",
+        "description": "Auction configuration",
+        "columns": [
+          { "name": "id", "type": "uuid", "primary_key": true, "default": "gen_random_uuid()" },
+          { "name": "tournament_id", "type": "uuid", "foreign_key": { "table": "tournaments", "column": "id", "on_delete": "CASCADE" }, "unique": true },
+          { "name": "player_order", "type": "jsonb", "nullable": true },
+          { "name": "is_captain_bidding", "type": "boolean", "default": false },
+          { "name": "auction_mode", "type": "varchar(20)", "check": "auction_mode IN ('host_controlled', 'captain_bidding')", "nullable": true },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" }
+        ]
+      },
+      {
+        "name": "auction_bids",
+        "description": "Realtime bids",
+        "columns": [
+          { "name": "id", "type": "uuid", "primary_key": true, "default": "gen_random_uuid()" },
+          { "name": "tournament_id", "type": "uuid", "foreign_key": { "table": "tournaments", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "player_id", "type": "uuid", "foreign_key": { "table": "players", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "team_id", "type": "uuid", "foreign_key": { "table": "teams", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "bid_amount", "type": "decimal(10,2)", "nullable": false },
+          { "name": "bidder_user_id", "type": "uuid", "foreign_key": { "table": "users", "column": "id" }, "nullable": true },
+          { "name": "is_winning_bid", "type": "boolean", "default": false },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" }
+        ],
+        "realtime_enabled": true
+      },
+      {
+        "name": "team_players",
+        "description": "Final auction results",
+        "columns": [
+          { "name": "id", "type": "uuid", "primary_key": true, "default": "gen_random_uuid()" },
+          { "name": "team_id", "type": "uuid", "foreign_key": { "table": "teams", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "player_id", "type": "uuid", "foreign_key": { "table": "players", "column": "id", "on_delete": "CASCADE" } },
+          { "name": "final_bid_amount", "type": "decimal(10,2)", "nullable": false },
+          { "name": "created_at", "type": "timestamptz", "default": "now()" }
+        ]
+      }
+    ],
+    "realtime_tables": ["auction_bids", "tournament_slots", "teams"],
+    "storage_buckets": [
+      {
+        "name": "player-profiles",
+        "public": true,
+        "allowed_mime_types": ["image/png", "image/jpeg", "image/jpg", "image/webp"],
+        "max_file_size": 5242880
+      }
+    ]
+  }
+  
