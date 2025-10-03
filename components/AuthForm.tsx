@@ -96,12 +96,12 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
 
   if (user) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md mx-auto">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+      <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto border border-gray-200">
+        <h2 className="text-2xl font-bold mb-4 text-gray-900">
           Welcome!
         </h2>
         <div className="space-y-4">
-          <div className="p-4 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg">
+          <div className="p-4 bg-gray-100 text-gray-800 rounded-lg">
             <p className="text-sm">
               <strong>Email:</strong> {user.email}
             </p>
@@ -111,7 +111,7 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
           </div>
           
           {message && (
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg text-sm">
+            <div className="p-3 bg-gray-100 text-gray-800 rounded-lg text-sm">
               {message}
             </div>
           )}
@@ -119,7 +119,7 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
           <button
             onClick={handleSignOut}
             disabled={loading}
-            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Signing out...' : 'Sign Out'}
           </button>
@@ -129,14 +129,14 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+    <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto border border-gray-200">
+      <h2 className="text-2xl font-bold mb-4 text-gray-900">
         {isSignUp ? 'Sign Up' : 'Sign In'}
       </h2>
       
       <form onSubmit={handleAuth} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Email
           </label>
           <input
@@ -145,13 +145,13 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white text-gray-900"
             placeholder="Enter your email"
           />
         </div>
         
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
             Password
           </label>
           <input
@@ -160,7 +160,7 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white text-gray-900"
             placeholder="Enter your password"
           />
         </div>
@@ -168,8 +168,8 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
         {message && (
           <div className={`p-3 rounded-lg text-sm ${
             message.includes('Error') 
-              ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-              : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+              ? 'bg-gray-100 text-gray-800'
+              : 'bg-gray-100 text-gray-800'
           }`}>
             {message}
           </div>
@@ -178,7 +178,7 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
         </button>
@@ -187,7 +187,7 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
       <div className="mt-4 text-center">
         <button
           onClick={() => setIsSignUp(!isSignUp)}
-          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+          className="text-gray-600 hover:text-gray-900 text-sm"
         >
           {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
         </button>
