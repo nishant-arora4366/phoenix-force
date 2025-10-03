@@ -488,11 +488,11 @@ export default function PlayersPage() {
         ) : (
           <div className="space-y-4">
             {filteredPlayers?.map((player) => (
-              <div key={player.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center space-x-6">
+              <div key={player.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
                   {/* Player Avatar */}
-                  <div className="flex-shrink-0">
-                    <div className="h-16 w-16 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
+                  <div className="flex-shrink-0 flex items-center space-x-4">
+                    <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
                       {player.profile_pic_url ? (
                         <img
                           src={player.profile_pic_url}
@@ -500,14 +500,23 @@ export default function PlayersPage() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="text-2xl text-gray-400">🏏</div>
+                        <div className="text-xl sm:text-2xl text-gray-400">🏏</div>
                       )}
+                    </div>
+                    
+                    {/* Mobile: Player name and price */}
+                    <div className="flex-1 sm:hidden">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {player.display_name}
+                      </h3>
+                      <div className="text-lg font-bold text-gray-700">₹{player.base_price}</div>
                     </div>
                   </div>
 
                   {/* Player Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
+                    {/* Desktop layout */}
+                    <div className="hidden sm:flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">
                           {player.display_name}
@@ -516,13 +525,13 @@ export default function PlayersPage() {
                           <p className="text-sm text-gray-500 italic">"{player.stage_name}"</p>
                         )}
                         {player.group_name && (
-                          <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mt-1">
+                          <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full mt-1">
                             {player.group_name}
                           </span>
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-green-600">₹{player.base_price}</div>
+                        <div className="text-2xl font-bold text-gray-700">₹{player.base_price}</div>
                         <div className="flex items-center space-x-4 mt-2">
                           {player.batting_rating && (
                             <span className="text-sm text-gray-600">Bat: {player.batting_rating}/10</span>
@@ -536,23 +545,48 @@ export default function PlayersPage() {
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Mobile layout */}
+                    <div className="sm:hidden">
+                      {player.stage_name && (
+                        <p className="text-sm text-gray-500 italic mb-2">"{player.stage_name}"</p>
+                      )}
+                      {player.group_name && (
+                        <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full mb-2">
+                          {player.group_name}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Ratings - Mobile */}
+                    <div className="sm:hidden flex flex-wrap gap-2 mb-3">
+                      {player.batting_rating && (
+                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">Bat: {player.batting_rating}/10</span>
+                      )}
+                      {player.bowling_rating && (
+                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">Bowl: {player.bowling_rating}/10</span>
+                      )}
+                      {player.wicket_keeping_rating && (
+                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">WK: {player.wicket_keeping_rating}/10</span>
+                      )}
+                    </div>
 
                     {/* Roles */}
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="flex flex-wrap gap-2 mb-3">
                       {player.is_bowler && (
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Bowler</span>
+                        <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">Bowler</span>
                       )}
                       {player.is_batter && (
-                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Batter</span>
+                        <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">Batter</span>
                       )}
                       {player.is_wicket_keeper && (
-                        <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">WK</span>
+                        <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">WK</span>
                       )}
                     </div>
 
                     {/* Bio */}
                     {player.bio && (
-                      <div className="text-sm text-gray-600 mt-2">
+                      <div className="text-sm text-gray-600 mb-3">
                         {player.bio.length > 80 ? (
                           <div>
                             <span className="line-clamp-1">
@@ -573,30 +607,30 @@ export default function PlayersPage() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex-shrink-0 flex space-x-2">
+                  <div className="flex-shrink-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <button 
                       onClick={() => router.push(`/players/${player.id}`)}
-                      className="bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                      className="w-full sm:w-auto bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors text-sm"
                     >
-                      View
+                      View Details
                     </button>
                     {isLoadingUser ? (
                       <>
-                        <div className="bg-gray-200 animate-pulse py-2 px-3 rounded-lg h-9 w-16"></div>
-                        <div className="bg-gray-200 animate-pulse py-2 px-3 rounded-lg h-9 w-16"></div>
+                        <div className="w-full sm:w-auto bg-gray-200 animate-pulse py-2 px-3 rounded-lg h-9"></div>
+                        <div className="w-full sm:w-auto bg-gray-200 animate-pulse py-2 px-3 rounded-lg h-9"></div>
                       </>
                     ) : (userRole === 'admin' || userRole === 'host') ? (
                       <>
                         <button 
                           onClick={() => router.push(`/players/${player.id}/edit`)}
-                          className="bg-gray-600 text-white py-2 px-3 rounded-lg hover:bg-gray-700 transition-colors"
+                          className="w-full sm:w-auto bg-gray-600 text-white py-2 px-3 rounded-lg hover:bg-gray-700 transition-colors text-sm"
                         >
                           Edit
                         </button>
                         {userRole === 'admin' && (
                           <button 
                             onClick={() => handleDelete(player.id, player.display_name)}
-                            className="bg-gray-500 text-white py-2 px-3 rounded-lg hover:bg-gray-600 transition-colors"
+                            className="w-full sm:w-auto bg-gray-500 text-white py-2 px-3 rounded-lg hover:bg-gray-600 transition-colors text-sm"
                           >
                             Delete
                           </button>

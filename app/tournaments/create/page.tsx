@@ -209,30 +209,30 @@ export default function CreateTournamentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full mb-4 sm:mb-6">
+            <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Create New Tournament</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">Create New Tournament</h1>
+          <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
             Set up your tournament with advanced configuration options and smart recommendations
           </p>
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
-            <h2 className="text-2xl font-bold text-white">Tournament Configuration</h2>
-            <p className="text-blue-100 mt-2">Configure your tournament settings below</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-4 sm:px-8 py-4 sm:py-6">
+            <h2 className="text-lg sm:text-2xl font-bold text-white">Tournament Configuration</h2>
+            <p className="text-gray-200 mt-1 sm:mt-2 text-sm sm:text-base">Configure your tournament settings below</p>
           </div>
           
-          <div className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="p-4 sm:p-8">
+            <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
               {/* Tournament Name */}
               <div className="space-y-2">
                 <label htmlFor="name" className="block text-sm font-semibold text-gray-700">
@@ -246,7 +246,7 @@ export default function CreateTournamentPage() {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-gray-100 focus:border-gray-500 transition-all duration-200 bg-gray-50 text-sm sm:text-base"
                     placeholder="Enter a memorable tournament name"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -262,7 +262,7 @@ export default function CreateTournamentPage() {
                 <label className="block text-sm font-semibold text-gray-700">
                   Tournament Format *
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                   {[
                     { value: 'Bilateral', label: 'Bilateral', teams: 2, color: 'from-blue-500 to-blue-600' },
                     { value: 'TriSeries', label: 'TriSeries', teams: 3, color: 'from-green-500 to-green-600' },
@@ -285,10 +285,10 @@ export default function CreateTournamentPage() {
                       }`}
                       onClick={() => handleInputChange({ target: { name: 'format', value: format.value } } as any)}
                     >
-                      <div className={`p-4 rounded-lg bg-gradient-to-r ${format.color} text-white`}>
+                      <div className={`p-2 sm:p-4 rounded-lg bg-gradient-to-r ${format.color} text-white`}>
                         <div className="text-center">
-                          <div className="text-2xl font-bold">{format.teams}</div>
-                          <div className="text-sm opacity-90">{format.label}</div>
+                          <div className="text-lg sm:text-2xl font-bold">{format.teams}</div>
+                          <div className="text-xs sm:text-sm opacity-90">{format.label}</div>
                         </div>
                       </div>
                       {formData.format === format.value && (
@@ -304,7 +304,7 @@ export default function CreateTournamentPage() {
               </div>
 
               {/* Selected Teams & Date Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* Selected Teams */}
                 <div className="space-y-2">
                   <label htmlFor="selected_teams" className="block text-sm font-semibold text-gray-700">
@@ -435,18 +435,18 @@ export default function CreateTournamentPage() {
                     <h3 className="text-lg font-semibold text-gray-900">Ready to Create?</h3>
                     <p className="text-sm text-gray-600">Review your settings and create your tournament</p>
                   </div>
-                  <div className="flex space-x-3">
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                     <button
                       type="button"
                       onClick={() => router.back()}
-                      className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200"
+                      className="w-full sm:w-auto px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200 text-sm sm:text-base"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                      className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-lg sm:rounded-xl hover:from-gray-700 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
                     >
                       {loading ? (
                         <div className="flex items-center">
