@@ -18,6 +18,8 @@ export default function CreateTournamentPage() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [user, setUser] = useState<any>(null)
+  const [isLoadingUser, setIsLoadingUser] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [formData, setFormData] = useState<TournamentFormData>({
     name: '',
     format: '8 Team',
@@ -30,22 +32,31 @@ export default function CreateTournamentPage() {
   // Check if user is authenticated and is a host
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        // Check if user is a host
-        const { data: userData } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-        
-        if (userData?.role === 'host' || userData?.role === 'admin') {
-          setUser(user)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          // Check if user is a host
+          const { data: userData } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+          
+          setUserRole(userData?.role || null)
+          
+          if (userData?.role === 'host' || userData?.role === 'admin') {
+            setUser(user)
+          } else {
+            setMessage('Only hosts and admins can create tournaments. Your current role: ' + (userData?.role || 'unknown'))
+          }
         } else {
-          setMessage('Only hosts and admins can create tournaments. Your current role: ' + (userData?.role || 'unknown'))
+          setMessage('Please sign in to create tournaments')
         }
-      } else {
-        setMessage('Please sign in to create tournaments')
+      } catch (error) {
+        console.error('Error checking user:', error)
+        setMessage('Error checking authentication status')
+      } finally {
+        setIsLoadingUser(false)
       }
     }
     checkUser()
@@ -141,25 +152,55 @@ export default function CreateTournamentPage() {
     })
   }
 
+  // Show loading state while checking authentication
+  if (isLoadingUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Checking Access...
+              </h2>
+              <p className="text-gray-600">
+                Verifying your permissions to create tournaments
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show access denied if user is not authenticated or doesn't have permission
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
             <div className="text-center">
-              <div className="text-red-600 dark:text-red-400 text-6xl mb-4">🚫</div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              <div className="text-red-500 text-6xl mb-4">🚫</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 Access Denied
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {message || 'You need to be a host to create tournaments.'}
+              <p className="text-gray-600 mb-6">
+                {message || 'You need to be a host or admin to create tournaments.'}
               </p>
-              <button
-                onClick={() => router.push('/')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Go Home
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => router.push('/signin')}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => router.push('/')}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Go Home
+                </button>
+              </div>
             </div>
           </div>
         </div>
