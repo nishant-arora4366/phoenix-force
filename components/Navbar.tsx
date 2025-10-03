@@ -20,7 +20,6 @@ export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [profileFetched, setProfileFetched] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -30,17 +29,15 @@ export default function Navbar() {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
         
-        if (user && !profileFetched) {
+        if (user) {
           try {
             const response = await fetch(`/api/user-profile?userId=${user.id}`)
             const result = await response.json()
             if (result.success) {
               setUserProfile(result.data)
             }
-            setProfileFetched(true)
           } catch (error) {
             console.error('Error fetching user profile:', error)
-            setProfileFetched(true)
           }
         }
       } catch (error) {
@@ -51,24 +48,24 @@ export default function Navbar() {
     }
     getUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user || null)
+      
       if (session?.user) {
         // Only fetch profile on sign in, not on every auth change
         if (event === 'SIGNED_IN') {
-          fetch(`/api/user-profile?userId=${session.user.id}`)
-            .then(res => res.json())
-            .then(result => {
-              if (result.success) {
-                setUserProfile(result.data)
-              }
-              setProfileFetched(true)
-            })
-            .catch(console.error)
+          try {
+            const response = await fetch(`/api/user-profile?userId=${session.user.id}`)
+            const result = await response.json()
+            if (result.success) {
+              setUserProfile(result.data)
+            }
+          } catch (error) {
+            console.error('Error fetching user profile:', error)
+          }
         }
       } else {
         setUserProfile(null)
-        setProfileFetched(false)
       }
     })
 
@@ -80,7 +77,6 @@ export default function Navbar() {
       await supabase.auth.signOut()
       setUser(null)
       setUserProfile(null)
-      setProfileFetched(false)
       setIsDropdownOpen(false)
       setIsMobileMenuOpen(false)
       router.push('/')

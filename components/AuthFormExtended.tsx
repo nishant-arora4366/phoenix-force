@@ -86,18 +86,26 @@ export default function AuthFormExtended({ onAuthChange }: AuthFormProps) {
       // Sync user to public.users table after successful auth
       if (authData?.user) {
         try {
+          // For sign up, use profile data; for sign in, use existing user data or defaults
+          const userData = isSignUp ? {
+            id: authData.user.id,
+            email: authData.user.email || '',
+            username: profile.username || email.split('@')[0],
+            firstname: profile.firstname,
+            middlename: profile.middlename || null,
+            lastname: profile.lastname,
+            photo: profile.photo || null,
+            role: 'viewer'
+          } : {
+            id: authData.user.id,
+            email: authData.user.email || '',
+            // For sign in, don't overwrite existing user data
+            updated_at: new Date().toISOString()
+          }
+
           const { error: syncError } = await supabase
             .from('users')
-            .upsert({
-              id: authData.user.id,
-              email: authData.user.email || '',
-              username: profile.username || email.split('@')[0],
-              firstname: profile.firstname,
-              middlename: profile.middlename || null,
-              lastname: profile.lastname,
-              photo: profile.photo || null,
-              role: 'viewer'
-            }, { onConflict: 'id' })
+            .upsert(userData, { onConflict: 'id' })
           
           if (syncError) {
             console.warn('Failed to sync user:', syncError.message)
