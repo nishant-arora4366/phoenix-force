@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import AuthForm from '@/components/AuthForm'
 
 interface TestResponse {
   success?: boolean
@@ -13,6 +14,7 @@ interface TestResponse {
 export default function Home() {
   const [testResult, setTestResult] = useState<TestResponse | null>(null)
   const [loading, setLoading] = useState(false)
+  const [user, setUser] = useState<any>(null)
 
   const testSupabaseConnection = async () => {
     setLoading(true)
@@ -47,6 +49,19 @@ export default function Home() {
         <h1 className="text-6xl font-bold text-center">
           Phoenix Force
         </h1>
+      </div>
+
+      {/* Authentication Section */}
+      <div className="mb-8 w-full max-w-4xl">
+        <AuthForm onAuthChange={setUser} />
+        
+        {user && (
+          <div className="mt-4 p-4 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg">
+            <p className="text-sm">
+              <strong>Authenticated as:</strong> {user.email}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Supabase Test Section */}
