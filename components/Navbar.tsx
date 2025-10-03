@@ -99,29 +99,31 @@ export default function Navbar() {
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+        <div className="flex items-center h-16">
+          {/* Left Section - Home Icon */}
           <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Link href="/" className="text-2xl font-bold text-gray-900">
-                Phoenix Force Cricket
-              </Link>
-            </div>
+            <Link
+              href="/"
+              className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Home"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </Link>
           </div>
 
-          {/* Navigation Links and User Auth */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-center space-x-6">
-              {/* Navigation Links */}
-              <Link
-                href="/"
-                className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                title="Home"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-              </Link>
+          {/* Center Section - Logo (Optional) */}
+          <div className="flex-1 flex justify-center">
+            <Link href="/" className="text-xl font-bold text-gray-900 hidden md:block">
+              Phoenix Force Cricket
+            </Link>
+          </div>
+
+          {/* Right Section - Navigation and User Auth */}
+          <div className="flex items-center space-x-6">
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center space-x-4">
               <Link
                 href="/tournaments"
                 className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium"
@@ -140,16 +142,18 @@ export default function Navbar() {
               >
                 Auctions
               </Link>
+            </div>
 
-              {/* User Section */}
+            {/* User Section - Fixed width to prevent shifting */}
+            <div className="flex items-center min-w-[200px] justify-end">
               {isLoading ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-pulse bg-gray-200 h-4 w-20 rounded"></div>
                   <div className="animate-pulse bg-gray-200 h-8 w-8 rounded-full"></div>
                 </div>
               ) : user ? (
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm text-gray-600 whitespace-nowrap">
                     Welcome, {getDisplayName()}
                   </span>
                   {/* Profile Dropdown */}
@@ -157,7 +161,7 @@ export default function Navbar() {
                     <button
                       type="button"
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center space-x-1 text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -189,24 +193,24 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/signin"
-                  className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-gray-100"
+                  className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-gray-100 whitespace-nowrap"
                 >
                   Sign in to access features
                 </Link>
               )}
             </div>
-          </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              type="button"
-              className="text-gray-700 hover:text-gray-900 inline-flex items-center justify-center p-2 rounded-md"
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                type="button"
+                className="text-gray-700 hover:text-gray-900 inline-flex items-center justify-center p-2 rounded-md"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
