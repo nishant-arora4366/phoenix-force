@@ -58,7 +58,14 @@ export default function EditTournamentPage() {
           return
         }
 
-        if (tournamentData.host_id !== user.id) {
+        // Check if user is the host or an admin
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        if (tournamentData.host_id !== user.id && userData?.role !== 'admin') {
           setError('You are not authorized to edit this tournament')
           return
         }

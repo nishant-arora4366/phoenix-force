@@ -299,7 +299,7 @@ export default function TournamentsPage() {
                       View Details
                     </Link>
                     
-                    {isHost && tournament.host_id === user?.id && (
+                    {isHost && (tournament.host_id === user?.id || userProfile?.role === 'admin') && (
                       <div className="flex space-x-2">
                         <Link
                           href={`/tournaments/${tournament.id}/edit`}
