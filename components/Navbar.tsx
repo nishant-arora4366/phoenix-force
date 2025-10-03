@@ -134,9 +134,9 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* Phoenix Force Cricket Brand - Always visible */}
+            {/* Phoenix Force Brand - Always visible */}
             <Link href="/" className="text-xl font-bold text-gray-900 hover:text-gray-700 transition-colors">
-              Phoenix Force Cricket
+              Phoenix Force
             </Link>
 
             {/* Back Button - Only on non-homepage */}
