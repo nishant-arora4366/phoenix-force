@@ -1,6 +1,6 @@
 {
     "project_name": "phoenix_force",
-    "description": "Cricket auction platform with real-time bidding, tournament management, player registration, and team building",
+    "description": "Platform with real-time bidding, tournament management, player registration, and team building",
     "tables": [
       {
         "name": "users",

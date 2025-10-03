@@ -22,13 +22,15 @@ interface Player {
 }
 
 const fetcher = async (url: string) => {
-  const { data, error } = await supabase
-    .from('players')
-    .select('*')
-    .order('created_at', { ascending: false })
-  
-  if (error) throw error
-  return data
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error('Failed to fetch players')
+  }
+  const result = await response.json()
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to fetch players')
+  }
+  return result.data
 }
 
 export default function PlayersPage() {
@@ -36,7 +38,7 @@ export default function PlayersPage() {
   const [filterGroup, setFilterGroup] = useState('')
   const [filterRole, setFilterRole] = useState('')
 
-  const { data: players, error, isLoading, mutate } = useSWR<Player[]>('/api/players', fetcher)
+  const { data: players, error, isLoading, mutate } = useSWR<Player[]>('/api/players-public', fetcher)
 
   const filteredPlayers = players?.filter(player => {
     const matchesSearch = player.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
