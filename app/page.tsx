@@ -96,7 +96,7 @@ export default function Home() {
                   <p className="text-gray-600 mb-4 leading-relaxed">
                     Comprehensive player profiles with ratings, skills, and performance tracking.
                   </p>
-                  <div className="text-gray-700 group-hover:text-gray-900 font-medium transition-colors">
+                  <div className="text-gray-700 group-hover:text-gray-900 font-medium transition-colors whitespace-nowrap">
                     Browse Players →
                   </div>
                 </div>
@@ -116,7 +116,7 @@ export default function Home() {
                   <p className="text-gray-600 mb-4 leading-relaxed">
                     Create and manage tournaments with advanced auction systems and real-time bidding.
                   </p>
-                  <div className="text-gray-700 group-hover:text-gray-900 font-medium transition-colors">
+                  <div className="text-gray-700 group-hover:text-gray-900 font-medium transition-colors whitespace-nowrap">
                     View Tournaments →
                   </div>
                 </div>
@@ -136,7 +136,7 @@ export default function Home() {
                   <p className="text-gray-600 mb-4 leading-relaxed">
                     Real-time bidding system with race condition prevention and atomic transactions.
                   </p>
-                  <div className="text-gray-700 group-hover:text-gray-900 font-medium transition-colors">
+                  <div className="text-gray-700 group-hover:text-gray-900 font-medium transition-colors whitespace-nowrap">
                     View Auctions →
                   </div>
                 </div>
