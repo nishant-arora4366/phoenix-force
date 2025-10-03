@@ -176,7 +176,110 @@ export default function Navbar() {
               </Link>
             </div>
 
+            {/* User Section - Desktop Only */}
+            <div className="hidden md:flex items-center min-w-[200px] justify-end">
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-pulse bg-gray-200 h-4 w-24 rounded"></div>
+                </div>
+              ) : user ? (
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm text-gray-600 whitespace-nowrap">
+                    Welcome, {getDisplayName()}
+                  </span>
+                  {/* Profile Dropdown */}
+                  <div className="relative dropdown-container">
+                    <button
+                      type="button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="flex items-center space-x-1 text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {/* Dropdown Menu */}
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 overflow-hidden">
+                        <div className="px-4 py-2">
+                          <Link
+                            href="/profile"
+                            className="block text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            Profile
+                          </Link>
+                          <button
+                            onClick={handleSignOut}
+                            className="block w-full text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  href="/signin"
+                  className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-gray-100 whitespace-nowrap"
+                >
+                  Sign in to access features
+                </Link>
+              )}
+            </div>
 
+            {/* Mobile User Section - Right Side */}
+            <div className="md:hidden">
+              {isLoading ? (
+                <div className="animate-pulse bg-gray-200 h-8 w-8 rounded-full"></div>
+              ) : user ? (
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {/* Mobile Dropdown Menu */}
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 overflow-hidden">
+                      <div className="px-3 py-2 text-sm text-gray-600">
+                        Welcome, {getDisplayName()}
+                      </div>
+                      <div className="px-4 py-2">
+                        <Link
+                          href="/profile"
+                          className="block text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          Profile
+                        </Link>
+                        <button
+                          onClick={handleSignOut}
+                          className="block w-full text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  href="/signin"
+                  className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 no-underline"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -219,6 +322,46 @@ export default function Navbar() {
               </Link>
             </div>
             
+            {/* Mobile User Section */}
+            {user ? (
+              <div className="border-t border-gray-200 pt-3 mt-3">
+                <div className="px-3 py-2 text-sm text-gray-600 bg-gray-50 rounded-md">
+                  Welcome, {getDisplayName()}
+                </div>
+                <Link
+                  href="/profile"
+                  className="flex items-center space-x-3 px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md mt-1"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>Profile</span>
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-3 w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md mt-1"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              <div className="border-t border-gray-200 pt-3 mt-3">
+                <Link
+                  href="/signin"
+                  className="flex items-center space-x-3 px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Sign In</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}
