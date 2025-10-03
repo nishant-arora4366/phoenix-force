@@ -204,10 +204,88 @@ export default function EditTournamentPage() {
               />
             </div>
 
+            {/* Tournament Format */}
+            <div>
+              <label htmlFor="format" className="block text-sm font-medium text-gray-700 mb-2">
+                Tournament Format *
+              </label>
+              <select
+                id="format"
+                name="format"
+                value={formData.format}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
+              >
+                <option value="Bilateral">Bilateral (2 Teams)</option>
+                <option value="TriSeries">TriSeries (3 Teams)</option>
+                <option value="Quad">Quad (4 Teams)</option>
+                <option value="6 Team">6 Team</option>
+                <option value="8 Team">8 Team</option>
+                <option value="10 Team">10 Team</option>
+                <option value="12 Team">12 Team</option>
+                <option value="16 Team">16 Team</option>
+                <option value="20 Team">20 Team</option>
+                <option value="24 Team">24 Team</option>
+                <option value="32 Team">32 Team</option>
+              </select>
+            </div>
+
+            {/* Selected Teams */}
+            <div>
+              <label htmlFor="selected_teams" className="block text-sm font-medium text-gray-700 mb-2">
+                Number of Teams *
+              </label>
+              <input
+                type="number"
+                id="selected_teams"
+                name="selected_teams"
+                value={formData.selected_teams}
+                onChange={handleChange}
+                required
+                min="2"
+                max="32"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
+                placeholder="Number of teams"
+              />
+            </div>
+
+            {/* Tournament Date */}
+            <div>
+              <label htmlFor="tournament_date" className="block text-sm font-medium text-gray-700 mb-2">
+                Tournament Date *
+              </label>
+              <input
+                type="date"
+                id="tournament_date"
+                name="tournament_date"
+                value={formData.tournament_date}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
+                placeholder="Enter tournament description (optional)"
+              />
+            </div>
+
             {/* Total Slots */}
             <div>
               <label htmlFor="total_slots" className="block text-sm font-medium text-gray-700 mb-2">
-                Total Slots *
+                Total Player Slots *
               </label>
               <input
                 type="number"
@@ -216,43 +294,10 @@ export default function EditTournamentPage() {
                 value={formData.total_slots}
                 onChange={handleChange}
                 required
-                min="1"
+                min="22"
+                max="352"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
-                placeholder="Number of players"
-              />
-            </div>
-
-            {/* Min Bid Amount */}
-            <div>
-              <label htmlFor="min_bid_amount" className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Bid Amount (₹)
-              </label>
-              <input
-                type="number"
-                id="min_bid_amount"
-                name="min_bid_amount"
-                value={formData.min_bid_amount}
-                onChange={handleChange}
-                min="0"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
-                placeholder="Minimum bid amount"
-              />
-            </div>
-
-            {/* Min Increment */}
-            <div>
-              <label htmlFor="min_increment" className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Increment (₹)
-              </label>
-              <input
-                type="number"
-                id="min_increment"
-                name="min_increment"
-                value={formData.min_increment}
-                onChange={handleChange}
-                min="0"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
-                placeholder="Minimum bid increment"
+                placeholder="Total player slots"
               />
             </div>
 
