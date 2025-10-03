@@ -35,10 +35,10 @@ export default function CreateTournamentPage() {
           .eq('id', user.id)
           .single()
         
-        if (userData?.role === 'host') {
+        if (userData?.role === 'host' || userData?.role === 'admin') {
           setUser(user)
         } else {
-          setMessage('Only hosts can create tournaments')
+          setMessage('Only hosts and admins can create tournaments. Your current role: ' + (userData?.role || 'unknown'))
         }
       } else {
         setMessage('Please sign in to create tournaments')
