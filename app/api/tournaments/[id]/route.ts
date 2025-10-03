@@ -3,10 +3,10 @@ import { supabase } from '@/lib/supabaseClient'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const tournamentId = params.id
+    const { id: tournamentId } = await params
     const body = await request.json()
     const { name, total_slots, min_bid_amount, min_increment } = body
 
@@ -73,10 +73,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const tournamentId = params.id
+    const { id: tournamentId } = await params
 
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
