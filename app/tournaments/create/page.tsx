@@ -129,23 +129,25 @@ export default function CreateTournamentPage() {
       
       // Auto-update selected teams and total slots when format changes
       if (name === 'format') {
-        const formatRecommendations: { [key: string]: { teams: number, slots: number } } = {
-          'Bilateral': { teams: 2, slots: 22 },
-          'TriSeries': { teams: 3, slots: 33 },
-          'Quad': { teams: 4, slots: 44 },
-          '6 Team': { teams: 6, slots: 66 },
-          '8 Team': { teams: 8, slots: 88 },
-          '10 Team': { teams: 10, slots: 110 },
-          '12 Team': { teams: 12, slots: 132 },
-          '16 Team': { teams: 16, slots: 176 },
-          '20 Team': { teams: 20, slots: 220 },
-          '24 Team': { teams: 24, slots: 264 },
-          '32 Team': { teams: 32, slots: 352 }
+        const formatRecommendations: { [key: string]: { teams: number } } = {
+          'Bilateral': { teams: 2 },
+          'TriSeries': { teams: 3 },
+          'Quad': { teams: 4 },
+          '6 Team': { teams: 6 },
+          '8 Team': { teams: 8 },
+          '10 Team': { teams: 10 },
+          '12 Team': { teams: 12 },
+          '16 Team': { teams: 16 }
         }
         
-        const recommendation = formatRecommendations[value] || { teams: 8, slots: 88 }
+        const recommendation = formatRecommendations[value] || { teams: 8 }
         newData.selected_teams = recommendation.teams
-        newData.total_slots = recommendation.slots
+        newData.total_slots = recommendation.teams * 8 // 8 players per team
+      }
+      
+      // Auto-update total slots when selected teams changes
+      if (name === 'selected_teams') {
+        newData.total_slots = Number(value) * 8 // 8 players per team
       }
       
       return newData
@@ -316,7 +318,7 @@ export default function CreateTournamentPage() {
                       onChange={handleInputChange}
                       required
                       min="2"
-                      max="32"
+                      max="16"
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
                       placeholder="Number of teams"
                     />
@@ -381,8 +383,8 @@ export default function CreateTournamentPage() {
                     value={formData.total_slots}
                     onChange={handleInputChange}
                     required
-                    min="22"
-                    max="352"
+                    min="16"
+                    max="128"
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
                     placeholder="Total player slots"
                   />
@@ -392,9 +394,9 @@ export default function CreateTournamentPage() {
                     </svg>
                   </div>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-800">
-                    <span className="font-semibold">Recommended:</span> {formData.format === 'Bilateral' ? '22' : formData.format === 'TriSeries' ? '33' : formData.format === 'Quad' ? '44' : formData.format === '6 Team' ? '66' : formData.format === '8 Team' ? '88' : formData.format === '10 Team' ? '110' : formData.format === '12 Team' ? '132' : formData.format === '16 Team' ? '176' : formData.format === '20 Team' ? '220' : formData.format === '24 Team' ? '264' : formData.format === '32 Team' ? '352' : '88'} slots for {formData.format} format
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <p className="text-sm text-gray-700">
+                    <span className="font-semibold">Recommended:</span> {formData.selected_teams * 8} slots ({formData.selected_teams} teams × 8 players per team)
                   </p>
                 </div>
               </div>
