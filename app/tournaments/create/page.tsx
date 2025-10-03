@@ -264,23 +264,20 @@ export default function CreateTournamentPage() {
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                   {[
-                    { value: 'Bilateral', label: 'Bilateral', teams: 2, color: 'from-blue-500 to-blue-600' },
-                    { value: 'TriSeries', label: 'TriSeries', teams: 3, color: 'from-green-500 to-green-600' },
-                    { value: 'Quad', label: 'Quad', teams: 4, color: 'from-purple-500 to-purple-600' },
-                    { value: '6 Team', label: '6 Team', teams: 6, color: 'from-orange-500 to-orange-600' },
-                    { value: '8 Team', label: '8 Team', teams: 8, color: 'from-pink-500 to-pink-600' },
-                    { value: '10 Team', label: '10 Team', teams: 10, color: 'from-indigo-500 to-indigo-600' },
-                    { value: '12 Team', label: '12 Team', teams: 12, color: 'from-teal-500 to-teal-600' },
-                    { value: '16 Team', label: '16 Team', teams: 16, color: 'from-red-500 to-red-600' },
-                    { value: '20 Team', label: '20 Team', teams: 20, color: 'from-yellow-500 to-yellow-600' },
-                    { value: '24 Team', label: '24 Team', teams: 24, color: 'from-cyan-500 to-cyan-600' },
-                    { value: '32 Team', label: '32 Team', teams: 32, color: 'from-gray-500 to-gray-600' }
+                    { value: 'Bilateral', label: 'Bilateral', teams: 2, color: 'from-slate-400 to-slate-500' },
+                    { value: 'TriSeries', label: 'TriSeries', teams: 3, color: 'from-stone-400 to-stone-500' },
+                    { value: 'Quad', label: 'Quad', teams: 4, color: 'from-neutral-400 to-neutral-500' },
+                    { value: '6 Team', label: '6 Team', teams: 6, color: 'from-zinc-400 to-zinc-500' },
+                    { value: '8 Team', label: '8 Team', teams: 8, color: 'from-gray-400 to-gray-500' },
+                    { value: '10 Team', label: '10 Team', teams: 10, color: 'from-slate-500 to-slate-600' },
+                    { value: '12 Team', label: '12 Team', teams: 12, color: 'from-stone-500 to-stone-600' },
+                    { value: '16 Team', label: '16 Team', teams: 16, color: 'from-neutral-500 to-neutral-600' }
                   ].map((format) => (
                     <div
                       key={format.value}
                       className={`relative cursor-pointer rounded-xl border-2 transition-all duration-200 ${
                         formData.format === format.value
-                          ? 'border-blue-500 bg-blue-50 shadow-lg scale-105'
+                          ? 'border-gray-500 bg-gray-50 shadow-lg scale-105'
                           : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                       }`}
                       onClick={() => handleInputChange({ target: { name: 'format', value: format.value } } as any)}
@@ -292,7 +289,7 @@ export default function CreateTournamentPage() {
                         </div>
                       </div>
                       {formData.format === format.value && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
                           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
