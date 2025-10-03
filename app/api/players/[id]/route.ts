@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabaseClient'
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params
+
     // Get the authorization header
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
@@ -29,11 +34,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    // Fetch players from database
-    const { data, error } = await supabaseWithAuth
+    // Fetch specific player
+    const { data: player, error } = await supabaseWithAuth
       .from('players')
       .select('*')
-      .order('created_at', { ascending: false })
+      .eq('id', id)
+      .single()
 
     if (error) {
       console.error('Database error:', error)
@@ -44,24 +50,36 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
+    if (!player) {
+      return NextResponse.json({
+        success: false,
+        error: 'Player not found'
+      }, { status: 404 })
+    }
+
     return NextResponse.json({
       success: true,
-      data: data || [],
-      message: 'Players fetched successfully'
+      data: player,
+      message: 'Player fetched successfully'
     })
     
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch players',
+      error: 'Failed to fetch player',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params
+
     // Get the authorization header
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
@@ -88,7 +106,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    // Check if user has permission to create players (admin or host)
+    // Check if user has permission to update players (admin or host)
     const { data: userData } = await supabaseWithAuth
       .from('users')
       .select('role')
@@ -98,7 +116,7 @@ export async function POST(request: NextRequest) {
     if (!userData || (userData.role !== 'admin' && userData.role !== 'host')) {
       return NextResponse.json({ 
         success: false, 
-        error: 'Only admins and hosts can create players' 
+        error: 'Only admins and hosts can update players' 
       }, { status: 403 })
     }
 
@@ -126,10 +144,10 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Create player
+    // Update player
     const { data: player, error } = await supabaseWithAuth
       .from('players')
-      .insert({
+      .update({
         display_name,
         stage_name: stage_name || null,
         bio: bio || null,
@@ -141,8 +159,10 @@ export async function POST(request: NextRequest) {
         is_wicket_keeper: Boolean(is_wicket_keeper),
         bowling_rating: bowling_rating ? Number(bowling_rating) : null,
         batting_rating: batting_rating ? Number(batting_rating) : null,
-        wicket_keeping_rating: wicket_keeping_rating ? Number(wicket_keeping_rating) : null
+        wicket_keeping_rating: wicket_keeping_rating ? Number(wicket_keeping_rating) : null,
+        updated_at: new Date().toISOString()
       })
+      .eq('id', id)
       .select()
       .single()
 
@@ -155,17 +175,101 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
+    if (!player) {
+      return NextResponse.json({
+        success: false,
+        error: 'Player not found'
+      }, { status: 404 })
+    }
+
     return NextResponse.json({
       success: true,
       data: player,
-      message: 'Player created successfully'
+      message: 'Player updated successfully'
     })
     
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json({
       success: false,
-      error: 'Failed to create player',
+      error: 'Failed to update player',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    }
+
+    // Create a new Supabase client with the auth header
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabaseWithAuth = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: authHeader
+          }
+        }
+      }
+    )
+
+    // Ensure user is authenticated
+    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    }
+
+    // Check if user has permission to delete players (admin only)
+    const { data: userData } = await supabaseWithAuth
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!userData || userData.role !== 'admin') {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Only admins can delete players' 
+      }, { status: 403 })
+    }
+
+    // Delete player
+    const { error } = await supabaseWithAuth
+      .from('players')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Database error:', error)
+      return NextResponse.json({
+        success: false,
+        error: error.message,
+        details: error
+      }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Player deleted successfully'
+    })
+    
+  } catch (error) {
+    console.error('API error:', error)
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to delete player',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }

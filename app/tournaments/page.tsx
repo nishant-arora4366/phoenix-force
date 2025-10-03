@@ -41,17 +41,17 @@ const fetcher = async (url: string) => {
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'draft':
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-gray-100 text-gray-700'
     case 'registration_open':
-      return 'bg-green-100 text-green-800'
+      return 'bg-gray-100 text-gray-700'
     case 'registration_closed':
-      return 'bg-yellow-100 text-yellow-800'
+      return 'bg-gray-100 text-gray-700'
     case 'auction_started':
-      return 'bg-blue-100 text-blue-800'
+      return 'bg-gray-100 text-gray-700'
     case 'auction_completed':
-      return 'bg-purple-100 text-purple-800'
+      return 'bg-gray-100 text-gray-700'
     default:
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-gray-100 text-gray-700'
   }
 }
 
@@ -182,8 +182,8 @@ export default function TournamentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-3 bg-gray-100 rounded-lg">
+                <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                 </svg>
               </div>
@@ -315,7 +315,7 @@ export default function TournamentsPage() {
                       <div className="flex space-x-2">
                         <Link
                           href={`/tournaments/${tournament.id}/edit`}
-                          className="flex-1 px-3 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                          className="flex-1 px-3 py-2 bg-gray-700 text-white text-center rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
                         >
                           Edit
                         </Link>

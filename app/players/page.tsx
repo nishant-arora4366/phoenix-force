@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { supabase } from '@/lib/supabaseClient'
+import { useRouter } from 'next/navigation'
 
 interface Player {
   id: string
@@ -22,25 +23,88 @@ interface Player {
 }
 
 const fetcher = async (url: string) => {
-  const response = await fetch(url)
+  const { data: { session } } = await supabase.auth.getSession()
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${session?.access_token}`
+    }
+  })
+  
   if (!response.ok) {
     throw new Error('Failed to fetch players')
   }
+  
   const result = await response.json()
   if (!result.success) {
     throw new Error(result.error || 'Failed to fetch players')
   }
+  
   return result.data
 }
 
 export default function PlayersPage() {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterGroup, setFilterGroup] = useState('')
   const [filterRole, setFilterRole] = useState('')
   const [sortBy, setSortBy] = useState('name')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [user, setUser] = useState<any>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [isLoadingUser, setIsLoadingUser] = useState(true)
 
   const { data: players, error, isLoading, mutate } = useSWR<Player[]>('/api/players-public', fetcher)
+
+  // Get user info for permissions
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        setIsLoadingUser(true)
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          setUser(user)
+          // Fetch user role in parallel
+          const { data: userData } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+          setUserRole(userData?.role || null)
+        } else {
+          setUserRole(null)
+        }
+      } catch (error) {
+        console.error('Error getting user:', error)
+        setUserRole(null)
+      } finally {
+        setIsLoadingUser(false)
+      }
+    }
+    getUser()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user)
+        // Fetch role immediately
+        supabase
+          .from('users')
+          .select('role')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: userData }) => {
+            setUserRole(userData?.role || null)
+            setIsLoadingUser(false)
+          })
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setUserRole(null)
+        setIsLoadingUser(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const filteredPlayers = players?.filter(player => {
     const matchesSearch = player.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,6 +133,34 @@ export default function PlayersPage() {
 
   const uniqueGroups = Array.from(new Set(players?.map(p => p.group_name).filter(Boolean)))
 
+  const handleDelete = async (playerId: string, playerName: string) => {
+    if (!confirm(`Are you sure you want to delete ${playerName}? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const response = await fetch(`/api/players/${playerId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`
+        }
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete player')
+      }
+
+      // Refresh the players list
+      mutate()
+    } catch (error: any) {
+      console.error('Error deleting player:', error)
+      alert(`Error: ${error.message}`)
+    }
+  }
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
@@ -90,16 +182,16 @@ export default function PlayersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Modern Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold text-gray-800">
                 Player Roster
               </h1>
-              <p className="text-gray-600 mt-2 text-lg">
+              <p className="text-gray-500 mt-2 text-lg">
                 Discover talented cricketers and build your dream team
               </p>
             </div>
@@ -109,6 +201,16 @@ export default function PlayersPage() {
                   {isLoading ? 'Loading...' : `${filteredPlayers?.length || 0} players`}
                 </span>
               </div>
+              {isLoadingUser ? (
+                <div className="bg-gray-200 animate-pulse px-4 py-2 rounded-lg h-10 w-24"></div>
+              ) : (userRole === 'admin' || userRole === 'host') ? (
+                <button
+                  onClick={() => router.push('/players/create')}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                >
+                  Add Player
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -220,7 +322,7 @@ export default function PlayersPage() {
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredPlayers?.map((player) => (
-              <div key={player.id} className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-blue-300 transition-all duration-300">
+              <div key={player.id} className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 h-full flex flex-col">
                 {/* Player Image */}
                 <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                   {player.profile_pic_url ? (
@@ -236,22 +338,22 @@ export default function PlayersPage() {
                   )}
                   
                   {/* Price Badge */}
-                  <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                  <div className="absolute top-4 right-4 bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
                     ₹{player.base_price}
                   </div>
                   
                   {/* Group Badge */}
                   {player.group_name && (
-                    <div className="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                    <div className="absolute top-4 left-4 bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
                       {player.group_name}
                     </div>
                   )}
                 </div>
 
                 {/* Player Info */}
-                <div className="p-6">
+                <div className="p-6 flex-1 flex flex-col">
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-xl font-bold text-gray-800 group-hover:text-gray-600 transition-colors">
                       {player.display_name}
                     </h3>
                     {player.stage_name && (
@@ -264,17 +366,17 @@ export default function PlayersPage() {
                   {/* Roles */}
                   <div className="flex flex-wrap gap-2 mb-4">
                     {player.is_bowler && (
-                      <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium">
+                      <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
                         🏏 Bowler
                       </span>
                     )}
                     {player.is_batter && (
-                      <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-medium">
+                      <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
                         ⚾ Batter
                       </span>
                     )}
                     {player.is_wicket_keeper && (
-                      <span className="bg-purple-100 text-purple-800 text-xs px-3 py-1 rounded-full font-medium">
+                      <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
                         🧤 WK
                       </span>
                     )}
@@ -288,11 +390,11 @@ export default function PlayersPage() {
                         <div className="flex items-center">
                           <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                             <div 
-                              className="bg-blue-500 h-2 rounded-full" 
+                              className="bg-gray-600 h-2 rounded-full" 
                               style={{ width: `${(player.batting_rating / 10) * 100}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">{player.batting_rating}/10</span>
+                          <span className="text-sm font-semibold text-gray-800">{player.batting_rating}/10</span>
                         </div>
                       </div>
                     )}
@@ -302,11 +404,11 @@ export default function PlayersPage() {
                         <div className="flex items-center">
                           <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                             <div 
-                              className="bg-green-500 h-2 rounded-full" 
+                              className="bg-gray-600 h-2 rounded-full" 
                               style={{ width: `${(player.bowling_rating / 10) * 100}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">{player.bowling_rating}/10</span>
+                          <span className="text-sm font-semibold text-gray-800">{player.bowling_rating}/10</span>
                         </div>
                       </div>
                     )}
@@ -316,11 +418,11 @@ export default function PlayersPage() {
                         <div className="flex items-center">
                           <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                             <div 
-                              className="bg-purple-500 h-2 rounded-full" 
+                              className="bg-gray-600 h-2 rounded-full" 
                               style={{ width: `${(player.wicket_keeping_rating / 10) * 100}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">{player.wicket_keeping_rating}/10</span>
+                          <span className="text-sm font-semibold text-gray-800">{player.wicket_keeping_rating}/10</span>
                         </div>
                       </div>
                     )}
@@ -328,15 +430,57 @@ export default function PlayersPage() {
 
                   {/* Bio */}
                   {player.bio && (
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-                      {player.bio}
-                    </p>
+                    <div className="text-sm text-gray-600 mb-4">
+                      {player.bio.length > 100 ? (
+                        <div>
+                          <span className="line-clamp-2">
+                            {player.bio.substring(0, 100)}...
+                          </span>
+                          <button 
+                            onClick={() => router.push(`/players/${player.id}`)}
+                            className="text-gray-500 hover:text-gray-700 text-xs mt-1 block"
+                          >
+                            Show more →
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="line-clamp-2">{player.bio}</p>
+                      )}
+                    </div>
                   )}
 
-                  {/* Action Button */}
-                  <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                    View Details
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="space-y-2 mt-auto">
+                    <button 
+                      onClick={() => router.push(`/players/${player.id}`)}
+                      className="w-full bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                    >
+                      View Details
+                    </button>
+                    {isLoadingUser ? (
+                      <div className="flex space-x-2">
+                        <div className="flex-1 bg-gray-200 animate-pulse py-2 px-3 rounded-lg h-9"></div>
+                        <div className="flex-1 bg-gray-200 animate-pulse py-2 px-3 rounded-lg h-9"></div>
+                      </div>
+                    ) : (userRole === 'admin' || userRole === 'host') ? (
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => router.push(`/players/${player.id}/edit`)}
+                          className="flex-1 bg-gray-600 text-white py-2 px-3 rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                        >
+                          Edit
+                        </button>
+                        {userRole === 'admin' && (
+                          <button 
+                            onClick={() => handleDelete(player.id, player.display_name)}
+                            className="flex-1 bg-gray-500 text-white py-2 px-3 rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             ))}
@@ -408,17 +552,57 @@ export default function PlayersPage() {
 
                     {/* Bio */}
                     {player.bio && (
-                      <p className="text-sm text-gray-600 mt-2 line-clamp-1">
-                        {player.bio}
-                      </p>
+                      <div className="text-sm text-gray-600 mt-2">
+                        {player.bio.length > 80 ? (
+                          <div>
+                            <span className="line-clamp-1">
+                              {player.bio.substring(0, 80)}...
+                            </span>
+                            <button 
+                              onClick={() => router.push(`/players/${player.id}`)}
+                              className="text-gray-500 hover:text-gray-700 text-xs ml-1"
+                            >
+                              more
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="line-clamp-1">{player.bio}</p>
+                        )}
+                      </div>
                     )}
                   </div>
 
-                  {/* Action Button */}
-                  <div className="flex-shrink-0">
-                    <button className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                      View Details
+                  {/* Action Buttons */}
+                  <div className="flex-shrink-0 flex space-x-2">
+                    <button 
+                      onClick={() => router.push(`/players/${player.id}`)}
+                      className="bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                    >
+                      View
                     </button>
+                    {isLoadingUser ? (
+                      <>
+                        <div className="bg-gray-200 animate-pulse py-2 px-3 rounded-lg h-9 w-16"></div>
+                        <div className="bg-gray-200 animate-pulse py-2 px-3 rounded-lg h-9 w-16"></div>
+                      </>
+                    ) : (userRole === 'admin' || userRole === 'host') ? (
+                      <>
+                        <button 
+                          onClick={() => router.push(`/players/${player.id}/edit`)}
+                          className="bg-gray-600 text-white py-2 px-3 rounded-lg hover:bg-gray-700 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        {userRole === 'admin' && (
+                          <button 
+                            onClick={() => handleDelete(player.id, player.display_name)}
+                            className="bg-gray-500 text-white py-2 px-3 rounded-lg hover:bg-gray-600 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </>
+                    ) : null}
                   </div>
                 </div>
               </div>
