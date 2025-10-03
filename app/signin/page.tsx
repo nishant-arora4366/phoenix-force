@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AuthFormExtended from '@/components/AuthFormExtended'
-import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function SignIn() {
@@ -41,10 +40,7 @@ export default function SignIn() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation Bar */}
-      <Navbar />
-
+    <div>
       {/* Sign In Form */}
       <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
