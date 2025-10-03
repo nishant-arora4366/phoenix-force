@@ -17,6 +17,7 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<User | null>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -70,6 +71,7 @@ export default function Navbar() {
     setUser(null)
     setUserProfile(null)
     setIsDropdownOpen(false)
+    setIsMobileMenuOpen(false)
   }
 
   const getDisplayName = () => {
@@ -113,11 +115,17 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Center Section - Logo (Optional) */}
+          {/* Center Section - Back Button */}
           <div className="flex-1 flex justify-center">
-            <Link href="/" className="text-xl font-bold text-gray-900 hidden md:block">
-              Phoenix Force Cricket
-            </Link>
+            <button
+              onClick={() => window.history.back()}
+              className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Go Back"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
           </div>
 
           {/* Right Section - Navigation and User Auth */}
@@ -204,6 +212,7 @@ export default function Navbar() {
             <div className="md:hidden">
               <button
                 type="button"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="text-gray-700 hover:text-gray-900 inline-flex items-center justify-center p-2 rounded-md"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -214,6 +223,68 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Dropdown Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {/* Mobile Navigation Links */}
+            <Link
+              href="/tournaments"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Tournaments
+            </Link>
+            <Link
+              href="/players"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Players
+            </Link>
+            <Link
+              href="/auctions"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Auctions
+            </Link>
+            
+            {/* Mobile User Section */}
+            {user ? (
+              <div className="border-t border-gray-200 pt-2 mt-2">
+                <div className="px-3 py-2 text-sm text-gray-600">
+                  Welcome, {getDisplayName()}
+                </div>
+                <Link
+                  href="/profile"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="border-t border-gray-200 pt-2 mt-2">
+                <Link
+                  href="/signin"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Sign in to access features
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
     </nav>
   )

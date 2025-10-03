@@ -82,59 +82,65 @@ export default function Home() {
 
             {/* Feature Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-              <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-gray-200">
-                <div className="text-gray-700 mb-4">
-                  <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+              <Link
+                href="/players"
+                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-gray-300 cursor-pointer group"
+              >
+                <div className="text-center">
+                  <div className="text-gray-700 mb-4 group-hover:text-gray-900 transition-colors">
+                    <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Player Management</h3>
+                  <p className="text-gray-600 mb-4 leading-relaxed">
+                    Comprehensive player profiles with ratings, skills, and performance tracking.
+                  </p>
+                  <div className="text-gray-700 group-hover:text-gray-900 font-medium transition-colors">
+                    Browse Players →
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Player Management</h3>
-                <p className="text-gray-600">
-                  Comprehensive player profiles with ratings, skills, and performance tracking.
-                </p>
-                <Link
-                  href="/players"
-                  className="inline-block mt-4 text-gray-700 hover:text-gray-900 font-medium"
-                >
-                  Browse Players →
-                </Link>
-              </div>
+              </Link>
 
-              <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-gray-200">
-                <div className="text-gray-700 mb-4">
-                  <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                  </svg>
+              <Link
+                href="/tournaments"
+                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-gray-300 cursor-pointer group"
+              >
+                <div className="text-center">
+                  <div className="text-gray-700 mb-4 group-hover:text-gray-900 transition-colors">
+                    <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Tournament Management</h3>
+                  <p className="text-gray-600 mb-4 leading-relaxed">
+                    Create and manage tournaments with advanced auction systems and real-time bidding.
+                  </p>
+                  <div className="text-gray-700 group-hover:text-gray-900 font-medium transition-colors">
+                    View Tournaments →
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Tournament Management</h3>
-                <p className="text-gray-600">
-                  Create and manage tournaments with advanced auction systems and real-time bidding.
-                </p>
-                <Link
-                  href="/tournaments"
-                  className="inline-block mt-4 text-gray-700 hover:text-gray-900 font-medium"
-                >
-                  View Tournaments →
-                </Link>
-              </div>
+              </Link>
 
-              <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-gray-200">
-                <div className="text-gray-700 mb-4">
-                  <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+              <Link
+                href="/auctions"
+                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-gray-300 cursor-pointer group"
+              >
+                <div className="text-center">
+                  <div className="text-gray-700 mb-4 group-hover:text-gray-900 transition-colors">
+                    <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Live Auctions</h3>
+                  <p className="text-gray-600 mb-4 leading-relaxed">
+                    Real-time bidding system with race condition prevention and atomic transactions.
+                  </p>
+                  <div className="text-gray-700 group-hover:text-gray-900 font-medium transition-colors">
+                    View Auctions →
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Live Auctions</h3>
-                <p className="text-gray-600">
-                  Real-time bidding system with race condition prevention and atomic transactions.
-                </p>
-                <Link
-                  href="/tournaments/create"
-                  className="inline-block mt-4 text-gray-700 hover:text-gray-900 font-medium"
-                >
-                  Create Tournament →
-                </Link>
-              </div>
+              </Link>
             </div>
 
             {/* Quick Stats */}
