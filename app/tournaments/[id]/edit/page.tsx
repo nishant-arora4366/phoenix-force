@@ -125,11 +125,11 @@ export default function EditTournamentPage() {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'total_slots' || name === 'min_bid_amount' || name === 'min_increment' 
+      [name]: name === 'total_slots' || name === 'selected_teams' 
         ? parseInt(value) || 0 
         : value
     }))
