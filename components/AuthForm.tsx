@@ -21,6 +21,8 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
     setMessage('')
 
     try {
+      let authData
+      
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -29,6 +31,7 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
         
         if (error) throw error
         
+        authData = data
         setMessage('Check your email for the confirmation link!')
         setUser(data.user)
       } else {
@@ -39,12 +42,13 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
         
         if (error) throw error
         
+        authData = data
         setMessage('Successfully signed in!')
         setUser(data.user)
       }
       
-      if (onAuthChange) {
-        onAuthChange(data.user)
+      if (onAuthChange && authData) {
+        onAuthChange(authData.user)
       }
     } catch (error: any) {
       setMessage(`Error: ${error.message}`)
