@@ -6,9 +6,11 @@ import { supabase } from '@/lib/supabaseClient'
 
 interface TournamentFormData {
   name: string
+  format: string
+  selected_teams: number
+  tournament_date: string
+  description: string
   total_slots: number
-  min_bid_amount: number
-  min_increment: number
 }
 
 export default function CreateTournamentPage() {
@@ -18,9 +20,11 @@ export default function CreateTournamentPage() {
   const [user, setUser] = useState<any>(null)
   const [formData, setFormData] = useState<TournamentFormData>({
     name: '',
-    total_slots: 8,
-    min_bid_amount: 50,
-    min_increment: 10
+    format: '8 Team',
+    selected_teams: 8,
+    tournament_date: '',
+    description: '',
+    total_slots: 88
   })
 
   // Check if user is authenticated and is a host
@@ -62,10 +66,12 @@ export default function CreateTournamentPage() {
         .from('tournaments')
         .insert({
           name: formData.name,
-          host_id: user.id,
+          format: formData.format,
+          selected_teams: formData.selected_teams,
+          tournament_date: formData.tournament_date,
+          description: formData.description,
           total_slots: formData.total_slots,
-          min_bid_amount: formData.min_bid_amount,
-          min_increment: formData.min_increment,
+          host_id: user.id,
           status: 'draft'
         })
         .select()
@@ -100,14 +106,39 @@ export default function CreateTournamentPage() {
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: name.includes('slots') || name.includes('amount') || name.includes('increment') 
-        ? Number(value) 
-        : value
-    }))
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: name.includes('slots') || name.includes('selected_teams') || name.includes('amount') || name.includes('increment') 
+          ? Number(value) 
+          : value
+      }
+      
+      // Auto-update selected teams and total slots when format changes
+      if (name === 'format') {
+        const formatRecommendations: { [key: string]: { teams: number, slots: number } } = {
+          'Bilateral': { teams: 2, slots: 22 },
+          'TriSeries': { teams: 3, slots: 33 },
+          'Quad': { teams: 4, slots: 44 },
+          '6 Team': { teams: 6, slots: 66 },
+          '8 Team': { teams: 8, slots: 88 },
+          '10 Team': { teams: 10, slots: 110 },
+          '12 Team': { teams: 12, slots: 132 },
+          '16 Team': { teams: 16, slots: 176 },
+          '20 Team': { teams: 20, slots: 220 },
+          '24 Team': { teams: 24, slots: 264 },
+          '32 Team': { teams: 32, slots: 352 }
+        }
+        
+        const recommendation = formatRecommendations[value] || { teams: 8, slots: 88 }
+        newData.selected_teams = recommendation.teams
+        newData.total_slots = recommendation.slots
+      }
+      
+      return newData
+    })
   }
 
   if (!user) {
@@ -167,10 +198,90 @@ export default function CreateTournamentPage() {
               />
             </div>
 
+            {/* Tournament Format */}
+            <div>
+              <label htmlFor="format" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Tournament Format *
+              </label>
+              <select
+                id="format"
+                name="format"
+                value={formData.format}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              >
+                <option value="Bilateral">Bilateral (2 Teams)</option>
+                <option value="TriSeries">TriSeries (3 Teams)</option>
+                <option value="Quad">Quad (4 Teams)</option>
+                <option value="6 Team">6 Team</option>
+                <option value="8 Team">8 Team</option>
+                <option value="10 Team">10 Team</option>
+                <option value="12 Team">12 Team</option>
+                <option value="16 Team">16 Team</option>
+                <option value="20 Team">20 Team</option>
+                <option value="24 Team">24 Team</option>
+                <option value="32 Team">32 Team</option>
+              </select>
+            </div>
+
+            {/* Selected Teams */}
+            <div>
+              <label htmlFor="selected_teams" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Number of Teams *
+              </label>
+              <input
+                type="number"
+                id="selected_teams"
+                name="selected_teams"
+                value={formData.selected_teams}
+                onChange={handleInputChange}
+                required
+                min="2"
+                max="32"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Number of teams participating in the tournament
+              </p>
+            </div>
+
+            {/* Tournament Date */}
+            <div>
+              <label htmlFor="tournament_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Tournament Date *
+              </label>
+              <input
+                type="date"
+                id="tournament_date"
+                name="tournament_date"
+                value={formData.tournament_date}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                placeholder="Enter tournament description (optional)"
+              />
+            </div>
+
             {/* Total Slots */}
             <div>
               <label htmlFor="total_slots" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Total Slots *
+                Total Player Slots *
               </label>
               <input
                 type="number"
@@ -179,52 +290,12 @@ export default function CreateTournamentPage() {
                 value={formData.total_slots}
                 onChange={handleInputChange}
                 required
-                min="2"
-                max="20"
+                min="22"
+                max="352"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Number of players that can participate (2-20)
-              </p>
-            </div>
-
-            {/* Minimum Bid Amount */}
-            <div>
-              <label htmlFor="min_bid_amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Minimum Bid Amount (₹)
-              </label>
-              <input
-                type="number"
-                id="min_bid_amount"
-                name="min_bid_amount"
-                value={formData.min_bid_amount}
-                onChange={handleInputChange}
-                min="0"
-                step="10"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Minimum amount for any bid (optional)
-              </p>
-            </div>
-
-            {/* Minimum Increment */}
-            <div>
-              <label htmlFor="min_increment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Minimum Bid Increment (₹)
-              </label>
-              <input
-                type="number"
-                id="min_increment"
-                name="min_increment"
-                value={formData.min_increment}
-                onChange={handleInputChange}
-                min="1"
-                step="1"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Minimum increase for each new bid (optional)
+                Total number of player slots (recommended: {formData.format === 'Bilateral' ? '22' : formData.format === 'TriSeries' ? '33' : formData.format === 'Quad' ? '44' : formData.format === '6 Team' ? '66' : formData.format === '8 Team' ? '88' : formData.format === '10 Team' ? '110' : formData.format === '12 Team' ? '132' : formData.format === '16 Team' ? '176' : formData.format === '20 Team' ? '220' : formData.format === '24 Team' ? '264' : formData.format === '32 Team' ? '352' : '88'})
               </p>
             </div>
 

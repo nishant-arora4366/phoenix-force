@@ -8,11 +8,13 @@ import { supabase } from '@/lib/supabaseClient'
 interface Tournament {
   id: string
   name: string
+  format: string
+  selected_teams: number
+  tournament_date: string
+  description?: string
   host_id: string
   status: string
   total_slots: number
-  min_bid_amount?: number
-  min_increment?: number
   created_at: string
   updated_at: string
 }
