@@ -168,193 +168,322 @@ export default function CreateTournamentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create Tournament</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Set up a new tournament and configure auction settings
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6">
+            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+            </svg>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Create New Tournament</h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Set up your tournament with advanced configuration options and smart recommendations
           </p>
         </div>
 
         {/* Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Tournament Name */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tournament Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="Enter tournament name"
-              />
-            </div>
-
-            {/* Tournament Format */}
-            <div>
-              <label htmlFor="format" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tournament Format *
-              </label>
-              <select
-                id="format"
-                name="format"
-                value={formData.format}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              >
-                <option value="Bilateral">Bilateral (2 Teams)</option>
-                <option value="TriSeries">TriSeries (3 Teams)</option>
-                <option value="Quad">Quad (4 Teams)</option>
-                <option value="6 Team">6 Team</option>
-                <option value="8 Team">8 Team</option>
-                <option value="10 Team">10 Team</option>
-                <option value="12 Team">12 Team</option>
-                <option value="16 Team">16 Team</option>
-                <option value="20 Team">20 Team</option>
-                <option value="24 Team">24 Team</option>
-                <option value="32 Team">32 Team</option>
-              </select>
-            </div>
-
-            {/* Selected Teams */}
-            <div>
-              <label htmlFor="selected_teams" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Number of Teams *
-              </label>
-              <input
-                type="number"
-                id="selected_teams"
-                name="selected_teams"
-                value={formData.selected_teams}
-                onChange={handleInputChange}
-                required
-                min="2"
-                max="32"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Number of teams participating in the tournament
-              </p>
-            </div>
-
-            {/* Tournament Date */}
-            <div>
-              <label htmlFor="tournament_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tournament Date *
-              </label>
-              <input
-                type="date"
-                id="tournament_date"
-                name="tournament_date"
-                value={formData.tournament_date}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="Enter tournament description (optional)"
-              />
-            </div>
-
-            {/* Total Slots */}
-            <div>
-              <label htmlFor="total_slots" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Total Player Slots *
-              </label>
-              <input
-                type="number"
-                id="total_slots"
-                name="total_slots"
-                value={formData.total_slots}
-                onChange={handleInputChange}
-                required
-                min="22"
-                max="352"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Total number of player slots (recommended: {formData.format === 'Bilateral' ? '22' : formData.format === 'TriSeries' ? '33' : formData.format === 'Quad' ? '44' : formData.format === '6 Team' ? '66' : formData.format === '8 Team' ? '88' : formData.format === '10 Team' ? '110' : formData.format === '12 Team' ? '132' : formData.format === '16 Team' ? '176' : formData.format === '20 Team' ? '220' : formData.format === '24 Team' ? '264' : formData.format === '32 Team' ? '352' : '88'})
-              </p>
-            </div>
-
-            {/* Message */}
-            {message && (
-              <div className={`p-4 rounded-lg ${
-                message.includes('Error') 
-                  ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                  : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-              }`}>
-                {message}
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
+            <h2 className="text-2xl font-bold text-white">Tournament Configuration</h2>
+            <p className="text-blue-100 mt-2">Configure your tournament settings below</p>
+          </div>
+          
+          <div className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Tournament Name */}
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-sm font-semibold text-gray-700">
+                  Tournament Name *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
+                    placeholder="Enter a memorable tournament name"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                  </div>
+                </div>
               </div>
-            )}
 
-            {/* Submit Button */}
-            <div className="flex justify-end space-x-4">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Creating...' : 'Create Tournament'}
-              </button>
-            </div>
+              {/* Tournament Format */}
+              <div className="space-y-4">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Tournament Format *
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {[
+                    { value: 'Bilateral', label: 'Bilateral', teams: 2, color: 'from-blue-500 to-blue-600' },
+                    { value: 'TriSeries', label: 'TriSeries', teams: 3, color: 'from-green-500 to-green-600' },
+                    { value: 'Quad', label: 'Quad', teams: 4, color: 'from-purple-500 to-purple-600' },
+                    { value: '6 Team', label: '6 Team', teams: 6, color: 'from-orange-500 to-orange-600' },
+                    { value: '8 Team', label: '8 Team', teams: 8, color: 'from-pink-500 to-pink-600' },
+                    { value: '10 Team', label: '10 Team', teams: 10, color: 'from-indigo-500 to-indigo-600' },
+                    { value: '12 Team', label: '12 Team', teams: 12, color: 'from-teal-500 to-teal-600' },
+                    { value: '16 Team', label: '16 Team', teams: 16, color: 'from-red-500 to-red-600' },
+                    { value: '20 Team', label: '20 Team', teams: 20, color: 'from-yellow-500 to-yellow-600' },
+                    { value: '24 Team', label: '24 Team', teams: 24, color: 'from-cyan-500 to-cyan-600' },
+                    { value: '32 Team', label: '32 Team', teams: 32, color: 'from-gray-500 to-gray-600' }
+                  ].map((format) => (
+                    <div
+                      key={format.value}
+                      className={`relative cursor-pointer rounded-xl border-2 transition-all duration-200 ${
+                        formData.format === format.value
+                          ? 'border-blue-500 bg-blue-50 shadow-lg scale-105'
+                          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                      }`}
+                      onClick={() => handleInputChange({ target: { name: 'format', value: format.value } } as any)}
+                    >
+                      <div className={`p-4 rounded-lg bg-gradient-to-r ${format.color} text-white`}>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">{format.teams}</div>
+                          <div className="text-sm opacity-90">{format.label}</div>
+                        </div>
+                      </div>
+                      {formData.format === format.value && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Selected Teams & Date Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Selected Teams */}
+                <div className="space-y-2">
+                  <label htmlFor="selected_teams" className="block text-sm font-semibold text-gray-700">
+                    Number of Teams *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      id="selected_teams"
+                      name="selected_teams"
+                      value={formData.selected_teams}
+                      onChange={handleInputChange}
+                      required
+                      min="2"
+                      max="32"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
+                      placeholder="Number of teams"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tournament Date */}
+                <div className="space-y-2">
+                  <label htmlFor="tournament_date" className="block text-sm font-semibold text-gray-700">
+                    Tournament Date *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      id="tournament_date"
+                      name="tournament_date"
+                      value={formData.tournament_date}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <label htmlFor="description" className="block text-sm font-semibold text-gray-700">
+                  Tournament Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50 resize-none"
+                  placeholder="Describe your tournament, rules, prizes, or any special information..."
+                />
+              </div>
+
+              {/* Total Slots */}
+              <div className="space-y-2">
+                <label htmlFor="total_slots" className="block text-sm font-semibold text-gray-700">
+                  Total Player Slots *
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    id="total_slots"
+                    name="total_slots"
+                    value={formData.total_slots}
+                    onChange={handleInputChange}
+                    required
+                    min="22"
+                    max="352"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
+                    placeholder="Total player slots"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-semibold">Recommended:</span> {formData.format === 'Bilateral' ? '22' : formData.format === 'TriSeries' ? '33' : formData.format === 'Quad' ? '44' : formData.format === '6 Team' ? '66' : formData.format === '8 Team' ? '88' : formData.format === '10 Team' ? '110' : formData.format === '12 Team' ? '132' : formData.format === '16 Team' ? '176' : formData.format === '20 Team' ? '220' : formData.format === '24 Team' ? '264' : formData.format === '32 Team' ? '352' : '88'} slots for {formData.format} format
+                  </p>
+                </div>
+              </div>
+
+              {/* Message */}
+              {message && (
+                <div className={`p-4 rounded-xl border-2 ${
+                  message.includes('Error') 
+                    ? 'bg-red-50 border-red-200 text-red-800'
+                    : 'bg-green-50 border-green-200 text-green-800'
+                }`}>
+                  <div className="flex items-center">
+                    <div className={`w-5 h-5 mr-3 ${
+                      message.includes('Error') ? 'text-red-500' : 'text-green-500'
+                    }`}>
+                      {message.includes('Error') ? (
+                        <svg fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="font-medium">{message}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Section */}
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+                <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                  <div className="text-center sm:text-left">
+                    <h3 className="text-lg font-semibold text-gray-900">Ready to Create?</h3>
+                    <p className="text-sm text-gray-600">Review your settings and create your tournament</p>
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => router.back()}
+                      className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      {loading ? (
+                        <div className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Creating Tournament...
+                        </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          Create Tournament
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
           </form>
         </div>
 
         {/* Tournament Preview */}
-        <div className="mt-8 bg-blue-50 dark:bg-blue-900 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">
-            Tournament Preview
-          </h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-blue-700 dark:text-blue-300 font-medium">Name:</span>
-              <span className="ml-2 text-blue-900 dark:text-blue-100">
+        <div className="mt-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border-2 border-blue-200">
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mr-4">
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900">Tournament Preview</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+              <div className="text-sm font-medium text-gray-500 mb-1">Tournament Name</div>
+              <div className="text-lg font-semibold text-gray-900">
                 {formData.name || 'Untitled Tournament'}
-              </span>
+              </div>
             </div>
-            <div>
-              <span className="text-blue-700 dark:text-blue-300 font-medium">Slots:</span>
-              <span className="ml-2 text-blue-900 dark:text-blue-100">{formData.total_slots}</span>
+            
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+              <div className="text-sm font-medium text-gray-500 mb-1">Format</div>
+              <div className="text-lg font-semibold text-gray-900">{formData.format}</div>
             </div>
-            <div>
-              <span className="text-blue-700 dark:text-blue-300 font-medium">Min Bid:</span>
-              <span className="ml-2 text-blue-900 dark:text-blue-100">₹{formData.min_bid_amount}</span>
+            
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+              <div className="text-sm font-medium text-gray-500 mb-1">Teams</div>
+              <div className="text-lg font-semibold text-gray-900">{formData.selected_teams}</div>
             </div>
-            <div>
-              <span className="text-blue-700 dark:text-blue-300 font-medium">Min Increment:</span>
-              <span className="ml-2 text-blue-900 dark:text-blue-100">₹{formData.min_increment}</span>
+            
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+              <div className="text-sm font-medium text-gray-500 mb-1">Player Slots</div>
+              <div className="text-lg font-semibold text-gray-900">{formData.total_slots}</div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+              <div className="text-sm font-medium text-gray-500 mb-1">Date</div>
+              <div className="text-lg font-semibold text-gray-900">
+                {formData.tournament_date ? new Date(formData.tournament_date).toLocaleDateString() : 'Not set'}
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+              <div className="text-sm font-medium text-gray-500 mb-1">Status</div>
+              <div className="text-lg font-semibold text-green-600">Draft</div>
             </div>
           </div>
+          
+          {formData.description && (
+            <div className="mt-6 bg-white rounded-xl p-4 shadow-sm border border-blue-100">
+              <div className="text-sm font-medium text-gray-500 mb-2">Description</div>
+              <div className="text-gray-900">{formData.description}</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
