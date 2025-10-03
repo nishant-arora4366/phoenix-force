@@ -74,11 +74,11 @@ export default function TournamentsPage() {
   const [user, setUser] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<User | null>(null)
   const [isHost, setIsHost] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isUserLoading, setIsUserLoading] = useState(true)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [tournamentToDelete, setTournamentToDelete] = useState<string | null>(null)
 
-  const { data: tournaments, error, isLoading, mutate } = useSWR<Tournament[]>('/api/tournaments', fetcher)
+  const { data: tournaments, error, isLoading: tournamentsLoading, mutate } = useSWR<Tournament[]>('/api/tournaments', fetcher)
 
   // Check user authentication and role
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function TournamentsPage() {
       } catch (error) {
         console.error('Error checking user:', error)
       } finally {
-        setIsLoading(false)
+        setIsUserLoading(false)
       }
     }
     checkUser()
@@ -130,7 +130,7 @@ export default function TournamentsPage() {
     setShowDeleteModal(true)
   }
 
-  if (isLoading) {
+  if (isUserLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
@@ -242,7 +242,7 @@ export default function TournamentsPage() {
         </div>
 
         {/* Tournaments Grid */}
-        {isLoading ? (
+        {tournamentsLoading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
           </div>
@@ -323,7 +323,7 @@ export default function TournamentsPage() {
         )}
 
         {/* Empty State */}
-        {!isLoading && tournaments?.length === 0 && (
+        {!tournamentsLoading && tournaments?.length === 0 && (
           <div className="text-center py-16">
             <div className="text-gray-400 text-6xl mb-4">🏆</div>
             <h3 className="text-2xl font-semibold text-gray-900 mb-2">
