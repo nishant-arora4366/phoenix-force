@@ -105,9 +105,9 @@ export default function CreateTournamentPage() {
 
       setMessage('Tournament created successfully!')
       
-      // Redirect to tournament management or tournaments list
+      // Redirect to tournament details page
       setTimeout(() => {
-        router.push('/tournaments')
+        router.push(`/tournaments/${tournament.id}`)
       }, 2000)
 
     } catch (error: any) {

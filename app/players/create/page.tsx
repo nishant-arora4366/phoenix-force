@@ -101,9 +101,9 @@ export default function CreatePlayerPage() {
 
       setMessage('Player created successfully!')
       
-      // Redirect to players list
+      // Redirect to player details page
       setTimeout(() => {
-        router.push('/players')
+        router.push(`/players/${result.data.id}`)
       }, 2000)
 
     } catch (error: any) {

@@ -113,7 +113,7 @@ export default function EditTournamentPage() {
       const result = await response.json()
 
       if (response.ok) {
-        router.push('/tournaments')
+        router.push(`/tournaments/${tournamentId}`)
       } else {
         setError(result.error || 'Failed to update tournament')
       }
