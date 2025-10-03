@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
 interface User {
@@ -22,6 +22,7 @@ export default function Navbar() {
   const [isLoading, setIsLoading] = useState(true)
   const [profileFetched, setProfileFetched] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
   useEffect(() => {
     const getUser = async () => {
