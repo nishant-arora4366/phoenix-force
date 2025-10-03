@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
@@ -68,7 +68,7 @@ export default function TournamentsPage() {
   const { data: tournaments, error, isLoading, mutate } = useSWR<Tournament[]>('/api/tournaments', fetcher)
 
   // Check user authentication and role
-  useState(() => {
+  useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {

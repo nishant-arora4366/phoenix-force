@@ -25,11 +25,26 @@ export async function POST() {
       }, { status: 500 })
     }
 
-    // Sync users to public.users table
+    // Get existing users to preserve their roles
+    const { data: existingUsers, error: existingError } = await supabaseAdmin
+      .from('users')
+      .select('id, role')
+
+    if (existingError) {
+      return NextResponse.json({
+        success: false,
+        error: existingError.message
+      }, { status: 500 })
+    }
+
+    // Create a map of existing user roles
+    const existingRoles = new Map(existingUsers?.map(user => [user.id, user.role]) || [])
+
+    // Sync users to public.users table, preserving existing roles
     const usersToInsert = authUsers.users.map(user => ({
       id: user.id,
       email: user.email || '',
-      role: 'viewer' as const
+      role: existingRoles.get(user.id) || 'viewer' // Preserve existing role or default to 'viewer'
     }))
 
     const { data: insertedUsers, error: insertError } = await supabaseAdmin
