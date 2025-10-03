@@ -266,21 +266,31 @@ export default function TournamentsPage() {
                   {/* Tournament Details */}
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Format:</span>
+                      <span className="font-semibold text-gray-900">{tournament.format}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Teams:</span>
+                      <span className="font-semibold text-gray-900">{tournament.selected_teams}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600">Total Slots:</span>
                       <span className="font-semibold text-gray-900">{tournament.total_slots}</span>
                     </div>
                     
-                    {tournament.min_bid_amount && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Min Bid:</span>
-                        <span className="font-semibold text-gray-900">₹{tournament.min_bid_amount}</span>
-                      </div>
-                    )}
-                    
-                    {tournament.min_increment && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Min Increment:</span>
-                        <span className="font-semibold text-gray-900">₹{tournament.min_increment}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Date:</span>
+                      <span className="font-semibold text-gray-900">
+                        {new Date(tournament.tournament_date).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    {tournament.description && (
+                      <div className="mt-3">
+                        <span className="text-gray-600 text-sm">Description:</span>
+                        <p className="text-sm text-gray-700 mt-1 line-clamp-2">{tournament.description}</p>
                       </div>
                     )}
 

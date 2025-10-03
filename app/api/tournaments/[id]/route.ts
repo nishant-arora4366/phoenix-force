@@ -8,7 +8,7 @@ export async function PUT(
   try {
     const { id: tournamentId } = await params
     const body = await request.json()
-    const { name, total_slots, min_bid_amount, min_increment } = body
+    const { name, format, selected_teams, tournament_date, description, total_slots } = body
 
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -49,9 +49,11 @@ export async function PUT(
       .from('tournaments')
       .update({
         name,
+        format,
+        selected_teams,
+        tournament_date,
+        description: description || null,
         total_slots,
-        min_bid_amount: min_bid_amount || null,
-        min_increment: min_increment || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', tournamentId)

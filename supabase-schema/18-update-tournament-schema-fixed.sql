@@ -8,6 +8,11 @@ ADD COLUMN IF NOT EXISTS selected_teams INTEGER,
 ADD COLUMN IF NOT EXISTS tournament_date DATE,
 ADD COLUMN IF NOT EXISTS description TEXT;
 
+-- Remove bid-related columns (these will be in auction schema)
+ALTER TABLE tournaments 
+DROP COLUMN IF EXISTS min_bid_amount,
+DROP COLUMN IF EXISTS min_increment;
+
 -- Update existing tournaments to have default values
 UPDATE tournaments 
 SET 

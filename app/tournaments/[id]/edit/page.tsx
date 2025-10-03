@@ -8,11 +8,13 @@ import { supabase } from '@/lib/supabaseClient'
 interface Tournament {
   id: string
   name: string
+  format: string
+  selected_teams: number
+  tournament_date: string
+  description?: string
   host_id: string
   status: string
   total_slots: number
-  min_bid_amount?: number
-  min_increment?: number
   created_at: string
   updated_at: string
 }
@@ -30,9 +32,11 @@ export default function EditTournamentPage() {
 
   const [formData, setFormData] = useState({
     name: '',
-    total_slots: 0,
-    min_bid_amount: 0,
-    min_increment: 0
+    format: '8 Team',
+    selected_teams: 8,
+    tournament_date: '',
+    description: '',
+    total_slots: 88
   })
 
   useEffect(() => {
@@ -73,9 +77,11 @@ export default function EditTournamentPage() {
         setTournament(tournamentData)
         setFormData({
           name: tournamentData.name,
-          total_slots: tournamentData.total_slots,
-          min_bid_amount: tournamentData.min_bid_amount || 0,
-          min_increment: tournamentData.min_increment || 0
+          format: tournamentData.format || '8 Team',
+          selected_teams: tournamentData.selected_teams || 8,
+          tournament_date: tournamentData.tournament_date || '',
+          description: tournamentData.description || '',
+          total_slots: tournamentData.total_slots || 88
         })
       } catch (error) {
         console.error('Error fetching tournament:', error)
