@@ -17,23 +17,30 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<User | null>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      
-      if (user) {
-        // Fetch user profile to get display name
-        try {
-          const response = await fetch(`/api/user-profile?userId=${user.id}`)
-          const result = await response.json()
-          if (result.success) {
-            setUserProfile(result.data)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setUser(user)
+        
+        if (user) {
+          // Fetch user profile to get display name
+          try {
+            const response = await fetch(`/api/user-profile?userId=${user.id}`)
+            const result = await response.json()
+            if (result.success) {
+              setUserProfile(result.data)
+            }
+          } catch (error) {
+            console.error('Error fetching user profile:', error)
           }
-        } catch (error) {
-          console.error('Error fetching user profile:', error)
         }
+      } catch (error) {
+        console.error('Error getting user:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
     getUser()
@@ -73,6 +80,21 @@ export default function Navbar() {
     if (userProfile.firstname) return userProfile.firstname
     return user?.email || 'User'
   }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isDropdownOpen) {
+        const target = event.target as Element
+        if (!target.closest('.dropdown-container')) {
+          setIsDropdownOpen(false)
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isDropdownOpen])
 
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200">
@@ -120,13 +142,18 @@ export default function Navbar() {
               </Link>
 
               {/* User Section */}
-              {user ? (
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-pulse bg-gray-200 h-4 w-20 rounded"></div>
+                  <div className="animate-pulse bg-gray-200 h-8 w-8 rounded-full"></div>
+                </div>
+              ) : user ? (
                 <div className="flex items-center space-x-4">
                   <span className="text-sm text-gray-600">
                     Welcome, {getDisplayName()}
                   </span>
                   {/* Profile Dropdown */}
-                  <div className="relative">
+                  <div className="relative dropdown-container">
                     <button
                       type="button"
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -184,13 +211,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Close dropdown when clicking outside */}
-      {isDropdownOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsDropdownOpen(false)}
-        />
-      )}
     </nav>
   )
 }

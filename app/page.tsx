@@ -8,12 +8,19 @@ import { supabase } from '@/lib/supabaseClient'
 
 export default function Home() {
   const [user, setUser] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     // Check if user is already logged in
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setUser(user)
+      } catch (error) {
+        console.error('Error getting user:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
     getUser()
 
@@ -24,6 +31,17 @@ export default function Home() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-700">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -43,24 +61,24 @@ export default function Home() {
               player ratings, and real-time bidding.
             </p>
             
-            {/* Welcome Message for Logged In Users */}
-            {user && (
-              <div className="max-w-md mx-auto mb-12">
-                <div className="p-4 bg-gray-100 text-gray-800 rounded-lg">
-                  <p className="text-sm">
-                    <strong>Welcome back, {user.email}!</strong>
-                  </p>
-                  <div className="mt-2">
-                    <Link
-                      href="/sync-user"
-                      className="text-sm text-gray-600 hover:text-gray-800 underline"
-                    >
-                      Sync your account to access all features →
-                    </Link>
+                {/* Welcome Message for Logged In Users */}
+                {!isLoading && user && (
+                  <div className="max-w-md mx-auto mb-12">
+                    <div className="p-4 bg-gray-100 text-gray-800 rounded-lg">
+                      <p className="text-sm">
+                        <strong>Welcome back, {user.email}!</strong>
+                      </p>
+                      <div className="mt-2">
+                        <Link
+                          href="/profile"
+                          className="text-sm text-gray-600 hover:text-gray-800 underline"
+                        >
+                          View your profile →
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
+                )}
 
             {/* Feature Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
