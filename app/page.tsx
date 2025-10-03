@@ -60,6 +60,14 @@ export default function Home() {
             <p className="text-sm">
               <strong>Authenticated as:</strong> {user.email}
             </p>
+            <div className="mt-2">
+              <a
+                href="/sync-user"
+                className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+              >
+                Sync your account to access all features →
+              </a>
+            </div>
           </div>
         )}
       </div>

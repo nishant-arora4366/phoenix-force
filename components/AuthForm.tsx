@@ -50,6 +50,25 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
       if (onAuthChange && authData) {
         onAuthChange(authData.user)
       }
+      
+      // Sync user to public.users table after successful auth
+      if (authData?.user) {
+        try {
+          const { error: syncError } = await supabase
+            .from('users')
+            .upsert({
+              id: authData.user.id,
+              email: authData.user.email || '',
+              role: 'viewer'
+            }, { onConflict: 'id' })
+          
+          if (syncError) {
+            console.warn('Failed to sync user:', syncError.message)
+          }
+        } catch (syncErr) {
+          console.warn('User sync error:', syncErr)
+        }
+      }
     } catch (error: any) {
       setMessage(`Error: ${error.message}`)
     } finally {
