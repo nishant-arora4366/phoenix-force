@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import AuthForm from '@/components/AuthForm'
+import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function Home() {
@@ -24,90 +25,10 @@ export default function Home() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation Bar */}
-      <nav className="bg-white shadow-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Phoenix Force Cricket
-                </h1>
-              </div>
-            </div>
-
-            {/* Navigation Links and User Auth */}
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-4">
-                <Link
-                  href="/players"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Players
-                </Link>
-                <Link
-                  href="/tournaments"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Tournaments
-                </Link>
-                <Link
-                  href="/tournaments/create"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Create Tournament
-                </Link>
-                {user ? (
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-600">
-                      Welcome, {user.email}
-                    </span>
-                    <button
-                      onClick={handleSignOut}
-                      className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      Sign Out
-                    </button>
-                    <Link
-                      href="/sync-user"
-                      className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      Sync Account
-                    </Link>
-                  </div>
-                ) : (
-                  <Link
-                    href="/signin"
-                    className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
-                  >
-                    Sign in to access features
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                type="button"
-                className="text-gray-700 hover:text-gray-900 inline-flex items-center justify-center p-2 rounded-md"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <div className="relative">

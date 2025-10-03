@@ -6,32 +6,72 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
+
+    if (!userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'User ID is required'
+      }, { status: 400 })
+    }
+
+    const { data: user, error } = await supabaseAdmin
+      .from('users')
+      .select('id, email, username, firstname, middlename, lastname, photo, role, created_at, updated_at')
+      .eq('id', userId)
+      .single()
+
+    if (error) {
+      return NextResponse.json({
+        success: false,
+        error: error.message
+      }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: user
+    })
+
+  } catch (error: any) {
+    return NextResponse.json({
+      success: false,
+      error: error.message
+    }, { status: 500 })
+  }
+}
+
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, newRole } = body
+    const { userId, profile } = body
 
-    if (!userId || !newRole) {
+    if (!userId) {
       return NextResponse.json({
         success: false,
-        error: 'User ID and new role are required'
+        error: 'User ID is required'
       }, { status: 400 })
     }
 
-    // Validate role
-    const validRoles = ['viewer', 'host', 'captain', 'admin']
-    if (!validRoles.includes(newRole)) {
+    // Validate required fields
+    if (!profile.firstname || !profile.lastname) {
       return NextResponse.json({
         success: false,
-        error: 'Invalid role. Must be one of: viewer, host, captain, admin'
+        error: 'First name and last name are required'
       }, { status: 400 })
     }
 
-    // Update user role
     const { data: updatedUser, error } = await supabaseAdmin
       .from('users')
       .update({
-        role: newRole,
+        username: profile.username || null,
+        firstname: profile.firstname,
+        middlename: profile.middlename || null,
+        lastname: profile.lastname,
+        photo: profile.photo || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', userId)
@@ -47,47 +87,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: updatedUser,
-      message: `User role updated to ${newRole}`
-    })
-
-  } catch (error: any) {
-    return NextResponse.json({
-      success: false,
-      error: error.message
-    }, { status: 500 })
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const email = searchParams.get('email')
-
-    if (!email) {
-      return NextResponse.json({
-        success: false,
-        error: 'Email is required'
-      }, { status: 400 })
-    }
-
-    // Find user by email
-    const { data: user, error } = await supabaseAdmin
-      .from('users')
-      .select('id, email, username, firstname, lastname, role, created_at, updated_at')
-      .ilike('email', `%${email}%`)
-      .single()
-
-    if (error) {
-      return NextResponse.json({
-        success: false,
-        error: error.message
-      }, { status: 500 })
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: user
+      data: updatedUser
     })
 
   } catch (error: any) {
