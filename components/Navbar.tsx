@@ -111,7 +111,7 @@ export default function Navbar() {
     <nav className="bg-white shadow-lg border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16">
-          {/* Left Section - Home Icon, Back Button, and Mobile Menu */}
+          {/* Left Section - Brand/Logo and Mobile Menu */}
           <div className="flex items-center space-x-2">
             {/* Mobile Menu Button */}
             <div className="md:hidden">
@@ -134,16 +134,12 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* Home Icon */}
-            <Link
-              href="/"
-              className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              title="Home"
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
+            {/* Phoenix Force Cricket Brand - Always visible */}
+            <Link href="/" className="text-xl font-bold text-gray-900 hover:text-gray-700 transition-colors">
+              Phoenix Force Cricket
             </Link>
+
+            {/* Back Button - Only on non-homepage */}
             {pathname !== '/' && (
               <button
                 onClick={() => window.history.back()}
@@ -157,12 +153,8 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Center Section - Logo/Brand */}
-          <div className="flex-1 flex justify-center">
-            <Link href="/" className="text-xl font-bold text-gray-900 hidden md:block">
-              Phoenix Force Cricket
-            </Link>
-          </div>
+          {/* Center Section - Spacer */}
+          <div className="flex-1"></div>
 
           {/* Right Section - Navigation and User Auth */}
           <div className="flex items-center space-x-6">
