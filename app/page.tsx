@@ -1,211 +1,187 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import Link from 'next/link'
 import AuthForm from '@/components/AuthForm'
 
-interface TestResponse {
-  success?: boolean
-  data?: any[]
-  message?: string
-  error?: string
-  details?: any
-}
-
 export default function Home() {
-  const [testResult, setTestResult] = useState<TestResponse | null>(null)
-  const [loading, setLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
 
-  const testSupabaseConnection = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch('/api/test-admin')
-      const data = await response.json()
-      setTestResult(data)
-    } catch (error) {
-      setTestResult({
-        error: 'Failed to fetch test data',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    testSupabaseConnection()
-  }, [])
-
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Phoenix Force&nbsp;
-          <code className="font-mono font-bold">Next.js</code>
-        </p>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <h1 className="text-6xl font-bold text-center">
-          Phoenix Force
-        </h1>
-      </div>
-
-      {/* Authentication Section */}
-      <div className="mb-8 w-full max-w-4xl">
-        <AuthForm onAuthChange={setUser} />
-        
-        {user && (
-          <div className="mt-4 p-4 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg">
-            <p className="text-sm">
-              <strong>Authenticated as:</strong> {user.email}
-            </p>
-            <div className="mt-2">
-              <a
-                href="/sync-user"
-                className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
-              >
-                Sync your account to access all features →
-              </a>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      {/* Navigation Bar */}
+      <nav className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                  Phoenix Force
+                </h1>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
 
-      {/* Supabase Test Section */}
-      <div className="mb-8 w-full max-w-4xl">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-            Supabase Connection Test
-          </h2>
-          
-          {loading && (
-            <div className="text-blue-600 dark:text-blue-400">
-              Testing connection...
-            </div>
-          )}
-          
-          {testResult && (
-            <div className="space-y-4">
-              <div className={`p-4 rounded-lg ${
-                testResult.success 
-                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
-                  : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-              }`}>
-                <h3 className="font-semibold mb-2">
-                  {testResult.success ? '✅ Connection Successful' : '❌ Connection Failed'}
-                </h3>
-                {testResult.message && (
-                  <p className="text-sm">{testResult.message}</p>
-                )}
-                {testResult.error && (
-                  <p className="text-sm">Error: {testResult.error}</p>
+            {/* Navigation Links */}
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-4">
+                <Link
+                  href="/players"
+                  className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Players
+                </Link>
+                <Link
+                  href="/tournaments"
+                  className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Tournaments
+                </Link>
+                <Link
+                  href="/tournaments/create"
+                  className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Create Tournament
+                </Link>
+                {user && (
+                  <Link
+                    href="/sync-user"
+                    className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    Sync Account
+                  </Link>
                 )}
               </div>
-              
-              <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
-                <h4 className="font-semibold mb-2 text-gray-900 dark:text-white">Response Data:</h4>
-                <pre className="text-sm overflow-x-auto text-gray-800 dark:text-gray-200">
-                  {JSON.stringify(testResult, null, 2)}
-                </pre>
-              </div>
-              
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
               <button
-                onClick={testSupabaseConnection}
-                disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                type="button"
+                className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 inline-flex items-center justify-center p-2 rounded-md"
               >
-                {loading ? 'Testing...' : 'Test Again'}
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
               </button>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Navigation Links */}
-      <div className="mb-8 w-full max-w-4xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <a
-            href="/players"
-            className="group rounded-lg border border-transparent px-6 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          >
-            <h2 className="mb-3 text-2xl font-semibold">
-              Players{' '}
-              <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-                -&gt;
-              </span>
-            </h2>
-            <p className="m-0 max-w-[30ch] text-sm opacity-50">
-              Browse and manage player profiles with ratings and skills.
+      {/* Hero Section */}
+      <div className="relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+              Welcome to{' '}
+              <span className="text-indigo-600 dark:text-indigo-400">Phoenix Force</span>
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+              The ultimate platform for cricket tournament management with advanced auction systems, 
+              player ratings, and real-time bidding.
             </p>
-          </a>
+            
+            {/* Authentication Section */}
+            <div className="max-w-md mx-auto mb-12">
+              <AuthForm onAuthChange={setUser} />
+              
+              {user && (
+                <div className="mt-4 p-4 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg">
+                  <p className="text-sm">
+                    <strong>Welcome back, {user.email}!</strong>
+                  </p>
+                  <div className="mt-2">
+                    <Link
+                      href="/sync-user"
+                      className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                    >
+                      Sync your account to access all features →
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
 
-          <a
-            href="/tournaments"
-            className="group rounded-lg border border-transparent px-6 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          >
-            <h2 className="mb-3 text-2xl font-semibold">
-              Tournaments{' '}
-              <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-                -&gt;
-              </span>
-            </h2>
-            <p className="m-0 max-w-[30ch] text-sm opacity-50">
-              Create and manage tournaments with auction systems.
-            </p>
-          </a>
+            {/* Feature Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div className="text-indigo-600 dark:text-indigo-400 mb-4">
+                  <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Player Management</h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Comprehensive player profiles with ratings, skills, and performance tracking.
+                </p>
+                <Link
+                  href="/players"
+                  className="inline-block mt-4 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
+                >
+                  Browse Players →
+                </Link>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div className="text-indigo-600 dark:text-indigo-400 mb-4">
+                  <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Tournament Management</h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Create and manage tournaments with advanced auction systems and real-time bidding.
+                </p>
+                <Link
+                  href="/tournaments"
+                  className="inline-block mt-4 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
+                >
+                  View Tournaments →
+                </Link>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div className="text-indigo-600 dark:text-indigo-400 mb-4">
+                  <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Live Auctions</h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Real-time bidding system with race condition prevention and atomic transactions.
+                </p>
+                <Link
+                  href="/tournaments/create"
+                  className="inline-block mt-4 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
+                >
+                  Create Tournament →
+                </Link>
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">20+</div>
+                <div className="text-gray-600 dark:text-gray-300">API Endpoints</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">100%</div>
+                <div className="text-gray-600 dark:text-gray-300">Race Condition Safe</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">Real-time</div>
+                <div className="text-gray-600 dark:text-gray-300">Live Bidding</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">Admin</div>
+                <div className="text-gray-600 dark:text-gray-300">Role Management</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <div className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-          <h2 className="mb-3 text-2xl font-semibold">
-            Components{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Reusable UI components in the /components directory.
-          </p>
-        </div>
-
-        <div className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-          <h2 className="mb-3 text-2xl font-semibold">
-            Features{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Feature-based architecture in the /features directory.
-          </p>
-        </div>
-
-        <div className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-          <h2 className="mb-3 text-2xl font-semibold">
-            Types{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            TypeScript type definitions in the /types directory.
-          </p>
-        </div>
-
-        <div className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-          <h2 className="mb-3 text-2xl font-semibold">
-            Lib{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Utility functions and helpers in the /lib directory.
-          </p>
-        </div>
-      </div>
-    </main>
+    </div>
   )
 }
