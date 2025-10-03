@@ -54,7 +54,7 @@ export default function Navbar() {
       setUser(session?.user || null)
       if (session?.user) {
         // Only fetch profile on sign in, not on every auth change
-        if (event === 'SIGNED_IN' && !profileFetched) {
+        if (event === 'SIGNED_IN') {
           fetch(`/api/user-profile?userId=${session.user.id}`)
             .then(res => res.json())
             .then(result => {
@@ -72,15 +72,20 @@ export default function Navbar() {
     })
 
     return () => subscription.unsubscribe()
-  }, [profileFetched])
+  }, [])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setUserProfile(null)
-    setProfileFetched(false)
-    setIsDropdownOpen(false)
-    setIsMobileMenuOpen(false)
+    try {
+      await supabase.auth.signOut()
+      setUser(null)
+      setUserProfile(null)
+      setProfileFetched(false)
+      setIsDropdownOpen(false)
+      setIsMobileMenuOpen(false)
+      router.push('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
 
   const getDisplayName = () => {
