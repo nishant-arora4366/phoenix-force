@@ -204,7 +204,7 @@ export default function Navbar() {
                     </button>
                     {/* Dropdown Menu */}
                     {isDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 overflow-hidden">
                         <Link
                           href="/profile"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
@@ -249,7 +249,7 @@ export default function Navbar() {
                   </button>
                   {/* Mobile Dropdown Menu */}
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 overflow-hidden">
                       <div className="px-3 py-2 text-sm text-gray-600">
                         Welcome, {getDisplayName()}
                       </div>
