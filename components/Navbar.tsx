@@ -205,19 +205,21 @@ export default function Navbar() {
                     {/* Dropdown Menu */}
                     {isDropdownOpen && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 overflow-hidden">
-                        <Link
-                          href="/profile"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          Profile
-                        </Link>
-                        <button
-                          onClick={handleSignOut}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        >
-                          Sign Out
-                        </button>
+                        <div className="px-4 py-2">
+                          <Link
+                            href="/profile"
+                            className="block text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            Profile
+                          </Link>
+                          <button
+                            onClick={handleSignOut}
+                            className="block w-full text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -253,19 +255,21 @@ export default function Navbar() {
                       <div className="px-3 py-2 text-sm text-gray-600">
                         Welcome, {getDisplayName()}
                       </div>
-                      <Link
-                        href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        Profile
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        Sign Out
-                      </button>
+                      <div className="px-4 py-2">
+                        <Link
+                          href="/profile"
+                          className="block text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          Profile
+                        </Link>
+                        <button
+                          onClick={handleSignOut}
+                          className="block w-full text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
