@@ -1,4 +1,4 @@
--- Finalize Auction RPC with Transaction Handling
+-- Finalize Auction RPC with Transaction Handling (Fixed Version)
 -- This script creates a comprehensive auction finalization process
 
 -- ==============================================
@@ -20,6 +20,7 @@ DECLARE
     v_bid JSON;
     v_team RECORD;
     v_existing_allocation RECORD;
+    v_bid_record RECORD;
 BEGIN
     -- Start transaction
     BEGIN
@@ -60,8 +61,7 @@ BEGIN
             );
         END IF;
         
-        -- Get all winning bids (highest bid per player)
-        -- This query finds the highest bid for each player in the tournament
+        -- Get all winning bids (highest bid per player) using a simpler approach
         WITH winning_bids AS (
             SELECT DISTINCT ON (ab.player_id)
                 ab.id as bid_id,
@@ -80,19 +80,22 @@ BEGIN
             WHERE ab.tournament_id = p_tournament_id
             ORDER BY ab.player_id, ab.bid_amount DESC, ab.created_at ASC
         )
-        SELECT ARRAY_AGG(
-            json_build_object(
-                'bid_id', bid_id,
-                'tournament_id', tournament_id,
-                'player_id', player_id,
-                'team_id', team_id,
-                'bid_amount', bid_amount,
-                'bidder_user_id', bidder_user_id,
-                'team_name', team_name,
-                'budget_remaining', budget_remaining,
-                'player_name', player_name,
-                'created_at', created_at
-            )
+        SELECT COALESCE(
+            json_agg(
+                json_build_object(
+                    'bid_id', bid_id,
+                    'tournament_id', tournament_id,
+                    'player_id', player_id,
+                    'team_id', team_id,
+                    'bid_amount', bid_amount,
+                    'bidder_user_id', bidder_user_id,
+                    'team_name', team_name,
+                    'budget_remaining', budget_remaining,
+                    'player_name', player_name,
+                    'created_at', created_at
+                )
+            ), 
+            '[]'::json
         ) INTO v_winning_bids
         FROM winning_bids;
         
@@ -106,19 +109,30 @@ BEGIN
         END IF;
         
         -- Validate that all teams have sufficient budget for their winning bids
-        FOR i IN 0..json_array_length(v_winning_bids) - 1 LOOP
-            v_bid := v_winning_bids->i;
-            
+        FOR v_bid_record IN 
+            SELECT * FROM json_to_recordset(v_winning_bids) AS x(
+                bid_id UUID,
+                tournament_id UUID,
+                player_id UUID,
+                team_id UUID,
+                bid_amount DECIMAL,
+                bidder_user_id UUID,
+                team_name TEXT,
+                budget_remaining DECIMAL,
+                player_name TEXT,
+                created_at TIMESTAMPTZ
+            )
+        LOOP
             -- Check if team has sufficient budget
-            IF v_bid->>'budget_remaining' IS NULL OR 
-               (v_bid->>'budget_remaining')::DECIMAL < (v_bid->>'bid_amount')::DECIMAL THEN
+            IF v_bid_record.budget_remaining IS NULL OR 
+               v_bid_record.budget_remaining < v_bid_record.bid_amount THEN
                 RETURN json_build_object(
                     'success', false,
                     'error', 'Insufficient budget for team allocation',
-                    'team_id', v_bid->>'team_id',
-                    'team_name', v_bid->>'team_name',
-                    'required_amount', v_bid->>'bid_amount',
-                    'available_budget', v_bid->>'budget_remaining'
+                    'team_id', v_bid_record.team_id,
+                    'team_name', v_bid_record.team_name,
+                    'required_amount', v_bid_record.bid_amount,
+                    'available_budget', v_bid_record.budget_remaining
                 );
             END IF;
         END LOOP;
@@ -130,9 +144,20 @@ BEGIN
         );
         
         -- Process each winning bid
-        FOR i IN 0..json_array_length(v_winning_bids) - 1 LOOP
-            v_bid := v_winning_bids->i;
-            
+        FOR v_bid_record IN 
+            SELECT * FROM json_to_recordset(v_winning_bids) AS x(
+                bid_id UUID,
+                tournament_id UUID,
+                player_id UUID,
+                team_id UUID,
+                bid_amount DECIMAL,
+                bidder_user_id UUID,
+                team_name TEXT,
+                budget_remaining DECIMAL,
+                player_name TEXT,
+                created_at TIMESTAMPTZ
+            )
+        LOOP
             -- Insert into team_players (final allocation)
             INSERT INTO team_players (
                 team_id,
@@ -140,26 +165,26 @@ BEGIN
                 final_bid_amount,
                 created_at
             ) VALUES (
-                (v_bid->>'team_id')::UUID,
-                (v_bid->>'player_id')::UUID,
-                (v_bid->>'bid_amount')::DECIMAL,
+                v_bid_record.team_id,
+                v_bid_record.player_id,
+                v_bid_record.bid_amount,
                 NOW()
             );
             
             -- Update team budget
             UPDATE teams 
             SET 
-                budget_remaining = budget_remaining - (v_bid->>'bid_amount')::DECIMAL,
+                budget_remaining = budget_remaining - v_bid_record.bid_amount,
                 updated_at = NOW()
-            WHERE id = (v_bid->>'team_id')::UUID;
+            WHERE id = v_bid_record.team_id;
             
             -- Update auction_bids to mark as winning
             UPDATE auction_bids 
             SET is_winning_bid = TRUE
-            WHERE id = (v_bid->>'bid_id')::UUID;
+            WHERE id = v_bid_record.bid_id;
             
             v_finalized_count := v_finalized_count + 1;
-            v_total_budget_deducted := v_total_budget_deducted + (v_bid->>'bid_amount')::DECIMAL;
+            v_total_budget_deducted := v_total_budget_deducted + v_bid_record.bid_amount;
         END LOOP;
         
         -- Update tournament status to auction_completed
@@ -170,19 +195,22 @@ BEGIN
         WHERE id = p_tournament_id;
         
         -- Get final team budget summary
-        SELECT ARRAY_AGG(
-            json_build_object(
-                'team_id', t.id,
-                'team_name', t.name,
-                'initial_budget', t.initial_budget,
-                'budget_remaining', t.budget_remaining,
-                'total_spent', t.initial_budget - t.budget_remaining,
-                'players_count', (
-                    SELECT COUNT(*) 
-                    FROM team_players tp 
-                    WHERE tp.team_id = t.id
+        SELECT COALESCE(
+            json_agg(
+                json_build_object(
+                    'team_id', t.id,
+                    'team_name', t.name,
+                    'initial_budget', t.initial_budget,
+                    'budget_remaining', t.budget_remaining,
+                    'total_spent', t.initial_budget - t.budget_remaining,
+                    'players_count', (
+                        SELECT COUNT(*) 
+                        FROM team_players tp 
+                        WHERE tp.team_id = t.id
+                    )
                 )
-            )
+            ),
+            '[]'::json
         ) INTO v_team_budget_updates
         FROM teams t
         WHERE t.tournament_id = p_tournament_id;
@@ -221,8 +249,7 @@ CREATE OR REPLACE FUNCTION get_auction_results(p_tournament_id UUID)
 RETURNS JSON AS $$
 DECLARE
     v_tournament RECORD;
-    v_results RECORD[];
-    v_team_summaries RECORD[];
+    v_results JSON;
 BEGIN
     -- Get tournament details
     SELECT * INTO v_tournament 
@@ -237,28 +264,34 @@ BEGIN
     END IF;
     
     -- Get final auction results
-    SELECT ARRAY_AGG(
-        json_build_object(
-            'team_id', t.id,
-            'team_name', t.name,
-            'captain_name', p.display_name,
-            'initial_budget', t.initial_budget,
-            'budget_remaining', t.budget_remaining,
-            'total_spent', t.initial_budget - t.budget_remaining,
-            'players', (
-                SELECT ARRAY_AGG(
-                    json_build_object(
-                        'player_id', tp.player_id,
-                        'player_name', pl.display_name,
-                        'final_bid_amount', tp.final_bid_amount,
-                        'allocated_at', tp.created_at
+    SELECT COALESCE(
+        json_agg(
+            json_build_object(
+                'team_id', t.id,
+                'team_name', t.name,
+                'captain_name', p.display_name,
+                'initial_budget', t.initial_budget,
+                'budget_remaining', t.budget_remaining,
+                'total_spent', t.initial_budget - t.budget_remaining,
+                'players', (
+                    SELECT COALESCE(
+                        json_agg(
+                            json_build_object(
+                                'player_id', tp.player_id,
+                                'player_name', pl.display_name,
+                                'final_bid_amount', tp.final_bid_amount,
+                                'allocated_at', tp.created_at
+                            )
+                        ),
+                        '[]'::json
                     )
+                    FROM team_players tp
+                    JOIN players pl ON tp.player_id = pl.id
+                    WHERE tp.team_id = t.id
                 )
-                FROM team_players tp
-                JOIN players pl ON tp.player_id = pl.id
-                WHERE tp.team_id = t.id
             )
-        )
+        ),
+        '[]'::json
     ) INTO v_results
     FROM teams t
     LEFT JOIN players p ON t.captain_id = p.id
@@ -270,7 +303,7 @@ BEGIN
         'tournament_name', v_tournament.name,
         'tournament_status', v_tournament.status,
         'results', v_results,
-        'total_teams', COALESCE(array_length(v_results, 1), 0)
+        'total_teams', COALESCE(json_array_length(v_results), 0)
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
