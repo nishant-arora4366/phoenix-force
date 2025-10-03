@@ -182,15 +182,15 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
   // Show loading state while checking authentication
   if (isLoadingUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-8">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                 Checking Access...
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm sm:text-base">
                 Verifying your permissions to edit players
               </p>
             </div>
@@ -203,12 +203,12 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
   // Show access denied if user is not authenticated or doesn't have permission
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-8">
             <div className="text-center">
-              <div className="text-red-500 text-6xl mb-4">🚫</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <div className="text-gray-500 text-4xl sm:text-6xl mb-4">🚫</div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
                 Access Denied
               </h2>
               <p className="text-gray-600 mb-6">
@@ -236,32 +236,32 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-full mb-6">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full mb-4 sm:mb-6">
+            <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Edit Player</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">Edit Player</h1>
+          <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
             Update player information and ratings
           </p>
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-600 to-red-600 px-8 py-6">
-            <h2 className="text-2xl font-bold text-white">Player Information</h2>
-            <p className="text-orange-100 mt-2">Update the player details below</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-4 sm:px-8 py-4 sm:py-6">
+            <h2 className="text-lg sm:text-2xl font-bold text-white">Player Information</h2>
+            <p className="text-gray-200 mt-1 sm:mt-2 text-sm sm:text-base">Update the player details below</p>
           </div>
           
-          <div className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="p-4 sm:p-8">
+            <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
               {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
                   <label htmlFor="display_name" className="block text-sm font-semibold text-gray-700">
                     Display Name *
@@ -273,7 +273,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
                     value={formData.display_name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-200 bg-gray-50"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-gray-100 focus:border-gray-500 transition-all duration-200 bg-gray-50 text-sm sm:text-base"
                     placeholder="Enter player's display name"
                   />
                 </div>
@@ -288,7 +288,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
                     name="stage_name"
                     value={formData.stage_name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-200 bg-gray-50"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-gray-100 focus:border-gray-500 transition-all duration-200 bg-gray-50 text-sm sm:text-base"
                     placeholder="Enter stage name (optional)"
                   />
                 </div>
@@ -308,7 +308,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
                     onChange={handleInputChange}
                     required
                     min="0"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-200 bg-gray-50"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-gray-100 focus:border-gray-500 transition-all duration-200 bg-gray-50 text-sm sm:text-base"
                     placeholder="Enter base price"
                   />
                 </div>
@@ -323,7 +323,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
                     name="group_name"
                     value={formData.group_name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-200 bg-gray-50"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-gray-100 focus:border-gray-500 transition-all duration-200 bg-gray-50 text-sm sm:text-base"
                     placeholder="Enter group name (optional)"
                   />
                 </div>
@@ -429,7 +429,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
                       onChange={handleInputChange}
                       min="0"
                       max="10"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-gray-100 focus:border-gray-500 transition-all duration-200 bg-gray-50 text-sm sm:text-base"
                     />
                   </div>
 
@@ -445,7 +445,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
                       onChange={handleInputChange}
                       min="0"
                       max="10"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-gray-100 focus:border-gray-500 transition-all duration-200 bg-gray-50 text-sm sm:text-base"
                     />
                   </div>
 
@@ -461,7 +461,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
                       onChange={handleInputChange}
                       min="0"
                       max="10"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-gray-100 focus:border-gray-500 transition-all duration-200 bg-gray-50 text-sm sm:text-base"
                     />
                   </div>
                 </div>
@@ -500,18 +500,18 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
                     <h3 className="text-lg font-semibold text-gray-900">Ready to Update?</h3>
                     <p className="text-sm text-gray-600">Review the changes and update the player profile</p>
                   </div>
-                  <div className="flex space-x-3">
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                     <button
                       type="button"
                       onClick={() => router.back()}
-                      className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200"
+                      className="w-full sm:w-auto px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200 text-sm sm:text-base"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl hover:from-orange-700 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                      className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-lg sm:rounded-xl hover:from-gray-700 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
                     >
                       {loading ? (
                         <div className="flex items-center">
