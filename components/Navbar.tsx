@@ -20,6 +20,7 @@ export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [profileFetched, setProfileFetched] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -28,16 +29,17 @@ export default function Navbar() {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
         
-        if (user) {
-          // Fetch user profile to get display name
+        if (user && !profileFetched) {
           try {
             const response = await fetch(`/api/user-profile?userId=${user.id}`)
             const result = await response.json()
             if (result.success) {
               setUserProfile(result.data)
             }
+            setProfileFetched(true)
           } catch (error) {
             console.error('Error fetching user profile:', error)
+            setProfileFetched(true)
           }
         }
       } catch (error) {
@@ -51,27 +53,32 @@ export default function Navbar() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null)
       if (session?.user) {
-        // Fetch profile when user changes
-        fetch(`/api/user-profile?userId=${session.user.id}`)
-          .then(res => res.json())
-          .then(result => {
-            if (result.success) {
-              setUserProfile(result.data)
-            }
-          })
-          .catch(console.error)
+        // Only fetch profile on sign in, not on every auth change
+        if (event === 'SIGNED_IN' && !profileFetched) {
+          fetch(`/api/user-profile?userId=${session.user.id}`)
+            .then(res => res.json())
+            .then(result => {
+              if (result.success) {
+                setUserProfile(result.data)
+              }
+              setProfileFetched(true)
+            })
+            .catch(console.error)
+        }
       } else {
         setUserProfile(null)
+        setProfileFetched(false)
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [profileFetched])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     setUser(null)
     setUserProfile(null)
+    setProfileFetched(false)
     setIsDropdownOpen(false)
     setIsMobileMenuOpen(false)
   }
@@ -80,8 +87,8 @@ export default function Navbar() {
     if (!userProfile) return user?.email || 'User'
     
     // Priority: username > firstname > email
-    if (userProfile.username) return userProfile.username
-    if (userProfile.firstname) return userProfile.firstname
+    if (userProfile.username && userProfile.username.trim()) return userProfile.username
+    if (userProfile.firstname && userProfile.firstname.trim()) return userProfile.firstname
     return user?.email || 'User'
   }
 
@@ -169,7 +176,7 @@ export default function Navbar() {
             <div className="flex items-center min-w-[200px] justify-end">
               {isLoading ? (
                 <div className="flex items-center space-x-2">
-                  <div className="animate-pulse bg-gray-200 h-4 w-20 rounded"></div>
+                  <div className="animate-pulse bg-gray-200 h-4 w-24 rounded"></div>
                   <div className="animate-pulse bg-gray-200 h-8 w-8 rounded-full"></div>
                 </div>
               ) : user ? (
