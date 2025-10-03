@@ -52,7 +52,7 @@ export default function PlayersPage() {
     return matchesSearch && matchesGroup && matchesRole
   })
 
-  const uniqueGroups = [...new Set(players?.map(p => p.group_name).filter(Boolean))]
+  const uniqueGroups = Array.from(new Set(players?.map(p => p.group_name).filter(Boolean)))
 
   if (error) {
     return (
