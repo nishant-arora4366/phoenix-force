@@ -46,7 +46,7 @@ export default function UserManagementPage() {
   const [userRole, setUserRole] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
-  const [activeTab, setActiveTab] = useState<'users' | 'players'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'players' | 'skills'>('users')
 
   useEffect(() => {
     const checkUser = async () => {
@@ -434,6 +434,16 @@ export default function UserManagementPage() {
                 }`}
               >
                 Player Profiles
+              </button>
+              <button
+                onClick={() => setActiveTab('skills')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'skills'
+                    ? 'border-gray-500 text-gray-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Player Skills
               </button>
             </nav>
           </div>
@@ -829,6 +839,25 @@ export default function UserManagementPage() {
                 <div className="text-gray-500">No player profiles found</div>
               </div>
             )}
+          </>
+        )}
+
+        {/* Skills Tab Content */}
+        {activeTab === 'skills' && (
+          <>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Player Skills Configuration</h2>
+                <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                  Add New Skill
+                </button>
+              </div>
+              
+              <div className="text-center py-8">
+                <div className="text-gray-500">Player Skills management interface will be implemented here</div>
+                <p className="text-sm text-gray-400 mt-2">This will allow admins to configure available player skills and their values</p>
+              </div>
+            </div>
           </>
         )}
       </div>

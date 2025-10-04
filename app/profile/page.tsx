@@ -34,10 +34,26 @@ interface PlayerProfile {
   updated_at?: string
 }
 
+interface PlayerSkill {
+  id: string
+  name: string
+  type: string
+  required: boolean
+  displayOrder: number
+  values: PlayerSkillValue[]
+}
+
+interface PlayerSkillValue {
+  id: string
+  name: string
+  displayOrder: number
+}
+
 export default function Profile() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [playerProfile, setPlayerProfile] = useState<PlayerProfile | null>(null)
+  const [playerSkills, setPlayerSkills] = useState<PlayerSkill[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -87,6 +103,14 @@ export default function Profile() {
             photo: '',
             status: 'pending'
           })
+        }
+
+        // Fetch player skills
+        const skillsResponse = await fetch('/api/player-skills')
+        const skillsResult = await skillsResponse.json()
+        
+        if (skillsResult.success) {
+          setPlayerSkills(skillsResult.skills)
         }
       }
       
@@ -653,104 +677,57 @@ export default function Profile() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Role
-                    </label>
-                    <select
-                      value={playerProfile.role || ''}
-                      onChange={(e) => handlePlayerProfileChange('role', e.target.value)}
-                      disabled={!isEditingPlayer}
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
-                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      <option value="">Select Role</option>
-                      <option value="Batsman">Batsman</option>
-                      <option value="Bowler">Bowler</option>
-                      <option value="All-rounder">All-rounder</option>
-                      <option value="Wicket-keeper">Wicket-keeper</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Batting Style
-                    </label>
-                    <select
-                      value={playerProfile.batting_style || ''}
-                      onChange={(e) => handlePlayerProfileChange('batting_style', e.target.value)}
-                      disabled={!isEditingPlayer}
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
-                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      <option value="">Select Batting Style</option>
-                      <option value="Right-handed">Right-handed</option>
-                      <option value="Left-handed">Left-handed</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Bowling Style
-                    </label>
-                    <select
-                      value={playerProfile.bowling_style || ''}
-                      onChange={(e) => handlePlayerProfileChange('bowling_style', e.target.value)}
-                      disabled={!isEditingPlayer}
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
-                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      <option value="">Select Bowling Style</option>
-                      <option value="Right-arm fast">Right-arm fast</option>
-                      <option value="Left-arm fast">Left-arm fast</option>
-                      <option value="Right-arm medium">Right-arm medium</option>
-                      <option value="Left-arm medium">Left-arm medium</option>
-                      <option value="Right-arm spin">Right-arm spin</option>
-                      <option value="Left-arm spin">Left-arm spin</option>
-                      <option value="Leg spin">Leg spin</option>
-                      <option value="Off spin">Off spin</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Price (₹)
-                    </label>
-                    <input
-                      type="number"
-                      value={playerProfile.price || ''}
-                      onChange={(e) => handlePlayerProfileChange('price', parseInt(e.target.value) || 0)}
-                      disabled={!isEditingPlayer}
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
-                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
-                      }`}
-                      placeholder="Enter your base price"
-                      min="0"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Group
-                    </label>
-                    <select
-                      value={playerProfile.group || ''}
-                      onChange={(e) => handlePlayerProfileChange('group', e.target.value)}
-                      disabled={!isEditingPlayer}
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
-                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      <option value="">Select Group</option>
-                      <option value="A">Group A</option>
-                      <option value="B">Group B</option>
-                      <option value="C">Group C</option>
-                      <option value="D">Group D</option>
-                    </select>
-                  </div>
+                  {/* Dynamic skill fields */}
+                  {playerSkills.map((skill) => (
+                    <div key={skill.id}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {skill.name} {skill.required && '*'}
+                      </label>
+                      {skill.type === 'select' ? (
+                        <select
+                          value={playerProfile[skill.name.toLowerCase().replace(' ', '_') as keyof PlayerProfile] as string || ''}
+                          onChange={(e) => handlePlayerProfileChange(skill.name.toLowerCase().replace(' ', '_') as keyof PlayerProfile, e.target.value)}
+                          disabled={!isEditingPlayer}
+                          required={skill.required}
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                            isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          <option value="">Select {skill.name}</option>
+                          {skill.values.map((value) => (
+                            <option key={value.id} value={value.name}>
+                              {value.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : skill.type === 'number' ? (
+                        <input
+                          type="number"
+                          value={playerProfile[skill.name.toLowerCase().replace(' ', '_') as keyof PlayerProfile] as number || ''}
+                          onChange={(e) => handlePlayerProfileChange(skill.name.toLowerCase().replace(' ', '_') as keyof PlayerProfile, parseInt(e.target.value) || 0)}
+                          disabled={!isEditingPlayer}
+                          required={skill.required}
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                            isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                          }`}
+                          placeholder={`Enter your ${skill.name.toLowerCase()}`}
+                          min="0"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={playerProfile[skill.name.toLowerCase().replace(' ', '_') as keyof PlayerProfile] as string || ''}
+                          onChange={(e) => handlePlayerProfileChange(skill.name.toLowerCase().replace(' ', '_') as keyof PlayerProfile, e.target.value)}
+                          disabled={!isEditingPlayer}
+                          required={skill.required}
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                            isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                          }`}
+                          placeholder={`Enter your ${skill.name.toLowerCase()}`}
+                        />
+                      )}
+                    </div>
+                  ))}
 
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
