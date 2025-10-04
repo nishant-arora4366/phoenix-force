@@ -16,14 +16,37 @@ interface User {
   updated_at: string
 }
 
+interface PlayerProfile {
+  id: string
+  user_id: string
+  name: string
+  bio?: string
+  batting_style?: string
+  bowling_style?: string
+  role?: string
+  price: number
+  group?: string
+  photo?: string
+  status: string
+  created_at: string
+  updated_at: string
+  users?: {
+    firstname?: string
+    lastname?: string
+    email: string
+  }
+}
+
 export default function UserManagementPage() {
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
+  const [playerProfiles, setPlayerProfiles] = useState<PlayerProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const [activeTab, setActiveTab] = useState<'users' | 'players'>('users')
 
   useEffect(() => {
     const checkUser = async () => {
@@ -100,6 +123,13 @@ export default function UserManagementPage() {
     }
   }, [router])
 
+  // Fetch player profiles when tab changes to players
+  useEffect(() => {
+    if (activeTab === 'players' && currentUser) {
+      fetchPlayerProfiles()
+    }
+  }, [activeTab, currentUser])
+
   const fetchUsers = async () => {
     try {
       const sessionUser = sessionManager.getUser()
@@ -123,6 +153,32 @@ export default function UserManagementPage() {
     } catch (error: any) {
       console.error('Error fetching users:', error)
       setMessage('Error loading users')
+    }
+  }
+
+  const fetchPlayerProfiles = async () => {
+    try {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+      
+      const response = await fetch(`/api/admin/player-profiles?userId=${sessionUser.id}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch player profiles')
+      }
+      
+      const { success, profiles } = await response.json()
+      
+      if (success) {
+        setPlayerProfiles(profiles || [])
+      } else {
+        throw new Error('Failed to fetch player profiles')
+      }
+    } catch (error: any) {
+      console.error('Error fetching player profiles:', error)
+      setMessage('Error loading player profiles')
     }
   }
 
@@ -236,6 +292,44 @@ export default function UserManagementPage() {
     }
   }
 
+  const updatePlayerProfileStatus = async (playerId: string, status: string) => {
+    try {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch(`/api/admin/player-profiles`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: sessionUser.id,
+          playerId,
+          status
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update player profile status')
+      }
+
+      const { success } = await response.json()
+
+      if (success) {
+        setMessage(`Player profile ${status} successfully!`)
+        fetchPlayerProfiles() // Refresh the list
+        setTimeout(() => setMessage(''), 3000)
+      } else {
+        throw new Error('Failed to update player profile status')
+      }
+    } catch (error: any) {
+      console.error('Error updating player profile status:', error)
+      setMessage(`Error: ${error.message}`)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -304,8 +398,8 @@ export default function UserManagementPage() {
           <div className="bg-gradient-to-r from-gray-600 to-gray-700 rounded-lg p-6 text-white">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">User Management</h1>
-                <p className="text-gray-200 mt-1">Manage user accounts and permissions</p>
+                <h1 className="text-2xl sm:text-3xl font-bold">Admin Panel</h1>
+                <p className="text-gray-200 mt-1">Manage users and player profiles</p>
               </div>
               <button
                 onClick={() => router.push('/')}
@@ -314,6 +408,34 @@ export default function UserManagementPage() {
                 Back to Dashboard
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'users'
+                    ? 'border-gray-500 text-gray-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                User Management
+              </button>
+              <button
+                onClick={() => setActiveTab('players')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'players'
+                    ? 'border-gray-500 text-gray-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Player Profiles
+              </button>
+            </nav>
           </div>
         </div>
 
@@ -328,29 +450,32 @@ export default function UserManagementPage() {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-2">
-            {[
-              { value: 'all', label: 'All Users' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'approved', label: 'Approved' },
-              { value: 'rejected', label: 'Rejected' }
-            ].map((filterOption) => (
-              <button
-                key={filterOption.value}
-                onClick={() => setFilter(filterOption.value as any)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === filterOption.value
-                    ? 'bg-gray-700 text-white'
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                {filterOption.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Users Tab Content */}
+        {activeTab === 'users' && (
+          <>
+            {/* Filters */}
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'all', label: 'All Users' },
+                  { value: 'pending', label: 'Pending' },
+                  { value: 'approved', label: 'Approved' },
+                  { value: 'rejected', label: 'Rejected' }
+                ].map((filterOption) => (
+                  <button
+                    key={filterOption.value}
+                    onClick={() => setFilter(filterOption.value as any)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filter === filterOption.value
+                        ? 'bg-gray-700 text-white'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {filterOption.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
         {/* Users Table - Desktop */}
         <div className="hidden md:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -540,6 +665,171 @@ export default function UserManagementPage() {
           <div className="text-center py-8">
             <div className="text-gray-500">No users found</div>
           </div>
+        )}
+          </>
+        )}
+
+        {/* Players Tab Content */}
+        {activeTab === 'players' && (
+          <>
+            {/* Player Profiles Table - Desktop */}
+            <div className="hidden md:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Player</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">User</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Role</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Created</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {playerProfiles.map((player) => (
+                      <tr key={player.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              {player.photo ? (
+                                <img className="h-10 w-10 rounded-full object-cover" src={player.photo} alt={player.name} />
+                              ) : (
+                                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                  <span className="text-sm font-medium text-gray-600">
+                                    {player.name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{player.name}</div>
+                              <div className="text-sm text-gray-500">{player.group}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {player.users?.firstname && player.users?.lastname 
+                              ? `${player.users.firstname} ${player.users.lastname}`
+                              : player.users?.email
+                            }
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{player.role || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">₹{player.price}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(player.status)}`}>
+                            {player.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(player.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            {player.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => updatePlayerProfileStatus(player.id, 'approved')}
+                                  className="text-green-600 hover:text-green-900"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => updatePlayerProfileStatus(player.id, 'rejected')}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Player Profiles Cards - Mobile */}
+            <div className="md:hidden space-y-4">
+              {playerProfiles.map((player) => (
+                <div key={player.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    {player.photo ? (
+                      <img className="h-12 w-12 rounded-full object-cover" src={player.photo} alt={player.name} />
+                    ) : (
+                      <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-sm font-medium text-gray-600">
+                          {player.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{player.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {player.users?.firstname && player.users?.lastname 
+                          ? `${player.users.firstname} ${player.users.lastname}`
+                          : player.users?.email
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Role:</span>
+                      <span className="text-sm text-gray-900">{player.role || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Price:</span>
+                      <span className="text-sm text-gray-900">₹{player.price}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Status:</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(player.status)}`}>
+                        {player.status}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Created:</span>
+                      <span className="text-sm text-gray-900">{new Date(player.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  {player.status === 'pending' && (
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => updatePlayerProfileStatus(player.id, 'approved')}
+                        className="flex-1 bg-green-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-green-700 transition-colors"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => updatePlayerProfileStatus(player.id, 'rejected')}
+                        className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-red-700 transition-colors"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {playerProfiles.length === 0 && (
+              <div className="text-center py-8">
+                <div className="text-gray-500">No player profiles found</div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

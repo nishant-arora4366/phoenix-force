@@ -18,20 +18,39 @@ interface UserProfile {
   updated_at: string
 }
 
+interface PlayerProfile {
+  id?: string
+  user_id: string
+  name: string
+  bio?: string
+  batting_style?: string
+  bowling_style?: string
+  role?: string
+  price?: number
+  group?: string
+  photo?: string
+  status?: string
+  created_at?: string
+  updated_at?: string
+}
+
 export default function Profile() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [playerProfile, setPlayerProfile] = useState<PlayerProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [isEditingPlayer, setIsEditingPlayer] = useState(false)
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   })
   const [passwordMessage, setPasswordMessage] = useState('')
+  const [playerMessage, setPlayerMessage] = useState('')
 
   useEffect(() => {
     const getUser = async () => {
@@ -46,6 +65,28 @@ export default function Profile() {
         
         if (result.success) {
           setProfile(result.data)
+        }
+
+        // Fetch player profile
+        const playerResponse = await fetch(`/api/players/user/${sessionUser.id}`)
+        const playerResult = await playerResponse.json()
+        
+        if (playerResult.success && playerResult.data) {
+          setPlayerProfile(playerResult.data)
+        } else {
+          // Initialize empty player profile if none exists
+          setPlayerProfile({
+            user_id: sessionUser.id,
+            name: '',
+            bio: '',
+            batting_style: '',
+            bowling_style: '',
+            role: '',
+            price: 0,
+            group: '',
+            photo: '',
+            status: 'pending'
+          })
         }
       }
       
@@ -179,6 +220,48 @@ export default function Profile() {
       }
     } catch (error: any) {
       setPasswordMessage(`Error: ${error.message}`)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handlePlayerProfileChange = (field: keyof PlayerProfile, value: string | number) => {
+    if (!playerProfile) return
+    setPlayerProfile(prev => ({
+      ...prev!,
+      [field]: value
+    }))
+  }
+
+  const handlePlayerProfileSave = async () => {
+    if (!user || !playerProfile) return
+
+    setSaving(true)
+    setPlayerMessage('')
+
+    try {
+      const response = await fetch('/api/players', {
+        method: playerProfile.id ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...playerProfile,
+          user_id: user.id
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setPlayerProfile(result.data)
+        setPlayerMessage('Player profile saved successfully! It will be reviewed by an admin.')
+        setIsEditingPlayer(false)
+      } else {
+        setPlayerMessage(`Error: ${result.error}`)
+      }
+    } catch (error: any) {
+      setPlayerMessage(`Error: ${error.message}`)
     } finally {
       setSaving(false)
     }
@@ -507,6 +590,237 @@ export default function Profile() {
                     {saving ? 'Changing...' : 'Change Password'}
                   </button>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Player Profile Section */}
+          <div className="mt-8 pt-8 border-t border-gray-200">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Player Profile</h2>
+              <button
+                onClick={() => {
+                  setIsEditingPlayer(!isEditingPlayer)
+                  setPlayerMessage('')
+                }}
+                className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                {isEditingPlayer ? 'Cancel' : (playerProfile?.id ? 'Edit Player Profile' : 'Create Player Profile')}
+              </button>
+            </div>
+
+            {playerMessage && (
+              <div className={`mb-6 p-4 rounded-lg ${
+                playerMessage.includes('successfully') 
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                {playerMessage}
+              </div>
+            )}
+
+            {playerProfile && (
+              <div className="space-y-6">
+                {playerProfile.id && (
+                  <div className="mb-4">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      playerProfile.status === 'approved' 
+                        ? 'bg-green-100 text-green-800'
+                        : playerProfile.status === 'rejected'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      Status: {playerProfile.status ? playerProfile.status.charAt(0).toUpperCase() + playerProfile.status.slice(1) : 'Unknown'}
+                    </span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Player Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={playerProfile.name}
+                      onChange={(e) => handlePlayerProfileChange('name', e.target.value)}
+                      disabled={!isEditingPlayer}
+                      required
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                      }`}
+                      placeholder="Enter your player name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Role
+                    </label>
+                    <select
+                      value={playerProfile.role || ''}
+                      onChange={(e) => handlePlayerProfileChange('role', e.target.value)}
+                      disabled={!isEditingPlayer}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      <option value="">Select Role</option>
+                      <option value="Batsman">Batsman</option>
+                      <option value="Bowler">Bowler</option>
+                      <option value="All-rounder">All-rounder</option>
+                      <option value="Wicket-keeper">Wicket-keeper</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Batting Style
+                    </label>
+                    <select
+                      value={playerProfile.batting_style || ''}
+                      onChange={(e) => handlePlayerProfileChange('batting_style', e.target.value)}
+                      disabled={!isEditingPlayer}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      <option value="">Select Batting Style</option>
+                      <option value="Right-handed">Right-handed</option>
+                      <option value="Left-handed">Left-handed</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bowling Style
+                    </label>
+                    <select
+                      value={playerProfile.bowling_style || ''}
+                      onChange={(e) => handlePlayerProfileChange('bowling_style', e.target.value)}
+                      disabled={!isEditingPlayer}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      <option value="">Select Bowling Style</option>
+                      <option value="Right-arm fast">Right-arm fast</option>
+                      <option value="Left-arm fast">Left-arm fast</option>
+                      <option value="Right-arm medium">Right-arm medium</option>
+                      <option value="Left-arm medium">Left-arm medium</option>
+                      <option value="Right-arm spin">Right-arm spin</option>
+                      <option value="Left-arm spin">Left-arm spin</option>
+                      <option value="Leg spin">Leg spin</option>
+                      <option value="Off spin">Off spin</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={playerProfile.price || ''}
+                      onChange={(e) => handlePlayerProfileChange('price', parseInt(e.target.value) || 0)}
+                      disabled={!isEditingPlayer}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                      }`}
+                      placeholder="Enter your base price"
+                      min="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Group
+                    </label>
+                    <select
+                      value={playerProfile.group || ''}
+                      onChange={(e) => handlePlayerProfileChange('group', e.target.value)}
+                      disabled={!isEditingPlayer}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      <option value="">Select Group</option>
+                      <option value="A">Group A</option>
+                      <option value="B">Group B</option>
+                      <option value="C">Group C</option>
+                      <option value="D">Group D</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bio
+                    </label>
+                    <textarea
+                      value={playerProfile.bio || ''}
+                      onChange={(e) => handlePlayerProfileChange('bio', e.target.value)}
+                      disabled={!isEditingPlayer}
+                      rows={4}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                      }`}
+                      placeholder="Tell us about your cricket experience, achievements, etc."
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Player Photo URL
+                    </label>
+                    <input
+                      type="url"
+                      value={playerProfile.photo || ''}
+                      onChange={(e) => handlePlayerProfileChange('photo', e.target.value)}
+                      disabled={!isEditingPlayer}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                        isEditingPlayer ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'
+                      }`}
+                      placeholder="Player photo URL"
+                    />
+                  </div>
+                </div>
+
+                {playerProfile.photo && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Player Photo Preview
+                    </label>
+                    <img
+                      src={playerProfile.photo}
+                      alt="Player"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  </div>
+                )}
+
+                {isEditingPlayer && (
+                  <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                    <button
+                      onClick={() => {
+                        setIsEditingPlayer(false)
+                        setPlayerMessage('')
+                      }}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handlePlayerProfileSave}
+                      disabled={saving || !playerProfile.name}
+                      className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {saving ? 'Saving...' : (playerProfile.id ? 'Update Player Profile' : 'Create Player Profile')}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
