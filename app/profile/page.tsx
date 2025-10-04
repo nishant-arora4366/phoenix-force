@@ -264,7 +264,7 @@ export default function Profile() {
     setPlayerMessage('')
 
     try {
-      const response = await fetch('/api/players', {
+      const response = await fetch('/api/player-profile', {
         method: playerProfile.id ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',

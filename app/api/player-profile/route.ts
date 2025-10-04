@@ -1,62 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-export async function GET(request: NextRequest) {
-  try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    // Parse user data from authorization header
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
-      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
-    }
-
-    // Fetch players from database using service role
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    const { data, error } = await supabase
-      .from('players')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Database error:', error)
-      return NextResponse.json({
-        success: false,
-        error: error.message,
-        details: error
-      }, { status: 500 })
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: data || [],
-      message: 'Players fetched successfully'
-    })
-    
-  } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch players',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     // Get the authorization header
@@ -77,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
     }
 
-    // Check if user has permission to create players (any authenticated user can create their own player profile)
+    // Check if user has permission to create their own player profile
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -96,15 +40,6 @@ export async function POST(request: NextRequest) {
       }, { status: 403 })
     }
 
-    // Check if user has permission to create players
-    // Only admins and hosts can create players through this endpoint
-    if (user.role !== 'admin' && user.role !== 'host') {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Only admins and hosts can create players. Use your profile page to create your own player profile.' 
-      }, { status: 403 })
-    }
-
     const body = await request.json()
     const { 
       name, 
@@ -120,6 +55,14 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Player name is required'
       }, { status: 400 })
+    }
+
+    // Ensure user can only create profile for themselves
+    if (user_id !== userData.id) {
+      return NextResponse.json({
+        success: false,
+        error: 'You can only create a player profile for yourself'
+      }, { status: 403 })
     }
 
     // Check if player profile already exists for this user
@@ -268,7 +211,6 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check if user owns this player profile
-
     const { data: existingPlayer } = await supabase
       .from('players')
       .select('user_id')
