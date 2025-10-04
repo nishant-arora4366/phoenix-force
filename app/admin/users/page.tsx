@@ -34,7 +34,7 @@ export default function UserManagementPage() {
           setCurrentUser(sessionUser)
           
           // Check user role and status using API endpoint
-          const response = await fetch('/api/admin/check-user')
+          const response = await fetch(`/api/admin/check-user?userId=${sessionUser.id}`)
           
           if (!response.ok) {
             console.log('Failed to check user role, redirecting to home')
