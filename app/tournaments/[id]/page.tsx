@@ -36,6 +36,7 @@ export default function TournamentDetailsPage() {
   const [tournament, setTournament] = useState<Tournament | null>(null)
   const [user, setUser] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<User | null>(null)
+  const [hostInfo, setHostInfo] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isHost, setIsHost] = useState(false)
@@ -64,6 +65,15 @@ export default function TournamentDetailsPage() {
         
         const tournamentData = result.tournament
         setTournament(tournamentData)
+
+        // Fetch host information
+        const hostResponse = await fetch(`/api/user-profile?userId=${tournamentData.host_id}`)
+        if (hostResponse.ok) {
+          const hostResult = await hostResponse.json()
+          if (hostResult.success) {
+            setHostInfo(hostResult.data)
+          }
+        }
 
         if (sessionUser) {
           // Fetch user profile
@@ -319,6 +329,19 @@ export default function TournamentDetailsPage() {
                         month: 'long',
                         day: 'numeric'
                       })}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-500">Tournament Host</label>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {hostInfo ? (
+                        hostInfo.firstname && hostInfo.lastname 
+                          ? `${hostInfo.firstname} ${hostInfo.lastname}`
+                          : hostInfo.username || hostInfo.email
+                      ) : (
+                        <span className="text-gray-500">Loading...</span>
+                      )}
                     </div>
                   </div>
                   
