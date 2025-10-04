@@ -18,6 +18,19 @@ export async function POST(request: NextRequest) {
     const result = await AuthService.login(email, password)
 
     if (result.success && result.user) {
+      // Check user status and provide appropriate messaging
+      const userStatus = result.user.status
+      let message = 'Login successful'
+      
+      if (userStatus === 'pending') {
+        message = 'Login successful. Your account is pending admin approval. You have limited access until approved.'
+      } else if (userStatus === 'rejected') {
+        return NextResponse.json(
+          { success: false, error: 'Your account has been rejected. Please contact admin.' },
+          { status: 403 }
+        )
+      }
+
       // Create Supabase session for the user
       // In a full custom auth implementation, you'd handle sessions differently
       const { data: { session }, error } = await supabase.auth.signInWithPassword({
@@ -31,14 +44,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: true,
           user: result.user,
-          message: 'Login successful'
+          message: message
         })
       }
 
       return NextResponse.json({
         success: true,
         user: result.user,
-        session: session
+        session: session,
+        message: message
       })
     } else {
       return NextResponse.json(

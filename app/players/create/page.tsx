@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { PermissionService } from '@/lib/permissions'
 
 interface PlayerFormData {
   display_name: string
@@ -49,14 +50,17 @@ export default function CreatePlayerPage() {
         if (user) {
           const { data: userData } = await supabase
             .from('users')
-            .select('role')
+            .select('role, status')
             .eq('id', user.id)
             .single()
           
           setUserRole(userData?.role || null)
           
-          if (userData?.role === 'host' || userData?.role === 'admin') {
+          // Check permissions using the permission service
+          if (PermissionService.canCreatePlayers(userData)) {
             setUser(user)
+          } else if (PermissionService.isPending(userData)) {
+            setMessage('Your account is pending admin approval. You cannot create players until approved.')
           } else {
             setMessage('Only hosts and admins can create players. Your current role: ' + (userData?.role || 'unknown'))
           }

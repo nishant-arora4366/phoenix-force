@@ -82,10 +82,8 @@ export class AuthService {
         return { success: false, error: 'Invalid email or password' }
       }
 
-      // Check if user is approved
-      if (user.status !== 'approved') {
-        return { success: false, error: 'Your account is pending admin approval' }
-      }
+      // Allow pending users to login but with limited access
+      // We'll handle access restrictions in the UI and API endpoints
 
       // Verify password
       const isValidPassword = await this.verifyPassword(password, user.password_hash)

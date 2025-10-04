@@ -70,16 +70,32 @@ export default function AuthFormExtended({ onAuthChange }: AuthFormProps) {
         setMessage('Registration successful! Your account is pending admin approval.')
         // Don't set user yet since they need approval
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+        // Use custom login API
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
         })
+
+        const result = await response.json()
+
+        if (!result.success) {
+          throw new Error(result.error)
+        }
         
-        if (error) throw error
+        // Create a mock auth data structure for compatibility
+        authData = {
+          user: result.user,
+          session: result.session
+        }
         
-        authData = data
-        setMessage('Successfully signed in!')
-        setUser(data.user)
+        setMessage(result.message || 'Successfully signed in!')
+        setUser(result.user)
       }
       
       if (onAuthChange && authData) {

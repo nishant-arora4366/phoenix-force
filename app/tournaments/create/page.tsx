@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { PermissionService } from '@/lib/permissions'
 
 interface TournamentFormData {
   name: string
@@ -29,23 +30,26 @@ export default function CreateTournamentPage() {
     total_slots: 88
   })
 
-  // Check if user is authenticated and is a host
+  // Check if user is authenticated and has permission to create tournaments
   useEffect(() => {
     const checkUser = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          // Check if user is a host
+          // Get user data including role and status
           const { data: userData } = await supabase
             .from('users')
-            .select('role')
+            .select('role, status')
             .eq('id', user.id)
             .single()
           
           setUserRole(userData?.role || null)
           
-          if (userData?.role === 'host' || userData?.role === 'admin') {
+          // Check permissions using the permission service
+          if (PermissionService.canCreateTournaments(userData)) {
             setUser(user)
+          } else if (PermissionService.isPending(userData)) {
+            setMessage('Your account is pending admin approval. You cannot create tournaments until approved.')
           } else {
             setMessage('Only hosts and admins can create tournaments. Your current role: ' + (userData?.role || 'unknown'))
           }

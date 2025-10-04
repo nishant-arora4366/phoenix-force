@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { PermissionService } from '@/lib/permissions'
 
 interface User {
   id: string
@@ -12,6 +13,7 @@ interface User {
   firstname?: string
   lastname?: string
   role: string
+  status?: string
 }
 
 export default function Navbar() {
@@ -197,9 +199,21 @@ export default function Navbar() {
                 </div>
               ) : user ? (
                 <div className="flex items-center space-x-3">
-                  <span className="text-sm text-gray-600 whitespace-nowrap">
-                    Welcome, {getDisplayName()}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-600 whitespace-nowrap">
+                      Welcome, {getDisplayName()}
+                    </span>
+                    {userProfile?.status === 'pending' && (
+                      <span className="text-xs text-yellow-600 font-medium">
+                        Pending Approval
+                      </span>
+                    )}
+                    {userProfile?.status === 'approved' && userProfile?.role === 'viewer' && (
+                      <span className="text-xs text-blue-600 font-medium">
+                        Limited Access
+                      </span>
+                    )}
+                  </div>
                   {/* Profile Dropdown */}
                   <div className="relative dropdown-container">
                     <button
