@@ -46,26 +46,29 @@ export default function AuthFormExtended({ onAuthChange }: AuthFormProps) {
           throw new Error('First name and last name are required')
         }
 
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username: profile.username || email.split('@')[0],
-              firstname: profile.firstname,
-              middlename: profile.middlename || null,
-              lastname: profile.lastname,
-              photo: profile.photo || null,
-              role: 'viewer'
-            }
-          }
+        // Use custom registration API
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            username: profile.username || email.split('@')[0],
+            firstname: profile.firstname,
+            lastname: profile.lastname
+          }),
         })
+
+        const result = await response.json()
+
+        if (!result.success) {
+          throw new Error(result.error)
+        }
         
-        if (error) throw error
-        
-        authData = data
-        setMessage('Check your email for the confirmation link!')
-        setUser(data.user)
+        setMessage('Registration successful! Your account is pending admin approval.')
+        // Don't set user yet since they need approval
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,

@@ -176,6 +176,17 @@ export default function Navbar() {
                 </svg>
                 <span>Auctions</span>
               </Link>
+              {userProfile?.role === 'admin' && (
+                <Link
+                  href="/admin/users"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
+                  <span>User Management</span>
+                </Link>
+              )}
             </div>
 
             {/* User Section - Desktop Only */}
@@ -322,6 +333,18 @@ export default function Navbar() {
                 </svg>
                 <span>Auctions</span>
               </Link>
+              {userProfile?.role === 'admin' && (
+                <Link
+                  href="/admin/users"
+                  className="flex items-center space-x-3 px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
+                  <span>User Management</span>
+                </Link>
+              )}
             </div>
             
             {/* Mobile User Section */}
