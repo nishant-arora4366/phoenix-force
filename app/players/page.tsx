@@ -121,11 +121,15 @@ export default function PlayersPage() {
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = sessionManager.getUser()
+      if (!currentUser) {
+        throw new Error('User not authenticated')
+      }
+      
       const response = await fetch(`/api/players/${playerId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${session?.access_token}`
+          'Authorization': JSON.stringify(currentUser)
         }
       })
 
