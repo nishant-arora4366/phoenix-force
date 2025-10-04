@@ -185,7 +185,7 @@ export default function PlayersPage() {
               </div>
               {isLoadingUser ? (
                 <div className="bg-gray-200 animate-pulse px-4 py-2 rounded-lg h-10 w-24"></div>
-              ) : user ? (
+              ) : (userRole === 'admin' || userRole === 'host') ? (
                 <button
                   onClick={() => router.push('/players/create')}
                   className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors font-medium"
