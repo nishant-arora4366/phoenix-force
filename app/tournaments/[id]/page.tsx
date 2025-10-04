@@ -39,6 +39,8 @@ export default function TournamentDetailsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isHost, setIsHost] = useState(false)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
 
   useEffect(() => {
     const fetchTournamentAndUser = async () => {
@@ -47,17 +49,7 @@ export default function TournamentDetailsPage() {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
 
-        if (user) {
-          // Fetch user profile
-          const response = await fetch(`/api/user-profile?userId=${user.id}`)
-          const result = await response.json()
-          if (result.success) {
-            setUserProfile(result.data)
-            setIsHost(result.data.role === 'host' || result.data.role === 'admin')
-          }
-        }
-
-        // Fetch tournament data
+        // Fetch tournament data first
         const { data: tournamentData, error: tournamentError } = await supabase
           .from('tournaments')
           .select('*')
@@ -70,6 +62,19 @@ export default function TournamentDetailsPage() {
         }
 
         setTournament(tournamentData)
+
+        if (user) {
+          // Fetch user profile
+          const response = await fetch(`/api/user-profile?userId=${user.id}`)
+          const result = await response.json()
+          if (result.success) {
+            setUserProfile(result.data)
+            // Check if user is admin or the tournament host
+            const isAdmin = result.data.role === 'admin'
+            const isTournamentHost = user.id === tournamentData.host_id
+            setIsHost(isAdmin || isTournamentHost)
+          }
+        }
       } catch (error) {
         console.error('Error fetching data:', error)
         setError('Error loading tournament')
@@ -114,6 +119,57 @@ export default function TournamentDetailsPage() {
         return 'Auction Completed'
       default:
         return status
+    }
+  }
+
+  const updateTournamentStatus = async (newStatus: string) => {
+    if (!tournament) return
+    
+    setIsUpdatingStatus(true)
+    setStatusMessage('')
+    
+    try {
+      const { error } = await supabase
+        .from('tournaments')
+        .update({ status: newStatus })
+        .eq('id', tournament.id)
+      
+      if (error) throw error
+      
+      // Update local state
+      setTournament(prev => prev ? { ...prev, status: newStatus } : null)
+      setStatusMessage(`Tournament status updated to ${getStatusText(newStatus)}`)
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setStatusMessage(''), 3000)
+      
+    } catch (error: any) {
+      setStatusMessage(`Error: ${error.message}`)
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
+
+  const getNextStatusOptions = (currentStatus: string) => {
+    switch (currentStatus) {
+      case 'draft':
+        return [
+          { value: 'registration_open', label: 'Open Registration', color: 'bg-green-600 hover:bg-green-700' }
+        ]
+      case 'registration_open':
+        return [
+          { value: 'registration_closed', label: 'Close Registration', color: 'bg-orange-600 hover:bg-orange-700' }
+        ]
+      case 'registration_closed':
+        return [
+          { value: 'auction_started', label: 'Start Auction', color: 'bg-blue-600 hover:bg-blue-700' }
+        ]
+      case 'auction_started':
+        return [
+          { value: 'auction_completed', label: 'Complete Auction', color: 'bg-purple-600 hover:bg-purple-700' }
+        ]
+      default:
+        return []
     }
   }
 
@@ -186,6 +242,36 @@ export default function TournamentDetailsPage() {
                 </Link>
               )}
             </div>
+            
+            {/* Status Management */}
+            {isHost && (
+              <div className="mt-4 space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {getNextStatusOptions(tournament.status).map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => updateTournamentStatus(option.value)}
+                      disabled={isUpdatingStatus}
+                      className={`px-4 py-2 text-white rounded-lg transition-colors text-sm font-medium ${option.color} ${
+                        isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {isUpdatingStatus ? 'Updating...' : option.label}
+                    </button>
+                  ))}
+                </div>
+                
+                {statusMessage && (
+                  <div className={`p-3 rounded-lg text-sm ${
+                    statusMessage.includes('Error') 
+                      ? 'bg-red-50 text-red-700 border border-red-200' 
+                      : 'bg-green-50 text-green-700 border border-green-200'
+                  }`}>
+                    {statusMessage}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
