@@ -50,24 +50,35 @@ export default function EditTournamentPage() {
         }
         setUser(sessionUser)
 
-        // Fetch tournament data
-        const { data: tournamentData, error: tournamentError } = await supabase
-          .from('tournaments')
-          .select('*')
-          .eq('id', tournamentId)
-          .single()
-
-        if (tournamentError) {
+        // Fetch tournament data via API
+        const response = await fetch(`/api/tournaments/${tournamentId}`)
+        if (!response.ok) {
           setError('Tournament not found')
           return
         }
+        
+        const result = await response.json()
+        if (!result.success) {
+          setError('Tournament not found')
+          return
+        }
+        
+        const tournamentData = result.tournament
 
         // Check if user is the host or an admin
-        const { data: userData } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single()
+        const userResponse = await fetch(`/api/user-profile?userId=${user.id}`)
+        if (!userResponse.ok) {
+          setError('Unable to verify user permissions')
+          return
+        }
+        
+        const userResult = await userResponse.json()
+        if (!userResult.success) {
+          setError('Unable to verify user permissions')
+          return
+        }
+        
+        const userData = userResult.data
 
         if (tournamentData.host_id !== user.id && userData?.role !== 'admin') {
           setError('You are not authorized to edit this tournament')

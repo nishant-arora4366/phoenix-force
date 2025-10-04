@@ -49,18 +49,20 @@ export default function TournamentDetailsPage() {
         const sessionUser = sessionManager.getUser()
         setUser(sessionUser)
 
-        // Fetch tournament data first
-        const { data: tournamentData, error: tournamentError } = await supabase
-          .from('tournaments')
-          .select('*')
-          .eq('id', tournamentId)
-          .single()
-
-        if (tournamentError) {
+        // Fetch tournament data via API
+        const response = await fetch(`/api/tournaments/${tournamentId}`)
+        if (!response.ok) {
           setError('Tournament not found')
           return
         }
-
+        
+        const result = await response.json()
+        if (!result.success) {
+          setError('Tournament not found')
+          return
+        }
+        
+        const tournamentData = result.tournament
         setTournament(tournamentData)
 
         if (user) {
@@ -129,12 +131,18 @@ export default function TournamentDetailsPage() {
     setStatusMessage('')
     
     try {
-      const { error } = await supabase
-        .from('tournaments')
-        .update({ status: newStatus })
-        .eq('id', tournament.id)
+      const response = await fetch(`/api/tournaments/${tournament.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
       
-      if (error) throw error
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update tournament status')
+      }
       
       // Update local state
       setTournament(prev => prev ? { ...prev, status: newStatus } : null)

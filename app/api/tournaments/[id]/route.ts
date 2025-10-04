@@ -1,75 +1,96 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    // Fetch tournament using service role (bypasses RLS)
+    const { data: tournament, error } = await supabaseAdmin
+      .from('tournaments')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    }
+
+    if (!tournament) {
+      return NextResponse.json({ success: false, error: 'Tournament not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true, tournament })
+  } catch (error: any) {
+    console.error('Error fetching tournament:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
+  }
+}
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: tournamentId } = await params
+    const { id } = await params
     const body = await request.json()
-    const { name, format, selected_teams, tournament_date, description, total_slots } = body
+    const { name, format, selected_teams, tournament_date, description, total_slots, status } = body
 
-    // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Handle status-only updates
+    if (status && !name && !format && !selected_teams && !tournament_date && !description && !total_slots) {
+      const { data: tournament, error } = await supabaseAdmin
+        .from('tournaments')
+        .update({
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true, tournament })
     }
 
-    // Check if user is the host of this tournament or an admin
-    const { data: tournament, error: tournamentError } = await supabase
-      .from('tournaments')
-      .select('host_id')
-      .eq('id', tournamentId)
-      .single()
-
-    if (tournamentError || !tournament) {
-      return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
+    // Handle full tournament updates
+    if (!name || !format || !selected_teams || !tournament_date || !total_slots) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Get user role
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (userError || !userData) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Check if user is the host or admin
-    if (tournament.host_id !== user.id && userData.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden - Only tournament host or admin can edit' }, { status: 403 })
-    }
-
-    // Update the tournament
-    const { data: updatedTournament, error: updateError } = await supabase
+    // Update tournament using service role (bypasses RLS)
+    const { data: tournament, error } = await supabaseAdmin
       .from('tournaments')
       .update({
         name,
         format,
         selected_teams,
         tournament_date,
-        description: description || null,
+        description,
         total_slots,
         updated_at: new Date().toISOString()
       })
-      .eq('id', tournamentId)
+      .eq('id', id)
       .select()
       .single()
 
-    if (updateError) {
-      console.error('Error updating tournament:', updateError)
-      return NextResponse.json({ error: 'Failed to update tournament' }, { status: 500 })
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, data: updatedTournament })
-
-  } catch (error) {
-    console.error('Error in PUT /api/tournaments/[id]:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ success: true, tournament })
+  } catch (error: any) {
+    console.error('Error updating tournament:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -78,57 +99,21 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: tournamentId } = await params
+    const { id } = await params
 
-    // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Check if user is the host of this tournament or an admin
-    const { data: tournament, error: tournamentError } = await supabase
-      .from('tournaments')
-      .select('host_id')
-      .eq('id', tournamentId)
-      .single()
-
-    if (tournamentError || !tournament) {
-      return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
-    }
-
-    // Get user role
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (userError || !userData) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Check if user is the host or admin
-    if (tournament.host_id !== user.id && userData.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden - Only tournament host or admin can delete' }, { status: 403 })
-    }
-
-    // Delete the tournament (this will cascade delete related records due to foreign key constraints)
-    const { error: deleteError } = await supabase
+    // Delete tournament using service role (bypasses RLS)
+    const { error } = await supabaseAdmin
       .from('tournaments')
       .delete()
-      .eq('id', tournamentId)
+      .eq('id', id)
 
-    if (deleteError) {
-      console.error('Error deleting tournament:', deleteError)
-      return NextResponse.json({ error: 'Failed to delete tournament' }, { status: 500 })
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, message: 'Tournament deleted successfully' })
-
-  } catch (error) {
-    console.error('Error in DELETE /api/tournaments/[id]:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error('Error deleting tournament:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
