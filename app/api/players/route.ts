@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { createClient } from '@supabase/supabase-js'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,28 +9,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    // Create a new Supabase client with the auth header
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabaseWithAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader
-          }
-        }
-      }
-    )
-
-    // Ensure user is authenticated
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    // Parse user data from authorization header
+    let userData
+    try {
+      userData = JSON.parse(authHeader)
+    } catch (error) {
+      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
     }
 
-    // Fetch players from database
-    const { data, error } = await supabaseWithAuth
+    if (!userData || !userData.id) {
+      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
+    }
+
+    // Fetch players from database using service role
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data, error } = await supabase
       .from('players')
       .select('*')
       .order('created_at', { ascending: false })
@@ -68,34 +65,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    // Create a new Supabase client with the auth header
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabaseWithAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader
-          }
-        }
-      }
-    )
+    // Parse user data from authorization header
+    let userData
+    try {
+      userData = JSON.parse(authHeader)
+    } catch (error) {
+      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
+    }
 
-    // Ensure user is authenticated
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    if (!userData || !userData.id) {
+      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
     }
 
     // Check if user has permission to create players (any authenticated user can create their own player profile)
-    const { data: userData } = await supabaseWithAuth
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data: user, error: userError } = await supabase
       .from('users')
       .select('role, status')
-      .eq('id', user.id)
+      .eq('id', userData.id)
       .single()
 
-    if (!userData || userData.status !== 'approved') {
+    if (userError || !user || user.status !== 'approved') {
       return NextResponse.json({ 
         success: false, 
         error: 'User not approved for creating player profile' 
@@ -124,7 +118,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if player profile already exists for this user
-    const { data: existingPlayer } = await supabaseWithAuth
+    const { data: existingPlayer } = await supabase
       .from('players')
       .select('id')
       .eq('user_id', user_id)
@@ -138,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create player profile
-    const { data: player, error } = await supabaseWithAuth
+    const { data: player, error } = await supabase
       .from('players')
       .insert({
         user_id,
@@ -188,24 +182,16 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    // Create a new Supabase client with the auth header
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabaseWithAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader
-          }
-        }
-      }
-    )
+    // Parse user data from authorization header
+    let userData
+    try {
+      userData = JSON.parse(authHeader)
+    } catch (error) {
+      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
+    }
 
-    // Ensure user is authenticated
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    if (!userData || !userData.id) {
+      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -231,13 +217,18 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check if user owns this player profile
-    const { data: existingPlayer } = await supabaseWithAuth
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data: existingPlayer } = await supabase
       .from('players')
       .select('user_id')
       .eq('id', id)
       .single()
 
-    if (!existingPlayer || existingPlayer.user_id !== user.id) {
+    if (!existingPlayer || existingPlayer.user_id !== userData.id) {
       return NextResponse.json({
         success: false,
         error: 'You can only update your own player profile'
@@ -245,7 +236,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update player profile
-    const { data: player, error } = await supabaseWithAuth
+    const { data: player, error } = await supabase
       .from('players')
       .update({
         name,
