@@ -70,9 +70,9 @@ export async function PUT(request: NextRequest) {
   try {
     // Get user ID from query parameters (passed from client-side session)
     const url = new URL(request.url)
-    const userId = url.searchParams.get('userId')
+    const adminUserId = url.searchParams.get('userId')
     
-    if (!userId) {
+    if (!adminUserId) {
       return NextResponse.json({
         success: false,
         error: 'No user ID provided'
@@ -83,7 +83,7 @@ export async function PUT(request: NextRequest) {
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('role, status')
-      .eq('id', userId)
+      .eq('id', adminUserId)
       .single()
 
     if (userError || !userData) {

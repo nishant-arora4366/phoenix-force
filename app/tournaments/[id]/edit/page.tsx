@@ -66,12 +66,12 @@ export default function EditTournamentPage() {
         const tournamentData = result.tournament
 
         // Check if user is the host or an admin
-        if (!user) {
+        if (!sessionUser) {
           setError('User not authenticated')
           return
         }
 
-        const userResponse = await fetch(`/api/user-profile?userId=${user.id}`)
+        const userResponse = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
         if (!userResponse.ok) {
           setError('Unable to verify user permissions')
           return
@@ -85,7 +85,7 @@ export default function EditTournamentPage() {
         
         const userData = userResult.data
 
-        if (tournamentData.host_id !== user.id && userData?.role !== 'admin') {
+        if (tournamentData.host_id !== sessionUser.id && userData?.role !== 'admin') {
           setError('You are not authorized to edit this tournament')
           return
         }
