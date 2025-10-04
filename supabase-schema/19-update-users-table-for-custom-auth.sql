@@ -8,8 +8,16 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending';
 
 -- Add constraint for status values
-ALTER TABLE users ADD CONSTRAINT IF NOT EXISTS users_status_check 
-CHECK (status IN ('pending', 'approved', 'rejected'));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'users_status_check' 
+    AND table_name = 'users'
+  ) THEN
+    ALTER TABLE users ADD CONSTRAINT users_status_check 
+    CHECK (status IN ('pending', 'approved', 'rejected'));
+  END IF;
+END $$;
 
 -- Update existing users to approved status
 UPDATE users SET status = 'approved' WHERE status IS NULL;
