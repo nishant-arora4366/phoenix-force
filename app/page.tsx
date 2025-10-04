@@ -3,32 +3,26 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import AuthForm from '@/components/AuthForm'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 export default function Home() {
   const [user, setUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check if user is already logged in
-    const getUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        setUser(user)
-      } catch (error) {
-        console.error('Error getting user:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    getUser()
+    // Get user from session manager
+    const sessionUser = sessionManager.getUser()
+    setUser(sessionUser)
+    setIsLoading(false)
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null)
+    // Subscribe to session changes
+    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+      setUser(sessionUser)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   if (isLoading) {
@@ -62,7 +56,9 @@ export default function Home() {
                   <div className="max-w-md mx-auto mb-12">
                     <div className="p-4 bg-gray-100 text-gray-800 rounded-lg">
                       <p className="text-sm">
-                        <strong>Welcome back, {user.email}!</strong>
+                        <strong>Welcome back, {user.firstname && user.lastname 
+                          ? `${user.firstname} ${user.lastname}` 
+                          : user.username || user.email}!</strong>
                       </p>
                       <div className="mt-2">
                         <Link
