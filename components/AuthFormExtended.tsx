@@ -116,8 +116,8 @@ export default function AuthFormExtended({ onAuthChange }: AuthFormProps) {
   const handleSignOut = async () => {
     setLoading(true)
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      // Clear user from session manager
+      sessionManager.clearUser()
       
       setMessage('Successfully signed out!')
       setUser(null)

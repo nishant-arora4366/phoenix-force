@@ -37,16 +37,7 @@ export default function Navbar() {
           // Refresh user data from database to get latest status/role
           const refreshedUser = await sessionManager.refreshUser()
           setUser(refreshedUser)
-          
-          try {
-            const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
-            const result = await response.json()
-            if (result.success) {
-              setUserProfile(result.data)
-            }
-          } catch (error) {
-            console.error('Error fetching user profile:', error)
-          }
+          setUserProfile(refreshedUser) // Use the refreshed user data directly
         }
       } catch (error) {
         console.error('Error getting user:', error)
@@ -59,34 +50,11 @@ export default function Navbar() {
     // Subscribe to session changes
     const unsubscribe = sessionManager.subscribe((sessionUser) => {
       setUser(sessionUser)
-      
-      if (sessionUser) {
-        // Fetch user profile when user changes
-        fetch(`/api/user-profile?userId=${sessionUser.id}`)
-          .then(response => response.json())
-          .then(result => {
-            if (result.success) {
-              setUserProfile(result.data)
-            }
-          })
-          .catch(error => {
-            console.error('Error fetching user profile:', error)
-          })
-      } else {
-        setUserProfile(null)
-      }
+      setUserProfile(sessionUser) // Use session user data directly
     })
-
-    // Set up periodic refresh of user data (every 30 seconds)
-    const refreshInterval = setInterval(async () => {
-      if (sessionManager.getUser()) {
-        await sessionManager.refreshUser()
-      }
-    }, 30000)
 
     return () => {
       unsubscribe()
-      clearInterval(refreshInterval)
     }
   }, [])
 
