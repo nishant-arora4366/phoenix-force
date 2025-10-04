@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 interface User {
   id: string
@@ -28,16 +28,13 @@ export default function UserManagementPage() {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          setCurrentUser(user)
+        // Get user from session manager
+        const sessionUser = sessionManager.getUser()
+        if (sessionUser) {
+          setCurrentUser(sessionUser)
           
           // Check user role and status using API endpoint
-          const response = await fetch('/api/admin/check-user', {
-            headers: {
-              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-            }
-          })
+          const response = await fetch('/api/admin/check-user')
           
           if (!response.ok) {
             console.log('Failed to check user role, redirecting to home')
@@ -85,15 +82,27 @@ export default function UserManagementPage() {
     }
 
     checkUser()
+
+    // Subscribe to session changes
+    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+      if (sessionUser) {
+        // Re-check permissions when user changes
+        checkUser()
+      } else {
+        setCurrentUser(null)
+        setUserRole(null)
+        router.push('/signin')
+      }
+    })
+
+    return () => {
+      unsubscribe()
+    }
   }, [router])
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users', {
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        }
-      })
+      const response = await fetch('/api/admin/users')
       
       if (!response.ok) {
         throw new Error('Failed to fetch users')
@@ -117,8 +126,7 @@ export default function UserManagementPage() {
       const response = await fetch('/api/admin/users', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ userId, status })
       })
@@ -150,8 +158,7 @@ export default function UserManagementPage() {
       const response = await fetch('/api/admin/users', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ userId, role })
       })
@@ -187,8 +194,7 @@ export default function UserManagementPage() {
       const response = await fetch('/api/admin/reset-password', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ userId })
       })

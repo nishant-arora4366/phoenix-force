@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 interface Tournament {
   id: string
@@ -42,13 +42,13 @@ export default function EditTournamentPage() {
   useEffect(() => {
     const fetchTournament = async () => {
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
+        // Get current user from session manager
+        const sessionUser = sessionManager.getUser()
+        if (!sessionUser) {
           router.push('/signin')
           return
         }
-        setUser(user)
+        setUser(sessionUser)
 
         // Fetch tournament data
         const { data: tournamentData, error: tournamentError } = await supabase
