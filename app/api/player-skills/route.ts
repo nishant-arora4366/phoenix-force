@@ -35,9 +35,9 @@ export async function GET(request: NextRequest) {
       required: skill.is_required,
       displayOrder: skill.display_order,
       values: skill.values
-        ?.filter(value => value.is_active)
-        ?.sort((a, b) => a.display_order - b.display_order)
-        ?.map(value => ({
+        ?.filter((value: any) => value.is_active)
+        ?.sort((a: any, b: any) => a.display_order - b.display_order)
+        ?.map((value: any) => ({
           id: value.id,
           name: value.value_name,
           displayOrder: value.display_order
