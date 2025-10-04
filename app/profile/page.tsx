@@ -268,6 +268,7 @@ export default function Profile() {
         method: playerProfile.id ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': JSON.stringify(user),
         },
         body: JSON.stringify({
           ...playerProfile,
