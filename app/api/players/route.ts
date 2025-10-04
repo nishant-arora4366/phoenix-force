@@ -107,18 +107,18 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { 
-      name, 
+      display_name, 
       bio, 
-      photo, 
+      profile_pic_url, 
       user_id,
       skills // This will be an object with skill assignments
     } = body
 
     // Validate required fields
-    if (!name) {
+    if (!display_name) {
       return NextResponse.json({
         success: false,
-        error: 'Player name is required'
+        error: 'Player display name is required'
       }, { status: 400 })
     }
 
@@ -141,10 +141,9 @@ export async function POST(request: NextRequest) {
       .from('players')
       .insert({
         user_id,
-        name,
+        display_name,
         bio: bio || null,
-        photo: photo || null,
-        status: 'pending' // New player profiles need admin approval
+        profile_pic_url: profile_pic_url || null
       })
       .select()
       .single()
@@ -252,18 +251,18 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const { 
       id,
-      name, 
+      display_name, 
       bio, 
-      photo, 
+      profile_pic_url, 
       user_id,
       skills // This will be an object with skill assignments
     } = body
 
     // Validate required fields
-    if (!name || !id) {
+    if (!display_name || !id) {
       return NextResponse.json({
         success: false,
-        error: 'Player name and ID are required'
+        error: 'Player display name and ID are required'
       }, { status: 400 })
     }
 
@@ -286,10 +285,9 @@ export async function PUT(request: NextRequest) {
     const { data: player, error } = await supabase
       .from('players')
       .update({
-        name,
+        display_name,
         bio: bio || null,
-        photo: photo || null,
-        status: 'pending' // Reset to pending when updated
+        profile_pic_url: profile_pic_url || null
       })
       .eq('id', id)
       .select()

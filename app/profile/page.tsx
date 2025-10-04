@@ -271,9 +271,9 @@ export default function Profile() {
           'Authorization': JSON.stringify(user),
         },
         body: JSON.stringify({
-          name: playerProfile.name,
+          display_name: playerProfile.name,
           bio: playerProfile.bio,
-          photo: playerProfile.photo,
+          profile_pic_url: playerProfile.photo,
           user_id: user.id,
           skills: {
             role: playerProfile.role,
