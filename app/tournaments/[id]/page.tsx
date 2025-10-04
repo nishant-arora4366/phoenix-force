@@ -65,15 +65,15 @@ export default function TournamentDetailsPage() {
         const tournamentData = result.tournament
         setTournament(tournamentData)
 
-        if (user) {
+        if (sessionUser) {
           // Fetch user profile
-          const response = await fetch(`/api/user-profile?userId=${user.id}`)
+          const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
           const result = await response.json()
           if (result.success) {
             setUserProfile(result.data)
             // Check if user is admin or the tournament host
             const isAdmin = result.data.role === 'admin'
-            const isTournamentHost = user.id === tournamentData.host_id
+            const isTournamentHost = sessionUser.id === tournamentData.host_id
             setIsHost(isAdmin || isTournamentHost)
           }
         }
