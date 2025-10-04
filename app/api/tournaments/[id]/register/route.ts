@@ -13,9 +13,22 @@ export async function POST(
 ) {
   try {
     const { id: tournamentId } = await params
-    const sessionUser = sessionManager.getUser()
     
-    if (!sessionUser) {
+    // Get user from Authorization header instead of sessionManager
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
+    }
+    
+    // Parse the user from the authorization header
+    let sessionUser
+    try {
+      sessionUser = JSON.parse(authHeader)
+    } catch (error) {
+      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
+    }
+    
+    if (!sessionUser || !sessionUser.id) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
     }
 
@@ -141,9 +154,22 @@ export async function DELETE(
 ) {
   try {
     const { id: tournamentId } = await params
-    const sessionUser = sessionManager.getUser()
     
-    if (!sessionUser) {
+    // Get user from Authorization header instead of sessionManager
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
+    }
+    
+    // Parse the user from the authorization header
+    let sessionUser
+    try {
+      sessionUser = JSON.parse(authHeader)
+    } catch (error) {
+      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
+    }
+    
+    if (!sessionUser || !sessionUser.id) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
     }
 

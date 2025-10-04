@@ -100,7 +100,11 @@ export default function TournamentDetailsPage() {
             const isAdmin = userResult.data.role === 'admin'
             const isTournamentHost = sessionUser.id === tournamentData.host_id
             if (isAdmin || isTournamentHost) {
-              const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+              const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+                headers: {
+                  'Authorization': JSON.stringify(sessionUser),
+                },
+              })
               if (slotsResponse.ok) {
                 const slotsResult = await slotsResponse.json()
                 if (slotsResult.success) {
@@ -219,10 +223,12 @@ export default function TournamentDetailsPage() {
     setIsRegistering(true)
     setRegistrationMessage('')
     try {
+      const sessionUser = sessionManager.getUser()
       const response = await fetch(`/api/tournaments/${tournamentId}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': JSON.stringify(sessionUser),
         },
       })
 
@@ -233,7 +239,12 @@ export default function TournamentDetailsPage() {
 
       setRegistrationMessage(result.message)
       // Refresh slots data
-      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+      const sessionUser = sessionManager.getUser()
+      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+        headers: {
+          'Authorization': JSON.stringify(sessionUser),
+        },
+      })
       if (slotsResponse.ok) {
         const slotsResult = await slotsResponse.json()
         if (slotsResult.success) {
@@ -254,10 +265,12 @@ export default function TournamentDetailsPage() {
     setIsRegistering(true)
     setRegistrationMessage('')
     try {
+      const sessionUser = sessionManager.getUser()
       const response = await fetch(`/api/tournaments/${tournamentId}/register`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': JSON.stringify(sessionUser),
         },
       })
 
@@ -268,7 +281,12 @@ export default function TournamentDetailsPage() {
 
       setRegistrationMessage(result.message)
       // Refresh slots data
-      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+      const sessionUser = sessionManager.getUser()
+      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+        headers: {
+          'Authorization': JSON.stringify(sessionUser),
+        },
+      })
       if (slotsResponse.ok) {
         const slotsResult = await slotsResponse.json()
         if (slotsResult.success) {
@@ -287,10 +305,12 @@ export default function TournamentDetailsPage() {
 
   const approveSlot = async (slotId: string) => {
     try {
+      const sessionUser = sessionManager.getUser()
       const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': JSON.stringify(sessionUser),
         },
         body: JSON.stringify({ slotId, action: 'approve' }),
       })
@@ -301,7 +321,12 @@ export default function TournamentDetailsPage() {
       }
 
       // Refresh slots data
-      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+      const sessionUser = sessionManager.getUser()
+      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+        headers: {
+          'Authorization': JSON.stringify(sessionUser),
+        },
+      })
       if (slotsResponse.ok) {
         const slotsResult = await slotsResponse.json()
         if (slotsResult.success) {
@@ -316,10 +341,12 @@ export default function TournamentDetailsPage() {
 
   const rejectSlot = async (slotId: string) => {
     try {
+      const sessionUser = sessionManager.getUser()
       const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': JSON.stringify(sessionUser),
         },
         body: JSON.stringify({ slotId, action: 'reject' }),
       })
@@ -330,7 +357,12 @@ export default function TournamentDetailsPage() {
       }
 
       // Refresh slots data
-      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+      const sessionUser = sessionManager.getUser()
+      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+        headers: {
+          'Authorization': JSON.stringify(sessionUser),
+        },
+      })
       if (slotsResponse.ok) {
         const slotsResult = await slotsResponse.json()
         if (slotsResult.success) {
@@ -706,7 +738,12 @@ export default function TournamentDetailsPage() {
                         <button
                           onClick={async () => {
                             try {
-                              const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+                              const sessionUser = sessionManager.getUser()
+                              const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+                                headers: {
+                                  'Authorization': JSON.stringify(sessionUser),
+                                },
+                              })
                               if (slotsResponse.ok) {
                                 const slotsResult = await slotsResponse.json()
                                 if (slotsResult.success) {
