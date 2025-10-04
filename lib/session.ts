@@ -52,6 +52,26 @@ class SessionManager {
     return this.currentUser
   }
 
+  // Refresh user data from database
+  async refreshUser(): Promise<SessionUser | null> {
+    if (!this.currentUser) return null
+
+    try {
+      const response = await fetch(`/api/user-profile?userId=${this.currentUser.id}`)
+      const result = await response.json()
+      
+      if (result.success && result.data) {
+        const updatedUser = result.data
+        this.setUser(updatedUser)
+        return updatedUser
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error)
+    }
+    
+    return this.currentUser
+  }
+
   // Clear user (called on logout)
   clearUser() {
     this.currentUser = null

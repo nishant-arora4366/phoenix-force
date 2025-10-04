@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 interface UserProfile {
   id: string
@@ -27,12 +28,13 @@ export default function Profile() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      // Get user from session manager
+      const sessionUser = sessionManager.getUser()
+      setUser(sessionUser)
       
-      if (user) {
+      if (sessionUser) {
         // Fetch user profile from users table
-        const response = await fetch(`/api/user-profile?userId=${user.id}`)
+        const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
         const result = await response.json()
         
         if (result.success) {
@@ -44,15 +46,35 @@ export default function Profile() {
     }
     getUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null)
+    // Subscribe to session changes
+    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+      setUser(sessionUser)
+      
+      if (sessionUser) {
+        // Fetch user profile when user changes
+        fetch(`/api/user-profile?userId=${sessionUser.id}`)
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              setProfile(result.data)
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching user profile:', error)
+          })
+      } else {
+        setProfile(null)
+      }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    // Clear session using session manager
+    sessionManager.clearUser()
     setUser(null)
     setProfile(null)
   }

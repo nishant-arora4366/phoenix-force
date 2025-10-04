@@ -29,11 +29,15 @@ export default function Navbar() {
   useEffect(() => {
     const getUser = async () => {
       try {
-        // Get user from session manager
+        // Get user from session manager and refresh from database
         const sessionUser = sessionManager.getUser()
         setUser(sessionUser)
         
         if (sessionUser) {
+          // Refresh user data from database to get latest status/role
+          const refreshedUser = await sessionManager.refreshUser()
+          setUser(refreshedUser)
+          
           try {
             const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
             const result = await response.json()
@@ -73,8 +77,16 @@ export default function Navbar() {
       }
     })
 
+    // Set up periodic refresh of user data (every 30 seconds)
+    const refreshInterval = setInterval(async () => {
+      if (sessionManager.getUser()) {
+        await sessionManager.refreshUser()
+      }
+    }, 30000)
+
     return () => {
       unsubscribe()
+      clearInterval(refreshInterval)
     }
   }, [])
 
@@ -241,6 +253,15 @@ export default function Navbar() {
                           >
                             Profile
                           </Link>
+                          <button
+                            onClick={async () => {
+                              await sessionManager.refreshUser()
+                              setIsDropdownOpen(false)
+                            }}
+                            className="block w-full text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
+                          >
+                            Refresh Status
+                          </button>
                           <button
                             onClick={handleSignOut}
                             className="block w-full text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
