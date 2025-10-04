@@ -19,14 +19,9 @@ interface User {
 interface PlayerProfile {
   id: string
   user_id: string
-  name: string
+  display_name: string
   bio?: string
-  batting_style?: string
-  bowling_style?: string
-  role?: string
-  price: number
-  group?: string
-  photo?: string
+  profile_pic_url?: string
   status: string
   created_at: string
   updated_at: string
@@ -846,19 +841,19 @@ export default function UserManagementPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
-                              {player.photo ? (
-                                <img className="h-10 w-10 rounded-full object-cover" src={player.photo} alt={player.name} />
+                              {player.profile_pic_url ? (
+                                <img className="h-10 w-10 rounded-full object-cover" src={player.profile_pic_url} alt={player.display_name} />
                               ) : (
                                 <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                                   <span className="text-sm font-medium text-gray-600">
-                                    {player.name ? player.name.charAt(0).toUpperCase() : '?'}
+                                    {player.display_name ? player.display_name.charAt(0).toUpperCase() : '?'}
                                   </span>
                                 </div>
                               )}
                             </div>
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{player.name}</div>
-                              <div className="text-sm text-gray-500">{player.group}</div>
+                              <div className="text-sm font-medium text-gray-900">{player.display_name}</div>
+                              <div className="text-sm text-gray-500">{player.bio}</div>
                             </div>
                           </div>
                         </td>
@@ -871,10 +866,10 @@ export default function UserManagementPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{player.role || 'N/A'}</div>
+                          <div className="text-sm text-gray-900">Player</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">₹{player.price}</div>
+                          <div className="text-sm text-gray-900">-</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(player.status)}`}>
@@ -916,17 +911,17 @@ export default function UserManagementPage() {
               {playerProfiles.map((player) => (
                 <div key={player.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                   <div className="flex items-center space-x-3 mb-3">
-                    {player.photo ? (
-                      <img className="h-12 w-12 rounded-full object-cover" src={player.photo} alt={player.name} />
+                    {player.profile_pic_url ? (
+                      <img className="h-12 w-12 rounded-full object-cover" src={player.profile_pic_url} alt={player.display_name} />
                     ) : (
                       <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
                         <span className="text-sm font-medium text-gray-600">
-                          {player.name ? player.name.charAt(0).toUpperCase() : '?'}
+                          {player.display_name ? player.display_name.charAt(0).toUpperCase() : '?'}
                         </span>
                       </div>
                     )}
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{player.name}</div>
+                      <div className="text-sm font-medium text-gray-900">{player.display_name}</div>
                       <div className="text-sm text-gray-500">
                         {player.users?.firstname && player.users?.lastname 
                           ? `${player.users.firstname} ${player.users.lastname}`
@@ -939,11 +934,11 @@ export default function UserManagementPage() {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Role:</span>
-                      <span className="text-sm text-gray-900">{player.role || 'N/A'}</span>
+                      <span className="text-sm text-gray-900">Player</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Price:</span>
-                      <span className="text-sm text-gray-900">₹{player.price}</span>
+                      <span className="text-sm text-gray-900">-</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Status:</span>
