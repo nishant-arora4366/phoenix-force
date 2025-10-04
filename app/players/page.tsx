@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import useSWR from 'swr'
-import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
+import { sessionManager } from '@/lib/sessionManager'
 
 interface Player {
   id: string
@@ -23,12 +23,7 @@ interface Player {
 }
 
 const fetcher = async (url: string) => {
-  const { data: { session } } = await supabase.auth.getSession()
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${session?.access_token}`
-    }
-  })
+  const response = await fetch(url)
   
   if (!response.ok) {
     throw new Error('Failed to fetch players')
@@ -60,21 +55,17 @@ export default function PlayersPage() {
     const getUser = async () => {
       try {
         setIsLoadingUser(true)
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          setUser(user)
-          // Fetch user role in parallel
-          const { data: userData } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-          setUserRole(userData?.role || null)
+        const currentUser = sessionManager.getUser()
+        if (currentUser) {
+          setUser(currentUser)
+          setUserRole(currentUser.role || null)
         } else {
+          setUser(null)
           setUserRole(null)
         }
       } catch (error) {
         console.error('Error getting user:', error)
+        setUser(null)
         setUserRole(null)
       } finally {
         setIsLoadingUser(false)
@@ -83,27 +74,18 @@ export default function PlayersPage() {
     getUser()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUser(session.user)
-        // Fetch role immediately
-        supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: userData }) => {
-            setUserRole(userData?.role || null)
-            setIsLoadingUser(false)
-          })
-      } else if (event === 'SIGNED_OUT') {
+    const unsubscribe = sessionManager.subscribe((userData) => {
+      if (userData) {
+        setUser(userData)
+        setUserRole(userData.role || null)
+      } else {
         setUser(null)
         setUserRole(null)
-        setIsLoadingUser(false)
       }
+      setIsLoadingUser(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => unsubscribe()
   }, [])
 
   const filteredPlayers = players?.filter(player => {
@@ -203,7 +185,7 @@ export default function PlayersPage() {
               </div>
               {isLoadingUser ? (
                 <div className="bg-gray-200 animate-pulse px-4 py-2 rounded-lg h-10 w-24"></div>
-              ) : (userRole === 'admin' || userRole === 'host') ? (
+              ) : user ? (
                 <button
                   onClick={() => router.push('/players/create')}
                   className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors font-medium"
