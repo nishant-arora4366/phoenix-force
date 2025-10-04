@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 import { PermissionService } from '@/lib/permissions'
 
 interface TournamentFormData {
@@ -34,24 +34,27 @@ export default function CreateTournamentPage() {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          // Get user data including role and status
-          const { data: userData } = await supabase
-            .from('users')
-            .select('role, status')
-            .eq('id', user.id)
-            .single()
+        // Get user from session manager
+        const sessionUser = sessionManager.getUser()
+        if (sessionUser) {
+          // Fetch user profile to get role and status
+          const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
+          const result = await response.json()
           
-          setUserRole(userData?.role || null)
-          
-          // Check permissions using the permission service
-          if (PermissionService.canCreateTournaments(userData)) {
-            setUser(user)
-          } else if (PermissionService.isPending(userData)) {
-            setMessage('Your account is pending admin approval. You cannot create tournaments until approved.')
+          if (result.success) {
+            const userData = result.data
+            setUserRole(userData?.role || null)
+            
+            // Check permissions using the permission service
+            if (PermissionService.canCreateTournaments(userData)) {
+              setUser(sessionUser)
+            } else if (PermissionService.isPending(userData)) {
+              setMessage('Your account is pending admin approval. You cannot create tournaments until approved.')
+            } else {
+              setMessage('Only hosts and admins can create tournaments. Your current role: ' + (userData?.role || 'unknown'))
+            }
           } else {
-            setMessage('Only hosts and admins can create tournaments. Your current role: ' + (userData?.role || 'unknown'))
+            setMessage('Error fetching user data. Please try again.')
           }
         } else {
           setMessage('Please sign in to create tournaments')
@@ -64,6 +67,22 @@ export default function CreateTournamentPage() {
       }
     }
     checkUser()
+
+    // Subscribe to session changes
+    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+      if (sessionUser) {
+        // Re-check permissions when user changes
+        checkUser()
+      } else {
+        setUser(null)
+        setUserRole(null)
+        setMessage('Please sign in to create tournaments')
+      }
+    })
+
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,10 +95,13 @@ export default function CreateTournamentPage() {
         throw new Error('User not authenticated')
       }
 
-      // Create tournament
-      const { data: tournament, error: tournamentError } = await supabase
-        .from('tournaments')
-        .insert({
+      // Create tournament via API
+      const response = await fetch('/api/tournaments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           name: formData.name,
           format: formData.format,
           selected_teams: formData.selected_teams,
@@ -89,23 +111,15 @@ export default function CreateTournamentPage() {
           host_id: user.id,
           status: 'draft'
         })
-        .select()
-        .single()
+      })
 
-      if (tournamentError) throw tournamentError
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create tournament')
+      }
 
-      // Create tournament slots
-      const slots = Array.from({ length: formData.total_slots }, (_, i) => ({
-        tournament_id: tournament.id,
-        slot_number: i + 1,
-        status: 'empty'
-      }))
-
-      const { error: slotsError } = await supabase
-        .from('tournament_slots')
-        .insert(slots)
-
-      if (slotsError) throw slotsError
+      const result = await response.json()
+      const tournament = result.tournament
 
       setMessage('Tournament created successfully!')
       

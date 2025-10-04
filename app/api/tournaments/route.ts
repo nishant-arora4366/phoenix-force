@@ -23,3 +23,57 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { name, format, selected_teams, tournament_date, description, total_slots, host_id, status } = body
+
+    // Validate required fields
+    if (!name || !format || !selected_teams || !tournament_date || !total_slots || !host_id) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Create tournament using service role (bypasses RLS)
+    const { data: tournament, error: tournamentError } = await supabaseAdmin
+      .from('tournaments')
+      .insert({
+        name,
+        format,
+        selected_teams,
+        tournament_date,
+        description,
+        total_slots,
+        host_id,
+        status: status || 'draft'
+      })
+      .select()
+      .single()
+
+    if (tournamentError) {
+      return NextResponse.json({ success: false, error: tournamentError.message }, { status: 500 })
+    }
+
+    // Create tournament slots
+    const slots = Array.from({ length: total_slots }, (_, i) => ({
+      tournament_id: tournament.id,
+      slot_number: i + 1,
+      status: 'empty'
+    }))
+
+    const { error: slotsError } = await supabaseAdmin
+      .from('tournament_slots')
+      .insert(slots)
+
+    if (slotsError) {
+      // If slots creation fails, we should clean up the tournament
+      await supabaseAdmin.from('tournaments').delete().eq('id', tournament.id)
+      return NextResponse.json({ success: false, error: slotsError.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, tournament })
+  } catch (error: any) {
+    console.error('Error creating tournament:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
+  }
+}
