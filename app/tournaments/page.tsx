@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 interface Tournament {
   id: string
@@ -29,13 +29,12 @@ interface User {
 }
 
 const fetcher = async (url: string) => {
-  const { data, error } = await supabase
-    .from('tournaments')
-    .select('*')
-    .order('created_at', { ascending: false })
-  
-  if (error) throw error
-  return data
+  const response = await fetch('/api/tournaments')
+  if (!response.ok) {
+    throw new Error('Failed to fetch tournaments')
+  }
+  const result = await response.json()
+  return result.tournaments || []
 }
 
 const getStatusColor = (status: string) => {
@@ -86,12 +85,13 @@ export default function TournamentsPage() {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          setUser(user)
-          
+        // Get user from session manager
+        const sessionUser = sessionManager.getUser()
+        setUser(sessionUser)
+        
+        if (sessionUser) {
           // Fetch user profile
-          const response = await fetch(`/api/user-profile?userId=${user.id}`)
+          const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
           const result = await response.json()
           if (result.success) {
             setUserProfile(result.data)
@@ -105,6 +105,33 @@ export default function TournamentsPage() {
       }
     }
     checkUser()
+
+    // Subscribe to session changes
+    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+      setUser(sessionUser)
+      
+      if (sessionUser) {
+        // Fetch user profile when user changes
+        fetch(`/api/user-profile?userId=${sessionUser.id}`)
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              setUserProfile(result.data)
+              setIsHost(result.data.role === 'host' || result.data.role === 'admin')
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching user profile:', error)
+          })
+      } else {
+        setUserProfile(null)
+        setIsHost(false)
+      }
+    })
+
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   const handleDeleteTournament = async (tournamentId: string) => {

@@ -178,14 +178,46 @@ export default function UserManagementPage() {
     }
   }
 
+  const resetUserPassword = async (userId: string, userEmail: string) => {
+    if (!confirm(`Are you sure you want to reset the password for ${userEmail}? The new password will be their email address.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({ userId })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to reset password')
+      }
+
+      const { success, message } = await response.json()
+      
+      if (success) {
+        setMessage(`Password reset successfully. New password is: ${userEmail}`)
+        setTimeout(() => setMessage(''), 5000) // Show for 5 seconds since it contains the password
+      } else {
+        throw new Error('Failed to reset password')
+      }
+    } catch (error: any) {
+      setMessage(`Error: ${error.message}`)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-gray-200 text-gray-700'
       case 'approved':
-        return 'bg-green-100 text-green-800'
+        return 'bg-gray-100 text-gray-700'
       case 'rejected':
-        return 'bg-red-100 text-red-800'
+        return 'bg-gray-300 text-gray-800'
       default:
         return 'bg-gray-100 text-gray-800'
     }
@@ -194,11 +226,11 @@ export default function UserManagementPage() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-gray-200 text-gray-800'
       case 'host':
-        return 'bg-blue-100 text-blue-800'
-      case 'player':
-        return 'bg-green-100 text-green-800'
+        return 'bg-gray-100 text-gray-700'
+      case 'viewer':
+        return 'bg-gray-100 text-gray-600'
       default:
         return 'bg-gray-100 text-gray-800'
     }
@@ -243,17 +275,19 @@ export default function UserManagementPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">User Management</h1>
-              <p className="text-gray-600 mt-1">Manage user accounts and permissions</p>
+          <div className="bg-gradient-to-r from-gray-600 to-gray-700 rounded-lg p-6 text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold">User Management</h1>
+                <p className="text-gray-200 mt-1">Manage user accounts and permissions</p>
+              </div>
+              <button
+                onClick={() => router.push('/')}
+                className="mt-4 sm:mt-0 px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
+              >
+                Back to Dashboard
+              </button>
             </div>
-            <button
-              onClick={() => router.push('/')}
-              className="mt-4 sm:mt-0 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Back to Dashboard
-            </button>
           </div>
         </div>
 
@@ -261,8 +295,8 @@ export default function UserManagementPage() {
         {message && (
           <div className={`mb-6 p-4 rounded-lg ${
             message.includes('Error') 
-              ? 'bg-red-50 text-red-700 border border-red-200' 
-              : 'bg-green-50 text-green-700 border border-green-200'
+              ? 'bg-gray-200 text-gray-800 border border-gray-300' 
+              : 'bg-gray-100 text-gray-700 border border-gray-200'
           }`}>
             {message}
           </div>
@@ -282,8 +316,8 @@ export default function UserManagementPage() {
                 onClick={() => setFilter(filterOption.value as any)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   filter === filterOption.value
-                    ? 'bg-gray-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    ? 'bg-gray-700 text-white'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                 }`}
               >
                 {filterOption.label}
@@ -292,36 +326,36 @@ export default function UserManagementPage() {
           </div>
         </div>
 
-        {/* Users Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {/* Users Table - Desktop */}
+        <div className="hidden md:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Created
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                             <span className="text-sm font-medium text-gray-700">
                               {user.firstname?.[0] || user.username?.[0] || user.email[0].toUpperCase()}
                             </span>
@@ -356,28 +390,36 @@ export default function UserManagementPage() {
                         <>
                           <button
                             onClick={() => updateUserStatus(user.id, 'approved')}
-                            className="text-green-600 hover:text-green-900"
+                            className="text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-xs"
                           >
                             Approve
                           </button>
                           <button
                             onClick={() => updateUserStatus(user.id, 'rejected')}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-xs"
                           >
                             Reject
                           </button>
                         </>
                       )}
                       {user.status === 'approved' && (
-                        <select
-                          value={user.role}
-                          onChange={(e) => updateUserRole(user.id, e.target.value)}
-                          className="text-sm border border-gray-300 rounded px-2 py-1"
-                        >
-                          <option value="player">Player</option>
-                          <option value="host">Host</option>
-                          <option value="admin">Admin</option>
-                        </select>
+                        <div className="flex flex-col space-y-2">
+                          <select
+                            value={user.role}
+                            onChange={(e) => updateUserRole(user.id, e.target.value)}
+                            className="text-sm border border-gray-300 rounded px-2 py-1"
+                          >
+                            <option value="viewer">Viewer</option>
+                            <option value="host">Host</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                          <button
+                            onClick={() => resetUserPassword(user.id, user.email)}
+                            className="text-xs text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+                          >
+                            Reset Password
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -385,6 +427,87 @@ export default function UserManagementPage() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-4">
+          {filteredUsers.map((user) => (
+            <div key={user.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-10 w-10">
+                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-sm font-medium text-gray-700">
+                        {user.firstname?.[0] || user.username?.[0] || user.email[0].toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-sm font-medium text-gray-900">
+                      {user.firstname && user.lastname 
+                        ? `${user.firstname} ${user.lastname}`
+                        : user.username || user.email
+                      }
+                    </div>
+                    <div className="text-sm text-gray-500">{user.email}</div>
+                  </div>
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}>
+                    {user.status}
+                  </span>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                    {user.role}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="text-xs text-gray-500 mb-3">
+                Created: {new Date(user.created_at).toLocaleDateString()}
+              </div>
+              
+              <div className="flex flex-col space-y-2">
+                {user.status === 'pending' && (
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => updateUserStatus(user.id, 'approved')}
+                      className="flex-1 bg-gray-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-700 transition-colors"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => updateUserStatus(user.id, 'rejected')}
+                      className="flex-1 bg-gray-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-600 transition-colors"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+                {user.status === 'approved' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Role</label>
+                      <select
+                        value={user.role}
+                        onChange={(e) => updateUserRole(user.id, e.target.value)}
+                        className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+                      >
+                        <option value="viewer">Viewer</option>
+                        <option value="host">Host</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    <button
+                      onClick={() => resetUserPassword(user.id, user.email)}
+                      className="w-full bg-gray-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-700 transition-colors"
+                    >
+                      Reset Password
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
         {filteredUsers.length === 0 && (

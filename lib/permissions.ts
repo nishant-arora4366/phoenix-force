@@ -10,44 +10,52 @@ export interface User {
   lastname?: string
 }
 
+// Flexible user data type for permission checks
+export interface UserData {
+  role?: string
+  status?: string
+  id?: string
+  email?: string
+}
+
 export class PermissionService {
   // Check if user can perform admin actions
-  static canAdmin(user: User | null): boolean {
+  static canAdmin(user: User | UserData | null): boolean {
     return user?.role === 'admin' && user?.status === 'approved'
   }
 
   // Check if user can create tournaments
-  static canCreateTournaments(user: User | null): boolean {
+  static canCreateTournaments(user: User | UserData | null): boolean {
     return (user?.role === 'admin' || user?.role === 'host') && user?.status === 'approved'
   }
 
   // Check if user can create players
-  static canCreatePlayers(user: User | null): boolean {
+  static canCreatePlayers(user: User | UserData | null): boolean {
     return (user?.role === 'admin' || user?.role === 'host') && user?.status === 'approved'
   }
 
   // Check if user can join tournaments/slots
-  static canJoinTournaments(user: User | null): boolean {
+  static canJoinTournaments(user: User | UserData | null): boolean {
     return user?.status === 'approved'
   }
 
   // Check if user can view content (basic read access)
-  static canView(user: User | null): boolean {
+  static canView(user: User | UserData | null): boolean {
     return user?.status === 'pending' || user?.status === 'approved'
   }
 
   // Check if user is pending approval
-  static isPending(user: User | null): boolean {
+  static isPending(user: User | UserData | null): boolean {
     return user?.status === 'pending'
   }
 
   // Check if user is approved
-  static isApproved(user: User | null): boolean {
+  static isApproved(user: User | UserData | null): boolean {
     return user?.status === 'approved'
   }
 
   // Get user access level description
-  static getAccessLevel(user: User | null): string {
+  static getAccessLevel(user: User | UserData | null): string {
     if (!user) return 'No access'
     if (user.status === 'rejected') return 'Account rejected'
     if (user.status === 'pending') return 'Pending approval - Limited access'
