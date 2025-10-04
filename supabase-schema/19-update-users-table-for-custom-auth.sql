@@ -34,18 +34,18 @@ DROP POLICY IF EXISTS "Users can update own profile" ON users;
 
 -- Allow users to view their own profile
 CREATE POLICY "Users can view own profile" ON users
-FOR SELECT USING (auth.uid()::text = id);
+FOR SELECT USING (auth.uid() = id::uuid);
 
 -- Allow users to update their own profile
 CREATE POLICY "Users can update own profile" ON users
-FOR UPDATE USING (auth.uid()::text = id);
+FOR UPDATE USING (auth.uid() = id::uuid);
 
 -- Allow admins to view all users
 CREATE POLICY "Admins can view all users" ON users
 FOR SELECT USING (
   EXISTS (
     SELECT 1 FROM users 
-    WHERE id = auth.uid()::text 
+    WHERE id = auth.uid() 
     AND role = 'admin'
   )
 );
@@ -55,7 +55,7 @@ CREATE POLICY "Admins can update all users" ON users
 FOR UPDATE USING (
   EXISTS (
     SELECT 1 FROM users 
-    WHERE id = auth.uid()::text 
+    WHERE id = auth.uid() 
     AND role = 'admin'
   )
 );
