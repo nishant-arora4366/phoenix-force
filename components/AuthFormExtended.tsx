@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 interface AuthFormProps {
   onAuthChange?: (user: any) => void
@@ -88,50 +89,22 @@ export default function AuthFormExtended({ onAuthChange }: AuthFormProps) {
           throw new Error(result.error)
         }
         
-        // Create a mock auth data structure for compatibility
+        // For custom authentication, we don't need to sync with Supabase
+        // The user data is already in our custom users table
         authData = {
           user: result.user,
-          session: result.session
+          session: null // No Supabase session for custom auth
         }
         
         setMessage(result.message || 'Successfully signed in!')
         setUser(result.user)
+        
+        // Set user in session manager
+        sessionManager.setUser(result.user)
       }
       
       if (onAuthChange && authData) {
         onAuthChange(authData.user)
-      }
-      
-      // Sync user to public.users table after successful auth
-      if (authData?.user) {
-        try {
-          // For sign up, use profile data; for sign in, use existing user data or defaults
-          const userData = isSignUp ? {
-            id: authData.user.id,
-            email: authData.user.email || '',
-            username: profile.username || email.split('@')[0],
-            firstname: profile.firstname,
-            middlename: profile.middlename || null,
-            lastname: profile.lastname,
-            photo: profile.photo || null,
-            role: 'viewer'
-          } : {
-            id: authData.user.id,
-            email: authData.user.email || '',
-            // For sign in, don't overwrite existing user data
-            updated_at: new Date().toISOString()
-          }
-
-          const { error: syncError } = await supabase
-            .from('users')
-            .upsert(userData, { onConflict: 'id' })
-          
-          if (syncError) {
-            console.warn('Failed to sync user:', syncError.message)
-          }
-        } catch (syncErr) {
-          console.warn('User sync error:', syncErr)
-        }
       }
     } catch (error: any) {
       setMessage(`Error: ${error.message}`)

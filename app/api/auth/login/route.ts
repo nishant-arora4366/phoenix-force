@@ -31,27 +31,11 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Create Supabase session for the user
-      // In a full custom auth implementation, you'd handle sessions differently
-      const { data: { session }, error } = await supabase.auth.signInWithPassword({
-        email: result.user.email,
-        password: 'dummy' // We'll handle this differently in practice
-      })
-
-      if (error) {
-        // For now, we'll create a session manually
-        // In production, you'd implement proper session management
-        return NextResponse.json({
-          success: true,
-          user: result.user,
-          message: message
-        })
-      }
-
+      // For custom authentication, we'll return the user data without Supabase session
+      // The frontend will handle the session state
       return NextResponse.json({
         success: true,
         user: result.user,
-        session: session,
         message: message
       })
     } else {
