@@ -708,7 +708,7 @@ export default function UserManagementPage() {
                               ) : (
                                 <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                                   <span className="text-sm font-medium text-gray-600">
-                                    {player.name.charAt(0).toUpperCase()}
+                                    {player.name ? player.name.charAt(0).toUpperCase() : '?'}
                                   </span>
                                 </div>
                               )}
@@ -778,7 +778,7 @@ export default function UserManagementPage() {
                     ) : (
                       <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
                         <span className="text-sm font-medium text-gray-600">
-                          {player.name.charAt(0).toUpperCase()}
+                          {player.name ? player.name.charAt(0).toUpperCase() : '?'}
                         </span>
                       </div>
                     )}
