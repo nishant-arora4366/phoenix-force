@@ -32,16 +32,27 @@ export default function UserManagementPage() {
         if (user) {
           setCurrentUser(user)
           
-          // Check user role
+          // Check user role and status
           const { data: userData } = await supabase
             .from('users')
-            .select('role')
+            .select('role, status')
             .eq('id', user.id)
             .single()
           
           setUserRole(userData?.role || null)
           
+          console.log('User role:', userData?.role)
+          console.log('User status:', userData?.status)
+          console.log('User data:', userData)
+          
           if (userData?.role !== 'admin') {
+            console.log('User is not admin, redirecting to home')
+            router.push('/')
+            return
+          }
+          
+          if (userData?.status !== 'approved') {
+            console.log('User is not approved, redirecting to home')
             router.push('/')
             return
           }
