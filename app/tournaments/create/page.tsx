@@ -335,22 +335,16 @@ export default function CreateTournamentPage() {
                   <label htmlFor="tournament_date" className="block text-sm font-semibold text-gray-700">
                     Tournament Date *
                   </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      id="tournament_date"
-                      name="tournament_date"
-                      value={formData.tournament_date}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  </div>
+                  <input
+                    type="date"
+                    id="tournament_date"
+                    name="tournament_date"
+                    value={formData.tournament_date}
+                    onChange={handleInputChange}
+                    required
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-gray-100 focus:border-gray-500 transition-all duration-200 bg-gray-50"
+                  />
                 </div>
               </div>
 

@@ -262,6 +262,7 @@ export default function EditTournamentPage() {
                 value={formData.tournament_date}
                 onChange={handleChange}
                 required
+                min={new Date().toISOString().split('T')[0]}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
               />
             </div>
