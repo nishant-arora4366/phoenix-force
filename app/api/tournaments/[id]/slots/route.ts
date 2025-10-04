@@ -91,7 +91,8 @@ export async function GET(
         status: 'empty',
         players: null,
         requested_at: null,
-        confirmed_at: null
+        confirmed_at: null,
+        created_at: null
       }
       allSlots.push({
         ...slot,
@@ -108,7 +109,8 @@ export async function GET(
         status: 'empty',
         players: null,
         requested_at: null,
-        confirmed_at: null
+        confirmed_at: null,
+        created_at: null
       }
       allSlots.push({
         ...slot,

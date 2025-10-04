@@ -50,6 +50,7 @@ export async function POST(
       .single()
 
     if (playerError || !player) {
+      console.error('Player profile error:', playerError)
       return NextResponse.json({ error: 'Player profile not found. Please create a player profile first.' }, { status: 400 })
     }
 
@@ -129,7 +130,8 @@ export async function POST(
 
   } catch (error: any) {
     console.error('Error registering for tournament:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error details:', error.message, error.stack)
+    return NextResponse.json({ error: `Internal server error: ${error.message}` }, { status: 500 })
   }
 }
 

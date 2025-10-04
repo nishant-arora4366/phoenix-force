@@ -657,7 +657,7 @@ export default function TournamentDetailsPage() {
                   </div>
                 )}
 
-                {/* Player Registration Section */}
+                {/* Player Registration Section - Moved to Top */}
                 {user && tournament.status === 'registration_open' && !isHost && (
                   <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <h3 className="text-lg font-semibold text-blue-900 mb-2">Register for Tournament</h3>
@@ -675,7 +675,7 @@ export default function TournamentDetailsPage() {
                 )}
 
                 {/* Slots Display */}
-                {slots.length > 0 ? (
+                {tournament && (
                   <div className="space-y-4">
                     {/* Stats */}
                     {slotsStats && (
@@ -699,11 +699,37 @@ export default function TournamentDetailsPage() {
                       </div>
                     )}
 
+                    {/* Generate slots if not loaded from API */}
+                    {slots.length === 0 && (
+                      <div className="text-center py-4">
+                        <p className="text-gray-600 mb-4">Loading tournament slots...</p>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+                              if (slotsResponse.ok) {
+                                const slotsResult = await slotsResponse.json()
+                                if (slotsResult.success) {
+                                  setSlots(slotsResult.slots)
+                                  setSlotsStats(slotsResult.stats)
+                                }
+                              }
+                            } catch (error) {
+                              console.error('Error loading slots:', error)
+                            }
+                          }}
+                          className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                        >
+                          Load Slots
+                        </button>
+                      </div>
+                    )}
+
                     {/* Main Tournament Slots */}
                     <div className="mb-8">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Main Tournament Slots</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {slots.filter(slot => slot.is_main_slot).map((slot) => (
+                        {slots.length > 0 ? slots.filter(slot => slot.is_main_slot).map((slot) => (
                           <div key={slot.slot_number} className={`p-4 rounded-lg border-2 ${
                             slot.status === 'empty' ? 'border-gray-200 bg-gray-50' :
                             slot.status === 'pending' ? 'border-yellow-200 bg-yellow-50' :
@@ -768,7 +794,20 @@ export default function TournamentDetailsPage() {
                               <div className="text-sm text-gray-500">Empty slot</div>
                             )}
                           </div>
-                        ))}
+                        )) : (
+                          // Generate empty slots if none loaded
+                          Array.from({ length: tournament.total_slots }, (_, i) => (
+                            <div key={i + 1} className="p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-semibold text-gray-900">Slot {i + 1}</span>
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+                                  empty
+                                </span>
+                              </div>
+                              <div className="text-sm text-gray-500">Empty slot</div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
 
@@ -776,7 +815,7 @@ export default function TournamentDetailsPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Waitlist Slots</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {slots.filter(slot => !slot.is_main_slot).map((slot) => (
+                        {slots.length > 0 ? slots.filter(slot => !slot.is_main_slot).map((slot) => (
                           <div key={slot.slot_number} className={`p-4 rounded-lg border-2 ${
                             slot.status === 'empty' ? 'border-gray-200 bg-gray-50' :
                             slot.status === 'pending' ? 'border-yellow-200 bg-yellow-50' :
@@ -841,18 +880,21 @@ export default function TournamentDetailsPage() {
                               <div className="text-sm text-gray-500">Empty waitlist slot</div>
                             )}
                           </div>
-                        ))}
+                        )) : (
+                          // Generate empty waitlist slots if none loaded
+                          Array.from({ length: 10 }, (_, i) => (
+                            <div key={i + 1} className="p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-semibold text-gray-900">Waitlist {i + 1}</span>
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+                                  empty
+                                </span>
+                              </div>
+                              <div className="text-sm text-gray-500">Empty waitlist slot</div>
+                            </div>
+                          ))
+                        )}
                       </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="text-gray-500 mb-4">
-                      <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      <p className="text-lg font-medium text-gray-900 mb-2">No Slots Available</p>
-                      <p className="text-gray-600">Slots will be displayed here when the tournament is ready.</p>
                     </div>
                   </div>
                 )}
