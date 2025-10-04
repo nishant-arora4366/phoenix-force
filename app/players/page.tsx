@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
-import { sessionManager } from '@/lib/sessionManager'
+import { sessionManager } from '@/lib/session'
 
 interface Player {
   id: string
