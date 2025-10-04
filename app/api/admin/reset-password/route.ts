@@ -8,34 +8,19 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'No authorization header' }, { status: 401 })
-    }
-
-    // Create a client with the user's auth token
-    const supabaseWithAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader,
-          },
-        },
-      }
-    )
-
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Authentication failed' }, { status: 401 })
+    // Get user ID from query parameters (passed from client-side session)
+    const url = new URL(request.url)
+    const userId = url.searchParams.get('userId')
+    
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'No user ID provided' }, { status: 401 })
     }
 
     // Check if user is admin using service role (bypasses RLS)
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('role, status')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
 
     if (userError || !userData) {
@@ -46,9 +31,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Access denied' }, { status: 403 })
     }
 
-    const { userId } = await request.json()
+    const { userId: targetUserId } = await request.json()
 
-    if (!userId) {
+    if (!targetUserId) {
       return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 })
     }
 
@@ -56,7 +41,7 @@ export async function POST(request: NextRequest) {
     const { data: targetUser, error: targetUserError } = await supabaseAdmin
       .from('users')
       .select('email')
-      .eq('id', userId)
+      .eq('id', targetUserId)
       .single()
 
     if (targetUserError || !targetUser) {
@@ -71,7 +56,7 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({ password_hash: hashedPassword })
-      .eq('id', userId)
+      .eq('id', targetUserId)
 
     if (updateError) {
       return NextResponse.json({ success: false, error: updateError.message }, { status: 500 })

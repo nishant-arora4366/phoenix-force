@@ -102,7 +102,12 @@ export default function UserManagementPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users')
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+      
+      const response = await fetch(`/api/admin/users?userId=${sessionUser.id}`)
       
       if (!response.ok) {
         throw new Error('Failed to fetch users')
@@ -123,7 +128,12 @@ export default function UserManagementPage() {
 
   const updateUserStatus = async (userId: string, status: string) => {
     try {
-      const response = await fetch('/api/admin/users', {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+      
+      const response = await fetch(`/api/admin/users?userId=${sessionUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -155,7 +165,12 @@ export default function UserManagementPage() {
 
   const updateUserRole = async (userId: string, role: string) => {
     try {
-      const response = await fetch('/api/admin/users', {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+      
+      const response = await fetch(`/api/admin/users?userId=${sessionUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -191,7 +206,12 @@ export default function UserManagementPage() {
     }
 
     try {
-      const response = await fetch('/api/admin/reset-password', {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+      
+      const response = await fetch(`/api/admin/reset-password?userId=${sessionUser.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

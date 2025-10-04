@@ -8,32 +8,14 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
+    // Get user ID from query parameters (passed from client-side session)
+    const url = new URL(request.url)
+    const userId = url.searchParams.get('userId')
+    
+    if (!userId) {
       return NextResponse.json({
         success: false,
-        error: 'No authorization header'
-      }, { status: 401 })
-    }
-
-    // Create a client with the user's auth token
-    const supabaseWithAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader
-          }
-        }
-      }
-    )
-
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({
-        success: false,
-        error: 'Authentication failed'
+        error: 'No user ID provided'
       }, { status: 401 })
     }
 
@@ -41,7 +23,7 @@ export async function GET(request: NextRequest) {
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('role, status')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
 
     if (userError || !userData) {
@@ -86,32 +68,14 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
+    // Get user ID from query parameters (passed from client-side session)
+    const url = new URL(request.url)
+    const userId = url.searchParams.get('userId')
+    
+    if (!userId) {
       return NextResponse.json({
         success: false,
-        error: 'No authorization header'
-      }, { status: 401 })
-    }
-
-    // Create a client with the user's auth token
-    const supabaseWithAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader
-          }
-        }
-      }
-    )
-
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({
-        success: false,
-        error: 'Authentication failed'
+        error: 'No user ID provided'
       }, { status: 401 })
     }
 
@@ -119,7 +83,7 @@ export async function PUT(request: NextRequest) {
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('role, status')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
 
     if (userError || !userData) {
@@ -136,9 +100,9 @@ export async function PUT(request: NextRequest) {
       }, { status: 403 })
     }
 
-    const { userId, status, role } = await request.json()
+    const { userId: targetUserId, status, role } = await request.json()
 
-    if (!userId) {
+    if (!targetUserId) {
       return NextResponse.json({
         success: false,
         error: 'User ID is required'
@@ -160,7 +124,7 @@ export async function PUT(request: NextRequest) {
     const { error } = await supabaseAdmin
       .from('users')
       .update(updateData)
-      .eq('id', userId)
+      .eq('id', targetUserId)
 
     if (error) {
       return NextResponse.json({
