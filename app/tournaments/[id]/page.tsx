@@ -239,7 +239,6 @@ export default function TournamentDetailsPage() {
 
       setRegistrationMessage(result.message)
       // Refresh slots data
-      const sessionUser = sessionManager.getUser()
       const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
         headers: {
           'Authorization': JSON.stringify(sessionUser),
@@ -281,7 +280,6 @@ export default function TournamentDetailsPage() {
 
       setRegistrationMessage(result.message)
       // Refresh slots data
-      const sessionUser = sessionManager.getUser()
       const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
         headers: {
           'Authorization': JSON.stringify(sessionUser),
@@ -321,7 +319,6 @@ export default function TournamentDetailsPage() {
       }
 
       // Refresh slots data
-      const sessionUser = sessionManager.getUser()
       const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
         headers: {
           'Authorization': JSON.stringify(sessionUser),
@@ -357,7 +354,6 @@ export default function TournamentDetailsPage() {
       }
 
       // Refresh slots data
-      const sessionUser = sessionManager.getUser()
       const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
         headers: {
           'Authorization': JSON.stringify(sessionUser),
