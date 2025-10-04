@@ -54,7 +54,7 @@ export class AuthService {
           username: userData.username,
           firstname: userData.firstname,
           lastname: userData.lastname,
-          role: 'player',
+          role: 'viewer',
           status: 'pending'
         })
         .select()
