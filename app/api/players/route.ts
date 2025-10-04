@@ -100,13 +100,9 @@ export async function POST(request: NextRequest) {
     const { 
       name, 
       bio, 
-      batting_style, 
-      bowling_style, 
-      role, 
-      price, 
-      group, 
       photo, 
-      user_id 
+      user_id,
+      skills // This will be an object with skill assignments
     } = body
 
     // Validate required fields
@@ -131,18 +127,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Create player profile
+    // Create player profile (only basic info)
     const { data: player, error } = await supabase
       .from('players')
       .insert({
         user_id,
         name,
         bio: bio || null,
-        batting_style: batting_style || null,
-        bowling_style: bowling_style || null,
-        role: role || null,
-        price: Number(price) || 0,
-        group: group || null,
         photo: photo || null,
         status: 'pending' // New player profiles need admin approval
       })
@@ -156,6 +147,42 @@ export async function POST(request: NextRequest) {
         error: error.message,
         details: error
       }, { status: 500 })
+    }
+
+    // Handle skill assignments if provided
+    if (skills && Object.keys(skills).length > 0) {
+      // Get all player skills to map skill names to IDs
+      const { data: playerSkills } = await supabase
+        .from('player_skills')
+        .select('id, skill_name')
+
+      const skillIdMap: { [key: string]: string } = {}
+      playerSkills?.forEach(skill => {
+        skillIdMap[skill.skill_name.toLowerCase().replace(' ', '_')] = skill.id
+      })
+
+      // Create skill assignments
+      for (const [skillKey, skillValue] of Object.entries(skills)) {
+        if (skillValue && skillIdMap[skillKey]) {
+          // Find the skill value ID
+          const { data: skillValues } = await supabase
+            .from('player_skill_values')
+            .select('id')
+            .eq('skill_id', skillIdMap[skillKey])
+            .eq('value_name', skillValue)
+            .single()
+
+          if (skillValues) {
+            await supabase
+              .from('player_skill_assignments')
+              .insert({
+                player_id: player.id,
+                skill_id: skillIdMap[skillKey],
+                skill_value_id: skillValues.id
+              })
+          }
+        }
+      }
     }
 
     return NextResponse.json({
@@ -199,13 +226,9 @@ export async function PUT(request: NextRequest) {
       id,
       name, 
       bio, 
-      batting_style, 
-      bowling_style, 
-      role, 
-      price, 
-      group, 
       photo, 
-      user_id 
+      user_id,
+      skills // This will be an object with skill assignments
     } = body
 
     // Validate required fields
@@ -235,17 +258,12 @@ export async function PUT(request: NextRequest) {
       }, { status: 403 })
     }
 
-    // Update player profile
+    // Update player profile (only basic info)
     const { data: player, error } = await supabase
       .from('players')
       .update({
         name,
         bio: bio || null,
-        batting_style: batting_style || null,
-        bowling_style: bowling_style || null,
-        role: role || null,
-        price: Number(price) || 0,
-        group: group || null,
         photo: photo || null,
         status: 'pending' // Reset to pending when updated
       })
@@ -260,6 +278,48 @@ export async function PUT(request: NextRequest) {
         error: error.message,
         details: error
       }, { status: 500 })
+    }
+
+    // Handle skill assignments if provided
+    if (skills && Object.keys(skills).length > 0) {
+      // Delete existing skill assignments for this player
+      await supabase
+        .from('player_skill_assignments')
+        .delete()
+        .eq('player_id', id)
+
+      // Get all player skills to map skill names to IDs
+      const { data: playerSkills } = await supabase
+        .from('player_skills')
+        .select('id, skill_name')
+
+      const skillIdMap: { [key: string]: string } = {}
+      playerSkills?.forEach(skill => {
+        skillIdMap[skill.skill_name.toLowerCase().replace(' ', '_')] = skill.id
+      })
+
+      // Create new skill assignments
+      for (const [skillKey, skillValue] of Object.entries(skills)) {
+        if (skillValue && skillIdMap[skillKey]) {
+          // Find the skill value ID
+          const { data: skillValues } = await supabase
+            .from('player_skill_values')
+            .select('id')
+            .eq('skill_id', skillIdMap[skillKey])
+            .eq('value_name', skillValue)
+            .single()
+
+          if (skillValues) {
+            await supabase
+              .from('player_skill_assignments')
+              .insert({
+                player_id: id,
+                skill_id: skillIdMap[skillKey],
+                skill_value_id: skillValues.id
+              })
+          }
+        }
+      }
     }
 
     return NextResponse.json({

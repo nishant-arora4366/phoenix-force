@@ -271,8 +271,17 @@ export default function Profile() {
           'Authorization': JSON.stringify(user),
         },
         body: JSON.stringify({
-          ...playerProfile,
-          user_id: user.id
+          name: playerProfile.name,
+          bio: playerProfile.bio,
+          photo: playerProfile.photo,
+          user_id: user.id,
+          skills: {
+            role: playerProfile.role,
+            batting_style: playerProfile.batting_style,
+            bowling_style: playerProfile.bowling_style,
+            group: playerProfile.group,
+            price: playerProfile.price
+          }
         })
       })
 
