@@ -204,6 +204,7 @@ export default function UserManagementPage() {
       const { success, profiles } = await response.json()
       
       if (success) {
+        console.log('Fetched player profiles:', profiles)
         setPlayerProfiles(profiles || [])
       } else {
         throw new Error('Failed to fetch player profiles')
@@ -975,6 +976,9 @@ export default function UserManagementPage() {
             {playerProfiles.length === 0 && (
               <div className="text-center py-8">
                 <div className="text-gray-500">No player profiles found</div>
+                <div className="text-sm text-gray-400 mt-2">
+                  Player profiles will appear here when users create them
+                </div>
               </div>
             )}
           </>
