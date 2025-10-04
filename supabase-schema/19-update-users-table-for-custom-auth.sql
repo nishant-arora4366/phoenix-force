@@ -31,6 +31,9 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 -- Update RLS policies for custom auth
 DROP POLICY IF EXISTS "Users can view own profile" ON users;
 DROP POLICY IF EXISTS "Users can update own profile" ON users;
+DROP POLICY IF EXISTS "Admins can view all users" ON users;
+DROP POLICY IF EXISTS "Admins can update all users" ON users;
+DROP POLICY IF EXISTS "Allow user registration" ON users;
 
 -- Allow users to view their own profile
 CREATE POLICY "Users can view own profile" ON users
