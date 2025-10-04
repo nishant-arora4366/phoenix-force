@@ -32,26 +32,40 @@ export default function UserManagementPage() {
         if (user) {
           setCurrentUser(user)
           
-          // Check user role and status
-          const { data: userData } = await supabase
-            .from('users')
-            .select('role, status')
-            .eq('id', user.id)
-            .single()
+          // Check user role and status using API endpoint
+          const response = await fetch('/api/admin/check-user', {
+            headers: {
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+            }
+          })
           
-          setUserRole(userData?.role || null)
+          if (!response.ok) {
+            console.log('Failed to check user role, redirecting to home')
+            router.push('/')
+            return
+          }
           
-          console.log('User role:', userData?.role)
-          console.log('User status:', userData?.status)
+          const { success, user: userData } = await response.json()
+          
+          if (!success || !userData) {
+            console.log('Failed to get user data, redirecting to home')
+            router.push('/')
+            return
+          }
+          
+          setUserRole(userData.role)
+          
+          console.log('User role:', userData.role)
+          console.log('User status:', userData.status)
           console.log('User data:', userData)
           
-          if (userData?.role !== 'admin') {
+          if (userData.role !== 'admin') {
             console.log('User is not admin, redirecting to home')
             router.push('/')
             return
           }
           
-          if (userData?.status !== 'approved') {
+          if (userData.status !== 'approved') {
             console.log('User is not approved, redirecting to home')
             router.push('/')
             return
@@ -75,14 +89,24 @@ export default function UserManagementPage() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setUsers(data || [])
-    } catch (error) {
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch users')
+      }
+      
+      const { success, users } = await response.json()
+      
+      if (success) {
+        setUsers(users || [])
+      } else {
+        throw new Error('Failed to fetch users')
+      }
+    } catch (error: any) {
       console.error('Error fetching users:', error)
       setMessage('Error loading users')
     }
@@ -90,20 +114,32 @@ export default function UserManagementPage() {
 
   const updateUserStatus = async (userId: string, status: string) => {
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ status })
-        .eq('id', userId)
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({ userId, status })
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error('Failed to update user status')
+      }
 
-      // Update local state
-      setUsers(prev => prev.map(user => 
-        user.id === userId ? { ...user, status } : user
-      ))
+      const { success } = await response.json()
+      
+      if (success) {
+        // Update local state
+        setUsers(prev => prev.map(user => 
+          user.id === userId ? { ...user, status } : user
+        ))
 
-      setMessage(`User ${status === 'approved' ? 'approved' : 'rejected'} successfully`)
-      setTimeout(() => setMessage(''), 3000)
+        setMessage(`User ${status === 'approved' ? 'approved' : 'rejected'} successfully`)
+        setTimeout(() => setMessage(''), 3000)
+      } else {
+        throw new Error('Failed to update user status')
+      }
     } catch (error: any) {
       setMessage(`Error: ${error.message}`)
     }
@@ -111,20 +147,32 @@ export default function UserManagementPage() {
 
   const updateUserRole = async (userId: string, role: string) => {
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ role })
-        .eq('id', userId)
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({ userId, role })
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error('Failed to update user role')
+      }
 
-      // Update local state
-      setUsers(prev => prev.map(user => 
-        user.id === userId ? { ...user, role } : user
-      ))
+      const { success } = await response.json()
+      
+      if (success) {
+        // Update local state
+        setUsers(prev => prev.map(user => 
+          user.id === userId ? { ...user, role } : user
+        ))
 
-      setMessage(`User role updated to ${role}`)
-      setTimeout(() => setMessage(''), 3000)
+        setMessage(`User role updated to ${role}`)
+        setTimeout(() => setMessage(''), 3000)
+      } else {
+        throw new Error('Failed to update user role')
+      }
     } catch (error: any) {
       setMessage(`Error: ${error.message}`)
     }
