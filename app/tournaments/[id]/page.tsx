@@ -37,11 +37,15 @@ export default function TournamentDetailsPage() {
   const [user, setUser] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<User | null>(null)
   const [hostInfo, setHostInfo] = useState<User | null>(null)
+  const [slots, setSlots] = useState<any[]>([])
+  const [slotsStats, setSlotsStats] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isHost, setIsHost] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+  const [isRegistering, setIsRegistering] = useState(false)
+  const [registrationMessage, setRegistrationMessage] = useState('')
 
   useEffect(() => {
     const fetchTournamentAndUser = async () => {
@@ -85,6 +89,26 @@ export default function TournamentDetailsPage() {
             const isAdmin = result.data.role === 'admin'
             const isTournamentHost = sessionUser.id === tournamentData.host_id
             setIsHost(isAdmin || isTournamentHost)
+          }
+        }
+
+        // Fetch tournament slots if user is host or admin
+        if (sessionUser) {
+          const userResponse = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
+          const userResult = await userResponse.json()
+          if (userResult.success) {
+            const isAdmin = userResult.data.role === 'admin'
+            const isTournamentHost = sessionUser.id === tournamentData.host_id
+            if (isAdmin || isTournamentHost) {
+              const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+              if (slotsResponse.ok) {
+                const slotsResult = await slotsResponse.json()
+                if (slotsResult.success) {
+                  setSlots(slotsResult.slots)
+                  setSlotsStats(slotsResult.stats)
+                }
+              }
+            }
           }
         }
       } catch (error) {
@@ -188,6 +212,134 @@ export default function TournamentDetailsPage() {
         ]
       default:
         return []
+    }
+  }
+
+  const registerForTournament = async () => {
+    setIsRegistering(true)
+    setRegistrationMessage('')
+    try {
+      const response = await fetch(`/api/tournaments/${tournamentId}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+
+      setRegistrationMessage(result.message)
+      // Refresh slots data
+      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+      if (slotsResponse.ok) {
+        const slotsResult = await slotsResponse.json()
+        if (slotsResult.success) {
+          setSlots(slotsResult.slots)
+          setSlotsStats(slotsResult.stats)
+        }
+      }
+    } catch (err: any) {
+      console.error('Error registering for tournament:', err)
+      setRegistrationMessage(`Error: ${err.message}`)
+    } finally {
+      setIsRegistering(false)
+      setTimeout(() => setRegistrationMessage(''), 5000) // Clear message after 5 seconds
+    }
+  }
+
+  const cancelRegistration = async () => {
+    setIsRegistering(true)
+    setRegistrationMessage('')
+    try {
+      const response = await fetch(`/api/tournaments/${tournamentId}/register`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+
+      setRegistrationMessage(result.message)
+      // Refresh slots data
+      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+      if (slotsResponse.ok) {
+        const slotsResult = await slotsResponse.json()
+        if (slotsResult.success) {
+          setSlots(slotsResult.slots)
+          setSlotsStats(slotsResult.stats)
+        }
+      }
+    } catch (err: any) {
+      console.error('Error cancelling registration:', err)
+      setRegistrationMessage(`Error: ${err.message}`)
+    } finally {
+      setIsRegistering(false)
+      setTimeout(() => setRegistrationMessage(''), 5000) // Clear message after 5 seconds
+    }
+  }
+
+  const approveSlot = async (slotId: string) => {
+    try {
+      const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ slotId, action: 'approve' }),
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+
+      // Refresh slots data
+      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+      if (slotsResponse.ok) {
+        const slotsResult = await slotsResponse.json()
+        if (slotsResult.success) {
+          setSlots(slotsResult.slots)
+          setSlotsStats(slotsResult.stats)
+        }
+      }
+    } catch (err: any) {
+      console.error('Error approving slot:', err)
+    }
+  }
+
+  const rejectSlot = async (slotId: string) => {
+    try {
+      const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ slotId, action: 'reject' }),
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+
+      // Refresh slots data
+      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`)
+      if (slotsResponse.ok) {
+        const slotsResult = await slotsResponse.json()
+        if (slotsResult.success) {
+          setSlots(slotsResult.slots)
+          setSlotsStats(slotsResult.stats)
+        }
+      }
+    } catch (err: any) {
+      console.error('Error rejecting slot:', err)
     }
   }
 
@@ -483,6 +635,231 @@ export default function TournamentDetailsPage() {
             </div>
           </div>
         </div>
+
+        {/* Tournament Slots Section */}
+        {tournament && (
+          <div className="mt-8">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl overflow-hidden">
+              <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-4 sm:px-8 py-4 sm:py-6">
+                <h2 className="text-lg sm:text-2xl font-bold text-white">Tournament Slots</h2>
+                <p className="text-gray-200 mt-1 sm:mt-2 text-sm sm:text-base">Player registrations and slot management</p>
+              </div>
+              
+              <div className="p-4 sm:p-8">
+                {/* Registration Messages */}
+                {registrationMessage && (
+                  <div className={`mb-4 p-3 rounded-lg text-sm ${
+                    registrationMessage.includes('Error') 
+                      ? 'bg-red-50 text-red-700 border border-red-200' 
+                      : 'bg-green-50 text-green-700 border border-green-200'
+                  }`}>
+                    {registrationMessage}
+                  </div>
+                )}
+
+                {/* Player Registration Section */}
+                {user && tournament.status === 'registration_open' && !isHost && (
+                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 className="text-lg font-semibold text-blue-900 mb-2">Register for Tournament</h3>
+                    <p className="text-blue-700 text-sm mb-4">
+                      Registration is open! Click below to register for a tournament slot.
+                    </p>
+                    <button
+                      onClick={registerForTournament}
+                      disabled={isRegistering}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isRegistering ? 'Registering...' : 'Register for Tournament'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Slots Display */}
+                {slots.length > 0 ? (
+                  <div className="space-y-4">
+                    {/* Stats */}
+                    {slotsStats && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-gray-50 p-3 rounded-lg text-center">
+                          <div className="text-lg font-bold text-gray-900">{slotsStats.filled_main_slots}</div>
+                          <div className="text-sm text-gray-600">Main Slots Filled</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg text-center">
+                          <div className="text-lg font-bold text-gray-900">{slotsStats.filled_waitlist_slots}</div>
+                          <div className="text-sm text-gray-600">Waitlist Filled</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg text-center">
+                          <div className="text-lg font-bold text-gray-900">{slotsStats.pending_approvals}</div>
+                          <div className="text-sm text-gray-600">Pending Approval</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg text-center">
+                          <div className="text-lg font-bold text-gray-900">{slotsStats.total_slots}</div>
+                          <div className="text-sm text-gray-600">Total Slots</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Main Tournament Slots */}
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Main Tournament Slots</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {slots.filter(slot => slot.is_main_slot).map((slot) => (
+                          <div key={slot.slot_number} className={`p-4 rounded-lg border-2 ${
+                            slot.status === 'empty' ? 'border-gray-200 bg-gray-50' :
+                            slot.status === 'pending' ? 'border-yellow-200 bg-yellow-50' :
+                            slot.status === 'confirmed' ? 'border-green-200 bg-green-50' :
+                            'border-blue-200 bg-blue-50'
+                          }`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold text-gray-900">Slot {slot.slot_number}</span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                slot.status === 'empty' ? 'bg-gray-200 text-gray-700' :
+                                slot.status === 'pending' ? 'bg-yellow-200 text-yellow-800' :
+                                slot.status === 'confirmed' ? 'bg-green-200 text-green-800' :
+                                'bg-blue-200 text-blue-800'
+                              }`}>
+                                {slot.status}
+                              </span>
+                            </div>
+                            
+                            {slot.players ? (
+                              <div className="space-y-2">
+                                <div className="text-sm">
+                                  <div className="font-medium text-gray-900">
+                                    {slot.players.users?.firstname && slot.players.users?.lastname 
+                                      ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                      : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                    }
+                                  </div>
+                                  <div className="text-gray-600">{slot.players.name}</div>
+                                </div>
+                                
+                                {slot.requested_at && (
+                                  <div className="text-xs text-gray-500">
+                                    Requested: {new Date(slot.requested_at).toLocaleDateString()}
+                                  </div>
+                                )}
+                                
+                                {slot.confirmed_at && (
+                                  <div className="text-xs text-gray-500">
+                                    Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
+                                  </div>
+                                )}
+                                
+                                {/* Host Actions */}
+                                {isHost && slot.status === 'pending' && (
+                                  <div className="flex space-x-2 mt-2">
+                                    <button
+                                      onClick={() => approveSlot(slot.id)}
+                                      className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                                    >
+                                      Approve
+                                    </button>
+                                    <button
+                                      onClick={() => rejectSlot(slot.id)}
+                                      className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                                    >
+                                      Reject
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-500">Empty slot</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Waitlist Slots */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Waitlist Slots</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {slots.filter(slot => !slot.is_main_slot).map((slot) => (
+                          <div key={slot.slot_number} className={`p-4 rounded-lg border-2 ${
+                            slot.status === 'empty' ? 'border-gray-200 bg-gray-50' :
+                            slot.status === 'pending' ? 'border-yellow-200 bg-yellow-50' :
+                            slot.status === 'confirmed' ? 'border-green-200 bg-green-50' :
+                            'border-blue-200 bg-blue-50'
+                          }`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold text-gray-900">Waitlist {slot.waitlist_position}</span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                slot.status === 'empty' ? 'bg-gray-200 text-gray-700' :
+                                slot.status === 'pending' ? 'bg-yellow-200 text-yellow-800' :
+                                slot.status === 'confirmed' ? 'bg-green-200 text-green-800' :
+                                'bg-blue-200 text-blue-800'
+                              }`}>
+                                {slot.status}
+                              </span>
+                            </div>
+                            
+                            {slot.players ? (
+                              <div className="space-y-2">
+                                <div className="text-sm">
+                                  <div className="font-medium text-gray-900">
+                                    {slot.players.users?.firstname && slot.players.users?.lastname 
+                                      ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                      : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                    }
+                                  </div>
+                                  <div className="text-gray-600">{slot.players.name}</div>
+                                </div>
+                                
+                                {slot.requested_at && (
+                                  <div className="text-xs text-gray-500">
+                                    Requested: {new Date(slot.requested_at).toLocaleDateString()}
+                                  </div>
+                                )}
+                                
+                                {slot.confirmed_at && (
+                                  <div className="text-xs text-gray-500">
+                                    Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
+                                  </div>
+                                )}
+                                
+                                {/* Host Actions */}
+                                {isHost && slot.status === 'pending' && (
+                                  <div className="flex space-x-2 mt-2">
+                                    <button
+                                      onClick={() => approveSlot(slot.id)}
+                                      className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                                    >
+                                      Approve
+                                    </button>
+                                    <button
+                                      onClick={() => rejectSlot(slot.id)}
+                                      className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                                    >
+                                      Reject
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-500">Empty waitlist slot</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-gray-500 mb-4">
+                      <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <p className="text-lg font-medium text-gray-900 mb-2">No Slots Available</p>
+                      <p className="text-gray-600">Slots will be displayed here when the tournament is ready.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
