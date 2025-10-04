@@ -37,16 +37,46 @@ interface PlayerProfile {
   }
 }
 
+interface PlayerSkill {
+  id: string
+  skill_name: string
+  skill_type: string
+  is_required: boolean
+  display_order: number
+  created_at: string
+  updated_at: string
+  values?: PlayerSkillValue[]
+}
+
+interface PlayerSkillValue {
+  id: string
+  skill_id: string
+  value_name: string
+  display_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
 export default function UserManagementPage() {
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [playerProfiles, setPlayerProfiles] = useState<PlayerProfile[]>([])
+  const [playerSkills, setPlayerSkills] = useState<PlayerSkill[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
   const [activeTab, setActiveTab] = useState<'users' | 'players' | 'skills'>('users')
+  const [isAddingSkill, setIsAddingSkill] = useState(false)
+  const [isEditingSkill, setIsEditingSkill] = useState<string | null>(null)
+  const [newSkill, setNewSkill] = useState({
+    name: '',
+    type: 'select',
+    required: false,
+    displayOrder: 0
+  })
 
   useEffect(() => {
     const checkUser = async () => {
@@ -127,6 +157,13 @@ export default function UserManagementPage() {
   useEffect(() => {
     if (activeTab === 'players' && currentUser) {
       fetchPlayerProfiles()
+    }
+  }, [activeTab, currentUser])
+
+  // Fetch player skills when tab changes to skills
+  useEffect(() => {
+    if (activeTab === 'skills' && currentUser) {
+      fetchPlayerSkills()
     }
   }, [activeTab, currentUser])
 
@@ -326,6 +363,112 @@ export default function UserManagementPage() {
       }
     } catch (error: any) {
       console.error('Error updating player profile status:', error)
+      setMessage(`Error: ${error.message}`)
+    }
+  }
+
+  const fetchPlayerSkills = async () => {
+    try {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+      
+      const response = await fetch(`/api/admin/player-skills?userId=${sessionUser.id}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch player skills')
+      }
+      
+      const { success, skills } = await response.json()
+      
+      if (success) {
+        setPlayerSkills(skills || [])
+      } else {
+        throw new Error('Failed to fetch player skills')
+      }
+    } catch (error: any) {
+      console.error('Error fetching player skills:', error)
+      setMessage('Error loading player skills')
+    }
+  }
+
+  const addPlayerSkill = async () => {
+    try {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch('/api/admin/player-skills', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: sessionUser.id,
+          skill: newSkill
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to add player skill')
+      }
+
+      const { success } = await response.json()
+
+      if (success) {
+        setMessage('Player skill added successfully!')
+        fetchPlayerSkills() // Refresh the list
+        setIsAddingSkill(false)
+        setNewSkill({ name: '', type: 'select', required: false, displayOrder: 0 })
+        setTimeout(() => setMessage(''), 3000)
+      } else {
+        throw new Error('Failed to add player skill')
+      }
+    } catch (error: any) {
+      console.error('Error adding player skill:', error)
+      setMessage(`Error: ${error.message}`)
+    }
+  }
+
+  const deletePlayerSkill = async (skillId: string) => {
+    if (!confirm('Are you sure you want to delete this skill? This will also delete all its values.')) {
+      return
+    }
+
+    try {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch('/api/admin/player-skills', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: sessionUser.id,
+          skillId
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete player skill')
+      }
+
+      const { success } = await response.json()
+
+      if (success) {
+        setMessage('Player skill deleted successfully!')
+        fetchPlayerSkills() // Refresh the list
+        setTimeout(() => setMessage(''), 3000)
+      } else {
+        throw new Error('Failed to delete player skill')
+      }
+    } catch (error: any) {
+      console.error('Error deleting player skill:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -848,15 +991,154 @@ export default function UserManagementPage() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Player Skills Configuration</h2>
-                <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                <button 
+                  onClick={() => setIsAddingSkill(true)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
                   Add New Skill
                 </button>
               </div>
-              
-              <div className="text-center py-8">
-                <div className="text-gray-500">Player Skills management interface will be implemented here</div>
-                <p className="text-sm text-gray-400 mt-2">This will allow admins to configure available player skills and their values</p>
+
+              {/* Add New Skill Form */}
+              {isAddingSkill && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Player Skill</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Skill Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={newSkill.name}
+                        onChange={(e) => setNewSkill(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                        placeholder="e.g., Experience Level"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Skill Type *
+                      </label>
+                      <select
+                        value={newSkill.type}
+                        onChange={(e) => setNewSkill(prev => ({ ...prev, type: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                      >
+                        <option value="select">Select (Dropdown)</option>
+                        <option value="number">Number</option>
+                        <option value="text">Text</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Display Order
+                      </label>
+                      <input
+                        type="number"
+                        value={newSkill.displayOrder}
+                        onChange={(e) => setNewSkill(prev => ({ ...prev, displayOrder: parseInt(e.target.value) || 0 }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                        min="0"
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="required"
+                        checked={newSkill.required}
+                        onChange={(e) => setNewSkill(prev => ({ ...prev, required: e.target.checked }))}
+                        className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="required" className="ml-2 text-sm text-gray-700">
+                        Required field
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-3 mt-4">
+                    <button
+                      onClick={() => {
+                        setIsAddingSkill(false)
+                        setNewSkill({ name: '', type: 'select', required: false, displayOrder: 0 })
+                      }}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={addPlayerSkill}
+                      disabled={!newSkill.name}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Add Skill
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Skills List */}
+              <div className="space-y-4">
+                {playerSkills.map((skill) => (
+                  <div key={skill.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">{skill.skill_name}</h3>
+                        <div className="flex items-center space-x-4 mt-1">
+                          <span className="text-sm text-gray-500">Type: {skill.skill_type}</span>
+                          <span className="text-sm text-gray-500">Order: {skill.display_order}</span>
+                          {skill.is_required && (
+                            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                              Required
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setIsEditingSkill(skill.id)}
+                          className="px-3 py-1 text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deletePlayerSkill(skill.id)}
+                          className="px-3 py-1 text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Skill Values */}
+                    {skill.values && skill.values.length > 0 && (
+                      <div className="mt-3">
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Values:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {skill.values.map((value) => (
+                            <span
+                              key={value.id}
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                value.is_active 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-gray-100 text-gray-600'
+                              }`}
+                            >
+                              {value.value_name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
+
+              {playerSkills.length === 0 && (
+                <div className="text-center py-8">
+                  <div className="text-gray-500">No player skills configured</div>
+                  <p className="text-sm text-gray-400 mt-2">Add skills to configure what players can select</p>
+                </div>
+              )}
             </div>
           </>
         )}
