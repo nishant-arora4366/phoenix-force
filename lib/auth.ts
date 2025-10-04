@@ -19,7 +19,16 @@ export class AuthService {
 
   // Verify password
   static async verifyPassword(password: string, hash: string): Promise<boolean> {
-    return await bcrypt.compare(password, hash)
+    try {
+      if (!password || !hash) {
+        console.error('Invalid arguments for bcrypt.compare:', { password: !!password, hash: !!hash })
+        return false
+      }
+      return await bcrypt.compare(password, hash)
+    } catch (error) {
+      console.error('Bcrypt comparison error:', error)
+      return false
+    }
   }
 
   // Register new user
@@ -86,8 +95,15 @@ export class AuthService {
       // We'll handle access restrictions in the UI and API endpoints
 
       // Verify password
+      if (!user.password_hash) {
+        console.error('No password hash found for user:', user.email)
+        return { success: false, error: 'Invalid email or password' }
+      }
+
+      console.log('Attempting password verification for:', user.email)
       const isValidPassword = await this.verifyPassword(password, user.password_hash)
       if (!isValidPassword) {
+        console.error('Password verification failed for:', user.email)
         return { success: false, error: 'Invalid email or password' }
       }
 
