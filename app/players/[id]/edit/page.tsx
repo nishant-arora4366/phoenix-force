@@ -134,8 +134,6 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
           throw new Error(result.error || 'Failed to fetch player')
         }
 
-        console.log('=== EDIT PAGE - LOADING PLAYER DATA ===')
-        console.log('Full API response:', result)
         
         // Handle different API response structures
         let player, skills
@@ -202,11 +200,6 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
         throw new Error('User not authenticated')
       }
 
-      console.log('=== EDIT PAGE - SAVING PLAYER DATA ===')
-      console.log('Sending form data to API:', formData)
-      console.log('Skills being sent:', formData.skills)
-      console.log('Skills keys being sent:', Object.keys(formData.skills || {}))
-      console.log('Skills values being sent:', Object.values(formData.skills || {}))
 
       const response = await fetch(`/api/players/${id}`, {
         method: 'PUT',

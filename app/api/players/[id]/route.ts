@@ -194,13 +194,6 @@ export async function PUT(
     }
 
     const body = await request.json()
-    console.log('=== API /api/players/[id] PUT - RECEIVING DATA ===')
-    console.log('Player ID being updated:', id)
-    console.log('User ID making request:', userData.id)
-    console.log('Received data in API:', body)
-    console.log('Skills received:', body.skills)
-    console.log('Skills keys received:', Object.keys(body.skills || {}))
-    console.log('Skills values received:', Object.values(body.skills || {}))
     
     const { 
       display_name, 
@@ -252,8 +245,6 @@ export async function PUT(
 
     // Handle skill assignments if provided
     if (skills && Object.keys(skills).length > 0) {
-      console.log('Processing skills:', skills)
-      
       // Delete existing skill assignments for this player
       await supabase
         .from('player_skill_assignments')
@@ -262,7 +253,6 @@ export async function PUT(
 
       // Insert new skill assignments
       for (const [skillName, skillValue] of Object.entries(skills)) {
-        console.log(`Processing skill: ${skillName} = ${skillValue}`)
         // Get the skill ID
         const { data: skillData } = await supabase
           .from('player_skills')
@@ -301,8 +291,6 @@ export async function PUT(
               
               if (insertError) {
                 console.error(`Error inserting multi-select skill ${skillName}:`, insertError)
-              } else {
-                console.log(`Successfully inserted multi-select skill ${skillName}:`, skillValue)
               }
             }
           }
@@ -329,8 +317,6 @@ export async function PUT(
               
               if (insertError) {
                 console.error(`Error inserting single-select skill ${skillName}:`, insertError)
-              } else {
-                console.log(`Successfully inserted single-select skill ${skillName}:`, skillValue)
               }
             }
           }

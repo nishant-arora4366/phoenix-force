@@ -114,8 +114,6 @@ export default function PlayerProfilePage() {
             return skill.viewer_can_see === true
           }) || []
           
-          console.log('All skills from API:', result.skills)
-          console.log('Filtered skills for user:', filteredSkills)
           setPlayerSkills(filteredSkills)
         } else {
           console.error('Failed to fetch player skills:', result.error)
@@ -143,17 +141,9 @@ export default function PlayerProfilePage() {
       })
 
       const result = await response.json()
-      console.log('=== PLAYER PROFILE PAGE - FETCHING DETAILS ===')
-      console.log('Player profile API response:', result)
-      console.log('Profile data:', result.profile)
-      console.log('Skills data:', result.skills)
-      console.log('Skills keys:', Object.keys(result.skills || {}))
-      console.log('Skills values:', Object.values(result.skills || {}))
-      console.log('Full response structure:', JSON.stringify(result, null, 2))
       
       if (result.success && result.profile) {
         setPlayerProfile(result.profile)
-        console.log('Setting form data with skills:', result.skills)
         setFormData({
           id: result.profile.id, // Include player ID for updates
           display_name: result.profile.display_name || '',
@@ -172,30 +162,6 @@ export default function PlayerProfilePage() {
     }
   }
 
-  const debugPlayerSkills = async () => {
-    if (!playerProfile?.id) {
-      console.log('No player profile ID available for debugging')
-      return
-    }
-
-    try {
-      console.log('=== DEBUGGING PLAYER SKILLS ===')
-      console.log('Player ID:', playerProfile.id)
-      
-      const response = await fetch(`/api/debug-player-skills?playerId=${playerProfile.id}`)
-      const result = await response.json()
-      
-      console.log('Debug API response:', result)
-      console.log('Player found:', result.counts.player)
-      console.log('Skill assignments found:', result.counts.skillAssignments)
-      console.log('All skills available:', result.counts.allSkills)
-      console.log('Raw skill assignments:', result.skillAssignments)
-      console.log('Raw all skills:', result.allSkills)
-      
-    } catch (error) {
-      console.error('Error debugging player skills:', error)
-    }
-  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -320,12 +286,6 @@ export default function PlayerProfilePage() {
                 className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
               >
                 Edit Profile
-              </button>
-              <button
-                onClick={debugPlayerSkills}
-                className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
-              >
-                Debug Skills
               </button>
             </div>
           )}

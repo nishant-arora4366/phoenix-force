@@ -27,9 +27,6 @@ export async function GET(request: NextRequest) {
     )
 
     // Get user's player profile
-    console.log('=== API /api/player-profile GET - QUERYING DATABASE ===')
-    console.log('Looking for player with user_id:', userData.id)
-    
     // First, let's get the player without skill assignments to see if the player exists
     const { data: playerBasic, error: playerBasicError } = await supabase
       .from('players')
@@ -37,10 +34,7 @@ export async function GET(request: NextRequest) {
       .eq('user_id', userData.id)
       .single()
     
-    console.log('Basic player query result:', { playerBasic, playerBasicError })
-    
     if (playerBasicError || !playerBasic) {
-      console.log('No player found for user_id:', userData.id)
       return NextResponse.json({ 
         success: true, 
         profile: null,
@@ -73,37 +67,23 @@ export async function GET(request: NextRequest) {
       `)
       .eq('player_id', playerBasic.id)
     
-    console.log('Skill assignments query result:', { skillAssignments, skillError })
-    
     // Combine the results
     const player = {
       ...playerBasic,
       player_skill_assignments: skillAssignments || []
     }
     
-    console.log('Database query result:', { player })
-    console.log('Player found:', !!player)
-    console.log('Player ID from database:', player?.id)
-    console.log('Number of skill assignments found:', skillAssignments?.length || 0)
 
     // Format skills data with filtering based on user role and visibility
     const skills: { [key: string]: string | string[] } = {}
     const userRole = userData.role || 'viewer'
     
-    console.log('=== API /api/player-profile GET - FETCHING DATA ===')
-    console.log('Player skill assignments:', player.player_skill_assignments)
-    console.log('User role for skill filtering in player profile:', userRole)
-    console.log('Player ID:', player.id)
-    console.log('User ID:', userData.id)
-    console.log('Number of skill assignments:', player.player_skill_assignments?.length || 0)
     
     if (player.player_skill_assignments) {
       for (const assignment of player.player_skill_assignments) {
         const skillName = assignment.player_skills?.skill_name
         const isAdminManaged = assignment.player_skills?.is_admin_managed
         const viewerCanSee = assignment.player_skills?.viewer_can_see
-        
-        console.log('Processing skill:', skillName, 'Type:', assignment.player_skills?.skill_type, 'Admin managed:', isAdminManaged, 'Viewer can see:', viewerCanSee)
         
         // Filter skills based on user role and visibility
         if (skillName) {
@@ -113,7 +93,6 @@ export async function GET(request: NextRequest) {
           } else {
             // For viewers, only show skills that viewers can see
             if (viewerCanSee !== true) {
-              console.log('Skipping skill for viewer in player profile:', skillName)
               continue
             }
           }
@@ -121,29 +100,18 @@ export async function GET(request: NextRequest) {
           if (assignment.player_skills?.skill_type === 'multiselect') {
             // For multiselect, use the value_array
             skills[skillName] = assignment.value_array || []
-            console.log('Multiselect skill value:', skills[skillName])
           } else {
             // For single select, use the skill_value_id to get the value
             if (assignment.player_skill_values) {
               skills[skillName] = assignment.player_skill_values.value_name
-              console.log('Single select skill value:', skills[skillName])
             }
           }
         }
       }
     }
     
-    console.log('Formatted skills after filtering:', skills)
-    console.log('Final skills keys:', Object.keys(skills))
-    console.log('Final skills values:', Object.values(skills))
-    console.log('Number of final skills:', Object.keys(skills).length)
-
     // Remove the skill assignments from the response
     const { player_skill_assignments, ...profileData } = player
-
-    console.log('=== API /api/player-profile GET - RETURNING DATA ===')
-    console.log('Returning profile:', profileData)
-    console.log('Returning skills:', skills)
 
     return NextResponse.json({
       success: true,
@@ -469,12 +437,8 @@ export async function PUT(request: NextRequest) {
         skillIdMap[skill.skill_name] = skill.id
       })
 
-      console.log('Skill ID map:', skillIdMap)
-      console.log('Skills being processed:', skills)
-
       // Create new skill assignments
       for (const [skillKey, skillValue] of Object.entries(skills)) {
-        console.log(`Processing skill: ${skillKey} = ${skillValue}`)
         if (skillValue && skillIdMap[skillKey]) {
           const skillId = skillIdMap[skillKey]
           
@@ -502,8 +466,6 @@ export async function PUT(request: NextRequest) {
                 
                 if (insertError) {
                   console.error(`Error inserting multi-select skill ${skillKey}:`, insertError)
-                } else {
-                  console.log(`Successfully inserted multi-select skill ${skillKey}:`, skillValue)
                 }
               }
             }
@@ -530,8 +492,6 @@ export async function PUT(request: NextRequest) {
                 
                 if (insertError) {
                   console.error(`Error inserting single-select skill ${skillKey}:`, insertError)
-                } else {
-                  console.log(`Successfully inserted single-select skill ${skillKey}:`, skillValue)
                 }
               }
             }
