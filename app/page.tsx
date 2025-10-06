@@ -33,10 +33,13 @@ export default function Home() {
     const checkPlayerProfile = async () => {
       if (user && !isLoading && !hasCheckedProfile) {
         try {
+          console.log('Sending user data for profile check:', user)
+          console.log('Authorization header:', JSON.stringify(user))
+          
           const response = await fetch('/api/player-profile', {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${JSON.stringify(user)}`
+              'Authorization': JSON.stringify(user)
             }
           })
           
