@@ -10,6 +10,7 @@ export default function Home() {
   const [user, setUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showPlayerProfilePrompt, setShowPlayerProfilePrompt] = useState(false)
+  const [hasCheckedProfile, setHasCheckedProfile] = useState(false)
 
   useEffect(() => {
     // Get user from session manager
@@ -30,7 +31,7 @@ export default function Home() {
   // Check for player profile when user is logged in
   useEffect(() => {
     const checkPlayerProfile = async () => {
-      if (user && !isLoading) {
+      if (user && !isLoading && !hasCheckedProfile) {
         try {
           const response = await fetch('/api/player-profile', {
             method: 'GET',
@@ -39,26 +40,40 @@ export default function Home() {
             }
           })
           
+          console.log('Player profile check - Response status:', response.status)
+          
           if (response.ok) {
             const data = await response.json()
+            console.log('Player profile check - Response data:', data)
+            console.log('Player profile check - data.success:', data.success)
+            console.log('Player profile check - data.profile:', data.profile)
+            console.log('Player profile check - profile exists:', !!(data.profile && data.profile.id))
+            
             // Show prompt if user doesn't have a player profile
-            if (!data.success || !data.profile) {
+            if (!data.success || !data.profile || !data.profile.id) {
+              console.log('No player profile found, showing prompt')
               setShowPlayerProfilePrompt(true)
+            } else {
+              console.log('Player profile found, NOT showing prompt')
             }
+            setHasCheckedProfile(true)
           } else {
+            console.log('API failed, showing prompt')
             // If API fails, assume no profile and show prompt
             setShowPlayerProfilePrompt(true)
+            setHasCheckedProfile(true)
           }
         } catch (error) {
           console.error('Error checking player profile:', error)
           // On error, show prompt to be safe
           setShowPlayerProfilePrompt(true)
+          setHasCheckedProfile(true)
         }
       }
     }
 
     checkPlayerProfile()
-  }, [user, isLoading])
+  }, [user, isLoading, hasCheckedProfile])
 
   if (isLoading) {
     return (

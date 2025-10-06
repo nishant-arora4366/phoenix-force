@@ -12,7 +12,7 @@ export default function PlayerProfilePrompt({ onClose }: PlayerProfilePromptProp
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full transform transition-all duration-300 scale-100">
         {/* Header with gradient */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl px-6 py-4">
+        <div className="bg-gradient-to-r from-gray-700 to-gray-800 rounded-t-2xl px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
@@ -24,12 +24,12 @@ export default function PlayerProfilePrompt({ onClose }: PlayerProfilePromptProp
                 <h3 className="text-xl font-bold text-white">
                   Complete Your Profile
                 </h3>
-                <p className="text-blue-100 text-sm">Join tournaments and auctions</p>
+                <p className="text-gray-200 text-sm">Join tournaments and auctions</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-white hover:text-blue-200 transition-colors p-1"
+              className="text-white hover:text-gray-200 transition-colors p-1"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -42,7 +42,7 @@ export default function PlayerProfilePrompt({ onClose }: PlayerProfilePromptProp
         <div className="p-6">
           <div className="mb-6">
             <div className="flex items-start mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -85,7 +85,7 @@ export default function PlayerProfilePrompt({ onClose }: PlayerProfilePromptProp
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/player-profile"
-              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl text-center font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl text-center font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
               Create Player Profile
             </Link>
