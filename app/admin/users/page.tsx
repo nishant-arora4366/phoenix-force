@@ -1330,7 +1330,7 @@ export default function UserManagementPage() {
                     {expandedSkills.has(skill.id) && (
                       <div className="border-t border-gray-200 p-4 bg-gray-50">
                         {/* Skill Values */}
-                    <div className="mt-3">
+                        <div className="mt-3">
                       <div className="flex justify-between items-center mb-2">
                         <h4 className="text-sm font-medium text-gray-700">Values:</h4>
                         <button
@@ -1482,7 +1482,8 @@ export default function UserManagementPage() {
                             </button>
                           </div>
                         </div>
-                      )}
+                        )}
+                        </div>
                       </div>
                     )}
 
