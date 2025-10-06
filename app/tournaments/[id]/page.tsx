@@ -110,7 +110,11 @@ export default function TournamentDetailsPage() {
                 if (slotsResult.success) {
                   setSlots(slotsResult.slots)
                   setSlotsStats(slotsResult.stats)
+                } else {
+                  console.error('Slots API returned error:', slotsResult.error)
                 }
+              } else {
+                console.error('Slots API request failed:', slotsResponse.status, slotsResponse.statusText)
               }
             }
           }
@@ -745,10 +749,17 @@ export default function TournamentDetailsPage() {
                                 if (slotsResult.success) {
                                   setSlots(slotsResult.slots)
                                   setSlotsStats(slotsResult.stats)
+                                } else {
+                                  console.error('Slots API returned error:', slotsResult.error)
+                                  alert(`Error loading slots: ${slotsResult.error}`)
                                 }
+                              } else {
+                                console.error('Slots API request failed:', slotsResponse.status, slotsResponse.statusText)
+                                alert(`Failed to load slots: ${slotsResponse.status} ${slotsResponse.statusText}`)
                               }
                             } catch (error) {
                               console.error('Error loading slots:', error)
+                              alert(`Error loading slots: ${error}`)
                             }
                           }}
                           className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
