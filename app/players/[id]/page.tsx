@@ -20,6 +20,7 @@ interface Player {
   wicket_keeping_rating?: number
   created_at: string
   updated_at?: string
+  skills?: { [key: string]: string | string[] }
 }
 
 export default function PlayerDetailsPage({ params }: { params: Promise<{ id: string }> }) {

@@ -17,6 +17,7 @@ interface PlayerFormData {
   bowling_rating: number
   batting_rating: number
   wicket_keeping_rating: number
+  skills: { [key: string]: string | string[] }
 }
 
 export default function EditPlayerPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,7 +39,8 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
     is_wicket_keeper: false,
     bowling_rating: 0,
     batting_rating: 0,
-    wicket_keeping_rating: 0
+    wicket_keeping_rating: 0,
+    skills: {}
   })
 
   // Check if user is authenticated and has permission
@@ -108,7 +110,8 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
           is_wicket_keeper: player.is_wicket_keeper || false,
           bowling_rating: player.bowling_rating || 0,
           batting_rating: player.batting_rating || 0,
-          wicket_keeping_rating: player.wicket_keeping_rating || 0
+          wicket_keeping_rating: player.wicket_keeping_rating || 0,
+          skills: player.skills || {}
         })
       } catch (error: any) {
         console.error('Error fetching player:', error)

@@ -20,6 +20,7 @@ interface Player {
   batting_rating?: number
   wicket_keeping_rating?: number
   created_at: string
+  skills?: { [key: string]: string | string[] }
 }
 
 const fetcher = async (url: string) => {

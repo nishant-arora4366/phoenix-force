@@ -72,22 +72,29 @@ export async function GET(request: NextRequest) {
     // Format skills data
     const skills: { [key: string]: string | string[] } = {}
     
+    console.log('Player skill assignments:', player.player_skill_assignments)
+    
     if (player.player_skill_assignments) {
       for (const assignment of player.player_skill_assignments) {
         const skillName = assignment.player_skills?.skill_name
+        console.log('Processing skill:', skillName, 'Type:', assignment.player_skills?.skill_type)
         if (skillName) {
           if (assignment.player_skills?.skill_type === 'multiselect') {
             // For multiselect, use the value_array
             skills[skillName] = assignment.value_array || []
+            console.log('Multiselect skill value:', skills[skillName])
           } else {
             // For single select, use the skill_value_id to get the value
             if (assignment.player_skill_values) {
               skills[skillName] = assignment.player_skill_values.value_name
+              console.log('Single select skill value:', skills[skillName])
             }
           }
         }
       }
     }
+    
+    console.log('Formatted skills:', skills)
 
     // Remove the skill assignments from the response
     const { player_skill_assignments, ...profileData } = player

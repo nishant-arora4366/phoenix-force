@@ -144,8 +144,11 @@ export default function PlayerProfilePage() {
       })
 
       const result = await response.json()
+      console.log('Player profile API response:', result)
+      
       if (result.success && result.profile) {
         setPlayerProfile(result.profile)
+        console.log('Setting form data with skills:', result.skills)
         setFormData({
           display_name: result.profile.display_name || '',
           bio: result.profile.bio || '',
@@ -363,6 +366,25 @@ export default function PlayerProfilePage() {
                     <p className="text-lg text-gray-900">{playerProfile.bio || 'No bio provided'}</p>
                   </div>
 
+                  {/* Skills Display */}
+                  {Object.keys(formData.skills).length > 0 && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Skills & Attributes
+                      </label>
+                      <div className="space-y-2">
+                        {Object.entries(formData.skills).map(([skillName, skillValue]) => (
+                          <div key={skillName} className="flex justify-between">
+                            <span className="text-sm font-medium text-gray-600">{skillName}:</span>
+                            <span className="text-sm text-gray-900">
+                              {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Base Price - Only for Hosts and Admins */}
                   {(userRole === 'host' || userRole === 'admin') && (
                     <div>
@@ -532,9 +554,11 @@ export default function PlayerProfilePage() {
                           return null
                         }
 
-                        const skillKey = skill.skill_name.toLowerCase().replace(' ', '_')
+                        const skillKey = skill.skill_name
                         const isMultiSelect = skill.skill_type === 'multiselect'
                         const currentValue = formData.skills[skillKey] || (isMultiSelect ? [] : '')
+                        
+                        console.log('Rendering skill:', skill.skill_name, 'Current value:', currentValue, 'Form data skills:', formData.skills)
 
                         return (
                           <div key={skill.id} className="space-y-2">
