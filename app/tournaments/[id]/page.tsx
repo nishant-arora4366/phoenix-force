@@ -92,14 +92,16 @@ export default function TournamentDetailsPage() {
           }
         }
 
-        // Fetch tournament slots if user is host or admin
+        // Fetch tournament slots for all authenticated users
         if (sessionUser) {
           const userResponse = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
           const userResult = await userResponse.json()
           if (userResult.success) {
             const isAdmin = userResult.data.role === 'admin'
             const isTournamentHost = sessionUser.id === tournamentData.host_id
-            if (isAdmin || isTournamentHost) {
+            const isViewer = userResult.data.role === 'viewer'
+            // Load slots for all authenticated users (admin, host, or viewer)
+            if (isAdmin || isTournamentHost || isViewer) {
               const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
                 headers: {
                   'Authorization': JSON.stringify(sessionUser),
