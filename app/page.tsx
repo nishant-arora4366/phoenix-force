@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import AuthForm from '@/components/AuthForm'
+import PlayerProfilePrompt from '@/components/PlayerProfilePrompt'
 import { sessionManager } from '@/lib/session'
 
 export default function Home() {
   const [user, setUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showPlayerProfilePrompt, setShowPlayerProfilePrompt] = useState(false)
 
   useEffect(() => {
     // Get user from session manager
@@ -25,6 +27,39 @@ export default function Home() {
     }
   }, [])
 
+  // Check for player profile when user is logged in
+  useEffect(() => {
+    const checkPlayerProfile = async () => {
+      if (user && !isLoading) {
+        try {
+          const response = await fetch('/api/player-profile', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${JSON.stringify(user)}`
+            }
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            // Show prompt if user doesn't have a player profile
+            if (!data.success || !data.profile) {
+              setShowPlayerProfilePrompt(true)
+            }
+          } else {
+            // If API fails, assume no profile and show prompt
+            setShowPlayerProfilePrompt(true)
+          }
+        } catch (error) {
+          console.error('Error checking player profile:', error)
+          // On error, show prompt to be safe
+          setShowPlayerProfilePrompt(true)
+        }
+      }
+    }
+
+    checkPlayerProfile()
+  }, [user, isLoading])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -38,6 +73,11 @@ export default function Home() {
 
   return (
     <div>
+      {/* Player Profile Prompt */}
+      {showPlayerProfilePrompt && (
+        <PlayerProfilePrompt onClose={() => setShowPlayerProfilePrompt(false)} />
+      )}
+      
       {/* Hero Section */}
       <div className="relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">

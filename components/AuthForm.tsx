@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
 interface AuthFormProps {
@@ -8,6 +9,7 @@ interface AuthFormProps {
 }
 
 export default function AuthForm({ onAuthChange }: AuthFormProps) {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -32,8 +34,25 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
         if (error) throw error
         
         authData = data
-        setMessage('Check your email for the confirmation link!')
-        setUser(data.user)
+        
+        // If user is immediately confirmed (no email confirmation required)
+        if (data.user && data.session) {
+          setMessage('Account created successfully! You are now signed in.')
+          setUser(data.user)
+          
+          // Navigate to signin page after successful signup
+          setTimeout(() => {
+            router.push('/signin')
+          }, 2000)
+        } else {
+          setMessage('Check your email for the confirmation link!')
+          setUser(data.user)
+          
+          // Navigate to signin page after signup
+          setTimeout(() => {
+            router.push('/signin')
+          }, 2000)
+        }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,

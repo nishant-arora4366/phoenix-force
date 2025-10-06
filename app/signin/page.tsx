@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AuthFormExtended from '@/components/AuthFormExtended'
+import PlayerProfilePrompt from '@/components/PlayerProfilePrompt'
 import { sessionManager } from '@/lib/session'
 
 export default function SignIn() {
   const [user, setUser] = useState<any>(null)
+  const [showPlayerProfilePrompt, setShowPlayerProfilePrompt] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -34,13 +36,47 @@ export default function SignIn() {
   const handleAuthChange = (user: any) => {
     setUser(user)
     if (user) {
-      // Redirect to homepage after successful sign in
-      router.push('/')
+      // Check for player profile after sign in
+      checkPlayerProfile(user)
+    }
+  }
+
+  const checkPlayerProfile = async (userData: any) => {
+    try {
+      const response = await fetch('/api/player-profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${JSON.stringify(userData)}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Show prompt if user doesn't have a player profile
+        if (!data.success || !data.profile) {
+          setShowPlayerProfilePrompt(true)
+        } else {
+          // Redirect to homepage if user has profile
+          router.push('/')
+        }
+      } else {
+        // If API fails, show prompt
+        setShowPlayerProfilePrompt(true)
+      }
+    } catch (error) {
+      console.error('Error checking player profile:', error)
+      // On error, show prompt to be safe
+      setShowPlayerProfilePrompt(true)
     }
   }
 
   return (
     <div>
+      {/* Player Profile Prompt */}
+      {showPlayerProfilePrompt && (
+        <PlayerProfilePrompt onClose={() => setShowPlayerProfilePrompt(false)} />
+      )}
+      
       {/* Sign In Form */}
       <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
