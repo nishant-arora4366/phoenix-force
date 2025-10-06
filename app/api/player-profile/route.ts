@@ -1,6 +1,112 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+export async function GET(request: NextRequest) {
+  try {
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    }
+
+    // Parse user data from authorization header
+    let userData
+    try {
+      userData = JSON.parse(authHeader)
+    } catch (error) {
+      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
+    }
+
+    if (!userData || !userData.id) {
+      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    // Get user's player profile
+    const { data: player, error: playerError } = await supabase
+      .from('players')
+      .select(`
+        *,
+        player_skill_assignments (
+          id,
+          skill_value_id,
+          skill_value_ids,
+          value_array,
+          player_skills (
+            id,
+            skill_name,
+            skill_type,
+            is_required,
+            display_order
+          ),
+          player_skill_values (
+            id,
+            value_name,
+            display_order
+          )
+        )
+      `)
+      .eq('user_id', userData.id)
+      .single()
+
+    if (playerError) {
+      if (playerError.code === 'PGRST116') {
+        // No player profile found
+        return NextResponse.json({ 
+          success: true, 
+          profile: null,
+          message: 'No player profile found'
+        })
+      }
+      console.error('Error fetching player profile:', playerError)
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Error fetching player profile' 
+      }, { status: 500 })
+    }
+
+    // Format skills data
+    const skills: { [key: string]: string | string[] } = {}
+    
+    if (player.player_skill_assignments) {
+      for (const assignment of player.player_skill_assignments) {
+        const skillName = assignment.player_skills?.skill_name
+        if (skillName) {
+          if (assignment.player_skills?.skill_type === 'multiselect') {
+            // For multiselect, use the value_array
+            skills[skillName] = assignment.value_array || []
+          } else {
+            // For single select, use the skill_value_id to get the value
+            if (assignment.player_skill_values) {
+              skills[skillName] = assignment.player_skill_values.value_name
+            }
+          }
+        }
+      }
+    }
+
+    // Remove the skill assignments from the response
+    const { player_skill_assignments, ...profileData } = player
+
+    return NextResponse.json({
+      success: true,
+      profile: profileData,
+      skills
+    })
+
+  } catch (error: any) {
+    console.error('Error in player profile GET API:', error)
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Internal server error' 
+    }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Get the authorization header
