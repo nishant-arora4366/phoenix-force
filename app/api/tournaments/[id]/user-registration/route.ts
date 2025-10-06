@@ -13,16 +13,12 @@ export async function GET(
 ) {
   try {
     const tournamentId = params.id
-    console.log('=== USER REGISTRATION API - START ===')
-    console.log('Tournament ID:', tournamentId)
 
     // Get user from session
     const userData = sessionManager.getUserFromRequest(request)
     if (!userData) {
-      console.log('No user data found in session')
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
-    console.log('User data:', userData)
 
     // Get user's player profile
     const { data: player, error: playerError } = await supabase
@@ -31,10 +27,7 @@ export async function GET(
       .eq('user_id', userData.id)
       .single()
 
-    console.log('Player lookup result:', { player, playerError })
-
     if (playerError || !player) {
-      console.log('Player profile not found')
       return NextResponse.json({ 
         success: false, 
         error: 'Player profile not found. Please create a player profile first.' 
@@ -49,8 +42,6 @@ export async function GET(
       .eq('player_id', player.id)
       .single()
 
-    console.log('Registration lookup result:', { registration, registrationError })
-
     if (registrationError && registrationError.code !== 'PGRST116') {
       console.error('Error checking registration:', registrationError)
       return NextResponse.json({ 
@@ -60,7 +51,6 @@ export async function GET(
     }
 
     if (registration) {
-      console.log('User is registered:', registration)
       return NextResponse.json({ 
         success: true, 
         registration: {
@@ -73,7 +63,6 @@ export async function GET(
         }
       })
     } else {
-      console.log('User is not registered')
       return NextResponse.json({ 
         success: true, 
         registration: null 

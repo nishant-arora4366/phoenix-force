@@ -255,13 +255,7 @@ export default function TournamentDetailsPage() {
   const checkUserRegistration = async () => {
     try {
       const sessionUser = sessionManager.getUser()
-      if (!sessionUser) {
-        console.log('No session user found')
-        return
-      }
-
-      console.log('Checking user registration for tournament:', tournamentId)
-      console.log('Session user:', sessionUser)
+      if (!sessionUser) return
 
       const response = await fetch(`/api/tournaments/${tournamentId}/user-registration`, {
         headers: {
@@ -269,15 +263,10 @@ export default function TournamentDetailsPage() {
         },
       })
 
-      console.log('User registration API response status:', response.status)
       const result = await response.json()
-      console.log('User registration API result:', result)
-
       if (result.success && result.registration) {
-        console.log('User is registered:', result.registration)
         setUserRegistration(result.registration)
       } else {
-        console.log('User is not registered or error occurred')
         setUserRegistration(null)
       }
     } catch (error) {
@@ -777,19 +766,6 @@ export default function TournamentDetailsPage() {
                   </div>
                 )}
 
-                {/* Debug Info */}
-                {user && (
-                  <div className="mb-4 p-3 bg-gray-100 rounded text-xs">
-                    <strong>Debug Info:</strong> userRegistration = {JSON.stringify(userRegistration)}
-                    <br />
-                    <button 
-                      onClick={checkUserRegistration}
-                      className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
-                    >
-                      Check Registration Status
-                    </button>
-                  </div>
-                )}
 
                 {/* Player Registration Section - Moved to Top */}
                 {user && tournament.status === 'registration_open' && !isHost && (
