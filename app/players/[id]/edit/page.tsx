@@ -9,7 +9,6 @@ interface PlayerFormData {
   bio: string
   profile_pic_url: string
   mobile_number: string
-  base_price: number
   skills: { [key: string]: string | string[] }
 }
 
@@ -40,7 +39,6 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
     bio: '',
     profile_pic_url: '',
     mobile_number: '',
-    base_price: 0,
     skills: {}
   })
 
