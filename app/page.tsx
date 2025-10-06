@@ -44,17 +44,24 @@ export default function Home() {
           
           if (response.ok) {
             const data = await response.json()
-            console.log('Player profile check - Response data:', data)
+            console.log('Player profile check - Full response data:', JSON.stringify(data, null, 2))
             console.log('Player profile check - data.success:', data.success)
             console.log('Player profile check - data.profile:', data.profile)
-            console.log('Player profile check - profile exists:', !!(data.profile && data.profile.id))
+            console.log('Player profile check - data.profile exists:', !!data.profile)
+            console.log('Player profile check - data.profile.id:', data.profile?.id)
+            console.log('Player profile check - data.profile.id exists:', !!data.profile?.id)
+            
+            // Check if profile actually exists (not null)
+            const hasValidProfile = data.success && data.profile !== null && data.profile && data.profile.id
+            console.log('Player profile check - hasValidProfile:', hasValidProfile)
+            console.log('Player profile check - profile is null:', data.profile === null)
             
             // Show prompt if user doesn't have a player profile
-            if (!data.success || !data.profile || !data.profile.id) {
-              console.log('No player profile found, showing prompt')
+            if (!hasValidProfile) {
+              console.log('No valid player profile found, showing prompt')
               setShowPlayerProfilePrompt(true)
             } else {
-              console.log('Player profile found, NOT showing prompt')
+              console.log('Valid player profile found, NOT showing prompt')
             }
             setHasCheckedProfile(true)
           } else {
