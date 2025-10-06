@@ -465,28 +465,76 @@ export async function PUT(request: NextRequest) {
 
       const skillIdMap: { [key: string]: string } = {}
       playerSkills?.forEach(skill => {
-        skillIdMap[skill.skill_name.toLowerCase().replace(' ', '_')] = skill.id
+        // Use the exact skill name as the key (matching frontend)
+        skillIdMap[skill.skill_name] = skill.id
       })
+
+      console.log('Skill ID map:', skillIdMap)
+      console.log('Skills being processed:', skills)
 
       // Create new skill assignments
       for (const [skillKey, skillValue] of Object.entries(skills)) {
+        console.log(`Processing skill: ${skillKey} = ${skillValue}`)
         if (skillValue && skillIdMap[skillKey]) {
-          // Find the skill value ID
-          const { data: skillValues } = await supabase
-            .from('player_skill_values')
-            .select('id')
-            .eq('skill_id', skillIdMap[skillKey])
-            .eq('value_name', skillValue)
-            .single()
+          const skillId = skillIdMap[skillKey]
+          
+          if (Array.isArray(skillValue)) {
+            // Multi-select skill
+            if (skillValue.length > 0) {
+              // Get skill value IDs
+              const { data: skillValues } = await supabase
+                .from('player_skill_values')
+                .select('id')
+                .in('value_name', skillValue)
+                .eq('skill_id', skillId)
 
-          if (skillValues) {
-            await supabase
-              .from('player_skill_assignments')
-              .insert({
-                player_id: id,
-                skill_id: skillIdMap[skillKey],
-                skill_value_id: skillValues.id
-              })
+              if (skillValues && skillValues.length > 0) {
+                const skillValueIds = skillValues.map(sv => sv.id)
+                
+                const { error: insertError } = await supabase
+                  .from('player_skill_assignments')
+                  .insert({
+                    player_id: id,
+                    skill_id: skillId,
+                    skill_value_ids: skillValueIds,
+                    value_array: skillValue
+                  })
+                
+                if (insertError) {
+                  console.error(`Error inserting multi-select skill ${skillKey}:`, insertError)
+                } else {
+                  console.log(`Successfully inserted multi-select skill ${skillKey}:`, skillValue)
+                }
+              }
+            }
+          } else {
+            // Single-select skill
+            if (skillValue) {
+              // Get skill value ID
+              const { data: skillValueData } = await supabase
+                .from('player_skill_values')
+                .select('id')
+                .eq('value_name', skillValue)
+                .eq('skill_id', skillId)
+                .single()
+
+              if (skillValueData) {
+                const { error: insertError } = await supabase
+                  .from('player_skill_assignments')
+                  .insert({
+                    player_id: id,
+                    skill_id: skillId,
+                    skill_value_id: skillValueData.id,
+                    value_array: [skillValue]
+                  })
+                
+                if (insertError) {
+                  console.error(`Error inserting single-select skill ${skillKey}:`, insertError)
+                } else {
+                  console.log(`Successfully inserted single-select skill ${skillKey}:`, skillValue)
+                }
+              }
+            }
           }
         }
       }
