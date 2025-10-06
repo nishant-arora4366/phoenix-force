@@ -135,16 +135,30 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
         }
 
         console.log('Full API response:', result)
-        const player = result.data
+        
+        // Handle different API response structures
+        let player, skills
+        if (result.data) {
+          // Structure: {success: true, data: {skills: {...}}}
+          player = result.data
+          skills = result.data.skills || {}
+        } else if (result.profile) {
+          // Structure: {success: true, profile: {...}, skills: {...}}
+          player = result.profile
+          skills = result.skills || {}
+        } else {
+          throw new Error('Invalid API response structure')
+        }
+        
         console.log('Player data from API:', player)
-        console.log('Player skills from API:', player.skills)
+        console.log('Player skills from API:', skills)
         setFormData({
           display_name: player.display_name || '',
           bio: player.bio || '',
           profile_pic_url: player.profile_pic_url || '',
           mobile_number: player.mobile_number || '',
           base_price: player.base_price || 0,
-          skills: player.skills || {}
+          skills: skills
         })
         console.log('Form data set to:', {
           display_name: player.display_name || '',
@@ -152,7 +166,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
           profile_pic_url: player.profile_pic_url || '',
           mobile_number: player.mobile_number || '',
           base_price: player.base_price || 0,
-          skills: player.skills || {}
+          skills: skills
         })
       } catch (error: any) {
         console.error('Error fetching player:', error)
