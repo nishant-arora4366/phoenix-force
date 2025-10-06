@@ -51,6 +51,7 @@ export async function POST(
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
     }
 
+    console.log('Tournament status:', tournament.status)
     if (tournament.status !== 'registration_open') {
       return NextResponse.json({ error: 'Tournament registration is not open' }, { status: 400 })
     }
@@ -64,6 +65,8 @@ export async function POST(
 
     if (playerError || !player) {
       console.error('Player profile error:', playerError)
+      console.error('User ID:', sessionUser.id)
+      console.error('Player found:', !!player)
       return NextResponse.json({ error: 'Player profile not found. Please create a player profile first.' }, { status: 400 })
     }
 
@@ -130,7 +133,12 @@ export async function POST(
       .single()
 
     if (registerError) {
-      return NextResponse.json({ error: 'Failed to register for tournament slot' }, { status: 500 })
+      console.error('Registration insert error:', registerError)
+      console.error('Tournament ID:', tournamentId)
+      console.error('Player ID:', player.id)
+      console.error('Slot number:', slotNumber)
+      console.error('Status:', status)
+      return NextResponse.json({ error: 'Failed to register for tournament slot', details: registerError.message }, { status: 500 })
     }
 
     return NextResponse.json({
