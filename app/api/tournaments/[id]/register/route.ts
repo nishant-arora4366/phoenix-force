@@ -136,18 +136,51 @@ export async function POST(
       status = 'waitlist'
     }
 
-    // Register player for slot
-    const { data: slot, error: registerError } = await supabase
+    // Check if slot already exists (pre-created slots)
+    const { data: existingSlotRecord, error: existingSlotError } = await supabase
       .from('tournament_slots')
-      .insert({
-        tournament_id: tournamentId,
-        slot_number: slotNumber,
-        player_id: player.id,
-        status: status,
-        requested_at: new Date().toISOString()
-      })
-      .select()
+      .select('*')
+      .eq('tournament_id', tournamentId)
+      .eq('slot_number', slotNumber)
       .single()
+
+    let slot
+    let registerError
+
+    if (existingSlotRecord) {
+      // Update existing slot record
+      console.log('Updating existing slot record:', existingSlotRecord.id)
+      const { data: updatedSlot, error: updateError } = await supabase
+        .from('tournament_slots')
+        .update({
+          player_id: player.id,
+          status: status,
+          requested_at: new Date().toISOString()
+        })
+        .eq('id', existingSlotRecord.id)
+        .select()
+        .single()
+      
+      slot = updatedSlot
+      registerError = updateError
+    } else {
+      // Insert new slot record (fallback)
+      console.log('Inserting new slot record')
+      const { data: newSlot, error: insertError } = await supabase
+        .from('tournament_slots')
+        .insert({
+          tournament_id: tournamentId,
+          slot_number: slotNumber,
+          player_id: player.id,
+          status: status,
+          requested_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+      
+      slot = newSlot
+      registerError = insertError
+    }
 
     if (registerError) {
       console.error('Registration insert error:', registerError)
