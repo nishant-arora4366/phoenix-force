@@ -136,7 +136,16 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
 
         const player = result.data
         console.log('Player data from API:', player)
+        console.log('Player skills from API:', player.skills)
         setFormData({
+          display_name: player.display_name || '',
+          bio: player.bio || '',
+          profile_pic_url: player.profile_pic_url || '',
+          mobile_number: player.mobile_number || '',
+          base_price: player.base_price || 0,
+          skills: player.skills || {}
+        })
+        console.log('Form data set to:', {
           display_name: player.display_name || '',
           bio: player.bio || '',
           profile_pic_url: player.profile_pic_url || '',
