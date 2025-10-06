@@ -9,10 +9,10 @@ const supabase = createClient(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const tournamentId = params.id
+    const { id: tournamentId } = await params
 
     // Get user from session
     const userData = sessionManager.getUserFromRequest(request)
