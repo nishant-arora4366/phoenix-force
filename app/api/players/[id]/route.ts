@@ -194,6 +194,9 @@ export async function PUT(
     }
 
     const body = await request.json()
+    console.log('Received data in API:', body)
+    console.log('Skills received:', body.skills)
+    
     const { 
       display_name, 
       bio, 
@@ -244,6 +247,8 @@ export async function PUT(
 
     // Handle skill assignments if provided
     if (skills && Object.keys(skills).length > 0) {
+      console.log('Processing skills:', skills)
+      
       // Delete existing skill assignments for this player
       await supabase
         .from('player_skill_assignments')
@@ -252,6 +257,7 @@ export async function PUT(
 
       // Insert new skill assignments
       for (const [skillName, skillValue] of Object.entries(skills)) {
+        console.log(`Processing skill: ${skillName} = ${skillValue}`)
         // Get the skill ID
         const { data: skillData } = await supabase
           .from('player_skills')

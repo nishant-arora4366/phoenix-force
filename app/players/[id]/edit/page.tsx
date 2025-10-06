@@ -171,6 +171,9 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
         throw new Error('User not authenticated')
       }
 
+      console.log('Sending form data to API:', formData)
+      console.log('Skills being sent:', formData.skills)
+
       const response = await fetch(`/api/players/${id}`, {
         method: 'PUT',
         headers: {
