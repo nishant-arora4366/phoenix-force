@@ -91,10 +91,13 @@ export async function POST(
       .order('slot_number')
 
     if (slotsError) {
+      console.error('Error fetching filled slots:', slotsError)
       return NextResponse.json({ error: 'Error checking tournament slots' }, { status: 500 })
     }
 
+    console.log('Filled slots from database:', filledSlots)
     const filledSlotNumbers = filledSlots?.map(slot => slot.slot_number) || []
+    console.log('Filled slot numbers array:', filledSlotNumbers)
     const totalSlots = tournament.total_slots
     const waitlistSlots = 10 // Additional waitlist slots
     const maxSlots = totalSlots + waitlistSlots
@@ -107,17 +110,25 @@ export async function POST(
     console.log('Total slots:', totalSlots)
     console.log('Max slots:', maxSlots)
     
-    while (slotNumber <= maxSlots) {
-      if (!filledSlotNumbers.includes(slotNumber)) {
+    // Find the first available slot number
+    for (let i = 1; i <= maxSlots; i++) {
+      if (!filledSlotNumbers.includes(i)) {
+        slotNumber = i
         break
       }
-      slotNumber++
     }
     
     console.log('Selected slot number:', slotNumber)
 
     if (slotNumber > maxSlots) {
       return NextResponse.json({ error: 'Tournament is full and waitlist is full' }, { status: 400 })
+    }
+
+    // Double-check that the selected slot is actually available
+    if (filledSlotNumbers.includes(slotNumber)) {
+      console.error('Selected slot number is already filled:', slotNumber)
+      console.error('Filled slots:', filledSlotNumbers)
+      return NextResponse.json({ error: 'Selected slot is already taken. Please try again.' }, { status: 400 })
     }
 
     // If slot is beyond tournament slots, it's waitlist
