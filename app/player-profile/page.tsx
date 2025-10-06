@@ -261,24 +261,37 @@ export default function PlayerProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-full mb-6">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 space-y-4 sm:space-y-0">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <button
+              onClick={() => router.push('/')}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <div>
+              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">
+                {playerProfile ? 'My Player Profile' : 'Create Player Profile'}
+              </h1>
+            </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            {playerProfile ? 'My Player Profile' : 'Create Player Profile'}
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            {playerProfile 
-              ? 'Manage your cricket player profile and skills'
-              : 'Create your cricket player profile to participate in tournaments'
-            }
-          </p>
+
+          {/* Action Buttons */}
+          {playerProfile && !isEditing && (
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
+              >
+                Edit Profile
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Player Profile Status */}
@@ -325,77 +338,115 @@ export default function PlayerProfilePage() {
           </div>
         )}
 
-        {/* Profile Display or Edit Form */}
+        {/* Player Card - Similar to Players Details Page */}
         {!isEditing && playerProfile ? (
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="bg-gray-700 px-8 py-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">Player Profile</h2>
+          <div className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
+            {/* Player Image Header */}
+            <div className="relative h-64 sm:h-80 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+              {playerProfile.profile_pic_url ? (
+                <img
+                  src={playerProfile.profile_pic_url}
+                  alt={playerProfile.display_name}
+                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center">
+                  <div className="text-8xl text-gray-400">🏏</div>
+                </div>
+              )}
+              
+              {/* Price Badge */}
+              {formData.skills?.['Base Price'] && (
+                <div className="absolute top-4 right-4 bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                  ₹{formData.skills['Base Price']}
+                </div>
+              )}
+              
+              {/* Status Badge */}
+              <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-medium shadow-lg ${
+                playerProfile.status === 'approved' 
+                  ? 'bg-green-600 text-white'
+                  : playerProfile.status === 'pending'
+                  ? 'bg-yellow-600 text-white'
+                  : 'bg-red-600 text-white'
+              }`}>
+                {playerProfile.status.charAt(0).toUpperCase() + playerProfile.status.slice(1)}
+              </div>
+            </div>
+
+            {/* Player Info */}
+            <div className="p-6">
+              <div className="mb-4">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 group-hover:text-gray-600 transition-colors mb-2">
+                  {playerProfile.display_name}
+                </h1>
+              </div>
+
+              {/* Bio */}
+              {playerProfile.bio && (
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">{playerProfile.bio}</p>
+              )}
+
+              {/* Skills and Attributes */}
+              {Object.keys(formData.skills).length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.entries(formData.skills).map(([skillName, skillValue]) => (
+                    <span key={skillName} className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full font-medium">
+                      {skillName}: {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Mobile Number */}
+              {playerProfile.mobile_number && (
+                <div className="text-sm text-gray-600 mb-4">
+                  📱 {playerProfile.mobile_number}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-gray-100">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-semibold"
                 >
                   Edit Profile
                 </button>
               </div>
             </div>
+          </div>
+        ) : !isEditing ? (
+          <div className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
+            <div className="p-8 text-center">
+              <div className="text-6xl mb-4">🏏</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">No Player Profile</h2>
+              <p className="text-gray-600 mb-6">Create your cricket player profile to participate in tournaments</p>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
+              >
+                Create Profile
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {playerProfile ? 'Edit Player Profile' : 'Create Player Profile'}
+              </h2>
+              <p className="text-gray-600">
+                {playerProfile 
+                  ? 'Update your player information and skills'
+                  : 'Fill in your player information to create your profile'
+                }
+              </p>
+            </div>
 
-            <div className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Basic Info */}
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Display Name
-                    </label>
-                    <p className="text-lg text-gray-900">{playerProfile.display_name}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Mobile Number
-                    </label>
-                    <p className="text-lg text-gray-900">{playerProfile.mobile_number || 'Not provided'}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Bio
-                    </label>
-                    <p className="text-lg text-gray-900">{playerProfile.bio || 'No bio provided'}</p>
-                  </div>
-
-                  {/* Skills Display */}
-                  {Object.keys(formData.skills).length > 0 && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Skills & Attributes
-                      </label>
-                      <div className="space-y-2">
-                        {Object.entries(formData.skills).map(([skillName, skillValue]) => (
-                          <div key={skillName} className="flex justify-between">
-                            <span className="text-sm font-medium text-gray-600">{skillName}:</span>
-                            <span className="text-sm text-gray-900">
-                              {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Base Price - Only for Hosts and Admins */}
-                  {(userRole === 'host' || userRole === 'admin') && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Base Price
-                      </label>
-                      <p className="text-lg text-gray-900">₹{formData.skills?.['Base Price'] || 0}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Profile Picture */}
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Profile Picture
@@ -649,6 +700,92 @@ export default function PlayerProfilePage() {
             </div>
           </div>
         )}
+
+        {/* Additional Information - Similar to Players Details Page */}
+        {!isEditing && playerProfile && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Skills & Attributes */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <span className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center mr-3 text-sm">
+                  ⚡
+                </span>
+                Skills & Attributes
+              </h3>
+              {Object.keys(formData.skills).length > 0 ? (
+                <div className="space-y-3">
+                  {Object.entries(formData.skills).map(([skillName, skillValue]) => (
+                    <div key={skillName} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                      <span className="text-sm font-medium text-gray-600">{skillName}</span>
+                      <span className="text-sm font-bold text-gray-900">
+                        {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 text-4xl mb-3">⚡</div>
+                  <p className="text-gray-500 text-sm">No skills and attributes configured yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Profile Info */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <span className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center mr-3 text-sm">
+                  📊
+                </span>
+                Profile Info
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Status</span>
+                  <span className={`font-bold text-sm px-2 py-1 rounded-full ${
+                    playerProfile.status === 'approved' 
+                      ? 'bg-green-100 text-green-800'
+                      : playerProfile.status === 'pending'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {playerProfile.status.charAt(0).toUpperCase() + playerProfile.status.slice(1)}
+                  </span>
+                </div>
+                {formData.skills?.['Base Price'] && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">Base Price</span>
+                    <span className="font-bold text-gray-900">₹{formData.skills['Base Price']}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Created</span>
+                  <span className="font-bold text-gray-900">
+                    {new Date(playerProfile.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                {playerProfile.updated_at && (
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm text-gray-600">Updated</span>
+                    <span className="font-bold text-gray-900">
+                      {new Date(playerProfile.updated_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Back to Home Button */}
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => router.push('/')}
+            className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
+          >
+            ← Back to Home
+          </button>
+        </div>
       </div>
     </div>
   )
