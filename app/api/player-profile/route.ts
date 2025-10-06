@@ -27,6 +27,9 @@ export async function GET(request: NextRequest) {
     )
 
     // Get user's player profile
+    console.log('=== API /api/player-profile GET - QUERYING DATABASE ===')
+    console.log('Looking for player with user_id:', userData.id)
+    
     const { data: player, error: playerError } = await supabase
       .from('players')
       .select(`
@@ -54,6 +57,10 @@ export async function GET(request: NextRequest) {
       `)
       .eq('user_id', userData.id)
       .single()
+    
+    console.log('Database query result:', { player, playerError })
+    console.log('Player found:', !!player)
+    console.log('Player ID from database:', player?.id)
 
     if (playerError) {
       if (playerError.code === 'PGRST116') {
