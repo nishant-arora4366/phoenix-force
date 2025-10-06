@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { sessionManager } from '@/lib/session'
 
 interface PlayerFormData {
+  id?: string // Optional for new profiles, required for updates
   display_name: string
   bio: string
   profile_pic_url: string
@@ -148,6 +149,7 @@ export default function PlayerProfilePage() {
         setPlayerProfile(result.profile)
         console.log('Setting form data with skills:', result.skills)
         setFormData({
+          id: result.profile.id, // Include player ID for updates
           display_name: result.profile.display_name || '',
           bio: result.profile.bio || '',
           profile_pic_url: result.profile.profile_pic_url || '',
