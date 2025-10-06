@@ -46,6 +46,8 @@ export default function TournamentDetailsPage() {
   const [statusMessage, setStatusMessage] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
   const [registrationMessage, setRegistrationMessage] = useState('')
+  const [userRegistration, setUserRegistration] = useState<any>(null)
+  const [isWithdrawing, setIsWithdrawing] = useState(false)
 
   useEffect(() => {
     const fetchTournamentAndUser = async () => {
@@ -118,6 +120,9 @@ export default function TournamentDetailsPage() {
               } else {
                 console.error('Slots API request failed:', slotsResponse.status, slotsResponse.statusText)
               }
+              
+              // Check if user is already registered for this tournament
+              await checkUserRegistration()
             }
           }
         }
@@ -225,6 +230,51 @@ export default function TournamentDetailsPage() {
     }
   }
 
+  const fetchSlots = async () => {
+    try {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) return
+
+      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+        headers: {
+          'Authorization': JSON.stringify(sessionUser),
+        },
+      })
+      if (slotsResponse.ok) {
+        const slotsResult = await slotsResponse.json()
+        if (slotsResult.success) {
+          setSlots(slotsResult.slots)
+          setSlotsStats(slotsResult.stats)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching slots:', error)
+    }
+  }
+
+  const checkUserRegistration = async () => {
+    try {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) return
+
+      const response = await fetch(`/api/tournaments/${tournamentId}/user-registration`, {
+        headers: {
+          'Authorization': JSON.stringify(sessionUser),
+        },
+      })
+
+      const result = await response.json()
+      if (result.success && result.registration) {
+        setUserRegistration(result.registration)
+      } else {
+        setUserRegistration(null)
+      }
+    } catch (error) {
+      console.error('Error checking user registration:', error)
+      setUserRegistration(null)
+    }
+  }
+
   const registerForTournament = async () => {
     setIsRegistering(true)
     setRegistrationMessage('')
@@ -244,24 +294,49 @@ export default function TournamentDetailsPage() {
       }
 
       setRegistrationMessage(result.message)
-      // Refresh slots data
-      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
-        headers: {
-          'Authorization': JSON.stringify(sessionUser),
-        },
-      })
-      if (slotsResponse.ok) {
-        const slotsResult = await slotsResponse.json()
-        if (slotsResult.success) {
-          setSlots(slotsResult.slots)
-          setSlotsStats(slotsResult.stats)
-        }
-      }
+      // Refresh slots data and user registration status
+      await Promise.all([
+        fetchSlots(),
+        checkUserRegistration()
+      ])
     } catch (err: any) {
       console.error('Error registering for tournament:', err)
       setRegistrationMessage(`Error: ${err.message}`)
     } finally {
       setIsRegistering(false)
+      setTimeout(() => setRegistrationMessage(''), 5000) // Clear message after 5 seconds
+    }
+  }
+
+  const withdrawFromTournament = async () => {
+    setIsWithdrawing(true)
+    setRegistrationMessage('')
+    try {
+      const sessionUser = sessionManager.getUser()
+      const response = await fetch(`/api/tournaments/${tournamentId}/withdraw`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': JSON.stringify(sessionUser),
+        },
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+
+      setRegistrationMessage(result.message)
+      // Refresh slots data and user registration status
+      await Promise.all([
+        fetchSlots(),
+        checkUserRegistration()
+      ])
+    } catch (err: any) {
+      console.error('Error withdrawing from tournament:', err)
+      setRegistrationMessage(`Error: ${err.message}`)
+    } finally {
+      setIsWithdrawing(false)
       setTimeout(() => setRegistrationMessage(''), 5000) // Clear message after 5 seconds
     }
   }
@@ -693,18 +768,46 @@ export default function TournamentDetailsPage() {
 
                 {/* Player Registration Section - Moved to Top */}
                 {user && tournament.status === 'registration_open' && !isHost && (
-                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h3 className="text-lg font-semibold text-blue-900 mb-2">Register for Tournament</h3>
-                    <p className="text-blue-700 text-sm mb-4">
-                      Registration is open! Click below to register for a tournament slot.
-                    </p>
-                    <button
-                      onClick={registerForTournament}
-                      disabled={isRegistering}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isRegistering ? 'Registering...' : 'Register for Tournament'}
-                    </button>
+                  <div className="mb-6 p-4 rounded-lg border">
+                    {userRegistration ? (
+                      // User is already registered
+                      <div className="bg-green-50 border-green-200">
+                        <h3 className="text-lg font-semibold text-green-900 mb-2">Registration Status</h3>
+                        <div className="text-green-700 text-sm mb-4">
+                          <p>You are registered for this tournament!</p>
+                          <p className="mt-1">
+                            <strong>Slot:</strong> {userRegistration.slot_number} | 
+                            <strong> Status:</strong> {userRegistration.status} | 
+                            <strong> Requested:</strong> {new Date(userRegistration.requested_at).toLocaleDateString()}
+                          </p>
+                          {userRegistration.confirmed_at && (
+                            <p><strong>Confirmed:</strong> {new Date(userRegistration.confirmed_at).toLocaleDateString()}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={withdrawFromTournament}
+                          disabled={isWithdrawing}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isWithdrawing ? 'Withdrawing...' : 'Withdraw from Tournament'}
+                        </button>
+                      </div>
+                    ) : (
+                      // User is not registered
+                      <div className="bg-blue-50 border-blue-200">
+                        <h3 className="text-lg font-semibold text-blue-900 mb-2">Register for Tournament</h3>
+                        <p className="text-blue-700 text-sm mb-4">
+                          Registration is open! Click below to register for a tournament slot.
+                        </p>
+                        <button
+                          onClick={registerForTournament}
+                          disabled={isRegistering}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isRegistering ? 'Registering...' : 'Register for Tournament'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
