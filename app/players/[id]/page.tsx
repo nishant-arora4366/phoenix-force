@@ -165,9 +165,6 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
             </button>
             <div>
               <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">{player.display_name}</h1>
-              {player.stage_name && (
-                <p className="text-base sm:text-xl text-gray-600 italic">"{player.stage_name}"</p>
-              )}
             </div>
           </div>
 
@@ -215,9 +212,6 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
             {/* Player Info */}
             <div className="flex-1 text-center sm:text-left">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{player.display_name}</h1>
-              {player.stage_name && (
-                <p className="text-lg sm:text-xl text-gray-600 italic mb-3 sm:mb-4">"{player.stage_name}"</p>
-              )}
               
               {/* Player Roles */}
               <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3 mb-4 sm:mb-6">
