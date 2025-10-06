@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function GET(
   request: NextRequest,
@@ -8,34 +13,9 @@ export async function GET(
   try {
     const { id } = await params
 
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    // Create a new Supabase client with the auth header
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabaseWithAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader
-          }
-        }
-      }
-    )
-
-    // Ensure user is authenticated
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    // Fetch specific player
-    const { data: player, error } = await supabaseWithAuth
+    // Fetch specific player using service role (bypasses RLS)
+    // GET requests are public - no authentication required for viewing
+    const { data: player, error } = await supabase
       .from('players')
       .select('*')
       .eq('id', id)
@@ -86,34 +66,32 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    // Create a new Supabase client with the auth header
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabaseWithAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader
-          }
-        }
-      }
-    )
+    let userData
+    try {
+      userData = JSON.parse(authHeader)
+    } catch (error) {
+      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
+    }
 
-    // Ensure user is authenticated
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    if (!userData || !userData.id) {
+      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
     }
 
     // Check if user has permission to update players (admin or host)
-    const { data: userData } = await supabaseWithAuth
+    const { data: user, error: userError } = await supabase
       .from('users')
-      .select('role')
-      .eq('id', user.id)
+      .select('role, status')
+      .eq('id', userData.id)
       .single()
 
-    if (!userData || (userData.role !== 'admin' && userData.role !== 'host')) {
+    if (userError || !user || user.status !== 'approved') {
+      return NextResponse.json({
+        success: false,
+        error: 'User not approved for updating players'
+      }, { status: 403 })
+    }
+
+    if (user.role !== 'admin' && user.role !== 'host') {
       return NextResponse.json({ 
         success: false, 
         error: 'Only admins and hosts can update players' 
@@ -145,7 +123,7 @@ export async function PUT(
     }
 
     // Update player
-    const { data: player, error } = await supabaseWithAuth
+    const { data: player, error } = await supabase
       .from('players')
       .update({
         display_name,
@@ -211,34 +189,32 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    // Create a new Supabase client with the auth header
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabaseWithAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader
-          }
-        }
-      }
-    )
+    let userData
+    try {
+      userData = JSON.parse(authHeader)
+    } catch (error) {
+      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
+    }
 
-    // Ensure user is authenticated
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    if (!userData || !userData.id) {
+      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
     }
 
     // Check if user has permission to delete players (admin only)
-    const { data: userData } = await supabaseWithAuth
+    const { data: user, error: userError } = await supabase
       .from('users')
-      .select('role')
-      .eq('id', user.id)
+      .select('role, status')
+      .eq('id', userData.id)
       .single()
 
-    if (!userData || userData.role !== 'admin') {
+    if (userError || !user || user.status !== 'approved') {
+      return NextResponse.json({
+        success: false,
+        error: 'User not approved for deleting players'
+      }, { status: 403 })
+    }
+
+    if (user.role !== 'admin') {
       return NextResponse.json({ 
         success: false, 
         error: 'Only admins can delete players' 
@@ -246,7 +222,7 @@ export async function DELETE(
     }
 
     // Delete player
-    const { error } = await supabaseWithAuth
+    const { error } = await supabase
       .from('players')
       .delete()
       .eq('id', id)
