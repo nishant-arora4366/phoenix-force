@@ -162,7 +162,6 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
           bio: player.bio || '',
           profile_pic_url: player.profile_pic_url || '',
           mobile_number: player.mobile_number || '',
-          base_price: player.base_price || 0,
           skills: skills
         })
         console.log('Form data set to:', {
@@ -170,7 +169,6 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
           bio: player.bio || '',
           profile_pic_url: player.profile_pic_url || '',
           mobile_number: player.mobile_number || '',
-          base_price: player.base_price || 0,
           skills: skills
         })
       } catch (error: any) {
@@ -233,17 +231,10 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     
-    if (name === 'base_price') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: Number(value)
-      }))
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }))
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
   // Show loading state while checking authentication
@@ -373,23 +364,6 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
               </div>
             </div>
 
-            {/* Base Price */}
-            <div className="space-y-2">
-              <label htmlFor="base_price" className="block text-sm font-semibold text-gray-700">
-                Base Price (₹) *
-              </label>
-              <input
-                type="number"
-                id="base_price"
-                name="base_price"
-                value={formData.base_price}
-                onChange={handleInputChange}
-                required
-                min="0"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
-                placeholder="Enter base price"
-              />
-            </div>
 
             {/* Profile Picture */}
             <div className="space-y-2">
