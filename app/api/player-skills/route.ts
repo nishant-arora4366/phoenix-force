@@ -27,22 +27,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Error fetching player skills' }, { status: 500 })
     }
 
-    // Format the response
+    console.log('Raw skills from database:', skills)
+
+    // Format the response to match frontend expectations
     const formattedSkills = skills?.map(skill => ({
       id: skill.id,
-      name: skill.skill_name,
-      type: skill.skill_type,
-      required: skill.is_required,
-      displayOrder: skill.display_order,
+      skill_name: skill.skill_name,
+      skill_type: skill.skill_type,
+      is_required: skill.is_required,
+      display_order: skill.display_order,
       values: skill.values
         ?.filter((value: any) => value.is_active)
         ?.sort((a: any, b: any) => a.display_order - b.display_order)
         ?.map((value: any) => ({
           id: value.id,
-          name: value.value_name,
-          displayOrder: value.display_order
+          value_name: value.value_name,
+          display_order: value.display_order
         })) || []
     })) || []
+
+    console.log('Formatted skills:', formattedSkills)
 
     return NextResponse.json({
       success: true,
