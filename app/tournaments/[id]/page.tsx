@@ -112,22 +112,7 @@ export default function TournamentDetailsPage() {
             const isViewer = userResult.data.role === 'viewer'
             // Load slots for all authenticated users
             if (true) {
-              const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
-                headers: {
-                  'Authorization': JSON.stringify(sessionUser),
-                },
-              })
-              if (slotsResponse.ok) {
-                const slotsResult = await slotsResponse.json()
-                if (slotsResult.success) {
-                  setSlots(slotsResult.slots)
-                  setSlotsStats(slotsResult.stats)
-                } else {
-                  console.error('Slots API returned error:', slotsResult.error)
-                }
-              } else {
-                console.error('Slots API request failed:', slotsResponse.status, slotsResponse.statusText)
-              }
+              await fetchSlots()
               
               // Check if user is already registered for this tournament
               await checkUserRegistration()
