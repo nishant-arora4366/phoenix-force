@@ -66,7 +66,7 @@ export async function GET(
         *,
         players (
           id,
-          name,
+          display_name,
           user_id,
           users (
             id,
@@ -81,7 +81,8 @@ export async function GET(
       .order('slot_number')
 
     if (slotsError) {
-      return NextResponse.json({ error: 'Error fetching tournament slots' }, { status: 500 })
+      console.error('Database error fetching tournament slots:', slotsError)
+      return NextResponse.json({ error: 'Error fetching tournament slots', details: slotsError.message }, { status: 500 })
     }
 
     // Create a map of filled slots
@@ -147,7 +148,8 @@ export async function GET(
 
   } catch (error: any) {
     console.error('Error fetching tournament slots:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error details:', error.message, error.stack)
+    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 })
   }
 }
 
