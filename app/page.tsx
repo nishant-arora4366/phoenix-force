@@ -135,25 +135,6 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Quick Stats */}
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900">20+</div>
-                <div className="text-gray-600">API Endpoints</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900">100%</div>
-                <div className="text-gray-600">Race Condition Safe</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900">Real-time</div>
-                <div className="text-gray-600">Live Bidding</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900">Admin</div>
-                <div className="text-gray-600">Role Management</div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
