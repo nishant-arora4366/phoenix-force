@@ -238,7 +238,8 @@ export async function POST(request: NextRequest) {
 
       const skillIdMap: { [key: string]: string } = {}
       playerSkills?.forEach(skill => {
-        skillIdMap[skill.skill_name.toLowerCase().replace(' ', '_')] = skill.id
+        // Use the exact skill name as the key (matching frontend)
+        skillIdMap[skill.skill_name] = skill.id
       })
 
       // Create skill assignments
@@ -246,54 +247,58 @@ export async function POST(request: NextRequest) {
         if (skillValue && skillIdMap[skillKey]) {
           const skillId = skillIdMap[skillKey]
           
-          // Check if this is a multi-select skill (array of values)
           if (Array.isArray(skillValue)) {
-            // Multi-select: store array of skill value IDs
-            const skillValueIds: string[] = []
-            const valueArray: string[] = []
-            
-            for (const value of skillValue) {
+            // Multi-select skill
+            if (skillValue.length > 0) {
+              // Get skill value IDs
+              const { data: skillValues } = await supabase
+                .from('player_skill_values')
+                .select('id')
+                .in('value_name', skillValue)
+                .eq('skill_id', skillId)
+
+              if (skillValues && skillValues.length > 0) {
+                const skillValueIds = skillValues.map(sv => sv.id)
+                
+                const { error: insertError } = await supabase
+                  .from('player_skill_assignments')
+                  .insert({
+                    player_id: player.id,
+                    skill_id: skillId,
+                    skill_value_ids: skillValueIds,
+                    value_array: skillValue
+                  })
+                
+                if (insertError) {
+                  console.error(`Error inserting multi-select skill ${skillKey}:`, insertError)
+                }
+              }
+            }
+          } else {
+            // Single-select skill
+            if (skillValue) {
+              // Get skill value ID
               const { data: skillValueData } = await supabase
                 .from('player_skill_values')
                 .select('id')
+                .eq('value_name', skillValue)
                 .eq('skill_id', skillId)
-                .eq('value_name', value)
                 .single()
-              
-              if (skillValueData) {
-                skillValueIds.push(skillValueData.id)
-                valueArray.push(value)
-              }
-            }
-            
-            if (skillValueIds.length > 0) {
-              await supabase
-                .from('player_skill_assignments')
-                .insert({
-                  player_id: player.id,
-                  skill_id: skillId,
-                  skill_value_ids: skillValueIds,
-                  value_array: valueArray
-                })
-            }
-          } else {
-            // Single select: store single skill value ID
-            const { data: skillValueData } = await supabase
-              .from('player_skill_values')
-              .select('id')
-              .eq('skill_id', skillId)
-              .eq('value_name', skillValue)
-              .single()
 
-            if (skillValueData) {
-              await supabase
-                .from('player_skill_assignments')
-                .insert({
-                  player_id: player.id,
-                  skill_id: skillId,
-                  skill_value_id: skillValueData.id,
-                  value_array: [skillValue]
-                })
+              if (skillValueData) {
+                const { error: insertError } = await supabase
+                  .from('player_skill_assignments')
+                  .insert({
+                    player_id: player.id,
+                    skill_id: skillId,
+                    skill_value_id: skillValueData.id,
+                    value_array: [skillValue]
+                  })
+                
+                if (insertError) {
+                  console.error(`Error inserting single-select skill ${skillKey}:`, insertError)
+                }
+              }
             }
           }
         }
