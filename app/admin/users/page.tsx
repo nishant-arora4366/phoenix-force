@@ -364,30 +364,30 @@ export default function UserManagementPage() {
         throw new Error('User not authenticated')
       }
 
-      const response = await fetch(`/api/admin/player-profiles`, {
+      const response = await fetch(`/api/admin/player-profiles?userId=${sessionUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: sessionUser.id,
           playerId,
           status
         })
       })
 
       if (!response.ok) {
-        throw new Error('Failed to update player profile status')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update player profile status')
       }
 
-      const { success } = await response.json()
+      const { success, error } = await response.json()
 
       if (success) {
         setMessage(`Player profile ${status} successfully!`)
         fetchPlayerProfiles() // Refresh the list
         setTimeout(() => setMessage(''), 3000)
       } else {
-        throw new Error('Failed to update player profile status')
+        throw new Error(error || 'Failed to update player profile status')
       }
     } catch (error: any) {
       console.error('Error updating player profile status:', error)
