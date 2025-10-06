@@ -339,7 +339,7 @@ export default function PlayerProfilePage() {
         )}
 
         {/* Player Card - Similar to Players Details Page */}
-        {!isEditing && playerProfile ? (
+        {!isEditing && playerProfile && (
           <div className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
             {/* Player Image Header */}
             <div className="relative h-64 sm:h-80 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
@@ -416,7 +416,10 @@ export default function PlayerProfilePage() {
               </div>
             </div>
           </div>
-        ) : !isEditing ? (
+        )}
+
+        {/* No Profile State */}
+        {!isEditing && !playerProfile && (
           <div className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
             <div className="p-8 text-center">
               <div className="text-6xl mb-4">🏏</div>
@@ -430,7 +433,10 @@ export default function PlayerProfilePage() {
               </button>
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* Edit Form */}
+        {isEditing && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
