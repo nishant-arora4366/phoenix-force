@@ -469,7 +469,7 @@ export default function PlayerProfilePage() {
             </div>
           </div>
         ) : (
-          /* Edit Form */
+          {/* Edit Form */}
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="bg-gray-700 px-8 py-6">
               <div className="flex justify-between items-center">
