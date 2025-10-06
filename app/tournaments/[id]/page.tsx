@@ -781,6 +781,13 @@ export default function TournamentDetailsPage() {
                 {user && (
                   <div className="mb-4 p-3 bg-gray-100 rounded text-xs">
                     <strong>Debug Info:</strong> userRegistration = {JSON.stringify(userRegistration)}
+                    <br />
+                    <button 
+                      onClick={checkUserRegistration}
+                      className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
+                    >
+                      Check Registration Status
+                    </button>
                   </div>
                 )}
 

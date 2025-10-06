@@ -79,6 +79,22 @@ class SessionManager {
     this.notifyListeners()
   }
 
+  // Get user from request (for server-side API routes)
+  getUserFromRequest(request: Request): SessionUser | null {
+    try {
+      const authHeader = request.headers.get('Authorization')
+      if (!authHeader) {
+        return null
+      }
+      
+      const userData = JSON.parse(authHeader)
+      return userData
+    } catch (error) {
+      console.error('Error parsing user from request:', error)
+      return null
+    }
+  }
+
   // Subscribe to user changes
   subscribe(listener: (user: SessionUser | null) => void) {
     this.listeners.push(listener)
