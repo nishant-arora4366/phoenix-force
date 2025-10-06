@@ -14,6 +14,12 @@ interface User {
   status: string
   created_at: string
   updated_at: string
+  player_profile?: {
+    id: string
+    display_name: string
+    status: string
+    created_at: string
+  }
 }
 
 interface PlayerProfile {
@@ -678,6 +684,19 @@ export default function UserManagementPage() {
     }
   }
 
+  const getPlayerProfileStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100 text-green-800'
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'rejected':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
   const filteredUsers = users.filter(user => {
     if (filter === 'all') return true
     return user.status === filter
@@ -825,6 +844,9 @@ export default function UserManagementPage() {
                     Role
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Player Profile
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Created
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
@@ -865,6 +887,20 @@ export default function UserManagementPage() {
                         {user.role}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {user.player_profile ? (
+                        <div className="flex flex-col space-y-1">
+                          <span className="text-sm font-medium text-gray-900">
+                            {user.player_profile.display_name}
+                          </span>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPlayerProfileStatusColor(user.player_profile.status)}`}>
+                            {user.player_profile.status}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">No profile</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(user.created_at).toLocaleDateString()}
                     </td>
@@ -902,6 +938,22 @@ export default function UserManagementPage() {
                           >
                             Reset Password
                           </button>
+                          {user.player_profile && user.player_profile.status === 'pending' && (
+                            <div className="flex space-x-1">
+                              <button
+                                onClick={() => updatePlayerProfileStatus(user.player_profile!.id, 'approved')}
+                                className="text-xs text-green-600 hover:text-green-800 bg-green-100 hover:bg-green-200 px-2 py-1 rounded"
+                              >
+                                Approve Profile
+                              </button>
+                              <button
+                                onClick={() => updatePlayerProfileStatus(user.player_profile!.id, 'rejected')}
+                                className="text-xs text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200 px-2 py-1 rounded"
+                              >
+                                Reject Profile
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </td>
@@ -942,6 +994,16 @@ export default function UserManagementPage() {
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
                     {user.role}
                   </span>
+                  {user.player_profile && (
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-xs text-gray-600">
+                        Player: {user.player_profile.display_name}
+                      </span>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPlayerProfileStatusColor(user.player_profile.status)}`}>
+                        {user.player_profile.status}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -986,6 +1048,22 @@ export default function UserManagementPage() {
                     >
                       Reset Password
                     </button>
+                    {user.player_profile && user.player_profile.status === 'pending' && (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => updatePlayerProfileStatus(user.player_profile!.id, 'approved')}
+                          className="flex-1 bg-green-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-green-700 transition-colors"
+                        >
+                          Approve Profile
+                        </button>
+                        <button
+                          onClick={() => updatePlayerProfileStatus(user.player_profile!.id, 'rejected')}
+                          className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-red-700 transition-colors"
+                        >
+                          Reject Profile
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

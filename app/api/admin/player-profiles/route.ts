@@ -1,47 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
-
+    // Get user ID from query parameters (passed from client-side session)
+    const url = new URL(request.url)
+    const userId = url.searchParams.get('userId')
+    
     if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
+      return NextResponse.json({
+        success: false,
+        error: 'No user ID provided'
+      }, { status: 401 })
     }
 
-    // Check if user is admin
-    const { data: user, error: userError } = await supabase
+    // Check if user is admin using service role (bypasses RLS)
+    const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('role, status')
       .eq('id', userId)
       .single()
 
-    if (userError || !user || user.role !== 'admin' || user.status !== 'approved') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (userError || !userData) {
+      return NextResponse.json({
+        success: false,
+        error: 'User not found'
+      }, { status: 404 })
     }
 
-    // Fetch all player profiles with user information
-    const { data: profiles, error } = await supabase
+    if (userData.role !== 'admin' || userData.status !== 'approved') {
+      return NextResponse.json({
+        success: false,
+        error: 'Access denied'
+      }, { status: 403 })
+    }
+
+    // Fetch all player profiles with user information using service role (bypasses RLS)
+    const { data: profiles, error } = await supabaseAdmin
       .from('players')
       .select(`
         *,
-        users:user_id (
+        users!players_user_id_fkey (
+          id,
+          email,
+          username,
           firstname,
           lastname,
-          email
+          role,
+          status
         )
       `)
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching player profiles:', error)
-      return NextResponse.json({ error: 'Error fetching player profiles' }, { status: 500 })
+      return NextResponse.json({
+        success: false,
+        error: error.message
+      }, { status: 500 })
     }
 
     return NextResponse.json({
@@ -50,51 +70,85 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Error in player profiles API:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({
+      success: false,
+      error: error.message
+    }, { status: 500 })
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { userId, playerId, status } = body
-
-    if (!userId || !playerId || !status) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    // Get user ID from query parameters (passed from client-side session)
+    const url = new URL(request.url)
+    const adminUserId = url.searchParams.get('userId')
+    
+    if (!adminUserId) {
+      return NextResponse.json({
+        success: false,
+        error: 'No user ID provided'
+      }, { status: 401 })
     }
 
-    // Check if user is admin
-    const { data: user, error: userError } = await supabase
+    // Check if user is admin using service role (bypasses RLS)
+    const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('role, status')
-      .eq('id', userId)
+      .eq('id', adminUserId)
       .single()
 
-    if (userError || !user || user.role !== 'admin' || user.status !== 'approved') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (userError || !userData) {
+      return NextResponse.json({
+        success: false,
+        error: 'User not found'
+      }, { status: 404 })
     }
 
-    // Update player profile status
-    const { data: profile, error: updateError } = await supabase
+    if (userData.role !== 'admin' || userData.status !== 'approved') {
+      return NextResponse.json({
+        success: false,
+        error: 'Access denied'
+      }, { status: 403 })
+    }
+
+    const { playerId, status } = await request.json()
+
+    if (!playerId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Player ID is required'
+      }, { status: 400 })
+    }
+
+    if (!status || !['pending', 'approved', 'rejected'].includes(status)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Valid status is required (pending, approved, rejected)'
+      }, { status: 400 })
+    }
+
+    // Update player profile status using service role (bypasses RLS)
+    const { error } = await supabaseAdmin
       .from('players')
       .update({ status })
       .eq('id', playerId)
-      .select()
-      .single()
 
-    if (updateError) {
-      console.error('Error updating player profile:', updateError)
-      return NextResponse.json({ error: 'Error updating player profile' }, { status: 500 })
+    if (error) {
+      return NextResponse.json({
+        success: false,
+        error: error.message
+      }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
-      profile
+      message: 'Player profile status updated successfully'
     })
 
   } catch (error: any) {
-    console.error('Error in player profile update API:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({
+      success: false,
+      error: error.message
+    }, { status: 500 })
   }
 }

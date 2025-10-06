@@ -40,10 +40,18 @@ export async function GET(request: NextRequest) {
       }, { status: 403 })
     }
 
-    // Fetch all users using service role (bypasses RLS)
+    // Fetch all users with their player profiles using service role (bypasses RLS)
     const { data: users, error } = await supabaseAdmin
       .from('users')
-      .select('*')
+      .select(`
+        *,
+        players!players_user_id_fkey (
+          id,
+          display_name,
+          status,
+          created_at
+        )
+      `)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -53,9 +61,20 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
+    // Transform the data to match the expected interface
+    const transformedUsers = users?.map(user => ({
+      ...user,
+      player_profile: user.players?.[0] ? {
+        id: user.players[0].id,
+        display_name: user.players[0].display_name,
+        status: user.players[0].status,
+        created_at: user.players[0].created_at
+      } : null
+    })) || []
+
     return NextResponse.json({
       success: true,
-      users: users || []
+      users: transformedUsers
     })
 
   } catch (error: any) {
