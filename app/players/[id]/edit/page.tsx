@@ -533,8 +533,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
                 }
               </button>
             </div>
-            </form>
-          </div>
+          </form>
         </div>
       </div>
     </div>
