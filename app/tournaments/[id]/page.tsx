@@ -257,6 +257,21 @@ export default function TournamentDetailsPage() {
       const sessionUser = sessionManager.getUser()
       if (!sessionUser) return
 
+      // First check if user has a player profile
+      const playerResponse = await fetch(`/api/player-profile`, {
+        headers: {
+          'Authorization': JSON.stringify(sessionUser),
+        },
+      })
+
+      const playerResult = await playerResponse.json()
+      if (!playerResult.success || !playerResult.profile) {
+        // User doesn't have a player profile, no need to check registration
+        setUserRegistration(null)
+        return
+      }
+
+      // User has a player profile, now check registration status
       const response = await fetch(`/api/tournaments/${tournamentId}/user-registration`, {
         headers: {
           'Authorization': JSON.stringify(sessionUser),
@@ -290,7 +305,12 @@ export default function TournamentDetailsPage() {
 
       const result = await response.json()
       if (!result.success) {
-        throw new Error(result.error)
+        if (result.error.includes('Player profile not found')) {
+          setRegistrationMessage('Please create a player profile first before registering for tournaments.')
+        } else {
+          throw new Error(result.error)
+        }
+        return
       }
 
       setRegistrationMessage(result.message)
