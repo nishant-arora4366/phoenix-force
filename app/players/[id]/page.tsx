@@ -257,6 +257,17 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
                         🧤 Wicket Keeper
                       </span>
                     )}
+                    {/* Display additional skills from the skills object */}
+                    {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
+                      // Skip if it's already displayed as a role above
+                      if (['Role', 'Base Price'].includes(skillName)) return null;
+                      
+                      return (
+                        <span key={skillName} className="bg-blue-100 text-blue-700 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-medium">
+                          {skillName}: {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -306,6 +317,20 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
                         </div>
                       </div>
                     )}
+                    {/* Display additional skills as ratings */}
+                    {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
+                      // Skip if it's already displayed above or is not a rating
+                      if (['Role', 'Base Price', 'Batting Rating', 'Bowling Rating', 'Wicket Keeping Rating'].includes(skillName)) return null;
+                      
+                      return (
+                        <div key={skillName} className="flex items-center justify-between">
+                          <span className="text-gray-700 font-medium text-sm sm:text-base">{skillName}</span>
+                          <span className="text-sm sm:text-lg font-bold text-gray-900">
+                            {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

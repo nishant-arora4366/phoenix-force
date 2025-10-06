@@ -367,6 +367,17 @@ export default function PlayersPage() {
                         🧤 WK
                       </span>
                     )}
+                    {/* Display additional skills from the skills object */}
+                    {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
+                      // Skip if it's already displayed as a role above
+                      if (['Role', 'Base Price'].includes(skillName)) return null;
+                      
+                      return (
+                        <span key={skillName} className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full font-medium">
+                          {skillName}: {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                        </span>
+                      );
+                    })}
                   </div>
 
                   {/* Ratings */}
@@ -413,6 +424,20 @@ export default function PlayersPage() {
                         </div>
                       </div>
                     )}
+                    {/* Display additional skills as ratings */}
+                    {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
+                      // Skip if it's already displayed above or is not a rating
+                      if (['Role', 'Base Price', 'Batting Rating', 'Bowling Rating', 'Wicket Keeping Rating'].includes(skillName)) return null;
+                      
+                      return (
+                        <div key={skillName} className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">{skillName}</span>
+                          <span className="text-sm font-semibold text-gray-800">
+                            {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Bio */}
