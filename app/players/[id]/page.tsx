@@ -293,14 +293,14 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
             )}
 
             {/* Skills & Attributes */}
-            {player.skills && Object.keys(player.skills).length > 0 && (
-              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center">
-                  <span className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-sm sm:text-base">
-                    ⚡
-                  </span>
-                  Skills & Attributes
-                </h3>
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center">
+                <span className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-sm sm:text-base">
+                  ⚡
+                </span>
+                Skills & Attributes
+              </h3>
+              {player.skills && Object.keys(player.skills).length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {Object.entries(player.skills).map(([skillName, skillValue]) => (
                     <div key={skillName} className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4">
@@ -311,18 +311,24 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 text-4xl mb-3">⚡</div>
+                  <p className="text-gray-500 text-sm sm:text-base">No skills and attributes configured yet</p>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Skills will appear here once configured</p>
+                </div>
+              )}
+            </div>
 
             {/* Player Ratings */}
-            {(player.batting_rating || player.bowling_rating || player.wicket_keeping_rating) && (
-              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center">
-                  <span className="w-6 h-6 sm:w-8 sm:h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-sm sm:text-base">
-                    ⭐
-                  </span>
-                  Player Ratings
-                </h3>
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center">
+                <span className="w-6 h-6 sm:w-8 sm:h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-sm sm:text-base">
+                  ⭐
+                </span>
+                Player Ratings
+              </h3>
+              {(player.batting_rating || player.bowling_rating || player.wicket_keeping_rating) ? (
                 <div className="space-y-3 sm:space-y-4">
                   {player.batting_rating && (
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-green-50 rounded-lg sm:rounded-xl">
@@ -367,8 +373,14 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
                     </div>
                   )}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 text-4xl mb-3">⭐</div>
+                  <p className="text-gray-500 text-sm sm:text-base">No player ratings available</p>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Ratings will appear here once configured</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sidebar */}
