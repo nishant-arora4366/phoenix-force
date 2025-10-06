@@ -63,23 +63,41 @@ export async function POST(
       }, { status: 404 })
     }
 
-    // Withdraw from tournament by clearing the slot
-    const { error: withdrawError } = await supabase
+    // Delete the slot record entirely in dynamic slot system
+    const { error: deleteError } = await supabase
       .from('tournament_slots')
-      .update({
-        player_id: null,
-        status: 'empty',
-        requested_at: null,
-        confirmed_at: null
-      })
+      .delete()
       .eq('id', registration.id)
 
-    if (withdrawError) {
-      console.error('Error withdrawing from tournament:', withdrawError)
+    if (deleteError) {
+      console.error('Error deleting slot:', deleteError)
       return NextResponse.json({ 
         success: false, 
         error: 'Failed to withdraw from tournament' 
       }, { status: 500 })
+    }
+
+    // Try to promote a waitlist player to the now-empty main slot
+    try {
+      const promotionResponse = await fetch(`${request.nextUrl.origin}/api/tournaments/${tournamentId}/auto-promote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (promotionResponse.ok) {
+        const promotionResult = await promotionResponse.json()
+        if (promotionResult.success) {
+          console.log('Successfully promoted waitlist player:', promotionResult.promoted_player)
+        } else {
+          console.log('No waitlist players to promote:', promotionResult.message)
+        }
+      } else {
+        console.log('Promotion failed or no waitlist players available')
+      }
+    } catch (promotionError) {
+      console.error('Error calling auto-promote:', promotionError)
     }
 
     return NextResponse.json({ 
