@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Player Skills</title>
+</head>
+<body>
+    <h1>Player Skills Debug</h1>
+    <div id="output"></div>
+    
+    <script>
+        async function debugSkills() {
+            const output = document.getElementById('output');
+            
+            try {
+                // Fetch skills from API
+                const response = await fetch('/api/player-skills');
+                const result = await response.json();
+                
+                output.innerHTML = `
+                    <h2>API Response:</h2>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                    
+                    <h2>Skills Count: ${result.skills?.length || 0}</h2>
+                    
+                    <h2>Skills Details:</h2>
+                    ${result.skills?.map(skill => `
+                        <div style="border: 1px solid #ccc; margin: 10px; padding: 10px;">
+                            <h3>${skill.skill_name}</h3>
+                            <p><strong>Type:</strong> ${skill.skill_type}</p>
+                            <p><strong>Admin Managed:</strong> ${skill.is_admin_managed}</p>
+                            <p><strong>Viewer Can See:</strong> ${skill.viewer_can_see}</p>
+                            <p><strong>Required:</strong> ${skill.is_required}</p>
+                            <p><strong>Values:</strong> ${skill.values?.length || 0}</p>
+                        </div>
+                    `).join('') || '<p>No skills found</p>'}
+                `;
+                
+            } catch (error) {
+                output.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        debugSkills();
+    </script>
+</body>
+</html>
