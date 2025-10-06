@@ -134,6 +134,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
           throw new Error(result.error || 'Failed to fetch player')
         }
 
+        console.log('Full API response:', result)
         const player = result.data
         console.log('Player data from API:', player)
         console.log('Player skills from API:', player.skills)
