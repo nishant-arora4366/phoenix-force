@@ -56,10 +56,7 @@ export async function GET(
     const isAdmin = userResult.data.role === 'admin'
 
     // All authenticated users can view tournament slots
-    // Only hosts and admins can manage slots
-    if (!isHost && !isAdmin && userResult.data.role !== 'viewer') {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
+    // Only hosts and admins can manage slots (checked later in PUT method)
 
     // Get all slots for the tournament
     const { data: slots, error: slotsError } = await supabase
