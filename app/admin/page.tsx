@@ -112,7 +112,7 @@ export default function AdminPanel() {
   }
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    sessionManager.signOut()
     setUser(null)
   }
 
