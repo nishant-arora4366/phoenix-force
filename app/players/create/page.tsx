@@ -6,17 +6,23 @@ import { sessionManager } from '@/lib/session'
 
 interface PlayerFormData {
   display_name: string
-  stage_name: string
   bio: string
   profile_pic_url: string
-  base_price: number
-  group_name: string
-  is_bowler: boolean
-  is_batter: boolean
-  is_wicket_keeper: boolean
-  bowling_rating: number
-  batting_rating: number
-  wicket_keeping_rating: number
+  mobile_number: string
+  skills: { [key: string]: string }
+}
+
+interface PlayerSkill {
+  id: string
+  skill_name: string
+  skill_type: string
+  is_required: boolean
+  display_order: number
+  values: Array<{
+    id: string
+    value_name: string
+    display_order: number
+  }>
 }
 
 export default function CreatePlayerPage() {
@@ -26,19 +32,14 @@ export default function CreatePlayerPage() {
   const [user, setUser] = useState<any>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [playerSkills, setPlayerSkills] = useState<PlayerSkill[]>([])
+  const [isLoadingSkills, setIsLoadingSkills] = useState(true)
   const [formData, setFormData] = useState<PlayerFormData>({
     display_name: '',
-    stage_name: '',
     bio: '',
     profile_pic_url: '',
-    base_price: 0,
-    group_name: '',
-    is_bowler: false,
-    is_batter: false,
-    is_wicket_keeper: false,
-    bowling_rating: 0,
-    batting_rating: 0,
-    wicket_keeping_rating: 0
+    mobile_number: '',
+    skills: {}
   })
 
   // Check if user is authenticated and has permission
@@ -84,6 +85,28 @@ export default function CreatePlayerPage() {
     })
 
     return () => unsubscribe()
+  }, [])
+
+  // Fetch player skills
+  useEffect(() => {
+    const fetchPlayerSkills = async () => {
+      try {
+        const response = await fetch('/api/player-skills')
+        const result = await response.json()
+        
+        if (result.success) {
+          setPlayerSkills(result.skills || [])
+        } else {
+          console.error('Failed to fetch player skills:', result.error)
+        }
+      } catch (error) {
+        console.error('Error fetching player skills:', error)
+      } finally {
+        setIsLoadingSkills(false)
+      }
+    }
+
+    fetchPlayerSkills()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -252,52 +275,17 @@ export default function CreatePlayerPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="stage_name" className="block text-sm font-semibold text-gray-700">
-                    Stage Name
+                  <label htmlFor="mobile_number" className="block text-sm font-semibold text-gray-700">
+                    Mobile Number
                   </label>
                   <input
-                    type="text"
-                    id="stage_name"
-                    name="stage_name"
-                    value={formData.stage_name}
+                    type="tel"
+                    id="mobile_number"
+                    name="mobile_number"
+                    value={formData.mobile_number}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
-                    placeholder="Enter stage name (optional)"
-                  />
-                </div>
-              </div>
-
-              {/* Price and Group */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label htmlFor="base_price" className="block text-sm font-semibold text-gray-700">
-                    Base Price (₹) *
-                  </label>
-                  <input
-                    type="number"
-                    id="base_price"
-                    name="base_price"
-                    value={formData.base_price}
-                    onChange={handleInputChange}
-                    required
-                    min="0"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
-                    placeholder="Enter base price"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="group_name" className="block text-sm font-semibold text-gray-700">
-                    Group Name
-                  </label>
-                  <input
-                    type="text"
-                    id="group_name"
-                    name="group_name"
-                    value={formData.group_name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
-                    placeholder="Enter group name (optional)"
+                    placeholder="Enter mobile number (optional)"
                   />
                 </div>
               </div>
@@ -334,111 +322,49 @@ export default function CreatePlayerPage() {
                 />
               </div>
 
-              {/* Roles */}
-              <div className="space-y-4">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Player Roles
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <label className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:border-green-300 cursor-pointer transition-colors">
-                    <input
-                      type="checkbox"
-                      name="is_batter"
-                      checked={formData.is_batter}
-                      onChange={handleInputChange}
-                      className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900">Batter</div>
-                      <div className="text-sm text-gray-500">Can bat in matches</div>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:border-green-300 cursor-pointer transition-colors">
-                    <input
-                      type="checkbox"
-                      name="is_bowler"
-                      checked={formData.is_bowler}
-                      onChange={handleInputChange}
-                      className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900">Bowler</div>
-                      <div className="text-sm text-gray-500">Can bowl in matches</div>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:border-green-300 cursor-pointer transition-colors">
-                    <input
-                      type="checkbox"
-                      name="is_wicket_keeper"
-                      checked={formData.is_wicket_keeper}
-                      onChange={handleInputChange}
-                      className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900">Wicket Keeper</div>
-                      <div className="text-sm text-gray-500">Can keep wickets</div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Ratings */}
-              <div className="space-y-6">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Player Ratings (1-10)
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="batting_rating" className="block text-sm font-medium text-gray-700">
-                      Batting Rating
-                    </label>
-                    <input
-                      type="number"
-                      id="batting_rating"
-                      name="batting_rating"
-                      value={formData.batting_rating}
-                      onChange={handleInputChange}
-                      min="0"
-                      max="10"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="bowling_rating" className="block text-sm font-medium text-gray-700">
-                      Bowling Rating
-                    </label>
-                    <input
-                      type="number"
-                      id="bowling_rating"
-                      name="bowling_rating"
-                      value={formData.bowling_rating}
-                      onChange={handleInputChange}
-                      min="0"
-                      max="10"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="wicket_keeping_rating" className="block text-sm font-medium text-gray-700">
-                      Wicket Keeping Rating
-                    </label>
-                    <input
-                      type="number"
-                      id="wicket_keeping_rating"
-                      name="wicket_keeping_rating"
-                      value={formData.wicket_keeping_rating}
-                      onChange={handleInputChange}
-                      min="0"
-                      max="10"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
-                    />
+              {/* Dynamic Player Skills */}
+              {isLoadingSkills ? (
+                <div className="space-y-4">
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+                    <p className="text-gray-600 mt-2">Loading player skills...</p>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-6">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Player Skills & Attributes
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {playerSkills.map((skill) => (
+                      <div key={skill.id} className="space-y-2">
+                        <label htmlFor={skill.skill_name.toLowerCase().replace(' ', '_')} className="block text-sm font-medium text-gray-700">
+                          {skill.skill_name} {skill.is_required && '*'}
+                        </label>
+                        <select
+                          id={skill.skill_name.toLowerCase().replace(' ', '_')}
+                          name={skill.skill_name.toLowerCase().replace(' ', '_')}
+                          value={formData.skills[skill.skill_name.toLowerCase().replace(' ', '_')] || ''}
+                          onChange={(e) => {
+                            const newSkills = { ...formData.skills }
+                            newSkills[skill.skill_name.toLowerCase().replace(' ', '_')] = e.target.value
+                            setFormData({ ...formData, skills: newSkills })
+                          }}
+                          required={skill.is_required}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                        >
+                          <option value="">Select {skill.skill_name}</option>
+                          {skill.values.map((value) => (
+                            <option key={value.id} value={value.value_name}>
+                              {value.value_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Message */}
               {message && (

@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       display_name, 
       bio, 
       profile_pic_url, 
-      user_id,
+      mobile_number,
       skills // This will be an object with skill assignments
     } = body
 
@@ -122,28 +122,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Check if player profile already exists for this user
-    const { data: existingPlayer } = await supabase
-      .from('players')
-      .select('id')
-      .eq('user_id', user_id)
-      .single()
-
-    if (existingPlayer) {
-      return NextResponse.json({
-        success: false,
-        error: 'Player profile already exists for this user'
-      }, { status: 400 })
-    }
-
     // Create player profile (only basic info)
     const { data: player, error } = await supabase
       .from('players')
       .insert({
-        user_id,
         display_name,
         bio: bio || null,
-        profile_pic_url: profile_pic_url || null
+        profile_pic_url: profile_pic_url || null,
+        mobile_number: mobile_number || null,
+        status: 'approved' // Admin-created players are auto-approved
       })
       .select()
       .single()
