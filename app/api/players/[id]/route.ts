@@ -196,43 +196,30 @@ export async function PUT(
     const body = await request.json()
     const { 
       display_name, 
-      stage_name, 
       bio, 
       profile_pic_url, 
-      base_price, 
-      group_name, 
-      is_bowler, 
-      is_batter, 
-      is_wicket_keeper, 
-      bowling_rating, 
-      batting_rating, 
-      wicket_keeping_rating 
+      mobile_number,
+      base_price,
+      skills // This will be an object with skill assignments
     } = body
 
     // Validate required fields
-    if (!display_name || !base_price) {
+    if (!display_name) {
       return NextResponse.json({
         success: false,
-        error: 'Display name and base price are required'
+        error: 'Display name is required'
       }, { status: 400 })
     }
 
-    // Update player
+    // Update player profile (only basic info)
     const { data: player, error } = await supabase
       .from('players')
       .update({
         display_name,
-        stage_name: stage_name || null,
         bio: bio || null,
         profile_pic_url: profile_pic_url || null,
-        base_price: Number(base_price),
-        group_name: group_name || null,
-        is_bowler: Boolean(is_bowler),
-        is_batter: Boolean(is_batter),
-        is_wicket_keeper: Boolean(is_wicket_keeper),
-        bowling_rating: bowling_rating ? Number(bowling_rating) : null,
-        batting_rating: batting_rating ? Number(batting_rating) : null,
-        wicket_keeping_rating: wicket_keeping_rating ? Number(wicket_keeping_rating) : null,
+        mobile_number: mobile_number || null,
+        base_price: base_price ? Number(base_price) : 0,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -253,6 +240,79 @@ export async function PUT(
         success: false,
         error: 'Player not found'
       }, { status: 404 })
+    }
+
+    // Handle skill assignments if provided
+    if (skills && Object.keys(skills).length > 0) {
+      // Delete existing skill assignments for this player
+      await supabase
+        .from('player_skill_assignments')
+        .delete()
+        .eq('player_id', id)
+
+      // Insert new skill assignments
+      for (const [skillName, skillValue] of Object.entries(skills)) {
+        // Get the skill ID
+        const { data: skillData } = await supabase
+          .from('player_skills')
+          .select('id')
+          .eq('skill_name', skillName)
+          .single()
+
+        if (!skillData) {
+          console.warn(`Skill "${skillName}" not found in database`)
+          continue
+        }
+
+        const skillId = skillData.id
+
+        if (Array.isArray(skillValue)) {
+          // Multi-select skill
+          if (skillValue.length > 0) {
+            // Get skill value IDs
+            const { data: skillValues } = await supabase
+              .from('player_skill_values')
+              .select('id')
+              .in('value_name', skillValue)
+              .eq('skill_id', skillId)
+
+            if (skillValues && skillValues.length > 0) {
+              const skillValueIds = skillValues.map(sv => sv.id)
+              
+              await supabase
+                .from('player_skill_assignments')
+                .insert({
+                  player_id: id,
+                  skill_id: skillId,
+                  skill_value_ids: skillValueIds,
+                  value_array: skillValue
+                })
+            }
+          }
+        } else {
+          // Single-select skill
+          if (skillValue) {
+            // Get skill value ID
+            const { data: skillValueData } = await supabase
+              .from('player_skill_values')
+              .select('id')
+              .eq('value_name', skillValue)
+              .eq('skill_id', skillId)
+              .single()
+
+            if (skillValueData) {
+              await supabase
+                .from('player_skill_assignments')
+                .insert({
+                  player_id: id,
+                  skill_id: skillId,
+                  skill_value_id: skillValueData.id,
+                  value_array: [skillValue]
+                })
+            }
+          }
+        }
+      }
     }
 
     return NextResponse.json({
