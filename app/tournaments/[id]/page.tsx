@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { sessionManager } from '@/lib/session'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseClient } from '@/lib/supabaseClient'
 
 interface Tournament {
   id: string
@@ -50,12 +50,11 @@ export default function TournamentDetailsPage() {
   const [userRegistration, setUserRegistration] = useState<any>(null)
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false)
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [waitlistStatus, setWaitlistStatus] = useState<any>(null)
 
-  // Initialize Supabase client for realtime
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  // Initialize Supabase client for realtime (singleton to avoid multiple instances)
+  const supabase = getSupabaseClient()
 
   useEffect(() => {
     const fetchTournamentAndUser = async () => {
@@ -131,6 +130,9 @@ export default function TournamentDetailsPage() {
               
               // Check if user is already registered for this tournament
               await checkUserRegistration()
+              
+              // Fetch waitlist status
+              await fetchWaitlistStatus()
             }
           }
         }
@@ -147,14 +149,14 @@ export default function TournamentDetailsPage() {
     }
   }, [tournamentId])
 
-  // Realtime subscription for tournament slots
+  // Realtime subscription for tournament slots and notifications
   useEffect(() => {
-    if (!tournamentId) return
+    if (!tournamentId || !user) return
 
     console.log('Setting up realtime subscription for tournament:', tournamentId)
 
     // Subscribe to changes in tournament_slots table for this tournament
-    const channel = supabase
+    const slotsChannel = supabase
       .channel(`tournament-slots-${tournamentId}`)
       .on(
         'postgres_changes',
@@ -164,7 +166,7 @@ export default function TournamentDetailsPage() {
           table: 'tournament_slots',
           filter: `tournament_id=eq.${tournamentId}`
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Realtime update received:', payload)
           
           // Refresh slots data when any slot changes
@@ -172,19 +174,47 @@ export default function TournamentDetailsPage() {
           
           // Also refresh user registration status in case it was affected
           checkUserRegistration()
+          
+          // Check for waitlist promotions
+          checkWaitlistPromotion(payload)
         }
       )
-      .subscribe((status) => {
-        console.log('Realtime subscription status:', status)
+      .subscribe((status: any) => {
+        console.log('Slots subscription status:', status)
         setIsRealtimeConnected(status === 'SUBSCRIBED')
       })
 
-    // Cleanup subscription on component unmount
+    // Subscribe to notifications for the current user
+    const notificationsChannel = supabase
+      .channel(`user-notifications-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload: any) => {
+          console.log('New notification received:', payload)
+          setNotifications(prev => [payload.new, ...prev])
+          
+          // Show notification to user
+          if (payload.new.type === 'waitlist_promotion') {
+            setRegistrationMessage(`🎉 You have been promoted from the waitlist to position ${payload.new.data.new_slot_number}!`)
+            setTimeout(() => setRegistrationMessage(''), 10000)
+          }
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscriptions on component unmount
     return () => {
-      console.log('Cleaning up realtime subscription')
-      supabase.removeChannel(channel)
+      console.log('Cleaning up realtime subscriptions')
+      supabase.removeChannel(slotsChannel)
+      supabase.removeChannel(notificationsChannel)
     }
-  }, [tournamentId])
+  }, [tournamentId, user])
 
 
   const getStatusColor = (status: string) => {
@@ -293,6 +323,31 @@ export default function TournamentDetailsPage() {
         if (slotsResult.success) {
           setSlots(slotsResult.slots)
           setSlotsStats(slotsResult.stats)
+          
+          // Check if we need to promote waitlist players
+          try {
+            const promotionResponse = await fetch(`/api/tournaments/${tournamentId}/promote-waitlist`, {
+              method: 'POST',
+              headers: {
+                'Authorization': JSON.stringify(sessionUser),
+              },
+            })
+            
+            if (promotionResponse.ok) {
+              const promotionResult = await promotionResponse.json()
+              if (promotionResult.success && promotionResult.promoted_player) {
+                console.log('Waitlist player promoted:', promotionResult.promoted_player)
+                // Refresh slots to show the updated state
+                setTimeout(() => fetchSlots(), 1000)
+              }
+            } else if (promotionResponse.status === 503) {
+              console.log('Promotion function not available, skipping auto-promotion')
+            } else {
+              console.log('No waitlist players to promote or no available slots')
+            }
+          } catch (error) {
+            console.log('Promotion check failed, continuing with normal flow:', error)
+          }
         }
       }
     } catch (error) {
@@ -335,6 +390,71 @@ export default function TournamentDetailsPage() {
     } catch (error) {
       console.error('Error checking user registration:', error)
       setUserRegistration(null)
+    }
+  }
+
+  const checkWaitlistPromotion = async (payload: any) => {
+    // Check if a main slot became empty and trigger auto-promotion
+    if (payload.eventType === 'UPDATE' && payload.old.player_id && !payload.new.player_id) {
+      console.log('Main slot became empty, checking for waitlist promotion')
+      
+      // The database trigger will handle the auto-promotion
+      // We just need to refresh the data to show the updated state
+      setTimeout(() => {
+        fetchSlots()
+        checkUserRegistration()
+      }, 1000) // Small delay to allow database trigger to complete
+    }
+  }
+
+  const fetchWaitlistStatus = async () => {
+    if (!user) return
+
+    try {
+      const response = await fetch(`/api/tournaments/${tournamentId}/promote-waitlist`, {
+        method: 'GET',
+        headers: {
+          'Authorization': JSON.stringify(user)
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setWaitlistStatus(data.waitlist)
+      }
+    } catch (error) {
+      console.error('Error fetching waitlist status:', error)
+    }
+  }
+
+  const promoteWaitlistManually = async () => {
+    if (!user) return
+
+    try {
+      const response = await fetch(`/api/tournaments/${tournamentId}/promote-waitlist`, {
+        method: 'POST',
+        headers: {
+          'Authorization': JSON.stringify(user)
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setRegistrationMessage(`✅ ${data.message}`)
+        setTimeout(() => setRegistrationMessage(''), 5000)
+        
+        // Refresh data
+        fetchSlots()
+        fetchWaitlistStatus()
+      } else {
+        const error = await response.json()
+        setRegistrationMessage(`❌ ${error.error}`)
+        setTimeout(() => setRegistrationMessage(''), 5000)
+      }
+    } catch (error) {
+      console.error('Error promoting waitlist:', error)
+      setRegistrationMessage('❌ Failed to promote waitlist player')
+      setTimeout(() => setRegistrationMessage(''), 5000)
     }
   }
 
@@ -921,6 +1041,35 @@ export default function TournamentDetailsPage() {
                   </div>
                 )}
 
+                {/* Notifications Display */}
+                {notifications.length > 0 && (
+                  <div className="mb-6 space-y-3">
+                    {notifications.slice(0, 3).map((notification, index) => (
+                      <div key={notification.id || index} className={`p-4 rounded-lg border ${
+                        notification.type === 'waitlist_promotion' 
+                          ? 'bg-green-50 border-green-200 text-green-800'
+                          : 'bg-blue-50 border-blue-200 text-blue-800'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{notification.title}</div>
+                            <div className="text-sm mt-1">{notification.message}</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {new Date(notification.created_at).toLocaleString()}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setNotifications(prev => prev.filter(n => n.id !== notification.id))}
+                            className="ml-4 text-gray-500 hover:text-gray-700"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
 
                 {/* Player Registration Section - Moved to Top */}
                 {user && tournament.status === 'registration_open' && !isHost && (
@@ -1030,188 +1179,252 @@ export default function TournamentDetailsPage() {
                       </div>
                     )}
 
-                    {/* Main Tournament Slots */}
+                    {/* Main Tournament Slots - Status Based Grouping */}
                     <div className="mb-8">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Main Tournament Slots</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {slots.length > 0 ? slots.filter(slot => slot.is_main_slot).map((slot) => (
-                          <div key={slot.slot_number} className={`p-4 rounded-lg border-2 ${
-                            slot.status === 'empty' ? 'border-gray-200 bg-gray-50' :
-                            slot.status === 'pending' ? 'border-yellow-200 bg-yellow-50' :
-                            slot.status === 'confirmed' ? 'border-green-200 bg-green-50' :
-                            'border-blue-200 bg-blue-50'
-                          }`}>
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-semibold text-gray-900">Slot {slot.slot_number}</span>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                slot.status === 'empty' ? 'bg-gray-200 text-gray-700' :
-                                slot.status === 'pending' ? 'bg-yellow-200 text-yellow-800' :
-                                slot.status === 'confirmed' ? 'bg-green-200 text-green-800' :
-                                'bg-blue-200 text-blue-800'
-                              }`}>
-                                {slot.status}
-                              </span>
-                            </div>
-                            
-                            {slot.players ? (
-                              <div className="space-y-2">
-                                <div className="text-sm">
-                                  <div className="font-medium text-gray-900">
-                                    {slot.players.users?.firstname && slot.players.users?.lastname 
-                                      ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                      : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                    }
-                                  </div>
-                                  <div className="text-gray-600">{slot.players.name}</div>
+                      
+                      {slots.length > 0 ? (
+                        <div className="space-y-6">
+                          {/* Confirmed Players */}
+                          {(() => {
+                            const confirmedSlots = slots.filter(slot => slot.is_main_slot && slot.status === 'confirmed' && slot.players)
+                            return confirmedSlots.length > 0 && (
+                              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="text-lg font-semibold text-green-800">Confirmed Players ({confirmedSlots.length})</h4>
+                                  <span className="px-3 py-1 bg-green-200 text-green-800 text-sm font-medium rounded-full">
+                                    {confirmedSlots.length}/{tournament.total_slots}
+                                  </span>
                                 </div>
-                                
-                                {slot.requested_at && (
-                                  <div className="text-xs text-gray-500">
-                                    Requested: {new Date(slot.requested_at).toLocaleDateString()}
-                                  </div>
-                                )}
-                                
-                                {slot.confirmed_at && (
-                                  <div className="text-xs text-gray-500">
-                                    Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
-                                  </div>
-                                )}
-                                
-                                {/* Host Actions */}
-                                {isHost && slot.status === 'pending' && (
-                                  <div className="flex space-x-2 mt-2">
-                                    <button
-                                      onClick={() => approveSlot(slot.id)}
-                                      className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
-                                    >
-                                      Approve
-                                    </button>
-                                    <button
-                                      onClick={() => rejectSlot(slot.id)}
-                                      className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
-                                    >
-                                      Reject
-                                    </button>
-                                  </div>
-                                )}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                  {confirmedSlots.map((slot) => (
+                                    <div key={slot.slot_number} className="bg-white border border-green-200 rounded-lg p-3">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <span className="font-medium text-gray-900">Position {confirmedSlots.indexOf(slot) + 1}</span>
+                                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
+                                          Confirmed
+                                        </span>
+                                      </div>
+                                      <div className="text-sm">
+                                        <div className="font-medium text-gray-900">
+                                          {slot.players.users?.firstname && slot.players.users?.lastname 
+                                            ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                            : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                          }
+                                        </div>
+                                        <div className="text-gray-600 text-xs">{slot.players.display_name}</div>
+                                        {slot.confirmed_at && (
+                                          <div className="text-xs text-gray-500 mt-1">
+                                            Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
+                                          </div>
+                                        )}
+                                      </div>
+                                      {isHost && (
+                                        <div className="mt-2">
+                                          <button
+                                            onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
+                                            className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                                          >
+                                            Remove Player
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )
+                          })()}
 
-                                {/* Admin Actions for Confirmed Slots */}
-                                {isHost && slot.status === 'confirmed' && (
-                                  <div className="flex space-x-2 mt-2">
-                                    <button
-                                      onClick={() => removePlayerFromSlot(slot.id, slot.players?.name || 'Player')}
-                                      className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
-                                    >
-                                      Remove Player
-                                    </button>
-                                  </div>
-                                )}
+                          {/* Pending Approval */}
+                          {(() => {
+                            const pendingSlots = slots.filter(slot => slot.is_main_slot && slot.status === 'pending' && slot.players)
+                            return pendingSlots.length > 0 && (
+                              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="text-lg font-semibold text-yellow-800">Pending Approval ({pendingSlots.length})</h4>
+                                  <span className="px-3 py-1 bg-yellow-200 text-yellow-800 text-sm font-medium rounded-full">
+                                    Awaiting Host Action
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                  {pendingSlots.map((slot) => (
+                                    <div key={slot.slot_number} className="bg-white border border-yellow-200 rounded-lg p-3">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <span className="font-medium text-gray-900">Position {pendingSlots.indexOf(slot) + 1}</span>
+                                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                          Pending
+                                        </span>
+                                      </div>
+                                      <div className="text-sm">
+                                        <div className="font-medium text-gray-900">
+                                          {slot.players.users?.firstname && slot.players.users?.lastname 
+                                            ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                            : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                          }
+                                        </div>
+                                        <div className="text-gray-600 text-xs">{slot.players.display_name}</div>
+                                        {slot.requested_at && (
+                                          <div className="text-xs text-gray-500 mt-1">
+                                            Requested: {new Date(slot.requested_at).toLocaleDateString()}
+                                          </div>
+                                        )}
+                                      </div>
+                                      {isHost && (
+                                        <div className="flex space-x-2 mt-2">
+                                          <button
+                                            onClick={() => approveSlot(slot.id)}
+                                            className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                                          >
+                                            Approve
+                                          </button>
+                                          <button
+                                            onClick={() => rejectSlot(slot.id)}
+                                            className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                                          >
+                                            Reject
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                            ) : (
-                              <div className="text-sm text-gray-500">Empty slot</div>
-                            )}
-                          </div>
-                        )) : (
-                          // Generate empty slots if none loaded
-                          Array.from({ length: tournament.total_slots }, (_, i) => (
-                            <div key={i + 1} className="p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="font-semibold text-gray-900">Slot {i + 1}</span>
-                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
-                                  empty
-                                </span>
+                            )
+                          })()}
+
+                          {/* Available Slots */}
+                          {(() => {
+                            const filledSlots = slots.filter(slot => slot.is_main_slot && slot.players).length
+                            const availableSlots = tournament.total_slots - filledSlots
+                            return availableSlots > 0 && (
+                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="text-lg font-semibold text-gray-800">Available Slots ({availableSlots})</h4>
+                                  <span className="px-3 py-1 bg-gray-200 text-gray-800 text-sm font-medium rounded-full">
+                                    Open for Registration
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {availableSlots} main tournament slots are available for registration.
+                                </div>
                               </div>
-                              <div className="text-sm text-gray-500">Empty slot</div>
-                            </div>
-                          ))
-                        )}
-                      </div>
+                            )
+                          })()}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          <div className="text-lg font-medium mb-2">Loading tournament slots...</div>
+                          <div className="text-sm">Please wait while we fetch the latest information.</div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Waitlist Slots */}
+                    {/* Waitlist Slots - Status Based Grouping */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Waitlist Slots</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {slots.length > 0 ? slots.filter(slot => !slot.is_main_slot).map((slot) => (
-                          <div key={slot.slot_number} className={`p-4 rounded-lg border-2 ${
-                            slot.status === 'empty' ? 'border-gray-200 bg-gray-50' :
-                            slot.status === 'pending' ? 'border-yellow-200 bg-yellow-50' :
-                            slot.status === 'confirmed' ? 'border-green-200 bg-green-50' :
-                            'border-blue-200 bg-blue-50'
-                          }`}>
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-semibold text-gray-900">Waitlist {slot.waitlist_position}</span>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                slot.status === 'empty' ? 'bg-gray-200 text-gray-700' :
-                                slot.status === 'pending' ? 'bg-yellow-200 text-yellow-800' :
-                                slot.status === 'confirmed' ? 'bg-green-200 text-green-800' :
-                                'bg-blue-200 text-blue-800'
-                              }`}>
-                                {slot.status}
-                              </span>
-                            </div>
-                            
-                            {slot.players ? (
-                              <div className="space-y-2">
-                                <div className="text-sm">
-                                  <div className="font-medium text-gray-900">
-                                    {slot.players.users?.firstname && slot.players.users?.lastname 
-                                      ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                      : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                    }
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Waitlist</h3>
+                      
+                      {slots.length > 0 ? (
+                        <div className="space-y-6">
+                          {/* Waitlisted Players */}
+                          {(() => {
+                            const waitlistSlots = slots.filter(slot => !slot.is_main_slot && slot.players)
+                            return waitlistSlots.length > 0 && (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="text-lg font-semibold text-blue-800">Waitlisted Players ({waitlistSlots.length})</h4>
+                                  <span className="px-3 py-1 bg-blue-200 text-blue-800 text-sm font-medium rounded-full">
+                                    First Come, First Served
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                  {waitlistSlots.map((slot) => (
+                                    <div key={slot.slot_number} className="bg-white border border-blue-200 rounded-lg p-3">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <span className="font-medium text-gray-900">Position {waitlistSlots.indexOf(slot) + 1}</span>
+                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                                          Waitlist
+                                        </span>
+                                      </div>
+                                      <div className="text-sm">
+                                        <div className="font-medium text-gray-900">
+                                          {slot.players.users?.firstname && slot.players.users?.lastname 
+                                            ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                            : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                          }
+                                        </div>
+                                        <div className="text-gray-600 text-xs">{slot.players.display_name}</div>
+                                        {slot.requested_at && (
+                                          <div className="text-xs text-gray-500 mt-1">
+                                            Joined: {new Date(slot.requested_at).toLocaleDateString()}
+                                          </div>
+                                        )}
+                                      </div>
+                                      {isHost && (
+                                        <div className="mt-2">
+                                          <button
+                                            onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
+                                            className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                                          >
+                                            Remove from Waitlist
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="mt-3 text-sm text-blue-700">
+                                  <div className="font-medium">How it works:</div>
+                                  <div className="text-xs mt-1">
+                                    When a main slot becomes available, the first person on the waitlist will be automatically promoted.
                                   </div>
-                                  <div className="text-gray-600">{slot.players.name}</div>
                                 </div>
                                 
-                                {slot.requested_at && (
-                                  <div className="text-xs text-gray-500">
-                                    Requested: {new Date(slot.requested_at).toLocaleDateString()}
-                                  </div>
-                                )}
-                                
-                                {slot.confirmed_at && (
-                                  <div className="text-xs text-gray-500">
-                                    Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
-                                  </div>
-                                )}
-                                
-                                {/* Host Actions */}
-                                {isHost && slot.status === 'pending' && (
-                                  <div className="flex space-x-2 mt-2">
-                                    <button
-                                      onClick={() => approveSlot(slot.id)}
-                                      className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
-                                    >
-                                      Approve
-                                    </button>
-                                    <button
-                                      onClick={() => rejectSlot(slot.id)}
-                                      className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
-                                    >
-                                      Reject
-                                    </button>
+                                {/* Host Controls for Waitlist Management */}
+                                {isHost && waitlistSlots.length > 0 && (
+                                  <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+                                    <div className="flex items-center justify-between">
+                                      <div className="text-sm text-blue-800">
+                                        <div className="font-medium">Host Controls</div>
+                                        <div className="text-xs">Manually promote waitlist players</div>
+                                      </div>
+                                      <button
+                                        onClick={promoteWaitlistManually}
+                                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                                      >
+                                        Promote Next Player
+                                      </button>
+                                    </div>
                                   </div>
                                 )}
                               </div>
-                            ) : (
-                              <div className="text-sm text-gray-500">Empty waitlist slot</div>
-                            )}
-                          </div>
-                        )) : (
-                          // Generate empty waitlist slots if none loaded
-                          Array.from({ length: 10 }, (_, i) => (
-                            <div key={i + 1} className="p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="font-semibold text-gray-900">Waitlist {i + 1}</span>
-                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
-                                  empty
-                                </span>
+                            )
+                          })()}
+
+                          {/* No Waitlist */}
+                          {(() => {
+                            const waitlistSlots = slots.filter(slot => !slot.is_main_slot && slot.players)
+                            return waitlistSlots.length === 0 && (
+                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="text-lg font-semibold text-gray-800">No Waitlist</h4>
+                                  <span className="px-3 py-1 bg-gray-200 text-gray-800 text-sm font-medium rounded-full">
+                                    Main Slots Available
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  All main tournament slots are available. No waitlist needed.
+                                </div>
                               </div>
-                              <div className="text-sm text-gray-500">Empty waitlist slot</div>
-                            </div>
-                          ))
-                        )}
-                      </div>
+                            )
+                          })()}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          <div className="text-lg font-medium mb-2">Loading waitlist...</div>
+                          <div className="text-sm">Please wait while we fetch the latest information.</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

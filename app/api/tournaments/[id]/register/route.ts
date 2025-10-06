@@ -282,6 +282,31 @@ export async function DELETE(
       return NextResponse.json({ error: 'Failed to cancel registration' }, { status: 500 })
     }
 
+    // Try to promote a waitlist player to the now-empty main slot
+    const { data: promotionResult, error: promotionError } = await supabase
+      .rpc('manual_promote_waitlist', { p_tournament_id: tournamentId })
+
+    if (promotionError) {
+      console.error('Error promoting waitlist player:', promotionError)
+    } else if (promotionResult && promotionResult.length > 0 && promotionResult[0].success) {
+      console.log('Successfully promoted waitlist player:', promotionResult[0])
+      
+      // Send notification to the promoted player
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: promotionResult[0].promoted_player_id,
+          type: 'waitlist_promotion',
+          title: 'You have been promoted from the waitlist!',
+          message: `You have been promoted to position ${promotionResult[0].new_slot_number} in the tournament. Please wait for host approval.`,
+          data: {
+            tournament_id: tournamentId,
+            new_slot_number: promotionResult[0].new_slot_number,
+            promoted_at: new Date().toISOString()
+          }
+        })
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Registration cancelled successfully'

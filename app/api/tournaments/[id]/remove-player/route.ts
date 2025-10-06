@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sessionManager } from '@/lib/session'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,44 +13,70 @@ export async function POST(
   try {
     const { id: tournamentId } = await params
     const { slotId } = await request.json()
-
+    
     if (!slotId) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Slot ID is required' 
-      }, { status: 400 })
+      return NextResponse.json({ error: 'Slot ID is required' }, { status: 400 })
+    }
+    
+    // Get user from Authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
+    }
+    
+    // Parse the user from the authorization header
+    let sessionUser
+    try {
+      sessionUser = JSON.parse(authHeader)
+    } catch (error) {
+      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
+    }
+    
+    if (!sessionUser || !sessionUser.id) {
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
     }
 
-    // Get user from session
-    const userData = sessionManager.getUserFromRequest(request)
-    if (!userData) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    // Check if user is host or admin
+    const userResponse = await fetch(`${request.nextUrl.origin}/api/user-profile?userId=${sessionUser.id}`)
+    const userResult = await userResponse.json()
+    
+    if (!userResult.success) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
     }
 
-    // Check if user is admin or host
-    if (userData.role !== 'admin' && userData.role !== 'host') {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Only admins and hosts can remove players from tournament slots' 
-      }, { status: 403 })
+    // Get tournament details
+    const { data: tournament, error: tournamentError } = await supabase
+      .from('tournaments')
+      .select('*')
+      .eq('id', tournamentId)
+      .single()
+
+    if (tournamentError || !tournament) {
+      return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
     }
 
-    // Get the slot to verify it exists and get player info
+    const isHost = tournament.host_id === sessionUser.id
+    const isAdmin = userResult.data.role === 'admin'
+
+    if (!isHost && !isAdmin) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    }
+
+    // Get the slot details
     const { data: slot, error: slotError } = await supabase
       .from('tournament_slots')
       .select(`
-        id,
-        slot_number,
-        status,
-        player_id,
-        players!tournament_slots_player_id_fkey (
+        *,
+        players (
           id,
           display_name,
-          users!players_user_id_fkey (
+          user_id,
+          users (
             id,
             email,
             firstname,
-            lastname
+            lastname,
+            username
           )
         )
       `)
@@ -60,59 +85,83 @@ export async function POST(
       .single()
 
     if (slotError || !slot) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Tournament slot not found' 
-      }, { status: 404 })
+      return NextResponse.json({ error: 'Slot not found' }, { status: 404 })
     }
 
     if (!slot.player_id) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No player assigned to this slot' 
-      }, { status: 400 })
+      return NextResponse.json({ error: 'Slot is already empty' }, { status: 400 })
     }
 
-    // Get player name for response
-    const player = slot.players?.[0] // Get first player from array
-    const user = player?.users?.[0] // Get first user from array
-    const playerName = player?.display_name || 
-                      (user?.firstname && user?.lastname 
-                        ? `${user.firstname} ${user.lastname}`
-                        : user?.email || 'Player')
-
-    // Remove player from slot (set player_id to null, status to empty, clear timestamps)
+    // Remove the player from the slot (set to empty) - same pattern as withdraw
     const { error: updateError } = await supabase
       .from('tournament_slots')
       .update({
         player_id: null,
         status: 'empty',
         requested_at: null,
-        confirmed_at: null,
-        waitlist_position: null
+        confirmed_at: null
       })
       .eq('id', slotId)
 
     if (updateError) {
       console.error('Error removing player from slot:', updateError)
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Failed to remove player from tournament slot' 
-      }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to remove player from slot' }, { status: 500 })
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: `Successfully removed ${playerName} from tournament slot ${slot.slot_number}`,
-      playerName,
-      slotNumber: slot.slot_number
+    // Try to promote a waitlist player to the now-empty main slot
+    const { data: promotionResult, error: promotionError } = await supabase
+      .rpc('manual_promote_waitlist', { p_tournament_id: tournamentId })
+
+    if (promotionError) {
+      console.error('Error promoting waitlist player:', promotionError)
+    } else if (promotionResult && promotionResult.length > 0 && promotionResult[0].success) {
+      console.log('Successfully promoted waitlist player:', promotionResult[0])
+      
+      // Send notification to the promoted player
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: promotionResult[0].promoted_player_id,
+          type: 'waitlist_promotion',
+          title: 'You have been promoted from the waitlist!',
+          message: `You have been promoted to position ${promotionResult[0].new_slot_number} in the tournament. Please wait for host approval.`,
+          data: {
+            tournament_id: tournamentId,
+            new_slot_number: promotionResult[0].new_slot_number,
+            promoted_at: new Date().toISOString()
+          }
+        })
+    }
+
+    // Send notification to the removed player
+    if (slot.player_id) {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: slot.player_id,
+          type: 'player_removed',
+          title: 'You have been removed from the tournament',
+          message: `You have been removed from position ${slot.slot_number} in the tournament by the host.`,
+          data: {
+            tournament_id: tournamentId,
+            slot_number: slot.slot_number,
+            removed_at: new Date().toISOString()
+          }
+        })
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Player removed successfully',
+      removed_player: {
+        id: slot.player_id,
+        name: slot.players?.display_name,
+        slot_number: slot.slot_number
+      }
     })
 
-  } catch (error) {
-    console.error('Error in remove-player API:', error)
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Internal server error' 
-    }, { status: 500 })
+  } catch (error: any) {
+    console.error('Error removing player from tournament:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
