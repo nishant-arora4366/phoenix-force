@@ -324,30 +324,9 @@ export default function TournamentDetailsPage() {
           setSlots(slotsResult.slots)
           setSlotsStats(slotsResult.stats)
           
-          // Check if we need to promote waitlist players
-          try {
-            const promotionResponse = await fetch(`/api/tournaments/${tournamentId}/promote-waitlist`, {
-              method: 'POST',
-              headers: {
-                'Authorization': JSON.stringify(sessionUser),
-              },
-            })
-            
-            if (promotionResponse.ok) {
-              const promotionResult = await promotionResponse.json()
-              if (promotionResult.success && promotionResult.promoted_player) {
-                console.log('Waitlist player promoted:', promotionResult.promoted_player)
-                // Refresh slots to show the updated state
-                setTimeout(() => fetchSlots(), 1000)
-              }
-            } else if (promotionResponse.status === 503) {
-              console.log('Promotion function not available, skipping auto-promotion')
-            } else {
-              console.log('No waitlist players to promote or no available slots')
-            }
-          } catch (error) {
-            console.log('Promotion check failed, continuing with normal flow:', error)
-          }
+          // Temporarily disabled automatic promotion to prevent infinite loop
+          // TODO: Re-enable once the promotion logic is fixed
+          console.log('Automatic promotion check disabled to prevent infinite loop')
         }
       }
     } catch (error) {

@@ -395,7 +395,7 @@ export default function CreateTournamentPage() {
                     value={formData.total_slots}
                     onChange={handleInputChange}
                     required
-                    min="16"
+                    min="1"
                     max="128"
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
                     placeholder="Total player slots"

@@ -111,12 +111,11 @@ export async function POST(
       try {
         console.log(`Registration attempt ${attempt}/${maxRetries}`)
         
-        // Get fresh slot count for this attempt - only count slots with players
+        // Get current slots to determine next slot number
         const { data: currentSlots, error: slotsError } = await supabase
           .from('tournament_slots')
-          .select('*')
+          .select('slot_number')
           .eq('tournament_id', tournamentId)
-          .not('player_id', 'is', null)
           .order('slot_number')
 
         if (slotsError) {
@@ -143,17 +142,16 @@ export async function POST(
           tournamentTotalSlots: tournament.total_slots
         })
         
-        // Update existing empty slot
+        // Create new slot entry dynamically
         const { data: slot, error: registerError } = await supabase
           .from('tournament_slots')
-          .update({
+          .insert({
+            tournament_id: tournamentId,
+            slot_number: nextSlotNumber,
             player_id: player.id,
             status: isWaitlist ? 'waitlist' : 'pending',
             requested_at: new Date().toISOString()
           })
-          .eq('tournament_id', tournamentId)
-          .eq('slot_number', nextSlotNumber)
-          .is('player_id', null) // Only update empty slots
           .select()
           .single()
 

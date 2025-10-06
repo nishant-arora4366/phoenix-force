@@ -58,115 +58,49 @@ export async function GET(
     // All authenticated users can view tournament slots
     // Only hosts and admins can manage slots (checked later in PUT method)
 
-    // Get all slots for the tournament
-    const { data: slots, error: slotsError } = await supabase
+    // Get all existing slots from database (dynamically created)
+    const { data: allSlotsData, error: allSlotsError } = await supabase
       .from('tournament_slots')
       .select(`
         *,
         players (
           id,
           display_name,
-          user_id,
-          users (
-            id,
-            email,
-            firstname,
-            lastname,
-            username
-          )
+          user_id
         )
       `)
       .eq('tournament_id', tournamentId)
       .order('slot_number')
 
-    if (slotsError) {
-      console.error('Database error fetching tournament slots:', slotsError)
-      return NextResponse.json({ error: 'Error fetching tournament slots', details: slotsError.message }, { status: 500 })
+    if (allSlotsError) {
+      console.error('Error fetching all slots:', allSlotsError)
+      return NextResponse.json({ error: 'Failed to fetch slots' }, { status: 500 })
     }
 
-    // Create a map of all slots (including empty ones)
-    const filledSlots = slots?.reduce((acc, slot) => {
-      acc[slot.slot_number] = slot
-      return acc
-    }, {} as Record<number, any>) || {}
+    console.log('All slots from database:', allSlotsData?.length || 0)
     
-    console.log('Fetched slots from database:', slots?.length || 0)
-    console.log('Slot details:', slots?.map(s => ({ 
-      slot_number: s.slot_number, 
-      status: s.status, 
-      player_id: s.player_id,
-      players: s.players?.display_name || 'No player'
-    })))
-    console.log('Filled slots map:', Object.keys(filledSlots).map(k => ({ slot: k, status: filledSlots[k].status })))
-
-    // Generate all slots (main + waitlist)
     const totalSlots = tournament.total_slots
-    const waitlistSlots = 10
-    const allSlots = []
+    const allSlots = allSlotsData?.map(slot => ({
+      ...slot,
+      is_main_slot: slot.slot_number <= totalSlots,
+      waitlist_position: slot.slot_number > totalSlots ? slot.slot_number - totalSlots : null,
+      players: slot.players
+    })) || []
 
-    // Main tournament slots
-    for (let i = 1; i <= totalSlots; i++) {
-      const slot = filledSlots[i] || {
-        id: null,
-        slot_number: i,
-        player_id: null,
-        status: 'empty',
-        players: null,
-        requested_at: null,
-        confirmed_at: null,
-        created_at: null
-      }
-      
-      console.log(`Slot ${i}:`, {
-        exists: !!filledSlots[i],
-        status: slot.status,
-        player: slot.players?.display_name || 'No player',
-        is_main_slot: true
-      })
-      
-      allSlots.push({
-        ...slot,
-        is_main_slot: true
-      })
-    }
-
-    // Waitlist slots
-    for (let i = totalSlots + 1; i <= totalSlots + waitlistSlots; i++) {
-      const slot = filledSlots[i] || {
-        id: null,
-        slot_number: i,
-        player_id: null,
-        status: 'empty',
-        players: null,
-        requested_at: null,
-        confirmed_at: null,
-        created_at: null
-      }
-      
-      console.log(`Waitlist Slot ${i}:`, {
-        exists: !!filledSlots[i],
-        status: slot.status,
-        player: slot.players?.display_name || 'No player',
-        waitlist_position: i - totalSlots
-      })
-      
-      allSlots.push({
-        ...slot,
-        is_main_slot: false,
-        waitlist_position: i - totalSlots
-      })
-    }
-
+    console.log('Processed slots:', allSlots.length)
+    console.log('Main slots:', allSlots.filter(s => s.is_main_slot).length)
+    console.log('Waitlist slots:', allSlots.filter(s => !s.is_main_slot).length)
+    
     return NextResponse.json({
       success: true,
       tournament: tournament,
       slots: allSlots,
       stats: {
         total_slots: totalSlots,
-        waitlist_slots: waitlistSlots,
-        filled_main_slots: slots?.filter(s => s.slot_number <= totalSlots && s.status !== 'empty').length || 0,
-        filled_waitlist_slots: slots?.filter(s => s.slot_number > totalSlots && s.status !== 'empty').length || 0,
-        pending_approvals: slots?.filter(s => s.status === 'pending').length || 0
+        waitlist_slots: allSlots.filter(s => !s.is_main_slot).length,
+        filled_main_slots: allSlots.filter(s => s.is_main_slot && s.status !== 'empty').length,
+        filled_waitlist_slots: allSlots.filter(s => !s.is_main_slot && s.status !== 'empty').length,
+        pending_approvals: allSlots.filter(s => s.status === 'pending').length
       }
     })
 

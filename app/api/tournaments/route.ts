@@ -54,22 +54,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: tournamentError.message }, { status: 500 })
     }
 
-    // Create tournament slots
-    const slots = Array.from({ length: total_slots }, (_, i) => ({
-      tournament_id: tournament.id,
-      slot_number: i + 1,
-      status: 'empty'
-    }))
-
-    const { error: slotsError } = await supabaseAdmin
-      .from('tournament_slots')
-      .insert(slots)
-
-    if (slotsError) {
-      // If slots creation fails, we should clean up the tournament
-      await supabaseAdmin.from('tournaments').delete().eq('id', tournament.id)
-      return NextResponse.json({ success: false, error: slotsError.message }, { status: 500 })
-    }
+    // No need to pre-create slots - they will be created dynamically as players register
+    console.log('Tournament created successfully. Slots will be created dynamically as players register.')
 
     return NextResponse.json({ success: true, tournament })
   } catch (error: any) {

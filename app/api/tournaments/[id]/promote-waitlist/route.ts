@@ -58,10 +58,10 @@ export async function POST(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    // Try to use the manual_promote_waitlist function first
-    console.log('Attempting to call manual_promote_waitlist for tournament:', tournamentId)
+    // Try to use the new safe promotion function first
+    console.log('Attempting to call find_and_promote_waitlist for tournament:', tournamentId)
     const { data: promotionResult, error: promotionError } = await supabase
-      .rpc('manual_promote_waitlist', { p_tournament_id: tournamentId })
+      .rpc('find_and_promote_waitlist', { p_tournament_id: tournamentId })
 
     console.log('Promotion result:', promotionResult)
     console.log('Promotion error:', promotionError)
@@ -77,7 +77,8 @@ export async function POST(
     }
 
     if (!promotionResult || promotionResult.length === 0 || !promotionResult[0].success) {
-      return NextResponse.json({ error: 'No waitlist players to promote or no available slots' }, { status: 404 })
+      console.log('Database function returned no promotion, trying manual promotion...')
+      return await manualPromotion(tournamentId, supabase)
     }
 
     const promotedPlayer = promotionResult[0]
@@ -108,7 +109,17 @@ export async function POST(
 
   } catch (error: any) {
     console.error('Error promoting waitlist player:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error.message,
+      code: error.code
+    }, { status: 500 })
   }
 }
 
@@ -203,17 +214,21 @@ export async function GET(
 // Manual promotion function as fallback
 async function manualPromotion(tournamentId: string, supabase: any) {
   try {
-    console.log('Starting manual promotion for tournament:', tournamentId)
+    console.log('=== STARTING MANUAL PROMOTION ===')
+    console.log('Tournament ID:', tournamentId)
     
     // Get tournament details
     const { data: tournament, error: tournamentError } = await supabase
       .from('tournaments')
-      .select('total_slots')
+      .select('*')
       .eq('id', tournamentId)
       .single()
 
+    console.log('=== TOURNAMENT DETAILS ===')
     console.log('Tournament data:', tournament)
     console.log('Tournament error:', tournamentError)
+    console.log('Total slots configured:', tournament?.total_slots)
+    console.log('Tournament status:', tournament?.status)
 
     if (tournamentError || !tournament) {
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
@@ -226,8 +241,31 @@ async function manualPromotion(tournamentId: string, supabase: any) {
       .eq('tournament_id', tournamentId)
       .order('slot_number', { ascending: true })
 
-    console.log('All tournament slots:', allSlots)
+    console.log('=== ALL TOURNAMENT SLOTS ===')
+    console.log('Total slots in database:', allSlots?.length || 0)
     console.log('All slots error:', allSlotsError)
+    console.log('Slot breakdown:')
+    if (allSlots) {
+      const mainSlots = allSlots.filter((s: any) => s.slot_number <= tournament.total_slots)
+      const waitlistSlots = allSlots.filter((s: any) => s.slot_number > tournament.total_slots)
+      const emptySlots = allSlots.filter((s: any) => s.player_id === null)
+      const filledSlots = allSlots.filter((s: any) => s.player_id !== null)
+      
+      console.log(`- Main slots (1-${tournament.total_slots}): ${mainSlots.length}`)
+      console.log(`- Waitlist slots (>${tournament.total_slots}): ${waitlistSlots.length}`)
+      console.log(`- Empty slots: ${emptySlots.length}`)
+      console.log(`- Filled slots: ${filledSlots.length}`)
+      
+      console.log('Main slots details:')
+      mainSlots.forEach((slot: any) => {
+        console.log(`  Slot ${slot.slot_number}: ${slot.status} (player: ${slot.player_id ? 'YES' : 'NO'})`)
+      })
+      
+      console.log('Waitlist slots details:')
+      waitlistSlots.forEach((slot: any) => {
+        console.log(`  Slot ${slot.slot_number}: ${slot.status} (player: ${slot.player_id ? 'YES' : 'NO'})`)
+      })
+    }
     
     // Debug: Get all slots with players to see the actual structure
     const { data: slotsWithPlayers, error: slotsWithPlayersError } = await supabase
@@ -237,90 +275,120 @@ async function manualPromotion(tournamentId: string, supabase: any) {
       .not('player_id', 'is', null)
       .order('slot_number', { ascending: true })
 
-    console.log('All slots with players:', slotsWithPlayers)
+    console.log('=== SLOTS WITH PLAYERS ===')
+    console.log('Slots with players:', slotsWithPlayers?.length || 0)
     console.log('Slots with players error:', slotsWithPlayersError)
-
-    // Find the first empty main slot
-    const { data: emptySlots, error: emptySlotsError } = await supabase
-      .from('tournament_slots')
-      .select('*')
-      .eq('tournament_id', tournamentId)
-      .lte('slot_number', tournament.total_slots)
-      .is('player_id', null)
-      .order('slot_number', { ascending: true })
-      .limit(1)
-
-    console.log('Empty slots query result:', emptySlots)
-    console.log('Empty slots error:', emptySlotsError)
-    console.log('Total slots:', tournament.total_slots)
-
-    if (emptySlotsError || !emptySlots || emptySlots.length === 0) {
-      console.log('No empty main slots found')
-      return NextResponse.json({ error: 'No empty main slots available' }, { status: 404 })
+    if (slotsWithPlayers) {
+      slotsWithPlayers.forEach((slot: any) => {
+        console.log(`  Slot ${slot.slot_number}: ${slot.status} (player: ${slot.player_id})`)
+      })
     }
 
-    // Find the first waitlist player - try different approaches
-    console.log('Looking for waitlist players with slot_number >', tournament.total_slots)
+    // Find the first available main slot number (not necessarily empty, but available)
+    console.log('=== SEARCHING FOR AVAILABLE MAIN SLOTS ===')
     
-    // First try: look for slots with slot_number > total_slots and player_id not null
+    // Get all existing slots to find gaps
+    const { data: existingSlots, error: existingSlotsError } = await supabase
+      .from('tournament_slots')
+      .select('slot_number')
+      .eq('tournament_id', tournamentId)
+      .order('slot_number')
+
+    if (existingSlotsError) {
+      console.error('Error fetching existing slots:', existingSlotsError)
+      return NextResponse.json({ error: 'Failed to fetch slots' }, { status: 500 })
+    }
+
+    const existingSlotNumbers = existingSlots?.map((s: any) => s.slot_number) || []
+    let availableMainSlot = null
+    
+    // Find the first available main slot (1 to total_slots)
+    for (let slotNum = 1; slotNum <= tournament.total_slots; slotNum++) {
+      if (!existingSlotNumbers.includes(slotNum)) {
+        availableMainSlot = slotNum
+        break
+      }
+    }
+
+    console.log('Available main slot:', availableMainSlot)
+    console.log('Existing slot numbers:', existingSlotNumbers)
+    console.log('Total slots configured:', tournament.total_slots)
+
+    if (!availableMainSlot) {
+      console.log('No available main slots found')
+      return NextResponse.json({ 
+        success: false, 
+        message: 'No available main slots' 
+      }, { status: 200 })
+    }
+
+    // Find the first waitlist player - look for any player with status 'waitlist'
+    console.log('=== SEARCHING FOR WAITLIST PLAYERS ===')
+    console.log('Looking for waitlist players with status = waitlist')
+    
     const { data: waitlistPlayers, error: waitlistError } = await supabase
       .from('tournament_slots')
       .select('*')
       .eq('tournament_id', tournamentId)
-      .gt('slot_number', tournament.total_slots)
+      .eq('status', 'waitlist')
       .not('player_id', 'is', null)
       .order('requested_at', { ascending: true })
       .limit(1)
 
     console.log('Waitlist players query result:', waitlistPlayers)
     console.log('Waitlist players error:', waitlistError)
-
-    // If no results, try looking for any slot with a player that's not in main slots
-    let actualWaitlistPlayers = waitlistPlayers
-    if (!waitlistPlayers || waitlistPlayers.length === 0) {
-      console.log('No waitlist players found with slot_number > total_slots, trying alternative approach...')
-      
-      // Alternative: look for any slot with player_id not null and status not 'confirmed'
-      const { data: altWaitlistPlayers, error: altWaitlistError } = await supabase
-        .from('tournament_slots')
-        .select('*')
-        .eq('tournament_id', tournamentId)
-        .not('player_id', 'is', null)
-        .neq('status', 'confirmed')
-        .order('requested_at', { ascending: true })
-        .limit(1)
-      
-      console.log('Alternative waitlist players query result:', altWaitlistPlayers)
-      console.log('Alternative waitlist players error:', altWaitlistError)
-      
-      actualWaitlistPlayers = altWaitlistPlayers
+    
+    if (waitlistPlayers && waitlistPlayers.length > 0) {
+      console.log(`Found waitlist player: Slot ${waitlistPlayers[0].slot_number} (ID: ${waitlistPlayers[0].id}, Player: ${waitlistPlayers[0].player_id})`)
+    } else {
+      console.log('No waitlist players found')
     }
+
+    let actualWaitlistPlayers = waitlistPlayers
 
     if (!actualWaitlistPlayers || actualWaitlistPlayers.length === 0) {
       console.log('No waitlist players found with any approach')
-      return NextResponse.json({ error: 'No waitlist players to promote' }, { status: 404 })
+      return NextResponse.json({ 
+        success: false, 
+        message: 'No waitlist players to promote' 
+      }, { status: 200 }) // Return 200 instead of 404 to prevent retries
     }
 
-    const emptySlot = emptySlots[0]
     const waitlistPlayer = actualWaitlistPlayers[0]
 
-    console.log('Found empty slot:', emptySlot.slot_number)
-    console.log('Found waitlist player:', waitlistPlayer.player_id)
+    console.log('=== PROMOTION DETAILS ===')
+    console.log('Available main slot:', availableMainSlot)
+    console.log('Waitlist player:', {
+      id: waitlistPlayer.id,
+      slot_number: waitlistPlayer.slot_number,
+      status: waitlistPlayer.status,
+      player_id: waitlistPlayer.player_id
+    })
 
-    // Promote the waitlist player
+    // Promote the waitlist player by updating their slot number
+    console.log('=== PROMOTING WAITLIST PLAYER ===')
+    console.log(`Moving player from slot ${waitlistPlayer.slot_number} to slot ${availableMainSlot}...`)
+    console.log(`Waitlist player ID: ${waitlistPlayer.id}`)
+    
+    // Simply update the waitlist player's slot number to the available main slot
     const { error: updateError } = await supabase
       .from('tournament_slots')
       .update({
-        slot_number: emptySlot.slot_number,
-        status: 'pending',
-        updated_at: new Date().toISOString()
+        slot_number: availableMainSlot,
+        status: 'pending'
       })
       .eq('id', waitlistPlayer.id)
 
     if (updateError) {
-      console.error('Error updating waitlist player:', updateError)
-      return NextResponse.json({ error: 'Failed to promote waitlist player' }, { status: 500 })
+      console.error('Error promoting waitlist player:', updateError)
+      return NextResponse.json({ 
+        error: 'Failed to promote waitlist player',
+        details: updateError.message,
+        code: updateError.code
+      }, { status: 500 })
     }
+
+    console.log('Successfully promoted waitlist player to main slot!')
 
     // Send notification
     await supabase
@@ -329,26 +397,40 @@ async function manualPromotion(tournamentId: string, supabase: any) {
         user_id: waitlistPlayer.player_id,
         type: 'waitlist_promotion',
         title: 'You have been promoted from the waitlist!',
-        message: `You have been promoted to position ${emptySlot.slot_number} in the tournament. Please wait for host approval.`,
+        message: `You have been promoted to position ${availableMainSlot} in the tournament. Please wait for host approval.`,
         data: {
           tournament_id: tournamentId,
-          new_slot_number: emptySlot.slot_number,
+          new_slot_number: availableMainSlot,
           promoted_at: new Date().toISOString()
         }
       })
 
+    console.log('=== PROMOTION SUCCESSFUL ===')
     console.log('Successfully promoted waitlist player manually')
+    console.log('Player moved from slot', waitlistPlayer.slot_number, 'to slot', availableMainSlot)
+    console.log('Player ID:', waitlistPlayer.player_id)
+    
     return NextResponse.json({
       success: true,
       message: 'Waitlist player promoted successfully (manual)',
       promoted_player: {
         id: waitlistPlayer.player_id,
-        new_slot: emptySlot.slot_number
+        new_slot: availableMainSlot
       }
     })
 
   } catch (error: any) {
     console.error('Error in manual promotion:', error)
-    return NextResponse.json({ error: 'Manual promotion failed' }, { status: 500 })
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    })
+    return NextResponse.json({ 
+      error: 'Manual promotion failed',
+      details: error.message,
+      code: error.code
+    }, { status: 500 })
   }
 }
