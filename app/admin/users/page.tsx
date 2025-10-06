@@ -91,6 +91,7 @@ export default function UserManagementPage() {
     required: false,
     displayOrder: 0
   })
+  const [expandedSkills, setExpandedSkills] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const checkUser = async () => {
@@ -639,6 +640,16 @@ export default function UserManagementPage() {
       console.error('Error deleting skill value:', error)
       setMessage(`Error: ${error.message}`)
     }
+  }
+
+  const toggleSkillExpansion = (skillId: string) => {
+    const newExpanded = new Set(expandedSkills)
+    if (newExpanded.has(skillId)) {
+      newExpanded.delete(skillId)
+    } else {
+      newExpanded.add(skillId)
+    }
+    setExpandedSkills(newExpanded)
   }
 
   const getStatusColor = (status: string) => {
@@ -1191,15 +1202,16 @@ export default function UserManagementPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Skill Type *
                       </label>
-                      <select
-                        value={newSkill.type}
-                        onChange={(e) => setNewSkill(prev => ({ ...prev, type: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
-                      >
-                        <option value="select">Select (Dropdown)</option>
-                        <option value="number">Number</option>
-                        <option value="text">Text</option>
-                      </select>
+                            <select
+                              value={newSkill.type}
+                              onChange={(e) => setNewSkill(prev => ({ ...prev, type: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                            >
+                              <option value="select">Select (Dropdown)</option>
+                              <option value="multiselect">Multi-Select (Checkboxes)</option>
+                              <option value="number">Number</option>
+                              <option value="text">Text</option>
+                            </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1248,47 +1260,76 @@ export default function UserManagementPage() {
               )}
 
               {/* Skills List */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {playerSkills.map((skill) => (
-                  <div key={skill.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900">{skill.skill_name}</h3>
-                        <div className="flex items-center space-x-4 mt-1">
-                          <span className="text-sm text-gray-500">Type: {skill.skill_type}</span>
-                          <span className="text-sm text-gray-500">Order: {skill.display_order}</span>
-                          {skill.is_required && (
-                            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                              Required
-                            </span>
-                          )}
+                  <div key={skill.id} className="border border-gray-200 rounded-lg">
+                    {/* Skill Header - Always Visible */}
+                    <div className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={() => toggleSkillExpansion(skill.id)}
+                            className="flex items-center space-x-2 text-left hover:bg-gray-50 p-2 rounded transition-colors"
+                          >
+                            <div className="w-5 h-5 flex items-center justify-center">
+                              {expandedSkills.has(skill.id) ? (
+                                <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              )}
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-medium text-gray-900">{skill.skill_name}</h3>
+                              <div className="flex items-center space-x-4 mt-1">
+                                <span className="text-sm text-gray-500">Type: {skill.skill_type}</span>
+                                <span className="text-sm text-gray-500">Order: {skill.display_order}</span>
+                                {skill.is_required && (
+                                  <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                                    Required
+                                  </span>
+                                )}
+                                {skill.values && skill.values.length > 0 && (
+                                  <span className="text-sm text-gray-500">
+                                    {skill.values.length} value{skill.values.length !== 1 ? 's' : ''}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              setIsEditingSkill(skill.id)
+                              setEditingSkill({
+                                name: skill.skill_name,
+                                type: skill.skill_type,
+                                required: skill.is_required,
+                                displayOrder: skill.display_order
+                              })
+                            }}
+                            className="px-3 py-1 text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => deletePlayerSkill(skill.id)}
+                            className="px-3 py-1 text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => {
-                            setIsEditingSkill(skill.id)
-                            setEditingSkill({
-                              name: skill.skill_name,
-                              type: skill.skill_type,
-                              required: skill.is_required,
-                              displayOrder: skill.display_order
-                            })
-                          }}
-                          className="px-3 py-1 text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => deletePlayerSkill(skill.id)}
-                          className="px-3 py-1 text-red-600 hover:text-red-800 text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
                     </div>
-                    
-                    {/* Skill Values */}
+
+                    {/* Collapsible Content */}
+                    {expandedSkills.has(skill.id) && (
+                      <div className="border-t border-gray-200 p-4 bg-gray-50">
+                        {/* Skill Values */}
                     <div className="mt-3">
                       <div className="flex justify-between items-center mb-2">
                         <h4 className="text-sm font-medium text-gray-700">Values:</h4>
@@ -1442,7 +1483,8 @@ export default function UserManagementPage() {
                           </div>
                         </div>
                       )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Edit Form */}
                     {isEditingSkill === skill.id && (
@@ -1471,6 +1513,7 @@ export default function UserManagementPage() {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
                               <option value="select">Select (Dropdown)</option>
+                              <option value="multiselect">Multi-Select (Checkboxes)</option>
                               <option value="number">Number</option>
                               <option value="text">Text</option>
                             </select>

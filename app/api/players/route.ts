@@ -159,22 +159,57 @@ export async function POST(request: NextRequest) {
       // Create skill assignments
       for (const [skillKey, skillValue] of Object.entries(skills)) {
         if (skillValue && skillIdMap[skillKey]) {
-          // Find the skill value ID
-          const { data: skillValues } = await supabase
-            .from('player_skill_values')
-            .select('id')
-            .eq('skill_id', skillIdMap[skillKey])
-            .eq('value_name', skillValue)
-            .single()
+          const skillId = skillIdMap[skillKey]
+          
+          // Check if this is a multi-select skill (array of values)
+          if (Array.isArray(skillValue)) {
+            // Multi-select: store array of skill value IDs
+            const skillValueIds: string[] = []
+            const valueArray: string[] = []
+            
+            for (const value of skillValue) {
+              const { data: skillValueData } = await supabase
+                .from('player_skill_values')
+                .select('id')
+                .eq('skill_id', skillId)
+                .eq('value_name', value)
+                .single()
+              
+              if (skillValueData) {
+                skillValueIds.push(skillValueData.id)
+                valueArray.push(value)
+              }
+            }
+            
+            if (skillValueIds.length > 0) {
+              await supabase
+                .from('player_skill_assignments')
+                .insert({
+                  player_id: player.id,
+                  skill_id: skillId,
+                  skill_value_ids: skillValueIds,
+                  value_array: valueArray
+                })
+            }
+          } else {
+            // Single select: store single skill value ID
+            const { data: skillValueData } = await supabase
+              .from('player_skill_values')
+              .select('id')
+              .eq('skill_id', skillId)
+              .eq('value_name', skillValue)
+              .single()
 
-          if (skillValues) {
-            await supabase
-              .from('player_skill_assignments')
-              .insert({
-                player_id: player.id,
-                skill_id: skillIdMap[skillKey],
-                skill_value_id: skillValues.id
-              })
+            if (skillValueData) {
+              await supabase
+                .from('player_skill_assignments')
+                .insert({
+                  player_id: player.id,
+                  skill_id: skillId,
+                  skill_value_id: skillValueData.id,
+                  value_array: [skillValue]
+                })
+            }
           }
         }
       }

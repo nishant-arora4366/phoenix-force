@@ -9,7 +9,7 @@ interface PlayerFormData {
   bio: string
   profile_pic_url: string
   mobile_number: string
-  skills: { [key: string]: string }
+  skills: { [key: string]: string | string[] }
 }
 
 interface PlayerSkill {
@@ -355,33 +355,69 @@ export default function CreatePlayerPage() {
                         console.error('Invalid skill object:', skill)
                         return null
                       }
-                      
+
                       const skillKey = skill.skill_name.toLowerCase().replace(' ', '_')
-                      
+                      const isMultiSelect = skill.skill_type === 'multiselect'
+                      const currentValue = formData.skills[skillKey] || (isMultiSelect ? [] : '')
+
                       return (
                         <div key={skill.id} className="space-y-2">
                           <label htmlFor={skillKey} className="block text-sm font-medium text-gray-700">
                             {skill.skill_name} {skill.is_required && '*'}
                           </label>
-                          <select
-                            id={skillKey}
-                            name={skillKey}
-                            value={formData.skills[skillKey] || ''}
-                            onChange={(e) => {
-                              const newSkills = { ...formData.skills }
-                              newSkills[skillKey] = e.target.value
-                              setFormData({ ...formData, skills: newSkills })
-                            }}
-                            required={skill.is_required}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
-                          >
-                            <option value="">Select {skill.skill_name}</option>
-                            {skill.values && skill.values.map((value) => (
-                              <option key={value.id} value={value.value_name}>
-                                {value.value_name}
-                              </option>
-                            ))}
-                          </select>
+                          
+                          {isMultiSelect ? (
+                            // Multi-select with checkboxes
+                            <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-xl p-3 bg-gray-50">
+                              {skill.values && skill.values.map((value) => (
+                                <label key={value.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                                  <input
+                                    type="checkbox"
+                                    checked={Array.isArray(currentValue) && currentValue.includes(value.value_name)}
+                                    onChange={(e) => {
+                                      const newSkills = { ...formData.skills }
+                                      const currentArray = Array.isArray(currentValue) ? currentValue : []
+                                      
+                                      if (e.target.checked) {
+                                        newSkills[skillKey] = [...currentArray, value.value_name]
+                                      } else {
+                                        newSkills[skillKey] = currentArray.filter(v => v !== value.value_name)
+                                      }
+                                      setFormData({ ...formData, skills: newSkills })
+                                    }}
+                                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                  />
+                                  <span className="text-sm text-gray-700">{value.value_name}</span>
+                                </label>
+                              ))}
+                              {Array.isArray(currentValue) && currentValue.length > 0 && (
+                                <div className="text-xs text-gray-500 mt-2">
+                                  Selected: {currentValue.join(', ')}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            // Single select dropdown
+                            <select
+                              id={skillKey}
+                              name={skillKey}
+                              value={currentValue}
+                              onChange={(e) => {
+                                const newSkills = { ...formData.skills }
+                                newSkills[skillKey] = e.target.value
+                                setFormData({ ...formData, skills: newSkills })
+                              }}
+                              required={skill.is_required}
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                            >
+                              <option value="">Select {skill.skill_name}</option>
+                              {skill.values && skill.values.map((value) => (
+                                <option key={value.id} value={value.value_name}>
+                                  {value.value_name}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                         </div>
                       )
                     })}

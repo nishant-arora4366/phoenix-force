@@ -43,12 +43,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         }
 
         // Fetch player data
-        const currentUser = sessionManager.getUser()
-        const response = await fetch(`/api/players/${id}`, {
-          headers: currentUser ? {
-            'Authorization': JSON.stringify(currentUser)
-          } : {}
-        })
+        const response = await fetch(`/api/players/${id}`)
         const result = await response.json()
 
         if (!result.success) {
