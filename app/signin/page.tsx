@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AuthFormExtended from '@/components/AuthFormExtended'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 export default function SignIn() {
   const [user, setUser] = useState<any>(null)
@@ -13,21 +13,21 @@ export default function SignIn() {
   useEffect(() => {
     // Check if user is already logged in
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      const currentUser = sessionManager.getUser()
+      setUser(currentUser)
     }
     getUser()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null)
+    const unsubscribe = sessionManager.subscribe((userData) => {
+      setUser(userData)
     })
 
-    return () => subscription.unsubscribe()
+    return () => unsubscribe()
   }, [])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    sessionManager.logout()
     setUser(null)
   }
 

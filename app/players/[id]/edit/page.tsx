@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 interface PlayerFormData {
   display_name: string
@@ -45,20 +45,15 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: userData } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', user.id)
-            .single()
+        const currentUser = sessionManager.getUser()
+        if (currentUser) {
+          setUser(currentUser)
+          setUserRole(currentUser.role || null)
           
-          setUserRole(userData?.role || null)
-          
-          if (userData?.role === 'host' || userData?.role === 'admin') {
-            setUser(user)
+          if (currentUser.role === 'host' || currentUser.role === 'admin') {
+            // User has permission to edit players
           } else {
-            setMessage('Only hosts and admins can edit players. Your current role: ' + (userData?.role || 'unknown'))
+            setMessage('Only hosts and admins can edit players. Your current role: ' + (currentUser.role || 'unknown'))
           }
         } else {
           setMessage('Please sign in to edit players')
@@ -71,6 +66,21 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
       }
     }
     checkUser()
+
+    // Listen for auth changes
+    const unsubscribe = sessionManager.subscribe((userData) => {
+      if (userData) {
+        setUser(userData)
+        setUserRole(userData.role || null)
+      } else {
+        setUser(null)
+        setUserRole(null)
+        setMessage('Please sign in to edit players')
+      }
+      setIsLoadingUser(false)
+    })
+
+    return () => unsubscribe()
   }, [])
 
   // Fetch player data
@@ -78,12 +88,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
     const fetchPlayer = async () => {
       try {
         const { id } = await params
-        const { data: { session } } = await supabase.auth.getSession()
-        const response = await fetch(`/api/players/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`
-          }
-        })
+        const response = await fetch(`/api/players/${id}`)
         const result = await response.json()
 
         if (!result.success) {
@@ -127,12 +132,16 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
       }
 
       const { id } = await params
-      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = sessionManager.getUser()
+      if (!currentUser) {
+        throw new Error('User not authenticated')
+      }
+
       const response = await fetch(`/api/players/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
+          'Authorization': JSON.stringify(currentUser)
         },
         body: JSON.stringify(formData),
       })

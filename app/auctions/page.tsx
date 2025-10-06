@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 export default function Auctions() {
   const [user, setUser] = useState<any>(null)
@@ -10,17 +10,18 @@ export default function Auctions() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      const currentUser = sessionManager.getUser()
+      setUser(currentUser)
       setLoading(false)
     }
     getUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null)
+    const unsubscribe = sessionManager.subscribe((userData) => {
+      setUser(userData)
+      setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => unsubscribe()
   }, [])
 
   if (loading) {

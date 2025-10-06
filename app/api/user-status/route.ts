@@ -1,31 +1,33 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-export async function GET() {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+export async function GET(request: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
       return NextResponse.json({
         success: false,
-        error: 'Supabase not configured'
-      }, { status: 500 })
+        error: 'Authentication required'
+      }, { status: 401 })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError) {
+    let userData
+    try {
+      userData = JSON.parse(authHeader)
+    } catch (error) {
       return NextResponse.json({
         success: false,
-        error: authError.message
-      }, { status: 500 })
+        error: 'Invalid authorization header'
+      }, { status: 401 })
     }
 
-    if (!user) {
+    if (!userData || !userData.id) {
       return NextResponse.json({
         success: false,
         message: 'No authenticated user',
@@ -34,10 +36,10 @@ export async function GET() {
     }
 
     // Check if user exists in public.users table
-    const { data: userData, error: userError } = await supabase
+    const { data: publicUserData, error: userError } = await supabase
       .from('users')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', userData.id)
       .single()
 
     if (userError && userError.code !== 'PGRST116') {
@@ -51,13 +53,13 @@ export async function GET() {
       success: true,
       message: 'User status retrieved',
       auth_user: {
-        id: user.id,
-        email: user.email,
-        created_at: user.created_at
+        id: userData.id,
+        email: userData.email,
+        created_at: userData.created_at
       },
-      public_user: userData,
-      is_synced: !!userData,
-      needs_sync: !userData
+      public_user: publicUserData,
+      is_synced: !!publicUserData,
+      needs_sync: !publicUserData
     })
     
   } catch (error) {

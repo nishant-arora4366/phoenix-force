@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 interface User {
   id: string
@@ -26,15 +26,12 @@ export default function AdminPanel() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      const currentUser = sessionManager.getUser()
+      setUser(currentUser)
       
-      if (user) {
+      if (currentUser) {
         // Check if user is admin
-        const response = await fetch(`/api/user-profile?userId=${user.id}`)
-        const result = await response.json()
-        
-        if (result.success && result.data.role === 'admin') {
+        if (currentUser.role === 'admin') {
           // Load all users for admin panel
           await loadUsers()
         } else {
@@ -46,11 +43,12 @@ export default function AdminPanel() {
     }
     getUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null)
+    const unsubscribe = sessionManager.subscribe((userData) => {
+      setUser(userData)
+      setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => unsubscribe()
   }, [])
 
   const loadUsers = async () => {

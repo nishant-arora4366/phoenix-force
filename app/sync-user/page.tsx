@@ -1,7 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function SyncUserPage() {
   const [loading, setLoading] = useState(false)
@@ -14,15 +20,14 @@ export default function SyncUserPage() {
 
     try {
       // Get current user
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      const currentUser = sessionManager.getUser()
       
-      if (authError) throw authError
-      if (!user) {
+      if (!currentUser) {
         setMessage('Please sign in first')
         return
       }
 
-      setUser(user)
+      setUser(currentUser)
 
       // Check if user already exists in public.users
       const { data: existingUser } = await supabase
