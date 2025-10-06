@@ -193,73 +193,95 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
           )}
         </div>
 
-        {/* Hero Section */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
-            {/* Profile Picture */}
-            <div className="flex-shrink-0">
-              {player.profile_pic_url ? (
-                <img 
-                  src={player.profile_pic_url} 
-                  alt={player.display_name}
-                  className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full object-cover shadow-lg border-4 border-white"
-                />
-              ) : (
-                <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-white shadow-lg border-4 border-white flex items-center justify-center">
-                  <svg className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              )}
-            </div>
-
-            {/* Player Info */}
-            <div className="flex-1 text-center sm:text-left">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{player.display_name}</h1>
-              
-              {/* Player Roles */}
-              <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3 mb-4 sm:mb-6">
-                {player.skills?.Role && (
-                  <span className="bg-green-100 text-green-800 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-semibold shadow-sm">
-                    🏏 {player.skills.Role}
-                  </span>
-                )}
-                {player.skills?.['Batting Style'] && (
-                  <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-semibold shadow-sm">
-                    ⚾ {player.skills['Batting Style']}
-                  </span>
-                )}
-                {player.skills?.['Bowling Style'] && (
-                  <span className="bg-purple-100 text-purple-800 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-semibold shadow-sm">
-                    🎯 {player.skills['Bowling Style']}
-                  </span>
-                )}
+        {/* Player Card - Similar to Players Page */}
+        <div className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
+          {/* Player Image Header */}
+          <div className="relative h-64 sm:h-80 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+            {player.profile_pic_url ? (
+              <img
+                src={player.profile_pic_url}
+                alt={player.display_name}
+                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center">
+                <div className="text-8xl text-gray-400">🏏</div>
               </div>
+            )}
+            
+            {/* Price Badge */}
+            {player.skills?.['Base Price'] && (
+              <div className="absolute top-4 right-4 bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                ₹{player.skills['Base Price']}
+              </div>
+            )}
+            
+            {/* Group Badge */}
+            {player.skills?.Group && (
+              <div className="absolute top-4 left-4 bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                {player.skills.Group}
+              </div>
+            )}
+          </div>
 
-              {/* Base Price */}
-              {player.skills?.['Base Price'] && (
-                <div className="inline-flex items-center bg-white rounded-full px-4 sm:px-6 py-2 sm:py-3 shadow-lg">
-                  <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">₹{player.skills['Base Price']}</span>
-                  <span className="text-xs sm:text-sm text-gray-500 ml-2">Base Price</span>
-                </div>
-              )}
+          {/* Player Info */}
+          <div className="p-6">
+            <div className="mb-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 group-hover:text-gray-600 transition-colors mb-2">
+                {player.display_name}
+              </h1>
             </div>
+
+            {/* Roles and Skills */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {player.skills?.Role && (
+                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
+                  🏏 {player.skills.Role}
+                </span>
+              )}
+              {player.skills?.['Batting Style'] && (
+                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
+                  ⚾ {player.skills['Batting Style']}
+                </span>
+              )}
+              {player.skills?.['Bowling Style'] && (
+                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
+                  🎯 {player.skills['Bowling Style']}
+                </span>
+              )}
+              {/* Display additional skills */}
+              {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
+                // Skip if it's already displayed as a role above
+                if (['Role', 'Base Price', 'Batting Style', 'Bowling Style', 'Group'].includes(skillName)) return null;
+                
+                return (
+                  <span key={skillName} className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full font-medium">
+                    {skillName}: {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* Bio */}
+            {player.bio && (
+              <p className="text-gray-600 text-sm leading-relaxed mb-4">{player.bio}</p>
+            )}
 
             {/* Action Buttons */}
             {(userRole === 'admin' || userRole === 'host') && (
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-gray-100">
                 <button
                   onClick={() => router.push(`/players/${player.id}/edit`)}
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-colors shadow-lg font-semibold text-sm sm:text-base"
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-semibold"
                 >
-                  ✏️ Edit Player
+                  Edit Player
                 </button>
                 {userRole === 'admin' && (
                   <button
                     onClick={handleDelete}
-                    className="px-4 sm:px-6 py-2 sm:py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors shadow-lg font-semibold text-sm sm:text-base"
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
                   >
-                    🗑️ Delete Player
+                    Delete Player
                   </button>
                 )}
               </div>
@@ -267,111 +289,82 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {/* Basic Information */}
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-            {/* Bio Section */}
-            {player.bio && (
-              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
-                  <span className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-sm sm:text-base">
-                    📝
-                  </span>
-                  About
-                </h3>
-                <p className="text-gray-700 leading-relaxed text-sm sm:text-base">{player.bio}</p>
+        {/* Additional Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Skills & Attributes */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+              <span className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center mr-3 text-sm">
+                ⚡
+              </span>
+              Skills & Attributes
+            </h3>
+            {player.skills && Object.keys(player.skills).length > 0 ? (
+              <div className="space-y-3">
+                {Object.entries(player.skills).map(([skillName, skillValue]) => (
+                  <div key={skillName} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                    <span className="text-sm font-medium text-gray-600">{skillName}</span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-gray-400 text-4xl mb-3">⚡</div>
+                <p className="text-gray-500 text-sm">No skills and attributes configured yet</p>
               </div>
             )}
+          </div>
 
-            {/* Skills & Attributes */}
-            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center">
-                <span className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-sm sm:text-base">
-                  ⚡
-                </span>
-                Skills & Attributes
-              </h3>
-              {player.skills && Object.keys(player.skills).length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {Object.entries(player.skills).map(([skillName, skillValue]) => (
-                    <div key={skillName} className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4">
-                      <div className="text-xs sm:text-sm font-semibold text-gray-600 mb-1">{skillName}</div>
-                      <div className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">
-                        {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                      </div>
-                    </div>
-                  ))}
+          {/* Quick Stats */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+              <span className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center mr-3 text-sm">
+                📊
+              </span>
+              Quick Stats
+            </h3>
+            <div className="space-y-3">
+              {player.skills?.['Base Price'] && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Base Price</span>
+                  <span className="font-bold text-gray-900">₹{player.skills['Base Price']}</span>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 text-4xl mb-3">⚡</div>
-                  <p className="text-gray-500 text-sm sm:text-base">No skills and attributes configured yet</p>
-                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Skills will appear here once configured</p>
+              )}
+              {player.skills?.Group && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Group</span>
+                  <span className="font-bold text-gray-900">{player.skills.Group}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-sm text-gray-600">Created</span>
+                <span className="font-bold text-gray-900">
+                  {new Date(player.created_at).toLocaleDateString()}
+                </span>
+              </div>
+              {player.updated_at && (
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-gray-600">Updated</span>
+                  <span className="font-bold text-gray-900">
+                    {new Date(player.updated_at).toLocaleDateString()}
+                  </span>
                 </div>
               )}
             </div>
-
           </div>
+        </div>
 
-          {/* Sidebar */}
-          <div className="space-y-4 sm:space-y-6">
-            {/* Quick Stats */}
-            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
-              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
-                <span className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 rounded-lg flex items-center justify-center mr-2 text-xs sm:text-sm">
-                  📊
-                </span>
-                Quick Stats
-              </h3>
-              <div className="space-y-2 sm:space-y-3">
-                {player.skills?.['Base Price'] && (
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-xs sm:text-sm text-gray-600">Base Price</span>
-                    <span className="font-bold text-gray-900 text-sm sm:text-base">₹{player.skills['Base Price']}</span>
-                  </div>
-                )}
-                {player.skills?.Group && (
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-xs sm:text-sm text-gray-600">Group</span>
-                    <span className="font-bold text-gray-900 text-sm sm:text-base">{player.skills.Group}</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-xs sm:text-sm text-gray-600">Created</span>
-                  <span className="font-bold text-gray-900 text-sm sm:text-base">
-                    {new Date(player.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                {player.updated_at && (
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-xs sm:text-sm text-gray-600">Updated</span>
-                    <span className="font-bold text-gray-900 text-sm sm:text-base">
-                      {new Date(player.updated_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
-              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
-                <span className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 rounded-lg flex items-center justify-center mr-2 text-xs sm:text-sm">
-                  ⚙️
-                </span>
-                Actions
-              </h3>
-              <div className="space-y-2 sm:space-y-3">
-                <button
-                  onClick={() => router.push('/players')}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-600 text-white rounded-lg sm:rounded-xl hover:bg-gray-700 transition-colors font-semibold text-sm sm:text-base"
-                >
-                  ← Back to Players
-                </button>
-              </div>
-            </div>
-          </div>
+        {/* Back to Players Button */}
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => router.push('/players')}
+            className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
+          >
+            ← Back to Players
+          </button>
         </div>
       </div>
     </div>
