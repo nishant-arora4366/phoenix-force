@@ -149,6 +149,7 @@ export default function PlayerProfilePage() {
       console.log('Skills data:', result.skills)
       console.log('Skills keys:', Object.keys(result.skills || {}))
       console.log('Skills values:', Object.values(result.skills || {}))
+      console.log('Full response structure:', JSON.stringify(result, null, 2))
       
       if (result.success && result.profile) {
         setPlayerProfile(result.profile)

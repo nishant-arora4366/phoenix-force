@@ -30,53 +30,61 @@ export async function GET(request: NextRequest) {
     console.log('=== API /api/player-profile GET - QUERYING DATABASE ===')
     console.log('Looking for player with user_id:', userData.id)
     
-    const { data: player, error: playerError } = await supabase
+    // First, let's get the player without skill assignments to see if the player exists
+    const { data: playerBasic, error: playerBasicError } = await supabase
       .from('players')
-      .select(`
-        *,
-        player_skill_assignments (
-          id,
-          skill_value_id,
-          skill_value_ids,
-          value_array,
-          player_skills (
-            id,
-            skill_name,
-            skill_type,
-            is_required,
-            display_order,
-            is_admin_managed,
-            viewer_can_see
-          ),
-          player_skill_values (
-            id,
-            value_name,
-            display_order
-          )
-        )
-      `)
+      .select('*')
       .eq('user_id', userData.id)
       .single()
     
-    console.log('Database query result:', { player, playerError })
+    console.log('Basic player query result:', { playerBasic, playerBasicError })
+    
+    if (playerBasicError || !playerBasic) {
+      console.log('No player found for user_id:', userData.id)
+      return NextResponse.json({ 
+        success: true, 
+        profile: null,
+        message: 'No player profile found'
+      })
+    }
+    
+    // Now get the skill assignments separately
+    const { data: skillAssignments, error: skillError } = await supabase
+      .from('player_skill_assignments')
+      .select(`
+        id,
+        skill_value_id,
+        skill_value_ids,
+        value_array,
+        player_skills (
+          id,
+          skill_name,
+          skill_type,
+          is_required,
+          display_order,
+          is_admin_managed,
+          viewer_can_see
+        ),
+        player_skill_values (
+          id,
+          value_name,
+          display_order
+        )
+      `)
+      .eq('player_id', playerBasic.id)
+    
+    console.log('Skill assignments query result:', { skillAssignments, skillError })
+    
+    // Combine the results
+    const player = {
+      ...playerBasic,
+      player_skill_assignments: skillAssignments || []
+    }
+    
+    console.log('Database query result:', { player })
     console.log('Player found:', !!player)
     console.log('Player ID from database:', player?.id)
-
-    if (playerError) {
-      if (playerError.code === 'PGRST116') {
-        // No player profile found
-        return NextResponse.json({ 
-          success: true, 
-          profile: null,
-          message: 'No player profile found'
-        })
-      }
-      console.error('Error fetching player profile:', playerError)
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Error fetching player profile' 
-      }, { status: 500 })
-    }
+    console.log('Number of skill assignments found:', skillAssignments?.length || 0)
 
     // Format skills data with filtering based on user role and visibility
     const skills: { [key: string]: string | string[] } = {}
