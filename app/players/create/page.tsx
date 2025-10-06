@@ -94,7 +94,10 @@ export default function CreatePlayerPage() {
         const response = await fetch('/api/player-skills')
         const result = await response.json()
         
+        console.log('Player skills API response:', result)
+        
         if (result.success) {
+          console.log('Setting player skills:', result.skills)
           setPlayerSkills(result.skills || [])
         } else {
           console.error('Failed to fetch player skills:', result.error)
@@ -330,38 +333,58 @@ export default function CreatePlayerPage() {
                     <p className="text-gray-600 mt-2">Loading player skills...</p>
                   </div>
                 </div>
+              ) : playerSkills.length === 0 ? (
+                <div className="space-y-4">
+                  <div className="text-center py-8">
+                    <div className="text-gray-500 text-4xl mb-4">⚠️</div>
+                    <p className="text-gray-600">No player skills configured yet.</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Please configure player skills in the admin panel first.
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div className="space-y-6">
                   <label className="block text-sm font-semibold text-gray-700">
                     Player Skills & Attributes
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {playerSkills.map((skill) => (
-                      <div key={skill.id} className="space-y-2">
-                        <label htmlFor={skill.skill_name.toLowerCase().replace(' ', '_')} className="block text-sm font-medium text-gray-700">
-                          {skill.skill_name} {skill.is_required && '*'}
-                        </label>
-                        <select
-                          id={skill.skill_name.toLowerCase().replace(' ', '_')}
-                          name={skill.skill_name.toLowerCase().replace(' ', '_')}
-                          value={formData.skills[skill.skill_name.toLowerCase().replace(' ', '_')] || ''}
-                          onChange={(e) => {
-                            const newSkills = { ...formData.skills }
-                            newSkills[skill.skill_name.toLowerCase().replace(' ', '_')] = e.target.value
-                            setFormData({ ...formData, skills: newSkills })
-                          }}
-                          required={skill.is_required}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
-                        >
-                          <option value="">Select {skill.skill_name}</option>
-                          {skill.values.map((value) => (
-                            <option key={value.id} value={value.value_name}>
-                              {value.value_name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ))}
+                    {playerSkills.map((skill) => {
+                      // Add safety checks
+                      if (!skill || !skill.skill_name) {
+                        console.error('Invalid skill object:', skill)
+                        return null
+                      }
+                      
+                      const skillKey = skill.skill_name.toLowerCase().replace(' ', '_')
+                      
+                      return (
+                        <div key={skill.id} className="space-y-2">
+                          <label htmlFor={skillKey} className="block text-sm font-medium text-gray-700">
+                            {skill.skill_name} {skill.is_required && '*'}
+                          </label>
+                          <select
+                            id={skillKey}
+                            name={skillKey}
+                            value={formData.skills[skillKey] || ''}
+                            onChange={(e) => {
+                              const newSkills = { ...formData.skills }
+                              newSkills[skillKey] = e.target.value
+                              setFormData({ ...formData, skills: newSkills })
+                            }}
+                            required={skill.is_required}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                          >
+                            <option value="">Select {skill.skill_name}</option>
+                            {skill.values && skill.values.map((value) => (
+                              <option key={value.id} value={value.value_name}>
+                                {value.value_name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
