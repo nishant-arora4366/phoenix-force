@@ -41,6 +41,7 @@ export default function TournamentDetailsPage() {
   const [slots, setSlots] = useState<any[]>([])
   const [slotsStats, setSlotsStats] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [slotsLoading, setSlotsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isHost, setIsHost] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
@@ -310,6 +311,7 @@ export default function TournamentDetailsPage() {
 
   const fetchSlots = async () => {
     try {
+      setSlotsLoading(true)
       const sessionUser = sessionManager.getUser()
       if (!sessionUser) return
 
@@ -331,6 +333,8 @@ export default function TournamentDetailsPage() {
       }
     } catch (error) {
       console.error('Error fetching slots:', error)
+    } finally {
+      setSlotsLoading(false)
     }
   }
 
@@ -1146,40 +1150,15 @@ export default function TournamentDetailsPage() {
                       </div>
                     )}
 
-                    {/* Generate slots if not loaded from API */}
+                    {/* Show message if no slots are available (should not happen with intelligent slots) */}
                     {slots.length === 0 && (
                       <div className="text-center py-4">
-                        <p className="text-gray-600 mb-4">Loading tournament slots...</p>
+                        <p className="text-gray-600 mb-4">No tournament slots available</p>
                         <button
-                          onClick={async () => {
-                            try {
-                              const sessionUser = sessionManager.getUser()
-                              const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
-                                headers: {
-                                  'Authorization': JSON.stringify(sessionUser),
-                                },
-                              })
-                              if (slotsResponse.ok) {
-                                const slotsResult = await slotsResponse.json()
-                                if (slotsResult.success) {
-                                  setSlots(slotsResult.slots)
-                                  setSlotsStats(slotsResult.stats)
-                                } else {
-                                  console.error('Slots API returned error:', slotsResult.error)
-                                  alert(`Error loading slots: ${slotsResult.error}`)
-                                }
-                              } else {
-                                console.error('Slots API request failed:', slotsResponse.status, slotsResponse.statusText)
-                                alert(`Failed to load slots: ${slotsResponse.status} ${slotsResponse.statusText}`)
-                              }
-                            } catch (error) {
-                              console.error('Error loading slots:', error)
-                              alert(`Error loading slots: ${error}`)
-                            }
-                          }}
+                          onClick={fetchSlots}
                           className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                         >
-                          Load Slots
+                          Refresh Slots
                         </button>
                       </div>
                     )}
@@ -1188,7 +1167,12 @@ export default function TournamentDetailsPage() {
                     <div className="mb-8">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Main Tournament Slots</h3>
                       
-                      {slots.length > 0 ? (
+                      {slotsLoading ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <div className="text-lg font-medium mb-2">Loading tournament slots...</div>
+                          <div className="text-sm">Please wait while we fetch the latest information.</div>
+                        </div>
+                      ) : slots.length > 0 ? (
                         <div className="space-y-6">
                           {/* Confirmed Players */}
                           {(() => {
@@ -1329,7 +1313,12 @@ export default function TournamentDetailsPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Waitlist</h3>
                       
-                      {slots.length > 0 ? (
+                      {slotsLoading ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <div className="text-lg font-medium mb-2">Loading waitlist...</div>
+                          <div className="text-sm">Please wait while we fetch the latest information.</div>
+                        </div>
+                      ) : slots.length > 0 ? (
                         <div className="space-y-6">
                           {/* Waitlisted Players */}
                           {(() => {

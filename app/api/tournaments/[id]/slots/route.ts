@@ -80,12 +80,66 @@ export async function GET(
     console.log('All slots from database:', allSlotsData?.length || 0)
     
     const totalSlots = tournament.total_slots
-    const allSlots = allSlotsData?.map(slot => ({
+    const existingSlots = allSlotsData?.map(slot => ({
       ...slot,
       is_main_slot: slot.slot_number <= totalSlots,
       waitlist_position: slot.slot_number > totalSlots ? slot.slot_number - totalSlots : null,
       players: slot.players
     })) || []
+
+    // Create intelligent slot display
+    const allSlots = []
+    
+    // Add main slots (1 to total_slots)
+    for (let i = 1; i <= totalSlots; i++) {
+      const existingSlot = existingSlots.find(s => s.slot_number === i)
+      if (existingSlot) {
+        // Slot exists and is filled
+        allSlots.push(existingSlot)
+      } else {
+        // Slot doesn't exist yet - show as available
+        allSlots.push({
+          id: `available-${i}`,
+          tournament_id: tournamentId,
+          slot_number: i,
+          player_id: null,
+          status: 'available',
+          is_host_assigned: false,
+          requested_at: null,
+          confirmed_at: null,
+          created_at: null,
+          is_main_slot: true,
+          waitlist_position: null,
+          players: null
+        })
+      }
+    }
+    
+    // Add waitlist slots (total_slots + 1 to total_slots + 10)
+    const waitlistSlots = 10 // Standard waitlist size
+    for (let i = totalSlots + 1; i <= totalSlots + waitlistSlots; i++) {
+      const existingSlot = existingSlots.find(s => s.slot_number === i)
+      if (existingSlot) {
+        // Waitlist slot exists and is filled
+        allSlots.push(existingSlot)
+      } else {
+        // Waitlist slot doesn't exist yet - show as available
+        allSlots.push({
+          id: `available-waitlist-${i}`,
+          tournament_id: tournamentId,
+          slot_number: i,
+          player_id: null,
+          status: 'available',
+          is_host_assigned: false,
+          requested_at: null,
+          confirmed_at: null,
+          created_at: null,
+          is_main_slot: false,
+          waitlist_position: i - totalSlots,
+          players: null
+        })
+      }
+    }
 
     console.log('Processed slots:', allSlots.length)
     console.log('Main slots:', allSlots.filter(s => s.is_main_slot).length)
@@ -97,9 +151,9 @@ export async function GET(
       slots: allSlots,
       stats: {
         total_slots: totalSlots,
-        waitlist_slots: allSlots.filter(s => !s.is_main_slot).length,
-        filled_main_slots: allSlots.filter(s => s.is_main_slot && s.status !== 'empty').length,
-        filled_waitlist_slots: allSlots.filter(s => !s.is_main_slot && s.status !== 'empty').length,
+        waitlist_slots: waitlistSlots,
+        filled_main_slots: allSlots.filter(s => s.is_main_slot && s.player_id !== null).length,
+        filled_waitlist_slots: allSlots.filter(s => !s.is_main_slot && s.player_id !== null).length,
         pending_approvals: allSlots.filter(s => s.status === 'pending').length
       }
     })
