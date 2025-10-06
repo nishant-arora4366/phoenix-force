@@ -55,7 +55,9 @@ export async function GET(
     const isHost = tournament.host_id === sessionUser.id
     const isAdmin = userResult.data.role === 'admin'
 
-    if (!isHost && !isAdmin) {
+    // All authenticated users can view tournament slots
+    // Only hosts and admins can manage slots
+    if (!isHost && !isAdmin && userResult.data.role !== 'viewer') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
@@ -212,7 +214,9 @@ export async function PUT(
     const isHost = tournament.host_id === sessionUser.id
     const isAdmin = userResult.data.role === 'admin'
 
-    if (!isHost && !isAdmin) {
+    // All authenticated users can view tournament slots
+    // Only hosts and admins can manage slots
+    if (!isHost && !isAdmin && userResult.data.role !== 'viewer') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
