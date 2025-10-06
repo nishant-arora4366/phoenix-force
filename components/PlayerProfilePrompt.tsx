@@ -1,55 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { sessionManager } from '@/lib/session'
 
 interface PlayerProfilePromptProps {
   onClose: () => void
 }
 
 export default function PlayerProfilePrompt({ onClose }: PlayerProfilePromptProps) {
-  const [user, setUser] = useState<any>(null)
-  const [hasPlayerProfile, setHasPlayerProfile] = useState<boolean | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const checkUserAndProfile = async () => {
-      try {
-        const currentUser = sessionManager.getUser()
-        setUser(currentUser)
-
-        if (currentUser) {
-          // Check if user has a player profile
-          const response = await fetch('/api/player-profile', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${JSON.stringify(currentUser)}`
-            }
-          })
-
-          if (response.ok) {
-            const data = await response.json()
-            setHasPlayerProfile(data.success && data.profile)
-          } else {
-            setHasPlayerProfile(false)
-          }
-        }
-      } catch (error) {
-        console.error('Error checking player profile:', error)
-        setHasPlayerProfile(false)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    checkUserAndProfile()
-  }, [])
-
-  // Don't show prompt if user has a player profile or is still loading
-  if (isLoading || hasPlayerProfile) {
-    return null
-  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

@@ -31,6 +31,7 @@ export default function Home() {
   useEffect(() => {
     const checkPlayerProfile = async () => {
       if (user && !isLoading) {
+        console.log('Checking player profile for user:', user.email)
         try {
           const response = await fetch('/api/player-profile', {
             method: 'GET',
@@ -39,13 +40,20 @@ export default function Home() {
             }
           })
 
+          console.log('Player profile API response status:', response.status)
+          
           if (response.ok) {
             const data = await response.json()
+            console.log('Player profile API response data:', data)
             // Show prompt if user doesn't have a player profile
             if (!data.success || !data.profile) {
+              console.log('No player profile found, showing prompt')
               setShowPlayerProfilePrompt(true)
+            } else {
+              console.log('Player profile found, not showing prompt')
             }
           } else {
+            console.log('API failed, showing prompt')
             // If API fails, assume no profile and show prompt
             setShowPlayerProfilePrompt(true)
           }
@@ -70,6 +78,10 @@ export default function Home() {
       </div>
     )
   }
+
+  console.log('Home page render - showPlayerProfilePrompt:', showPlayerProfilePrompt)
+  console.log('Home page render - user:', user?.email)
+  console.log('Home page render - isLoading:', isLoading)
 
   return (
     <div>
@@ -107,6 +119,15 @@ export default function Home() {
                         >
                           View your profile →
                         </Link>
+                      </div>
+                      {/* Debug button */}
+                      <div className="mt-2">
+                        <button
+                          onClick={() => setShowPlayerProfilePrompt(true)}
+                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
+                        >
+                          Test Player Profile Prompt
+                        </button>
                       </div>
                     </div>
                   </div>
