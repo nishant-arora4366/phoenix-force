@@ -88,18 +88,11 @@ export async function GET(
     const transformedPlayer = {
       id: player.id,
       display_name: player.display_name,
-      stage_name: player.stage_name,
       bio: player.bio,
       profile_pic_url: player.profile_pic_url,
-      base_price: skills['Base Price'] || player.base_price || 0,
-      group_name: player.group_name,
-      is_bowler: skills['Role']?.includes('Bowler') || false,
-      is_batter: skills['Role']?.includes('Batsman') || false,
-      is_wicket_keeper: skills['Role']?.includes('Wicket Keeper') || false,
-      bowling_rating: skills['Bowling Rating'] || null,
-      batting_rating: skills['Batting Rating'] || null,
-      wicket_keeping_rating: skills['Wicket Keeping Rating'] || null,
+      mobile_number: player.mobile_number,
       created_at: player.created_at,
+      updated_at: player.updated_at,
       // Include all skills for detailed view
       skills: skills
     }
