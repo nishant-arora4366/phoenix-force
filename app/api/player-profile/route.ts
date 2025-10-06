@@ -75,10 +75,12 @@ export async function GET(request: NextRequest) {
     const skills: { [key: string]: string | string[] } = {}
     const userRole = userData.role || 'viewer'
     
+    console.log('=== API /api/player-profile GET - FETCHING DATA ===')
     console.log('Player skill assignments:', player.player_skill_assignments)
     console.log('User role for skill filtering in player profile:', userRole)
     console.log('Player ID:', player.id)
     console.log('User ID:', userData.id)
+    console.log('Number of skill assignments:', player.player_skill_assignments?.length || 0)
     
     if (player.player_skill_assignments) {
       for (const assignment of player.player_skill_assignments) {
@@ -117,9 +119,16 @@ export async function GET(request: NextRequest) {
     }
     
     console.log('Formatted skills after filtering:', skills)
+    console.log('Final skills keys:', Object.keys(skills))
+    console.log('Final skills values:', Object.values(skills))
+    console.log('Number of final skills:', Object.keys(skills).length)
 
     // Remove the skill assignments from the response
     const { player_skill_assignments, ...profileData } = player
+
+    console.log('=== API /api/player-profile GET - RETURNING DATA ===')
+    console.log('Returning profile:', profileData)
+    console.log('Returning skills:', skills)
 
     return NextResponse.json({
       success: true,

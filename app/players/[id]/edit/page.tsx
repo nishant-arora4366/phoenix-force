@@ -134,6 +134,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
           throw new Error(result.error || 'Failed to fetch player')
         }
 
+        console.log('=== EDIT PAGE - LOADING PLAYER DATA ===')
         console.log('Full API response:', result)
         
         // Handle different API response structures
@@ -142,16 +143,22 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
           // Structure: {success: true, data: {skills: {...}}}
           player = result.data
           skills = result.data.skills || {}
+          console.log('Using data structure - player:', player)
+          console.log('Using data structure - skills:', skills)
         } else if (result.profile) {
           // Structure: {success: true, profile: {...}, skills: {...}}
           player = result.profile
           skills = result.skills || {}
+          console.log('Using profile structure - player:', player)
+          console.log('Using profile structure - skills:', skills)
         } else {
           throw new Error('Invalid API response structure')
         }
         
         console.log('Player data from API:', player)
         console.log('Player skills from API:', skills)
+        console.log('Skills keys:', Object.keys(skills || {}))
+        console.log('Skills values:', Object.values(skills || {}))
         setFormData({
           display_name: player.display_name || '',
           bio: player.bio || '',
@@ -195,8 +202,11 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
         throw new Error('User not authenticated')
       }
 
+      console.log('=== EDIT PAGE - SAVING PLAYER DATA ===')
       console.log('Sending form data to API:', formData)
       console.log('Skills being sent:', formData.skills)
+      console.log('Skills keys being sent:', Object.keys(formData.skills || {}))
+      console.log('Skills values being sent:', Object.values(formData.skills || {}))
 
       const response = await fetch(`/api/players/${id}`, {
         method: 'PUT',

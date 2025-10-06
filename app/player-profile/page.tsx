@@ -143,7 +143,12 @@ export default function PlayerProfilePage() {
       })
 
       const result = await response.json()
+      console.log('=== PLAYER PROFILE PAGE - FETCHING DETAILS ===')
       console.log('Player profile API response:', result)
+      console.log('Profile data:', result.profile)
+      console.log('Skills data:', result.skills)
+      console.log('Skills keys:', Object.keys(result.skills || {}))
+      console.log('Skills values:', Object.values(result.skills || {}))
       
       if (result.success && result.profile) {
         setPlayerProfile(result.profile)

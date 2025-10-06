@@ -194,8 +194,11 @@ export async function PUT(
     }
 
     const body = await request.json()
+    console.log('=== API /api/players/[id] PUT - RECEIVING DATA ===')
     console.log('Received data in API:', body)
     console.log('Skills received:', body.skills)
+    console.log('Skills keys received:', Object.keys(body.skills || {}))
+    console.log('Skills values received:', Object.values(body.skills || {}))
     
     const { 
       display_name, 
