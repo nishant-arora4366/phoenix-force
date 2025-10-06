@@ -41,7 +41,9 @@ export async function GET(request: NextRequest) {
             skill_name,
             skill_type,
             is_required,
-            display_order
+            display_order,
+            is_admin_managed,
+            viewer_can_see
           ),
           player_skill_values (
             id,
@@ -69,16 +71,34 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Format skills data
+    // Format skills data with filtering based on user role and visibility
     const skills: { [key: string]: string | string[] } = {}
+    const userRole = userData.role || 'viewer'
     
     console.log('Player skill assignments:', player.player_skill_assignments)
+    console.log('User role for skill filtering in player profile:', userRole)
     
     if (player.player_skill_assignments) {
       for (const assignment of player.player_skill_assignments) {
         const skillName = assignment.player_skills?.skill_name
-        console.log('Processing skill:', skillName, 'Type:', assignment.player_skills?.skill_type)
+        const isAdminManaged = assignment.player_skills?.is_admin_managed
+        const viewerCanSee = assignment.player_skills?.viewer_can_see
+        
+        console.log('Processing skill:', skillName, 'Type:', assignment.player_skills?.skill_type, 'Admin managed:', isAdminManaged, 'Viewer can see:', viewerCanSee)
+        
+        // Filter skills based on user role and visibility
         if (skillName) {
+          // If user is admin or host, show all skills
+          if (userRole === 'admin' || userRole === 'host') {
+            // Show all skills for admins and hosts
+          } else {
+            // For viewers, only show skills that viewers can see
+            if (viewerCanSee !== true) {
+              console.log('Skipping skill for viewer in player profile:', skillName)
+              continue
+            }
+          }
+          
           if (assignment.player_skills?.skill_type === 'multiselect') {
             // For multiselect, use the value_array
             skills[skillName] = assignment.value_array || []
@@ -94,7 +114,7 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    console.log('Formatted skills:', skills)
+    console.log('Formatted skills after filtering:', skills)
 
     // Remove the skill assignments from the response
     const { player_skill_assignments, ...profileData } = player

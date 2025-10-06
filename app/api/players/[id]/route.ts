@@ -13,6 +13,23 @@ export async function GET(
   try {
     const { id } = await params
 
+    // Get user role from authorization header if available
+    let userRole = 'viewer' // Default to viewer
+    const authHeader = request.headers.get('authorization')
+    if (authHeader) {
+      try {
+        const userData = JSON.parse(authHeader)
+        if (userData && userData.role) {
+          userRole = userData.role
+        }
+      } catch (error) {
+        // If parsing fails, keep default viewer role
+        console.log('Could not parse authorization header, using viewer role')
+      }
+    }
+
+    console.log('User role for skill filtering:', userRole)
+
     // Fetch specific player with skill assignments using service role (bypasses RLS)
     // GET requests are public - no authentication required for viewing
     const { data: player, error } = await supabase
@@ -29,7 +46,9 @@ export async function GET(
             skill_name,
             skill_type,
             is_required,
-            display_order
+            display_order,
+            is_admin_managed,
+            viewer_can_see
           ),
           player_skill_values (
             id,
@@ -65,8 +84,24 @@ export async function GET(
     if (player.player_skill_assignments) {
       for (const assignment of player.player_skill_assignments) {
         const skillName = assignment.player_skills?.skill_name
-        console.log('Processing skill:', skillName, 'Type:', assignment.player_skills?.skill_type)
+        const isAdminManaged = assignment.player_skills?.is_admin_managed
+        const viewerCanSee = assignment.player_skills?.viewer_can_see
+        
+        console.log('Processing skill:', skillName, 'Type:', assignment.player_skills?.skill_type, 'Admin managed:', isAdminManaged, 'Viewer can see:', viewerCanSee)
+        
+        // Filter skills based on user role and visibility
         if (skillName) {
+          // If user is admin or host, show all skills
+          if (userRole === 'admin' || userRole === 'host') {
+            // Show all skills for admins and hosts
+          } else {
+            // For viewers, only show skills that viewers can see
+            if (viewerCanSee !== true) {
+              console.log('Skipping skill for viewer:', skillName)
+              continue
+            }
+          }
+          
           if (assignment.player_skills?.skill_type === 'multiselect') {
             // For multiselect, use the value_array
             skills[skillName] = assignment.value_array || []
@@ -82,7 +117,7 @@ export async function GET(
       }
     }
     
-    console.log('Formatted skills:', skills)
+    console.log('Formatted skills after filtering:', skills)
 
     // Map to the expected interface
     const transformedPlayer = {
@@ -93,7 +128,7 @@ export async function GET(
       mobile_number: player.mobile_number,
       created_at: player.created_at,
       updated_at: player.updated_at,
-      // Include all skills for detailed view
+      // Include filtered skills for detailed view
       skills: skills
     }
 

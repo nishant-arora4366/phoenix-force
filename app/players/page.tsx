@@ -24,7 +24,14 @@ interface Player {
 }
 
 const fetcher = async (url: string) => {
-  const response = await fetch(url)
+  // Get current user for role-based skill filtering
+  const currentUser = sessionManager.getUser()
+  
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': JSON.stringify(currentUser || { role: 'viewer' })
+    }
+  })
   
   if (!response.ok) {
     throw new Error('Failed to fetch players')

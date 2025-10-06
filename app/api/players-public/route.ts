@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -12,6 +12,23 @@ export async function GET() {
         error: 'Service role key not configured'
       }, { status: 500 })
     }
+
+    // Get user role from authorization header if available
+    let userRole = 'viewer' // Default to viewer
+    const authHeader = request.headers.get('authorization')
+    if (authHeader) {
+      try {
+        const userData = JSON.parse(authHeader)
+        if (userData && userData.role) {
+          userRole = userData.role
+        }
+      } catch (error) {
+        // If parsing fails, keep default viewer role
+        console.log('Could not parse authorization header, using viewer role')
+      }
+    }
+
+    console.log('User role for skill filtering in public players:', userRole)
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
 
@@ -30,7 +47,9 @@ export async function GET() {
             skill_name,
             skill_type,
             is_required,
-            display_order
+            display_order,
+            is_admin_managed,
+            viewer_can_see
           ),
           player_skill_values (
             id,
@@ -52,13 +71,30 @@ export async function GET() {
 
     // Transform the data to match the expected interface
     const transformedPlayers = data?.map(player => {
-      // Extract skills from skill assignments
+      // Extract skills from skill assignments with filtering
       const skills: { [key: string]: any } = {}
       
       if (player.player_skill_assignments) {
         for (const assignment of player.player_skill_assignments) {
           const skillName = assignment.player_skills?.skill_name
+          const isAdminManaged = assignment.player_skills?.is_admin_managed
+          const viewerCanSee = assignment.player_skills?.viewer_can_see
+          
+          console.log('Processing skill in public players:', skillName, 'Admin managed:', isAdminManaged, 'Viewer can see:', viewerCanSee)
+          
+          // Filter skills based on user role and visibility
           if (skillName) {
+            // If user is admin or host, show all skills
+            if (userRole === 'admin' || userRole === 'host') {
+              // Show all skills for admins and hosts
+            } else {
+              // For viewers, only show skills that viewers can see
+              if (viewerCanSee !== true) {
+                console.log('Skipping skill for viewer in public players:', skillName)
+                continue
+              }
+            }
+            
             if (assignment.player_skills?.skill_type === 'multiselect') {
               // For multiselect, use the value_array
               skills[skillName] = assignment.value_array || []

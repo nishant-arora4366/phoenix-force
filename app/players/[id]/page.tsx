@@ -35,8 +35,12 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
           setUserRole(currentUser.role || null)
         }
 
-        // Fetch player data
-        const response = await fetch(`/api/players/${id}`)
+        // Fetch player data with user role for skill filtering
+        const response = await fetch(`/api/players/${id}`, {
+          headers: {
+            'Authorization': JSON.stringify(currentUser || { role: 'viewer' })
+          }
+        })
         const result = await response.json()
 
         if (!result.success) {
