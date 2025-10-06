@@ -374,15 +374,41 @@ export default function TournamentDetailsPage() {
 
   const checkWaitlistPromotion = async (payload: any) => {
     // Check if a main slot became empty and trigger auto-promotion
-    if (payload.eventType === 'UPDATE' && payload.old.player_id && !payload.new.player_id) {
-      console.log('Main slot became empty, checking for waitlist promotion')
+    const isMainSlotEmpty = 
+      (payload.eventType === 'UPDATE' && payload.old.player_id && !payload.new.player_id) ||
+      (payload.eventType === 'DELETE' && payload.old.player_id)
+    
+    if (isMainSlotEmpty) {
+      console.log('Main slot became empty, triggering automatic waitlist promotion')
       
-      // The database trigger will handle the auto-promotion
-      // We just need to refresh the data to show the updated state
+      // Automatically call the promotion API
+      try {
+        const response = await fetch(`/api/tournaments/${tournamentId}/auto-promote`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          console.log('Automatic promotion result:', result)
+          
+          if (result.success) {
+            console.log('Waitlist player automatically promoted:', result.promoted_player)
+          }
+        } else {
+          console.log('No waitlist players to promote or promotion failed')
+        }
+      } catch (error) {
+        console.error('Error during automatic promotion:', error)
+      }
+      
+      // Refresh the data to show the updated state
       setTimeout(() => {
         fetchSlots()
         checkUserRegistration()
-      }, 1000) // Small delay to allow database trigger to complete
+      }, 500) // Small delay to allow promotion to complete
     }
   }
 

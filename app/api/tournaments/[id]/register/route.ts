@@ -276,28 +276,26 @@ export async function DELETE(
     }
 
     // Try to promote a waitlist player to the now-empty main slot
-    const { data: promotionResult, error: promotionError } = await supabase
-      .rpc('manual_promote_waitlist', { p_tournament_id: tournamentId })
+    try {
+      const promotionResponse = await fetch(`${request.nextUrl.origin}/api/tournaments/${tournamentId}/auto-promote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
 
-    if (promotionError) {
-      console.error('Error promoting waitlist player:', promotionError)
-    } else if (promotionResult && promotionResult.length > 0 && promotionResult[0].success) {
-      console.log('Successfully promoted waitlist player:', promotionResult[0])
-      
-      // Send notification to the promoted player
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: promotionResult[0].promoted_player_id,
-          type: 'waitlist_promotion',
-          title: 'You have been promoted from the waitlist!',
-          message: `You have been promoted to position ${promotionResult[0].new_slot_number} in the tournament. Please wait for host approval.`,
-          data: {
-            tournament_id: tournamentId,
-            new_slot_number: promotionResult[0].new_slot_number,
-            promoted_at: new Date().toISOString()
-          }
-        })
+      if (promotionResponse.ok) {
+        const promotionResult = await promotionResponse.json()
+        if (promotionResult.success) {
+          console.log('Successfully promoted waitlist player:', promotionResult.promoted_player)
+        } else {
+          console.log('No waitlist players to promote:', promotionResult.message)
+        }
+      } else {
+        console.log('Promotion failed or no waitlist players available')
+      }
+    } catch (promotionError) {
+      console.error('Error calling auto-promote:', promotionError)
     }
 
     return NextResponse.json({
