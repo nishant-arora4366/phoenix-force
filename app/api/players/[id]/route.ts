@@ -285,7 +285,7 @@ export async function PUT(
             if (skillValues && skillValues.length > 0) {
               const skillValueIds = skillValues.map(sv => sv.id)
               
-              await supabase
+              const { error: insertError } = await supabase
                 .from('player_skill_assignments')
                 .insert({
                   player_id: id,
@@ -293,6 +293,12 @@ export async function PUT(
                   skill_value_ids: skillValueIds,
                   value_array: skillValue
                 })
+              
+              if (insertError) {
+                console.error(`Error inserting multi-select skill ${skillName}:`, insertError)
+              } else {
+                console.log(`Successfully inserted multi-select skill ${skillName}:`, skillValue)
+              }
             }
           }
         } else {
@@ -307,7 +313,7 @@ export async function PUT(
               .single()
 
             if (skillValueData) {
-              await supabase
+              const { error: insertError } = await supabase
                 .from('player_skill_assignments')
                 .insert({
                   player_id: id,
@@ -315,6 +321,12 @@ export async function PUT(
                   skill_value_id: skillValueData.id,
                   value_array: [skillValue]
                 })
+              
+              if (insertError) {
+                console.error(`Error inserting single-select skill ${skillName}:`, insertError)
+              } else {
+                console.log(`Successfully inserted single-select skill ${skillName}:`, skillValue)
+              }
             }
           }
         }
