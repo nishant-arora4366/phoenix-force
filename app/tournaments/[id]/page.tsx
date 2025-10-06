@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { sessionManager } from '@/lib/session'
+import { createClient } from '@supabase/supabase-js'
 
 interface Tournament {
   id: string
@@ -48,6 +49,13 @@ export default function TournamentDetailsPage() {
   const [registrationMessage, setRegistrationMessage] = useState('')
   const [userRegistration, setUserRegistration] = useState<any>(null)
   const [isWithdrawing, setIsWithdrawing] = useState(false)
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false)
+
+  // Initialize Supabase client for realtime
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   useEffect(() => {
     const fetchTournamentAndUser = async () => {
@@ -136,6 +144,45 @@ export default function TournamentDetailsPage() {
 
     if (tournamentId) {
       fetchTournamentAndUser()
+    }
+  }, [tournamentId])
+
+  // Realtime subscription for tournament slots
+  useEffect(() => {
+    if (!tournamentId) return
+
+    console.log('Setting up realtime subscription for tournament:', tournamentId)
+
+    // Subscribe to changes in tournament_slots table for this tournament
+    const channel = supabase
+      .channel(`tournament-slots-${tournamentId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'tournament_slots',
+          filter: `tournament_id=eq.${tournamentId}`
+        },
+        (payload) => {
+          console.log('Realtime update received:', payload)
+          
+          // Refresh slots data when any slot changes
+          fetchSlots()
+          
+          // Also refresh user registration status in case it was affected
+          checkUserRegistration()
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status)
+        setIsRealtimeConnected(status === 'SUBSCRIBED')
+      })
+
+    // Cleanup subscription on component unmount
+    return () => {
+      console.log('Cleaning up realtime subscription')
+      supabase.removeChannel(channel)
     }
   }, [tournamentId])
 
@@ -772,6 +819,13 @@ export default function TournamentDetailsPage() {
               <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-4 sm:px-8 py-4 sm:py-6">
                 <h2 className="text-lg sm:text-2xl font-bold text-white">Tournament Slots</h2>
                 <p className="text-gray-200 mt-1 sm:mt-2 text-sm sm:text-base">Player registrations and slot management</p>
+                {/* Realtime connection indicator */}
+                <div className="flex items-center mt-2">
+                  <div className={`w-2 h-2 rounded-full mr-2 ${isRealtimeConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                  <span className="text-xs text-gray-300">
+                    {isRealtimeConnected ? 'Live updates enabled' : 'Connecting...'}
+                  </span>
+                </div>
               </div>
               
               <div className="p-4 sm:p-8">
