@@ -219,7 +219,14 @@ export default function Navbar() {
                             className="block text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
                             onClick={() => setIsDropdownOpen(false)}
                           >
-                            Profile
+                            User Profile
+                          </Link>
+                          <Link
+                            href="/player-profile"
+                            className="block text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded px-2 py-1"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            Player Profile
                           </Link>
                           <button
                             onClick={async () => {

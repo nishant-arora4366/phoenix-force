@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       display_name, 
       bio, 
       profile_pic_url, 
-      user_id,
+      mobile_number,
       skills // This will be an object with skill assignments
     } = body
 
@@ -57,25 +57,17 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Ensure user can only create profile for themselves
-    if (user_id !== userData.id) {
-      return NextResponse.json({
-        success: false,
-        error: 'You can only create a player profile for yourself'
-      }, { status: 403 })
-    }
-
-    // Check if player profile already exists for this user
+    // Check if user already has a player profile
     const { data: existingPlayer } = await supabase
       .from('players')
       .select('id')
-      .eq('user_id', user_id)
+      .eq('user_id', userData.id)
       .single()
 
     if (existingPlayer) {
       return NextResponse.json({
         success: false,
-        error: 'Player profile already exists for this user'
+        error: 'User already has a player profile'
       }, { status: 400 })
     }
 
@@ -83,10 +75,12 @@ export async function POST(request: NextRequest) {
     const { data: player, error } = await supabase
       .from('players')
       .insert({
-        user_id,
+        user_id: userData.id,
         display_name,
         bio: bio || null,
-        profile_pic_url: profile_pic_url || null
+        profile_pic_url: profile_pic_url || null,
+        mobile_number: mobile_number || null,
+        status: 'pending' // User-created profiles need admin approval
       })
       .select()
       .single()
@@ -115,22 +109,57 @@ export async function POST(request: NextRequest) {
       // Create skill assignments
       for (const [skillKey, skillValue] of Object.entries(skills)) {
         if (skillValue && skillIdMap[skillKey]) {
-          // Find the skill value ID
-          const { data: skillValues } = await supabase
-            .from('player_skill_values')
-            .select('id')
-            .eq('skill_id', skillIdMap[skillKey])
-            .eq('value_name', skillValue)
-            .single()
+          const skillId = skillIdMap[skillKey]
+          
+          // Check if this is a multi-select skill (array of values)
+          if (Array.isArray(skillValue)) {
+            // Multi-select: store array of skill value IDs
+            const skillValueIds: string[] = []
+            const valueArray: string[] = []
+            
+            for (const value of skillValue) {
+              const { data: skillValueData } = await supabase
+                .from('player_skill_values')
+                .select('id')
+                .eq('skill_id', skillId)
+                .eq('value_name', value)
+                .single()
+              
+              if (skillValueData) {
+                skillValueIds.push(skillValueData.id)
+                valueArray.push(value)
+              }
+            }
+            
+            if (skillValueIds.length > 0) {
+              await supabase
+                .from('player_skill_assignments')
+                .insert({
+                  player_id: player.id,
+                  skill_id: skillId,
+                  skill_value_ids: skillValueIds,
+                  value_array: valueArray
+                })
+            }
+          } else {
+            // Single select: store single skill value ID
+            const { data: skillValueData } = await supabase
+              .from('player_skill_values')
+              .select('id')
+              .eq('skill_id', skillId)
+              .eq('value_name', skillValue)
+              .single()
 
-          if (skillValues) {
-            await supabase
-              .from('player_skill_assignments')
-              .insert({
-                player_id: player.id,
-                skill_id: skillIdMap[skillKey],
-                skill_value_id: skillValues.id
-              })
+            if (skillValueData) {
+              await supabase
+                .from('player_skill_assignments')
+                .insert({
+                  player_id: player.id,
+                  skill_id: skillId,
+                  skill_value_id: skillValueData.id,
+                  value_array: [skillValue]
+                })
+            }
           }
         }
       }
