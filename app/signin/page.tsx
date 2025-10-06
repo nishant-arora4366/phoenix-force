@@ -27,7 +27,7 @@ export default function SignIn() {
   }, [])
 
   const handleSignOut = async () => {
-    sessionManager.logout()
+    sessionManager.clearUser()
     setUser(null)
   }
 
