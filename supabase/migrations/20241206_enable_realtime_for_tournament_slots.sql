@@ -1,18 +1,15 @@
--- Enable realtime for tournament_slots table
-ALTER PUBLICATION supabase_realtime ADD TABLE tournament_slots;
-
 -- Enable RLS for tournament_slots if not already enabled
 ALTER TABLE tournament_slots ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policy to allow users to read tournament slots
 -- This allows authenticated users to view slots for any tournament
-CREATE POLICY "Allow authenticated users to view tournament slots" ON tournament_slots
+CREATE POLICY IF NOT EXISTS "Allow authenticated users to view tournament slots" ON tournament_slots
     FOR SELECT
     TO authenticated
     USING (true);
 
 -- Allow users to update their own slot registrations
-CREATE POLICY "Allow users to update their own slot registrations" ON tournament_slots
+CREATE POLICY IF NOT EXISTS "Allow users to update their own slot registrations" ON tournament_slots
     FOR UPDATE
     TO authenticated
     USING (player_id IN (
@@ -20,7 +17,7 @@ CREATE POLICY "Allow users to update their own slot registrations" ON tournament
     ));
 
 -- Allow users to insert their own slot registrations
-CREATE POLICY "Allow users to insert their own slot registrations" ON tournament_slots
+CREATE POLICY IF NOT EXISTS "Allow users to insert their own slot registrations" ON tournament_slots
     FOR INSERT
     TO authenticated
     WITH CHECK (player_id IN (
@@ -28,7 +25,7 @@ CREATE POLICY "Allow users to insert their own slot registrations" ON tournament
     ));
 
 -- Allow admins and hosts to manage all slots
-CREATE POLICY "Allow admins and hosts to manage all slots" ON tournament_slots
+CREATE POLICY IF NOT EXISTS "Allow admins and hosts to manage all slots" ON tournament_slots
     FOR ALL
     TO authenticated
     USING (
