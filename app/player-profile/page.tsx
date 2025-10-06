@@ -105,7 +105,17 @@ export default function PlayerProfilePage() {
         const result = await response.json()
 
         if (result.success) {
-          setPlayerSkills(result.skills || [])
+          // Filter skills based on user role and visibility settings
+          const filteredSkills = result.skills?.filter((skill: any) => {
+            // If user is admin or host, show all skills
+            if (userRole === 'admin' || userRole === 'host') {
+              return true
+            }
+            // If user is viewer, only show skills that viewers can see
+            return skill.viewer_can_see === true
+          }) || []
+          
+          setPlayerSkills(filteredSkills)
         } else {
           console.error('Failed to fetch player skills:', result.error)
         }
@@ -117,7 +127,7 @@ export default function PlayerProfilePage() {
     }
 
     fetchPlayerSkills()
-  }, [])
+  }, [userRole])
 
   const fetchPlayerProfile = async () => {
     try {

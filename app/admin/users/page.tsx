@@ -44,6 +44,8 @@ interface PlayerSkill {
   skill_type: string
   is_required: boolean
   display_order: number
+  is_admin_managed: boolean
+  viewer_can_see: boolean
   created_at: string
   updated_at: string
   values?: PlayerSkillValue[]
@@ -76,7 +78,9 @@ export default function UserManagementPage() {
     name: '',
     type: 'select',
     required: false,
-    displayOrder: 0
+    displayOrder: 0,
+    isAdminManaged: false,
+    viewerCanSee: true
   })
   const [editingValue, setEditingValue] = useState({
     skillId: '',
@@ -95,7 +99,9 @@ export default function UserManagementPage() {
     name: '',
     type: 'select',
     required: false,
-    displayOrder: 0
+    displayOrder: 0,
+    isAdminManaged: false,
+    viewerCanSee: true
   })
   const [expandedSkills, setExpandedSkills] = useState<Set<string>>(new Set())
 
@@ -443,7 +449,7 @@ export default function UserManagementPage() {
         setMessage('Player skill added successfully!')
         fetchPlayerSkills() // Refresh the list
         setIsAddingSkill(false)
-        setNewSkill({ name: '', type: 'select', required: false, displayOrder: 0 })
+        setNewSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
         setTimeout(() => setMessage(''), 3000)
       } else {
         throw new Error('Failed to add player skill')
@@ -481,7 +487,7 @@ export default function UserManagementPage() {
       if (result.success) {
         setMessage('Player skill updated successfully')
         setIsEditingSkill(null)
-        setEditingSkill({ name: '', type: 'select', required: false, displayOrder: 0 })
+        setEditingSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
         fetchPlayerSkills()
       } else {
         throw new Error(result.error || 'Failed to update player skill')
@@ -1315,12 +1321,37 @@ export default function UserManagementPage() {
                         Required field
                       </label>
                     </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="isAdminManaged"
+                        checked={newSkill.isAdminManaged}
+                        onChange={(e) => setNewSkill(prev => ({ ...prev, isAdminManaged: e.target.checked }))}
+                        className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="isAdminManaged" className="ml-2 text-sm text-gray-700">
+                        Admin managed (only admins/hosts can edit)
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="viewerCanSee"
+                        checked={newSkill.viewerCanSee}
+                        onChange={(e) => setNewSkill(prev => ({ ...prev, viewerCanSee: e.target.checked }))}
+                        className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                        disabled={newSkill.isAdminManaged}
+                      />
+                      <label htmlFor="viewerCanSee" className="ml-2 text-sm text-gray-700">
+                        Viewer can see this skill
+                      </label>
+                    </div>
                   </div>
                   <div className="flex justify-end space-x-3 mt-4">
                     <button
                       onClick={() => {
                         setIsAddingSkill(false)
-                        setNewSkill({ name: '', type: 'select', required: false, displayOrder: 0 })
+                        setNewSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
                       }}
                       className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                     >
@@ -1370,6 +1401,16 @@ export default function UserManagementPage() {
                                     Required
                                   </span>
                                 )}
+                                {skill.is_admin_managed && (
+                                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                    Admin Managed
+                                  </span>
+                                )}
+                                {!skill.viewer_can_see && (
+                                  <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">
+                                    Hidden from Viewers
+                                  </span>
+                                )}
                                 {skill.values && skill.values.length > 0 && (
                                   <span className="text-sm text-gray-500">
                                     {skill.values.length} value{skill.values.length !== 1 ? 's' : ''}
@@ -1387,7 +1428,9 @@ export default function UserManagementPage() {
                                 name: skill.skill_name,
                                 type: skill.skill_type,
                                 required: skill.is_required,
-                                displayOrder: skill.display_order
+                                displayOrder: skill.display_order,
+                                isAdminManaged: skill.is_admin_managed,
+                                viewerCanSee: skill.viewer_can_see
                               })
                             }}
                             className="px-3 py-1 text-blue-600 hover:text-blue-800 text-sm"
@@ -1621,12 +1664,37 @@ export default function UserManagementPage() {
                               Required field
                             </label>
                           </div>
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id={`admin-managed-${skill.id}`}
+                              checked={editingSkill.isAdminManaged}
+                              onChange={(e) => setEditingSkill(prev => ({ ...prev, isAdminManaged: e.target.checked }))}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <label htmlFor={`admin-managed-${skill.id}`} className="ml-2 text-sm text-gray-700">
+                              Admin managed (only admins/hosts can edit)
+                            </label>
+                          </div>
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id={`viewer-can-see-${skill.id}`}
+                              checked={editingSkill.viewerCanSee}
+                              onChange={(e) => setEditingSkill(prev => ({ ...prev, viewerCanSee: e.target.checked }))}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                              disabled={editingSkill.isAdminManaged}
+                            />
+                            <label htmlFor={`viewer-can-see-${skill.id}`} className="ml-2 text-sm text-gray-700">
+                              Viewer can see this skill
+                            </label>
+                          </div>
                         </div>
                         <div className="flex justify-end space-x-3 mt-4">
                           <button
                             onClick={() => {
                               setIsEditingSkill(null)
-                              setEditingSkill({ name: '', type: 'select', required: false, displayOrder: 0 })
+                              setEditingSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
                             }}
                             className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                           >

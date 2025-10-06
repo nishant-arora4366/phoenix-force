@@ -83,7 +83,9 @@ export async function POST(request: NextRequest) {
         skill_name: skill.name,
         skill_type: skill.type,
         is_required: skill.required || false,
-        display_order: skill.displayOrder || 0
+        display_order: skill.displayOrder || 0,
+        is_admin_managed: skill.isAdminManaged || false,
+        viewer_can_see: skill.viewerCanSee !== undefined ? skill.viewerCanSee : true
       })
       .select()
       .single()
@@ -131,7 +133,9 @@ export async function PUT(request: NextRequest) {
         skill_name: skill.name,
         skill_type: skill.type,
         is_required: skill.required,
-        display_order: skill.displayOrder
+        display_order: skill.displayOrder,
+        is_admin_managed: skill.isAdminManaged,
+        viewer_can_see: skill.viewerCanSee
       })
       .eq('id', skillId)
       .select()
