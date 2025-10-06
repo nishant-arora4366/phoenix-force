@@ -197,205 +197,168 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Player Info Card */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              {/* Player Image */}
-              <div className="relative h-48 sm:h-64 bg-gradient-to-br from-gray-100 to-gray-200">
-                {player.profile_pic_url ? (
-                  <img
-                    src={player.profile_pic_url}
-                    alt={player.display_name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center">
-                    <div className="text-6xl sm:text-8xl text-gray-400">🏏</div>
+        {/* Player Details Card */}
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-gray-700 px-8 py-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-white">Player Details</h2>
+              {(userRole === 'admin' || userRole === 'host') && (
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => router.push(`/players/${player.id}/edit`)}
+                    className="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
+                  >
+                    Edit Player
+                  </button>
+                  {userRole === 'admin' && (
+                    <button
+                      onClick={handleDelete}
+                      className="px-4 py-2 bg-red-600 bg-opacity-80 text-white rounded-lg hover:bg-opacity-100 transition-colors"
+                    >
+                      Delete Player
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Basic Info */}
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Display Name
+                  </label>
+                  <p className="text-lg text-gray-900">{player.display_name}</p>
+                </div>
+
+                {player.stage_name && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Stage Name
+                    </label>
+                    <p className="text-lg text-gray-900 italic">"{player.stage_name}"</p>
                   </div>
                 )}
-                
-                {/* Price Badge */}
-                <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-gray-700 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full text-sm sm:text-lg font-bold shadow-lg">
-                  ₹{player.base_price}
-                </div>
-                
-                {/* Group Badge */}
+
                 {player.group_name && (
-                  <div className="absolute top-3 sm:top-4 left-3 sm:left-4 bg-gray-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium shadow-lg">
-                    {player.group_name}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Group
+                    </label>
+                    <p className="text-lg text-gray-900">{player.group_name}</p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Base Price
+                  </label>
+                  <p className="text-lg text-gray-900">₹{player.base_price}</p>
+                </div>
+
+                {player.bio && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Bio
+                    </label>
+                    <p className="text-lg text-gray-900">{player.bio}</p>
+                  </div>
+                )}
+
+                {/* Skills Display */}
+                {player.skills && Object.keys(player.skills).length > 0 && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Skills & Attributes
+                    </label>
+                    <div className="space-y-2">
+                      {Object.entries(player.skills).map(([skillName, skillValue]) => (
+                        <div key={skillName} className="flex justify-between">
+                          <span className="text-sm font-medium text-gray-600">{skillName}:</span>
+                          <span className="text-sm text-gray-900">
+                            {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Player Details */}
-              <div className="p-4 sm:p-8">
-                {/* Bio */}
-                {player.bio && (
-                  <div className="mb-6 sm:mb-8">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">About</h3>
-                    <p className="text-gray-700 leading-relaxed text-sm sm:text-base">{player.bio}</p>
-                  </div>
-                )}
+              {/* Profile Picture and Roles */}
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Profile Picture
+                  </label>
+                  {player.profile_pic_url ? (
+                    <img 
+                      src={player.profile_pic_url} 
+                      alt="Profile" 
+                      className="w-32 h-32 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
+                      <svg className="w-16 h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
 
-                {/* Roles */}
-                <div className="mb-6 sm:mb-8">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Player Roles</h3>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                {/* Player Roles */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Player Roles
+                  </label>
+                  <div className="flex flex-wrap gap-2">
                     {player.is_batter && (
-                      <span className="bg-gray-100 text-gray-700 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-medium">
+                      <span className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full font-medium">
                         ⚾ Batter
                       </span>
                     )}
                     {player.is_bowler && (
-                      <span className="bg-gray-100 text-gray-700 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-medium">
+                      <span className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full font-medium">
                         🏏 Bowler
                       </span>
                     )}
                     {player.is_wicket_keeper && (
-                      <span className="bg-gray-100 text-gray-700 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-medium">
+                      <span className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full font-medium">
                         🧤 Wicket Keeper
                       </span>
                     )}
-                    {/* Display additional skills from the skills object */}
-                    {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
-                      // Skip if it's already displayed as a role above
-                      if (['Role', 'Base Price'].includes(skillName)) return null;
-                      
-                      return (
-                        <span key={skillName} className="bg-blue-100 text-blue-700 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-medium">
-                          {skillName}: {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                        </span>
-                      );
-                    })}
                   </div>
                 </div>
 
-                {/* Ratings */}
+                {/* Player Ratings */}
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Player Ratings</h3>
-                  <div className="space-y-3 sm:space-y-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Player Ratings
+                  </label>
+                  <div className="space-y-3">
                     {player.batting_rating && (
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">Batting</span>
-                        <div className="flex items-center">
-                          <div className="w-24 sm:w-32 bg-gray-200 rounded-full h-2 sm:h-3 mr-2 sm:mr-3">
-                            <div 
-                              className="bg-gray-600 h-2 sm:h-3 rounded-full" 
-                              style={{ width: `${(player.batting_rating / 10) * 100}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm sm:text-lg font-bold text-gray-900">{player.batting_rating}/10</span>
-                        </div>
+                        <span className="text-sm font-medium text-gray-600">Batting</span>
+                        <span className="text-sm font-semibold text-gray-900">{player.batting_rating}/10</span>
                       </div>
                     )}
                     {player.bowling_rating && (
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">Bowling</span>
-                        <div className="flex items-center">
-                          <div className="w-24 sm:w-32 bg-gray-200 rounded-full h-2 sm:h-3 mr-2 sm:mr-3">
-                            <div 
-                              className="bg-gray-600 h-2 sm:h-3 rounded-full" 
-                              style={{ width: `${(player.bowling_rating / 10) * 100}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm sm:text-lg font-bold text-gray-900">{player.bowling_rating}/10</span>
-                        </div>
+                        <span className="text-sm font-medium text-gray-600">Bowling</span>
+                        <span className="text-sm font-semibold text-gray-900">{player.bowling_rating}/10</span>
                       </div>
                     )}
                     {player.wicket_keeping_rating && (
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">Wicket Keeping</span>
-                        <div className="flex items-center">
-                          <div className="w-24 sm:w-32 bg-gray-200 rounded-full h-2 sm:h-3 mr-2 sm:mr-3">
-                            <div 
-                              className="bg-gray-600 h-2 sm:h-3 rounded-full" 
-                              style={{ width: `${(player.wicket_keeping_rating / 10) * 100}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm sm:text-lg font-bold text-gray-900">{player.wicket_keeping_rating}/10</span>
-                        </div>
+                        <span className="text-sm font-medium text-gray-600">Wicket Keeping</span>
+                        <span className="text-sm font-semibold text-gray-900">{player.wicket_keeping_rating}/10</span>
                       </div>
                     )}
-                    {/* Display additional skills as ratings */}
-                    {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
-                      // Skip if it's already displayed above or is not a rating
-                      if (['Role', 'Base Price', 'Batting Rating', 'Bowling Rating', 'Wicket Keeping Rating'].includes(skillName)) return null;
-                      
-                      return (
-                        <div key={skillName} className="flex items-center justify-between">
-                          <span className="text-gray-700 font-medium text-sm sm:text-base">{skillName}</span>
-                          <span className="text-sm sm:text-lg font-bold text-gray-900">
-                            {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                          </span>
-                        </div>
-                      );
-                    })}
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-4 sm:space-y-6">
-            {/* Quick Stats */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Quick Stats</h3>
-              <div className="space-y-2 sm:space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm sm:text-base">Base Price</span>
-                  <span className="font-semibold text-gray-700 text-sm sm:text-base">₹{player.base_price}</span>
-                </div>
-                {player.group_name && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 text-sm sm:text-base">Group</span>
-                    <span className="font-semibold text-gray-900 text-sm sm:text-base">{player.group_name}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm sm:text-base">Created</span>
-                  <span className="font-semibold text-gray-900 text-sm sm:text-base">
-                    {new Date(player.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                {player.updated_at && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 text-sm sm:text-base">Updated</span>
-                    <span className="font-semibold text-gray-900 text-sm sm:text-base">
-                      {new Date(player.updated_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Actions</h3>
-              <div className="space-y-2 sm:space-y-3">
-                <button
-                  onClick={() => router.push('/players')}
-                  className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
-                >
-                  Back to Players
-                </button>
-                {(userRole === 'admin' || userRole === 'host') && (
-                  <button
-                    onClick={() => router.push(`/players/${player.id}/edit`)}
-                    className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm sm:text-base"
-                  >
-                    Edit Player
-                  </button>
-                )}
-                {userRole === 'admin' && (
-                  <button
-                    onClick={handleDelete}
-                    className="w-full px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors text-sm sm:text-base"
-                  >
-                    Delete Player
-                  </button>
-                )}
               </div>
             </div>
           </div>
