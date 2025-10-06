@@ -103,12 +103,18 @@ export async function POST(
     let status = 'pending'
 
     // Find next available slot
+    console.log('Filled slot numbers:', filledSlotNumbers)
+    console.log('Total slots:', totalSlots)
+    console.log('Max slots:', maxSlots)
+    
     while (slotNumber <= maxSlots) {
       if (!filledSlotNumbers.includes(slotNumber)) {
         break
       }
       slotNumber++
     }
+    
+    console.log('Selected slot number:', slotNumber)
 
     if (slotNumber > maxSlots) {
       return NextResponse.json({ error: 'Tournament is full and waitlist is full' }, { status: 400 })
@@ -138,6 +144,16 @@ export async function POST(
       console.error('Player ID:', player.id)
       console.error('Slot number:', slotNumber)
       console.error('Status:', status)
+      
+      // Check for specific constraint violations
+      if (registerError.code === '23505') {
+        if (registerError.message.includes('unique_tournament_player')) {
+          return NextResponse.json({ error: 'Player already registered for this tournament' }, { status: 400 })
+        } else if (registerError.message.includes('unique_tournament_slot')) {
+          return NextResponse.json({ error: 'Slot number already taken' }, { status: 400 })
+        }
+      }
+      
       return NextResponse.json({ error: 'Failed to register for tournament slot', details: registerError.message }, { status: 500 })
     }
 
