@@ -77,6 +77,8 @@ export async function GET(request: NextRequest) {
     
     console.log('Player skill assignments:', player.player_skill_assignments)
     console.log('User role for skill filtering in player profile:', userRole)
+    console.log('Player ID:', player.id)
+    console.log('User ID:', userData.id)
     
     if (player.player_skill_assignments) {
       for (const assignment of player.player_skill_assignments) {
