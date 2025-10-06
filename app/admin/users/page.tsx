@@ -1340,7 +1340,6 @@ export default function UserManagementPage() {
                         checked={newSkill.viewerCanSee}
                         onChange={(e) => setNewSkill(prev => ({ ...prev, viewerCanSee: e.target.checked }))}
                         className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
-                        disabled={newSkill.isAdminManaged}
                       />
                       <label htmlFor="viewerCanSee" className="ml-2 text-sm text-gray-700">
                         Viewer can see this skill
@@ -1683,7 +1682,6 @@ export default function UserManagementPage() {
                               checked={editingSkill.viewerCanSee}
                               onChange={(e) => setEditingSkill(prev => ({ ...prev, viewerCanSee: e.target.checked }))}
                               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                              disabled={editingSkill.isAdminManaged}
                             />
                             <label htmlFor={`viewer-can-see-${skill.id}`} className="ml-2 text-sm text-gray-700">
                               Viewer can see this skill
