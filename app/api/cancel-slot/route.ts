@@ -1,7 +1,12 @@
-import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-export async function POST(request: Request) {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+export async function POST(request: NextRequest) {
   try {
     const { tournament_id, slot_id } = await request.json()
 
@@ -13,17 +18,28 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
-    // Ensure user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    }
+
+    let userData
+    try {
+      userData = JSON.parse(authHeader)
+    } catch (error) {
+      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
+    }
+
+    if (!userData || !userData.id) {
+      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
     }
 
     // Call the cancel_slot_reservation RPC
     const { data, error } = await supabase.rpc('cancel_slot_reservation', {
       p_tournament_id: tournament_id,
       p_slot_id: slot_id,
-      p_user_id: user.id
+      p_user_id: userData.id
     })
 
     if (error) {
