@@ -51,7 +51,10 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
           throw new Error(result.error || 'Failed to fetch player')
         }
 
-        setPlayer(result.data)
+        const player = result.data
+        console.log('Player data received:', player)
+        console.log('Player skills:', player.skills)
+        setPlayer(player)
       } catch (error: any) {
         console.error('Error fetching player:', error)
         setError(error.message)
