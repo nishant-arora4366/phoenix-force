@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { sessionManager } from '@/lib/session'
 
 interface Player {
   id: string
@@ -36,24 +36,14 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         const { id } = await params
         
         // Get user info
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          setUser(user)
-          const { data: userData } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-          setUserRole(userData?.role || null)
+        const currentUser = sessionManager.getUser()
+        if (currentUser) {
+          setUser(currentUser)
+          setUserRole(currentUser.role || null)
         }
 
         // Fetch player data
-        const { data: { session } } = await supabase.auth.getSession()
-        const response = await fetch(`/api/players/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`
-          }
-        })
+        const response = await fetch(`/api/players/${id}`)
         const result = await response.json()
 
         if (!result.success) {
@@ -70,6 +60,19 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
     }
 
     fetchData()
+
+    // Listen for auth changes
+    const unsubscribe = sessionManager.subscribe((userData) => {
+      if (userData) {
+        setUser(userData)
+        setUserRole(userData.role || null)
+      } else {
+        setUser(null)
+        setUserRole(null)
+      }
+    })
+
+    return () => unsubscribe()
   }, [params])
 
   const handleDelete = async () => {
@@ -78,11 +81,15 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = sessionManager.getUser()
+      if (!currentUser) {
+        throw new Error('User not authenticated')
+      }
+
       const response = await fetch(`/api/players/${player.id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${session?.access_token}`
+          'Authorization': JSON.stringify(currentUser)
         }
       })
 

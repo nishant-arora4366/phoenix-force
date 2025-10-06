@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
-import { PermissionService } from '@/lib/permissions'
+import { sessionManager } from '@/lib/session'
 
 interface PlayerFormData {
   display_name: string
@@ -46,23 +45,18 @@ export default function CreatePlayerPage() {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: userData } = await supabase
-            .from('users')
-            .select('role, status')
-            .eq('id', user.id)
-            .single()
+        const currentUser = sessionManager.getUser()
+        if (currentUser) {
+          setUser(currentUser)
+          setUserRole(currentUser.role || null)
           
-          setUserRole(userData?.role || null)
-          
-          // Check permissions using the permission service
-          if (PermissionService.canCreatePlayers(userData)) {
-            setUser(user)
-          } else if (PermissionService.isPending(userData)) {
+          // Check if user is admin or host
+          if (currentUser.role === 'admin' || currentUser.role === 'host') {
+            // User has permission to create players
+          } else if (currentUser.status === 'pending') {
             setMessage('Your account is pending admin approval. You cannot create players until approved.')
           } else {
-            setMessage('Only hosts and admins can create players. Your current role: ' + (userData?.role || 'unknown'))
+            setMessage('Only hosts and admins can create players. Your current role: ' + (currentUser.role || 'unknown'))
           }
         } else {
           setMessage('Please sign in to create players')
@@ -75,6 +69,21 @@ export default function CreatePlayerPage() {
       }
     }
     checkUser()
+
+    // Listen for auth changes
+    const unsubscribe = sessionManager.subscribe((userData) => {
+      if (userData) {
+        setUser(userData)
+        setUserRole(userData.role || null)
+      } else {
+        setUser(null)
+        setUserRole(null)
+        setMessage('Please sign in to create players')
+      }
+      setIsLoadingUser(false)
+    })
+
+    return () => unsubscribe()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,12 +96,16 @@ export default function CreatePlayerPage() {
         throw new Error('User not authenticated')
       }
 
-      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = sessionManager.getUser()
+      if (!currentUser) {
+        throw new Error('User not authenticated')
+      }
+
       const response = await fetch('/api/players', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
+          'Authorization': JSON.stringify(currentUser)
         },
         body: JSON.stringify(formData),
       })
