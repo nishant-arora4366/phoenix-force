@@ -92,20 +92,15 @@ export async function POST(
       return NextResponse.json({ error: 'Slot is already empty' }, { status: 400 })
     }
 
-    // Remove the player from the slot (set to empty) - same pattern as withdraw
-    const { error: updateError } = await supabase
+    // Delete the slot record entirely in dynamic slot system
+    const { error: deleteError } = await supabase
       .from('tournament_slots')
-      .update({
-        player_id: null,
-        status: 'empty',
-        requested_at: null,
-        confirmed_at: null
-      })
+      .delete()
       .eq('id', slotId)
 
-    if (updateError) {
-      console.error('Error removing player from slot:', updateError)
-      return NextResponse.json({ error: 'Failed to remove player from slot' }, { status: 500 })
+    if (deleteError) {
+      console.error('Error deleting slot:', deleteError)
+      return NextResponse.json({ error: 'Failed to delete slot' }, { status: 500 })
     }
 
     // Try to promote a waitlist player to the now-empty main slot

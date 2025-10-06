@@ -265,18 +265,13 @@ export async function DELETE(
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 })
     }
 
-    // Clear the slot (make it empty) instead of deleting it
-    const { error: updateError } = await supabase
+    // Delete the slot record entirely in dynamic slot system
+    const { error: deleteError } = await supabase
       .from('tournament_slots')
-      .update({
-        player_id: null,
-        status: 'empty',
-        requested_at: null,
-        confirmed_at: null
-      })
+      .delete()
       .eq('id', slot.id)
 
-    if (updateError) {
+    if (deleteError) {
       return NextResponse.json({ error: 'Failed to cancel registration' }, { status: 500 })
     }
 
