@@ -66,6 +66,12 @@ export default function UserManagementPage() {
   const [activeTab, setActiveTab] = useState<'users' | 'players' | 'skills'>('users')
   const [isAddingSkill, setIsAddingSkill] = useState(false)
   const [isEditingSkill, setIsEditingSkill] = useState<string | null>(null)
+  const [editingSkill, setEditingSkill] = useState({
+    name: '',
+    type: 'select',
+    required: false,
+    displayOrder: 0
+  })
   const [newSkill, setNewSkill] = useState({
     name: '',
     type: 'select',
@@ -424,6 +430,44 @@ export default function UserManagementPage() {
       }
     } catch (error: any) {
       console.error('Error adding player skill:', error)
+      setMessage(`Error: ${error.message}`)
+    }
+  }
+
+  const editPlayerSkill = async () => {
+    try {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch('/api/admin/player-skills', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: sessionUser.id,
+          skillId: isEditingSkill,
+          skill: editingSkill
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update player skill')
+      }
+
+      const result = await response.json()
+      if (result.success) {
+        setMessage('Player skill updated successfully')
+        setIsEditingSkill(null)
+        setEditingSkill({ name: '', type: 'select', required: false, displayOrder: 0 })
+        fetchPlayerSkills()
+      } else {
+        throw new Error(result.error || 'Failed to update player skill')
+      }
+    } catch (error: any) {
+      console.error('Error updating player skill:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -1094,7 +1138,15 @@ export default function UserManagementPage() {
                       </div>
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => setIsEditingSkill(skill.id)}
+                          onClick={() => {
+                            setIsEditingSkill(skill.id)
+                            setEditingSkill({
+                              name: skill.skill_name,
+                              type: skill.skill_type,
+                              required: skill.is_required,
+                              displayOrder: skill.display_order
+                            })
+                          }}
                           className="px-3 py-1 text-blue-600 hover:text-blue-800 text-sm"
                         >
                           Edit
@@ -1125,6 +1177,83 @@ export default function UserManagementPage() {
                               {value.value_name}
                             </span>
                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Edit Form */}
+                    {isEditingSkill === skill.id && (
+                      <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 className="text-sm font-medium text-gray-900 mb-3">Edit Skill</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Skill Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={editingSkill.name}
+                              onChange={(e) => setEditingSkill(prev => ({ ...prev, name: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="e.g., Experience Level"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Skill Type *
+                            </label>
+                            <select
+                              value={editingSkill.type}
+                              onChange={(e) => setEditingSkill(prev => ({ ...prev, type: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="select">Select (Dropdown)</option>
+                              <option value="number">Number</option>
+                              <option value="text">Text</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Display Order
+                            </label>
+                            <input
+                              type="number"
+                              value={editingSkill.displayOrder}
+                              onChange={(e) => setEditingSkill(prev => ({ ...prev, displayOrder: parseInt(e.target.value) || 0 }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              min="0"
+                            />
+                          </div>
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id={`required-${skill.id}`}
+                              checked={editingSkill.required}
+                              onChange={(e) => setEditingSkill(prev => ({ ...prev, required: e.target.checked }))}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <label htmlFor={`required-${skill.id}`} className="ml-2 text-sm text-gray-700">
+                              Required field
+                            </label>
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-3 mt-4">
+                          <button
+                            onClick={() => {
+                              setIsEditingSkill(null)
+                              setEditingSkill({ name: '', type: 'select', required: false, displayOrder: 0 })
+                            }}
+                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={editPlayerSkill}
+                            disabled={!editingSkill.name}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Update Skill
+                          </button>
                         </div>
                       </div>
                     )}
