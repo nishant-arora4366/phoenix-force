@@ -186,6 +186,7 @@ export default function TournamentDetailsPage() {
     }
   }, [tournamentId])
 
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft':
@@ -340,38 +341,85 @@ export default function TournamentDetailsPage() {
   const registerForTournament = async () => {
     setIsRegistering(true)
     setRegistrationMessage('')
-    try {
-      const sessionUser = sessionManager.getUser()
-      const response = await fetch(`/api/tournaments/${tournamentId}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(sessionUser),
-        },
-      })
+    
+    const maxRetries = 3
+    const baseDelay = 1000 // Base delay in milliseconds
+    let lastError = null
 
-      const result = await response.json()
-      if (!result.success) {
-        if (result.error.includes('Player profile not found')) {
-          setRegistrationMessage('Please create a player profile first before registering for tournaments.')
-        } else {
-          throw new Error(result.error)
+    try {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`Registration attempt ${attempt}/${maxRetries}`)
+          
+          if (attempt > 1) {
+            setRegistrationMessage(`Retrying registration (attempt ${attempt}/${maxRetries})...`)
+          }
+          
+          const sessionUser = sessionManager.getUser()
+          const response = await fetch(`/api/tournaments/${tournamentId}/register`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': JSON.stringify(sessionUser),
+            },
+          })
+
+          const result = await response.json()
+          
+          if (!result.success) {
+            if (result.error.includes('Player profile not found')) {
+              setRegistrationMessage('Please create a player profile first before registering for tournaments.')
+              return
+            } else if (result.error.includes('Slot number already taken') || result.error.includes('already registered')) {
+              // These are not retryable errors
+              throw new Error(result.error)
+            } else if (result.error.includes('Failed to register after multiple attempts')) {
+              // Server-side retry failed, but we can try again
+              if (attempt < maxRetries) {
+                const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000
+                console.log(`Server retry failed, client retrying in ${delay}ms...`)
+                setRegistrationMessage(`Registration failed, retrying in ${Math.ceil(delay/1000)}s...`)
+                await new Promise(resolve => setTimeout(resolve, delay))
+                continue
+              } else {
+                throw new Error(result.error)
+              }
+            } else {
+              throw new Error(result.error)
+            }
+          }
+
+          // Success!
+          console.log('Registration successful:', result)
+          setRegistrationMessage(result.message)
+          
+          // Refresh slots data and user registration status
+          await Promise.all([
+            fetchSlots(),
+            checkUserRegistration()
+          ])
+          
+          return // Exit the retry loop on success
+          
+        } catch (err: any) {
+          console.error(`Registration attempt ${attempt} failed:`, err)
+          lastError = err
+          
+          if (attempt < maxRetries) {
+            const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000
+            console.log(`Registration failed, retrying in ${delay}ms...`)
+            setRegistrationMessage(`Registration failed, retrying in ${Math.ceil(delay/1000)}s...`)
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
         }
-        return
       }
 
-      setRegistrationMessage(result.message)
-      // Refresh slots data and user registration status
-      await Promise.all([
-        fetchSlots(),
-        checkUserRegistration()
-      ])
-    } catch (err: any) {
-      console.error('Error registering for tournament:', err)
-      setRegistrationMessage(`Error: ${err.message}`)
+      // If we get here, all retries failed
+      console.error('All registration attempts failed')
+      setRegistrationMessage(`Registration failed after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`)
     } finally {
-      setIsRegistering(false)
-      setTimeout(() => setRegistrationMessage(''), 5000) // Clear message after 5 seconds
+      setIsRegistering(false);
+      setTimeout(() => setRegistrationMessage(''), 10000); // Clear message after 10 seconds for retry messages
     }
   }
 
@@ -551,6 +599,7 @@ export default function TournamentDetailsPage() {
     }
   }
 
+  // Component render logic
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center py-4 sm:py-8">

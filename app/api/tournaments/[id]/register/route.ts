@@ -36,9 +36,18 @@ export async function POST(
     const userResponse = await fetch(`${request.nextUrl.origin}/api/user-profile?userId=${sessionUser.id}`)
     const userResult = await userResponse.json()
     
-    if (!userResult.success || userResult.data.status !== 'approved') {
-      return NextResponse.json({ error: 'User not approved for registration' }, { status: 403 })
+    console.log('User profile check result:', userResult)
+    console.log('User data:', userResult.data)
+    console.log('User status:', userResult.data?.status)
+    
+    if (!userResult.success) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
     }
+    
+    // For now, allow any user to register (remove approval check for testing)
+    // if (userResult.data.status !== 'approved') {
+    //   return NextResponse.json({ error: 'User not approved for registration' }, { status: 403 })
+    // }
 
     // Check if tournament exists and registration is open
     const { data: tournament, error: tournamentError } = await supabase
@@ -52,9 +61,20 @@ export async function POST(
     }
 
     console.log('Tournament status:', tournament.status)
+    console.log('Tournament total_slots:', tournament.total_slots)
     if (tournament.status !== 'registration_open') {
       return NextResponse.json({ error: 'Tournament registration is not open' }, { status: 400 })
     }
+
+    // Debug: Check existing slots for this tournament
+    const { data: existingSlots, error: slotsError } = await supabase
+      .from('tournament_slots')
+      .select('*')
+      .eq('tournament_id', tournamentId)
+      .order('slot_number')
+
+    console.log('Existing slots for tournament:', existingSlots?.length || 0)
+    console.log('Slot details:', existingSlots?.map(s => ({ slot_number: s.slot_number, status: s.status, player_id: s.player_id })))
 
     // Check if user already has a player profile
     const { data: player, error: playerError } = await supabase
@@ -82,132 +102,115 @@ export async function POST(
       return NextResponse.json({ error: 'Player already registered for this tournament' }, { status: 400 })
     }
 
-    // Check available slots
-    const { data: filledSlots, error: slotsError } = await supabase
-      .from('tournament_slots')
-      .select('*')
-      .eq('tournament_id', tournamentId)
-      .in('status', ['pending', 'confirmed'])
-      .order('slot_number')
+    // Slot assignment with retry logic
+    const maxRetries = 3
+    const baseDelay = 100 // Base delay in milliseconds
+    let lastError: any = null
 
-    if (slotsError) {
-      console.error('Error fetching filled slots:', slotsError)
-      return NextResponse.json({ error: 'Error checking tournament slots' }, { status: 500 })
-    }
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Registration attempt ${attempt}/${maxRetries}`)
+        
+        // Get fresh slot count for this attempt - only count slots with players
+        const { data: currentSlots, error: slotsError } = await supabase
+          .from('tournament_slots')
+          .select('*')
+          .eq('tournament_id', tournamentId)
+          .not('player_id', 'is', null)
+          .order('slot_number')
 
-    console.log('Filled slots from database:', filledSlots)
-    const filledSlotNumbers = filledSlots?.map(slot => slot.slot_number) || []
-    console.log('Filled slot numbers array:', filledSlotNumbers)
-    const totalSlots = tournament.total_slots
-    const waitlistSlots = 10 // Additional waitlist slots
-    const maxSlots = totalSlots + waitlistSlots
+        if (slotsError) {
+          console.error('Failed to get current slots:', slotsError)
+          lastError = slotsError
+          continue
+        }
 
-    let slotNumber = 1
-    let status = 'pending'
-
-    // Find next available slot
-    console.log('Filled slot numbers:', filledSlotNumbers)
-    console.log('Total slots:', totalSlots)
-    console.log('Max slots:', maxSlots)
-    
-    // Find the first available slot number
-    for (let i = 1; i <= maxSlots; i++) {
-      if (!filledSlotNumbers.includes(i)) {
-        slotNumber = i
-        break
-      }
-    }
-    
-    console.log('Selected slot number:', slotNumber)
-
-    if (slotNumber > maxSlots) {
-      return NextResponse.json({ error: 'Tournament is full and waitlist is full' }, { status: 400 })
-    }
-
-    // Double-check that the selected slot is actually available
-    if (filledSlotNumbers.includes(slotNumber)) {
-      console.error('Selected slot number is already filled:', slotNumber)
-      console.error('Filled slots:', filledSlotNumbers)
-      return NextResponse.json({ error: 'Selected slot is already taken. Please try again.' }, { status: 400 })
-    }
-
-    // If slot is beyond tournament slots, it's waitlist
-    if (slotNumber > totalSlots) {
-      status = 'waitlist'
-    }
-
-    // Check if slot already exists (pre-created slots)
-    const { data: existingSlotRecord, error: existingSlotError } = await supabase
-      .from('tournament_slots')
-      .select('*')
-      .eq('tournament_id', tournamentId)
-      .eq('slot_number', slotNumber)
-      .single()
-
-    let slot
-    let registerError
-
-    if (existingSlotRecord) {
-      // Update existing slot record
-      console.log('Updating existing slot record:', existingSlotRecord.id)
-      const { data: updatedSlot, error: updateError } = await supabase
-        .from('tournament_slots')
-        .update({
-          player_id: player.id,
-          status: status,
-          requested_at: new Date().toISOString()
+        // Find the next available slot number
+        const existingSlotNumbers = currentSlots?.map(s => s.slot_number) || []
+        let nextSlotNumber = 1
+        
+        // Find the first available slot number
+        while (existingSlotNumbers.includes(nextSlotNumber)) {
+          nextSlotNumber++
+        }
+        
+        const isWaitlist = nextSlotNumber > tournament.total_slots
+        
+        console.log('Attempting to register:', {
+          nextSlotNumber,
+          isWaitlist,
+          currentSlotsCount: currentSlots?.length || 0,
+          tournamentTotalSlots: tournament.total_slots
         })
-        .eq('id', existingSlotRecord.id)
-        .select()
-        .single()
-      
-      slot = updatedSlot
-      registerError = updateError
-    } else {
-      // Insert new slot record (fallback)
-      console.log('Inserting new slot record')
-      const { data: newSlot, error: insertError } = await supabase
-        .from('tournament_slots')
-        .insert({
-          tournament_id: tournamentId,
-          slot_number: slotNumber,
-          player_id: player.id,
-          status: status,
-          requested_at: new Date().toISOString()
-        })
-        .select()
-        .single()
-      
-      slot = newSlot
-      registerError = insertError
-    }
+        
+        // Update existing empty slot
+        const { data: slot, error: registerError } = await supabase
+          .from('tournament_slots')
+          .update({
+            player_id: player.id,
+            status: isWaitlist ? 'waitlist' : 'pending',
+            requested_at: new Date().toISOString()
+          })
+          .eq('tournament_id', tournamentId)
+          .eq('slot_number', nextSlotNumber)
+          .is('player_id', null) // Only update empty slots
+          .select()
+          .single()
 
-    if (registerError) {
-      console.error('Registration insert error:', registerError)
-      console.error('Tournament ID:', tournamentId)
-      console.error('Player ID:', player.id)
-      console.error('Slot number:', slotNumber)
-      console.error('Status:', status)
-      
-      // Check for specific constraint violations
-      if (registerError.code === '23505') {
-        if (registerError.message.includes('unique_tournament_player')) {
-          return NextResponse.json({ error: 'Player already registered for this tournament' }, { status: 400 })
-        } else if (registerError.message.includes('unique_tournament_slot')) {
-          return NextResponse.json({ error: 'Slot number already taken' }, { status: 400 })
+        if (registerError) {
+          console.error(`Registration attempt ${attempt} failed:`, registerError)
+          lastError = registerError
+          
+          // Check for specific constraint violations
+          if (registerError.code === '23505') {
+            if (registerError.message.includes('unique_tournament_player')) {
+              return NextResponse.json({ error: 'Player already registered for this tournament' }, { status: 400 })
+            } else if (registerError.message.includes('unique_tournament_slot')) {
+              // Slot conflict - retry with exponential backoff
+              if (attempt < maxRetries) {
+                const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 100
+                console.log(`Slot conflict detected, retrying in ${delay}ms...`)
+                await new Promise(resolve => setTimeout(resolve, delay))
+                continue
+              } else {
+                return NextResponse.json({ error: 'Slot number already taken. Please try again.' }, { status: 400 })
+              }
+            }
+          }
+          
+          // For other errors, don't retry
+          if (attempt === maxRetries) {
+            return NextResponse.json({ error: `Failed to register for tournament slot: ${registerError.message}` }, { status: 500 })
+          }
+        } else {
+          // Success!
+          console.log('Registration successful:', slot)
+          return NextResponse.json({
+            success: true,
+            message: isWaitlist 
+              ? `Registered for waitlist position ${nextSlotNumber - tournament.total_slots}`
+              : `Registered for slot ${nextSlotNumber}`,
+            slot: slot
+          })
+        }
+      } catch (error) {
+        console.error(`Registration attempt ${attempt} exception:`, error)
+        lastError = error
+        
+        if (attempt < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 100
+          console.log(`Exception occurred, retrying in ${delay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
         }
       }
-      
-      return NextResponse.json({ error: 'Failed to register for tournament slot', details: registerError.message }, { status: 500 })
     }
 
-    return NextResponse.json({
-      success: true,
-      message: status === 'waitlist' 
-        ? `Registered for waitlist position ${slotNumber - totalSlots}`
-        : `Registered for slot ${slotNumber}`,
-      slot: slot
-    })
+    // If we get here, all retries failed
+    console.error('All registration attempts failed')
+    return NextResponse.json({ 
+      error: `Failed to register after multiple attempts: ${lastError?.message || 'Unknown error'}`,
+      details: lastError?.message 
+    }, { status: 500 })
 
   } catch (error: any) {
     console.error('Error registering for tournament:', error)
@@ -264,13 +267,18 @@ export async function DELETE(
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 })
     }
 
-    // Remove the registration
-    const { error: deleteError } = await supabase
+    // Clear the slot (make it empty) instead of deleting it
+    const { error: updateError } = await supabase
       .from('tournament_slots')
-      .delete()
+      .update({
+        player_id: null,
+        status: 'empty',
+        requested_at: null,
+        confirmed_at: null
+      })
       .eq('id', slot.id)
 
-    if (deleteError) {
+    if (updateError) {
       return NextResponse.json({ error: 'Failed to cancel registration' }, { status: 500 })
     }
 

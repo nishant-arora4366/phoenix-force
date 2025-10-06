@@ -87,11 +87,20 @@ export async function GET(
       return NextResponse.json({ error: 'Error fetching tournament slots', details: slotsError.message }, { status: 500 })
     }
 
-    // Create a map of filled slots
+    // Create a map of all slots (including empty ones)
     const filledSlots = slots?.reduce((acc, slot) => {
       acc[slot.slot_number] = slot
       return acc
     }, {} as Record<number, any>) || {}
+    
+    console.log('Fetched slots from database:', slots?.length || 0)
+    console.log('Slot details:', slots?.map(s => ({ 
+      slot_number: s.slot_number, 
+      status: s.status, 
+      player_id: s.player_id,
+      players: s.players?.display_name || 'No player'
+    })))
+    console.log('Filled slots map:', Object.keys(filledSlots).map(k => ({ slot: k, status: filledSlots[k].status })))
 
     // Generate all slots (main + waitlist)
     const totalSlots = tournament.total_slots
@@ -110,6 +119,14 @@ export async function GET(
         confirmed_at: null,
         created_at: null
       }
+      
+      console.log(`Slot ${i}:`, {
+        exists: !!filledSlots[i],
+        status: slot.status,
+        player: slot.players?.display_name || 'No player',
+        is_main_slot: true
+      })
+      
       allSlots.push({
         ...slot,
         is_main_slot: true
@@ -128,6 +145,14 @@ export async function GET(
         confirmed_at: null,
         created_at: null
       }
+      
+      console.log(`Waitlist Slot ${i}:`, {
+        exists: !!filledSlots[i],
+        status: slot.status,
+        player: slot.players?.display_name || 'No player',
+        waitlist_position: i - totalSlots
+      })
+      
       allSlots.push({
         ...slot,
         is_main_slot: false,

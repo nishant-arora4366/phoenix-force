@@ -74,10 +74,12 @@ export async function POST(
     }
 
     // Get player name for response
-    const playerName = slot.players?.display_name || 
-                      (slot.players?.users?.firstname && slot.players?.users?.lastname 
-                        ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                        : slot.players?.users?.email || 'Player')
+    const player = slot.players?.[0] // Get first player from array
+    const user = player?.users?.[0] // Get first user from array
+    const playerName = player?.display_name || 
+                      (user?.firstname && user?.lastname 
+                        ? `${user.firstname} ${user.lastname}`
+                        : user?.email || 'Player')
 
     // Remove player from slot (set player_id to null, status to empty, clear timestamps)
     const { error: updateError } = await supabase
