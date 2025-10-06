@@ -197,168 +197,230 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
           )}
         </div>
 
-        {/* Player Details Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="bg-gray-700 px-8 py-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-white">Player Details</h2>
-              {(userRole === 'admin' || userRole === 'host') && (
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => router.push(`/players/${player.id}/edit`)}
-                    className="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
-                  >
-                    Edit Player
-                  </button>
-                  {userRole === 'admin' && (
-                    <button
-                      onClick={handleDelete}
-                      className="px-4 py-2 bg-red-600 bg-opacity-80 text-white rounded-lg hover:bg-opacity-100 transition-colors"
-                    >
-                      Delete Player
-                    </button>
-                  )}
+        {/* Hero Section */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
+            {/* Profile Picture */}
+            <div className="flex-shrink-0">
+              {player.profile_pic_url ? (
+                <img 
+                  src={player.profile_pic_url} 
+                  alt={player.display_name}
+                  className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full object-cover shadow-lg border-4 border-white"
+                />
+              ) : (
+                <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-white shadow-lg border-4 border-white flex items-center justify-center">
+                  <svg className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
               )}
             </div>
-          </div>
 
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Basic Info */}
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Display Name
-                  </label>
-                  <p className="text-lg text-gray-900">{player.display_name}</p>
-                </div>
-
-                {player.stage_name && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Stage Name
-                    </label>
-                    <p className="text-lg text-gray-900 italic">"{player.stage_name}"</p>
-                  </div>
+            {/* Player Info */}
+            <div className="flex-1 text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{player.display_name}</h1>
+              {player.stage_name && (
+                <p className="text-lg sm:text-xl text-gray-600 italic mb-3 sm:mb-4">"{player.stage_name}"</p>
+              )}
+              
+              {/* Player Roles */}
+              <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3 mb-4 sm:mb-6">
+                {player.is_batter && (
+                  <span className="bg-green-100 text-green-800 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-semibold shadow-sm">
+                    ⚾ Batter
+                  </span>
                 )}
-
-                {player.group_name && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Group
-                    </label>
-                    <p className="text-lg text-gray-900">{player.group_name}</p>
-                  </div>
+                {player.is_bowler && (
+                  <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-semibold shadow-sm">
+                    🏏 Bowler
+                  </span>
                 )}
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Base Price
-                  </label>
-                  <p className="text-lg text-gray-900">₹{player.base_price}</p>
-                </div>
-
-                {player.bio && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Bio
-                    </label>
-                    <p className="text-lg text-gray-900">{player.bio}</p>
-                  </div>
-                )}
-
-                {/* Skills Display */}
-                {player.skills && Object.keys(player.skills).length > 0 && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Skills & Attributes
-                    </label>
-                    <div className="space-y-2">
-                      {Object.entries(player.skills).map(([skillName, skillValue]) => (
-                        <div key={skillName} className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-600">{skillName}:</span>
-                          <span className="text-sm text-gray-900">
-                            {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                {player.is_wicket_keeper && (
+                  <span className="bg-purple-100 text-purple-800 text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-full font-semibold shadow-sm">
+                    🧤 Wicket Keeper
+                  </span>
                 )}
               </div>
 
-              {/* Profile Picture and Roles */}
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Profile Picture
-                  </label>
-                  {player.profile_pic_url ? (
-                    <img 
-                      src={player.profile_pic_url} 
-                      alt="Profile" 
-                      className="w-32 h-32 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
-                      <svg className="w-16 h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
+              {/* Base Price */}
+              <div className="inline-flex items-center bg-white rounded-full px-4 sm:px-6 py-2 sm:py-3 shadow-lg">
+                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">₹{player.base_price}</span>
+                <span className="text-xs sm:text-sm text-gray-500 ml-2">Base Price</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            {(userRole === 'admin' || userRole === 'host') && (
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => router.push(`/players/${player.id}/edit`)}
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-colors shadow-lg font-semibold text-sm sm:text-base"
+                >
+                  ✏️ Edit Player
+                </button>
+                {userRole === 'admin' && (
+                  <button
+                    onClick={handleDelete}
+                    className="px-4 sm:px-6 py-2 sm:py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors shadow-lg font-semibold text-sm sm:text-base"
+                  >
+                    🗑️ Delete Player
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          {/* Basic Information */}
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            {/* Bio Section */}
+            {player.bio && (
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
+                  <span className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-sm sm:text-base">
+                    📝
+                  </span>
+                  About
+                </h3>
+                <p className="text-gray-700 leading-relaxed text-sm sm:text-base">{player.bio}</p>
+              </div>
+            )}
+
+            {/* Skills & Attributes */}
+            {player.skills && Object.keys(player.skills).length > 0 && (
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center">
+                  <span className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-sm sm:text-base">
+                    ⚡
+                  </span>
+                  Skills & Attributes
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  {Object.entries(player.skills).map(([skillName, skillValue]) => (
+                    <div key={skillName} className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                      <div className="text-xs sm:text-sm font-semibold text-gray-600 mb-1">{skillName}</div>
+                      <div className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">
+                        {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Player Ratings */}
+            {(player.batting_rating || player.bowling_rating || player.wicket_keeping_rating) && (
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center">
+                  <span className="w-6 h-6 sm:w-8 sm:h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-sm sm:text-base">
+                    ⭐
+                  </span>
+                  Player Ratings
+                </h3>
+                <div className="space-y-3 sm:space-y-4">
+                  {player.batting_rating && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-green-50 rounded-lg sm:rounded-xl">
+                      <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-700 mb-2 sm:mb-0">Batting</span>
+                      <div className="flex items-center">
+                        <div className="w-16 sm:w-20 lg:w-24 bg-gray-200 rounded-full h-2 sm:h-3 mr-2 sm:mr-3">
+                          <div 
+                            className="bg-green-500 h-2 sm:h-3 rounded-full" 
+                            style={{ width: `${(player.batting_rating / 10) * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm sm:text-base lg:text-xl font-bold text-gray-900">{player.batting_rating}/10</span>
+                      </div>
+                    </div>
+                  )}
+                  {player.bowling_rating && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
+                      <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-700 mb-2 sm:mb-0">Bowling</span>
+                      <div className="flex items-center">
+                        <div className="w-16 sm:w-20 lg:w-24 bg-gray-200 rounded-full h-2 sm:h-3 mr-2 sm:mr-3">
+                          <div 
+                            className="bg-blue-500 h-2 sm:h-3 rounded-full" 
+                            style={{ width: `${(player.bowling_rating / 10) * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm sm:text-base lg:text-xl font-bold text-gray-900">{player.bowling_rating}/10</span>
+                      </div>
+                    </div>
+                  )}
+                  {player.wicket_keeping_rating && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-purple-50 rounded-lg sm:rounded-xl">
+                      <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-700 mb-2 sm:mb-0">Wicket Keeping</span>
+                      <div className="flex items-center">
+                        <div className="w-16 sm:w-20 lg:w-24 bg-gray-200 rounded-full h-2 sm:h-3 mr-2 sm:mr-3">
+                          <div 
+                            className="bg-purple-500 h-2 sm:h-3 rounded-full" 
+                            style={{ width: `${(player.wicket_keeping_rating / 10) * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm sm:text-base lg:text-xl font-bold text-gray-900">{player.wicket_keeping_rating}/10</span>
+                      </div>
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+          </div>
 
-                {/* Player Roles */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Player Roles
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {player.is_batter && (
-                      <span className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full font-medium">
-                        ⚾ Batter
-                      </span>
-                    )}
-                    {player.is_bowler && (
-                      <span className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full font-medium">
-                        🏏 Bowler
-                      </span>
-                    )}
-                    {player.is_wicket_keeper && (
-                      <span className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full font-medium">
-                        🧤 Wicket Keeper
-                      </span>
-                    )}
-                  </div>
+          {/* Sidebar */}
+          <div className="space-y-4 sm:space-y-6">
+            {/* Quick Stats */}
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
+                <span className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 rounded-lg flex items-center justify-center mr-2 text-xs sm:text-sm">
+                  📊
+                </span>
+                Quick Stats
+              </h3>
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-xs sm:text-sm text-gray-600">Base Price</span>
+                  <span className="font-bold text-gray-900 text-sm sm:text-base">₹{player.base_price}</span>
                 </div>
+                {player.group_name && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-xs sm:text-sm text-gray-600">Group</span>
+                    <span className="font-bold text-gray-900 text-sm sm:text-base">{player.group_name}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-xs sm:text-sm text-gray-600">Created</span>
+                  <span className="font-bold text-gray-900 text-sm sm:text-base">
+                    {new Date(player.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                {player.updated_at && (
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-xs sm:text-sm text-gray-600">Updated</span>
+                    <span className="font-bold text-gray-900 text-sm sm:text-base">
+                      {new Date(player.updated_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
 
-                {/* Player Ratings */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Player Ratings
-                  </label>
-                  <div className="space-y-3">
-                    {player.batting_rating && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-600">Batting</span>
-                        <span className="text-sm font-semibold text-gray-900">{player.batting_rating}/10</span>
-                      </div>
-                    )}
-                    {player.bowling_rating && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-600">Bowling</span>
-                        <span className="text-sm font-semibold text-gray-900">{player.bowling_rating}/10</span>
-                      </div>
-                    )}
-                    {player.wicket_keeping_rating && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-600">Wicket Keeping</span>
-                        <span className="text-sm font-semibold text-gray-900">{player.wicket_keeping_rating}/10</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+            {/* Actions */}
+            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
+                <span className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 rounded-lg flex items-center justify-center mr-2 text-xs sm:text-sm">
+                  ⚙️
+                </span>
+                Actions
+              </h3>
+              <div className="space-y-2 sm:space-y-3">
+                <button
+                  onClick={() => router.push('/players')}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-600 text-white rounded-lg sm:rounded-xl hover:bg-gray-700 transition-colors font-semibold text-sm sm:text-base"
+                >
+                  ← Back to Players
+                </button>
               </div>
             </div>
           </div>
