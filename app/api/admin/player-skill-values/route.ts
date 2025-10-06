@@ -31,16 +31,16 @@ export async function POST(request: NextRequest) {
       .from('player_skill_values')
       .insert({
         skill_id: skillId,
-        value_name: value.name,
+        value_name: value.valueName,
         display_order: value.displayOrder || 0,
-        is_active: value.isActive !== false
+        is_active: true
       })
       .select()
       .single()
 
     if (valueError) {
-      console.error('Error creating player skill value:', valueError)
-      return NextResponse.json({ error: 'Error creating player skill value' }, { status: 500 })
+      console.error('Error creating skill value:', valueError)
+      return NextResponse.json({ error: 'Error creating skill value' }, { status: 500 })
     }
 
     return NextResponse.json({
@@ -78,17 +78,16 @@ export async function PUT(request: NextRequest) {
     const { data: updatedValue, error: valueError } = await supabase
       .from('player_skill_values')
       .update({
-        value_name: value.name,
-        display_order: value.displayOrder,
-        is_active: value.isActive
+        value_name: value.valueName,
+        display_order: value.displayOrder
       })
       .eq('id', valueId)
       .select()
       .single()
 
     if (valueError) {
-      console.error('Error updating player skill value:', valueError)
-      return NextResponse.json({ error: 'Error updating player skill value' }, { status: 500 })
+      console.error('Error updating skill value:', valueError)
+      return NextResponse.json({ error: 'Error updating skill value' }, { status: 500 })
     }
 
     return NextResponse.json({
@@ -129,13 +128,13 @@ export async function DELETE(request: NextRequest) {
       .eq('id', valueId)
 
     if (deleteError) {
-      console.error('Error deleting player skill value:', deleteError)
-      return NextResponse.json({ error: 'Error deleting player skill value' }, { status: 500 })
+      console.error('Error deleting skill value:', deleteError)
+      return NextResponse.json({ error: 'Error deleting skill value' }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Player skill value deleted successfully'
+      message: 'Skill value deleted successfully'
     })
 
   } catch (error: any) {
