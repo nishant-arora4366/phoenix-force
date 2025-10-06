@@ -9,6 +9,7 @@ interface PlayerFormData {
   bio: string
   profile_pic_url: string
   mobile_number: string
+  base_price?: number
   skills: { [key: string]: string | string[] }
 }
 
@@ -54,6 +55,7 @@ export default function PlayerProfilePage() {
     bio: '',
     profile_pic_url: '',
     mobile_number: '',
+    base_price: 0,
     skills: {}
   })
 
@@ -137,6 +139,7 @@ export default function PlayerProfilePage() {
           bio: result.profile.bio || '',
           profile_pic_url: result.profile.profile_pic_url || '',
           mobile_number: result.profile.mobile_number || '',
+          base_price: result.profile.base_price || 0,
           skills: result.skills || {}
         })
       } else {
@@ -348,6 +351,15 @@ export default function PlayerProfilePage() {
                     <p className="text-lg text-gray-900">{playerProfile.bio || 'No bio provided'}</p>
                   </div>
 
+                  {/* Base Price - Only for Hosts and Admins */}
+                  {(userRole === 'host' || userRole === 'admin') && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Base Price
+                      </label>
+                      <p className="text-lg text-gray-900">₹{playerProfile.base_price || 0}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Profile Picture */}
@@ -427,6 +439,24 @@ export default function PlayerProfilePage() {
                   </div>
                 </div>
 
+                {/* Base Price - Only for Hosts and Admins */}
+                {(userRole === 'host' || userRole === 'admin') && (
+                  <div className="space-y-2">
+                    <label htmlFor="base_price" className="block text-sm font-semibold text-gray-700">
+                      Base Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      id="base_price"
+                      name="base_price"
+                      value={formData.base_price || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, base_price: parseInt(e.target.value) || 0 }))}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                      placeholder="Enter base price"
+                      min="0"
+                    />
+                  </div>
+                )}
 
                 {/* Profile Picture */}
                 <div className="space-y-2">

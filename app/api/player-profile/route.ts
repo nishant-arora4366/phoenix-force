@@ -152,6 +152,7 @@ export async function POST(request: NextRequest) {
       bio, 
       profile_pic_url, 
       mobile_number,
+      base_price,
       skills // This will be an object with skill assignments
     } = body
 
@@ -178,16 +179,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Create player profile (only basic info)
+    const insertData: any = {
+      user_id: userData.id,
+      display_name,
+      bio: bio || null,
+      profile_pic_url: profile_pic_url || null,
+      mobile_number: mobile_number || null,
+      status: 'pending' // User-created profiles need admin approval
+    }
+
+    // Only include base_price for admins and hosts
+    if ((user.role === 'admin' || user.role === 'host') && base_price !== undefined) {
+      insertData.base_price = base_price || 0
+    }
+
     const { data: player, error } = await supabase
       .from('players')
-      .insert({
-        user_id: userData.id,
-        display_name,
-        bio: bio || null,
-        profile_pic_url: profile_pic_url || null,
-        mobile_number: mobile_number || null,
-        status: 'pending' // User-created profiles need admin approval
-      })
+      .insert(insertData)
       .select()
       .single()
 
@@ -333,6 +341,7 @@ export async function PUT(request: NextRequest) {
       bio, 
       profile_pic_url, 
       mobile_number,
+      base_price,
       user_id,
       skills // This will be an object with skill assignments
     } = body
@@ -360,14 +369,21 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update player profile (only basic info)
+    const updateData: any = {
+      display_name,
+      bio: bio || null,
+      profile_pic_url: profile_pic_url || null,
+      mobile_number: mobile_number || null
+    }
+
+    // Only include base_price for admins and hosts
+    if ((user.role === 'admin' || user.role === 'host') && base_price !== undefined) {
+      updateData.base_price = base_price || 0
+    }
+
     const { data: player, error } = await supabase
       .from('players')
-      .update({
-        display_name,
-        bio: bio || null,
-        profile_pic_url: profile_pic_url || null,
-        mobile_number: mobile_number || null
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()
