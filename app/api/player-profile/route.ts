@@ -152,7 +152,6 @@ export async function POST(request: NextRequest) {
       bio, 
       profile_pic_url, 
       mobile_number,
-      base_price,
       skills // This will be an object with skill assignments
     } = body
 
@@ -187,7 +186,6 @@ export async function POST(request: NextRequest) {
         bio: bio || null,
         profile_pic_url: profile_pic_url || null,
         mobile_number: mobile_number || null,
-        base_price: base_price || 0,
         status: 'pending' // User-created profiles need admin approval
       })
       .select()
@@ -335,7 +333,6 @@ export async function PUT(request: NextRequest) {
       bio, 
       profile_pic_url, 
       mobile_number,
-      base_price,
       user_id,
       skills // This will be an object with skill assignments
     } = body
@@ -369,8 +366,7 @@ export async function PUT(request: NextRequest) {
         display_name,
         bio: bio || null,
         profile_pic_url: profile_pic_url || null,
-        mobile_number: mobile_number || null,
-        base_price: base_price || 0
+        mobile_number: mobile_number || null
       })
       .eq('id', id)
       .select()
