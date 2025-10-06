@@ -229,7 +229,7 @@ export default function CreateTournamentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-4 sm:py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">

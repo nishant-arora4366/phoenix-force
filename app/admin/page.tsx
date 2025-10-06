@@ -217,11 +217,11 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Navigation Bar */}
       <nav className="bg-white shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-16 py-4 sm:py-0 space-y-4 sm:space-y-0">
             <div className="flex items-center">
               <Link href="/" className="text-2xl font-bold text-gray-900">
                 Phoenix Force Cricket
@@ -254,9 +254,9 @@ export default function AdminPanel() {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Panel</h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+        <div className="bg-white rounded-xl shadow-xl p-4 sm:p-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Admin Panel</h1>
 
           {message && (
             <div className={`mb-6 p-4 rounded-lg ${
@@ -269,9 +269,9 @@ export default function AdminPanel() {
           )}
 
           {/* Search User Section */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Update User Role</h2>
-            <div className="flex space-x-4">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Update User Role</h2>
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
               <input
                 type="email"
                 value={searchEmail}
@@ -281,7 +281,7 @@ export default function AdminPanel() {
               />
               <button
                 onClick={searchUser}
-                className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
               >
                 Search
               </button>
@@ -294,11 +294,11 @@ export default function AdminPanel() {
                 <p><strong>Email:</strong> {selectedUser.email}</p>
                 <p><strong>Current Role:</strong> {selectedUser.role}</p>
                 
-                <div className="mt-4 flex space-x-4">
+                <div className="mt-4 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                   <select
                     value={newRole}
                     onChange={(e) => setNewRole(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                   >
                     <option value="viewer">Viewer</option>
                     <option value="host">Host</option>
@@ -307,7 +307,7 @@ export default function AdminPanel() {
                   </select>
                   <button
                     onClick={updateUserRole}
-                    className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                    className="w-full sm:w-auto px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     Update Role
                   </button>
@@ -318,21 +318,21 @@ export default function AdminPanel() {
 
           {/* All Users List */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">All Users</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">All Users</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Email
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Role
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Created
                     </th>
                   </tr>
@@ -340,13 +340,13 @@ export default function AdminPanel() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map((user) => (
                     <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {user.firstname} {user.lastname}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {user.email}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           user.role === 'admin' ? 'bg-red-100 text-red-800' :
                           user.role === 'host' ? 'bg-blue-100 text-blue-800' :
@@ -356,7 +356,7 @@ export default function AdminPanel() {
                           {user.role}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(user.created_at).toLocaleDateString()}
                       </td>
                     </tr>

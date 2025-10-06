@@ -751,7 +751,7 @@ export default function TournamentDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -1009,7 +1009,7 @@ export default function TournamentDetailsPage() {
 
         {/* Tournament Slots Section */}
         {tournament && (
-          <div className="mt-8">
+          <div className="mt-6 sm:mt-8">
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl overflow-hidden">
               <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-4 sm:px-8 py-4 sm:py-6">
                 <h2 className="text-lg sm:text-2xl font-bold text-white">Tournament Slots</h2>
@@ -1115,22 +1115,22 @@ export default function TournamentDetailsPage() {
                   <div className="space-y-4">
                     {/* Stats */}
                     {slotsStats && (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                         <div className="bg-gray-50 p-3 rounded-lg text-center">
                           <div className="text-lg font-bold text-gray-900">{slotsStats.filled_main_slots}</div>
-                          <div className="text-sm text-gray-600">Main Slots Filled</div>
+                          <div className="text-xs sm:text-sm text-gray-600">Main Slots Filled</div>
                         </div>
                         <div className="bg-gray-50 p-3 rounded-lg text-center">
                           <div className="text-lg font-bold text-gray-900">{slotsStats.filled_waitlist_slots}</div>
-                          <div className="text-sm text-gray-600">Waitlist Filled</div>
+                          <div className="text-xs sm:text-sm text-gray-600">Waitlist Filled</div>
                         </div>
                         <div className="bg-gray-50 p-3 rounded-lg text-center">
                           <div className="text-lg font-bold text-gray-900">{slotsStats.pending_approvals}</div>
-                          <div className="text-sm text-gray-600">Pending Approval</div>
+                          <div className="text-xs sm:text-sm text-gray-600">Pending Approval</div>
                         </div>
                         <div className="bg-gray-50 p-3 rounded-lg text-center">
                           <div className="text-lg font-bold text-gray-900">{slotsStats.total_slots}</div>
-                          <div className="text-sm text-gray-600">Total Slots</div>
+                          <div className="text-xs sm:text-sm text-gray-600">Total Slots</div>
                         </div>
                       </div>
                     )}
@@ -1170,7 +1170,7 @@ export default function TournamentDetailsPage() {
                                     {confirmedSlots.length}/{tournament.total_slots}
                                   </span>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                                   {confirmedSlots.map((slot) => (
                                     <div key={slot.slot_number} className="bg-white border border-green-200 rounded-lg p-3">
                                       <div className="flex items-center justify-between mb-2">
@@ -1221,7 +1221,7 @@ export default function TournamentDetailsPage() {
                                     Awaiting Host Action
                                   </span>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                                   {pendingSlots.map((slot) => (
                                     <div key={slot.slot_number} className="bg-white border border-yellow-200 rounded-lg p-3">
                                       <div className="flex items-center justify-between mb-2">
@@ -1311,7 +1311,7 @@ export default function TournamentDetailsPage() {
                                     First Come, First Served
                                   </span>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                                   {waitlistSlots.map((slot) => (
                                     <div key={slot.slot_number} className="bg-white border border-blue-200 rounded-lg p-3">
                                       <div className="flex items-center justify-between mb-2">

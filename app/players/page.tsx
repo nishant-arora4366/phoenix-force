@@ -176,20 +176,20 @@ export default function PlayersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Modern Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
             <div>
-              <h1 className="text-4xl font-bold text-gray-800">
+              <h1 className="text-2xl sm:text-4xl font-bold text-gray-800">
                 Player Roster
               </h1>
-              <p className="text-gray-500 mt-2 text-lg">
+              <p className="text-gray-500 mt-2 text-base sm:text-lg">
                 Discover talented cricketers and build your dream team
               </p>
             </div>
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="bg-white rounded-lg px-4 py-2 shadow-sm border">
                 <span className="text-sm text-gray-600">
                   {isLoading ? 'Loading...' : `${filteredPlayers?.length || 0} players`}
