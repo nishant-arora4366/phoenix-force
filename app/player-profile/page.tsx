@@ -172,6 +172,31 @@ export default function PlayerProfilePage() {
     }
   }
 
+  const debugPlayerSkills = async () => {
+    if (!playerProfile?.id) {
+      console.log('No player profile ID available for debugging')
+      return
+    }
+
+    try {
+      console.log('=== DEBUGGING PLAYER SKILLS ===')
+      console.log('Player ID:', playerProfile.id)
+      
+      const response = await fetch(`/api/debug-player-skills?playerId=${playerProfile.id}`)
+      const result = await response.json()
+      
+      console.log('Debug API response:', result)
+      console.log('Player found:', result.counts.player)
+      console.log('Skill assignments found:', result.counts.skillAssignments)
+      console.log('All skills available:', result.counts.allSkills)
+      console.log('Raw skill assignments:', result.skillAssignments)
+      console.log('Raw all skills:', result.allSkills)
+      
+    } catch (error) {
+      console.error('Error debugging player skills:', error)
+    }
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -295,6 +320,12 @@ export default function PlayerProfilePage() {
                 className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
               >
                 Edit Profile
+              </button>
+              <button
+                onClick={debugPlayerSkills}
+                className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+              >
+                Debug Skills
               </button>
             </div>
           )}
