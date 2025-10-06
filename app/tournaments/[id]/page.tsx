@@ -1172,7 +1172,7 @@ export default function TournamentDetailsPage() {
                           <div className="text-lg font-medium mb-2">Loading tournament slots...</div>
                           <div className="text-sm">Please wait while we fetch the latest information.</div>
                         </div>
-                      ) : slots.length > 0 ? (
+                      ) : (
                         <div className="space-y-6">
                           {/* Confirmed Players */}
                           {(() => {
@@ -1301,11 +1301,6 @@ export default function TournamentDetailsPage() {
                             )
                           })()}
                         </div>
-                      ) : (
-                        <div className="text-center py-8 text-gray-500">
-                          <div className="text-lg font-medium mb-2">Loading tournament slots...</div>
-                          <div className="text-sm">Please wait while we fetch the latest information.</div>
-                        </div>
                       )}
                     </div>
 
@@ -1318,7 +1313,7 @@ export default function TournamentDetailsPage() {
                           <div className="text-lg font-medium mb-2">Loading waitlist...</div>
                           <div className="text-sm">Please wait while we fetch the latest information.</div>
                         </div>
-                      ) : slots.length > 0 ? (
+                      ) : (
                         <div className="space-y-6">
                           {/* Waitlisted Players */}
                           {(() => {
@@ -1412,11 +1407,6 @@ export default function TournamentDetailsPage() {
                               </div>
                             )
                           })()}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 text-gray-500">
-                          <div className="text-lg font-medium mb-2">Loading waitlist...</div>
-                          <div className="text-sm">Please wait while we fetch the latest information.</div>
                         </div>
                       )}
                     </div>
