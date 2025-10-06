@@ -112,7 +112,7 @@ export default function AdminPanel() {
   }
 
   const handleSignOut = async () => {
-    sessionManager.signOut()
+    sessionManager.clearUser()
     setUser(null)
   }
 
