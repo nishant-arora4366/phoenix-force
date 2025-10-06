@@ -115,6 +115,8 @@ export default function PlayerProfilePage() {
             return skill.viewer_can_see === true
           }) || []
           
+          console.log('All skills from API:', result.skills)
+          console.log('Filtered skills for user:', filteredSkills)
           setPlayerSkills(filteredSkills)
         } else {
           console.error('Failed to fetch player skills:', result.error)

@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Raw skills from database:', skills)
+    console.log('Number of skills found:', skills?.length || 0)
 
     // Format the response to match frontend expectations
     const formattedSkills = skills?.map(skill => ({
@@ -36,6 +37,8 @@ export async function GET(request: NextRequest) {
       skill_type: skill.skill_type,
       is_required: skill.is_required,
       display_order: skill.display_order,
+      is_admin_managed: skill.is_admin_managed || false,
+      viewer_can_see: skill.viewer_can_see !== undefined ? skill.viewer_can_see : true,
       values: skill.values
         ?.filter((value: any) => value.is_active)
         ?.sort((a: any, b: any) => a.display_order - b.display_order)
