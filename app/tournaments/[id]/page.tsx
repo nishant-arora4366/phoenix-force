@@ -408,6 +408,38 @@ export default function TournamentDetailsPage() {
     }
   }
 
+  const removePlayerFromSlot = async (slotId: string, playerName: string) => {
+    if (!confirm(`Are you sure you want to remove ${playerName} from this tournament slot?`)) {
+      return
+    }
+
+    try {
+      const sessionUser = sessionManager.getUser()
+      const response = await fetch(`/api/tournaments/${tournamentId}/remove-player`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': JSON.stringify(sessionUser),
+        },
+        body: JSON.stringify({ slotId })
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+
+      setRegistrationMessage(`Successfully removed ${playerName} from tournament`)
+      // Refresh slots
+      await fetchSlots()
+    } catch (error: any) {
+      console.error('Error removing player from tournament:', error)
+      setRegistrationMessage(`Error: ${error.message}`)
+    } finally {
+      setTimeout(() => setRegistrationMessage(''), 5000) // Clear message after 5 seconds
+    }
+  }
+
   const cancelRegistration = async () => {
     setIsRegistering(true)
     setRegistrationMessage('')
@@ -1010,6 +1042,18 @@ export default function TournamentDetailsPage() {
                                       className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
                                     >
                                       Reject
+                                    </button>
+                                  </div>
+                                )}
+
+                                {/* Admin Actions for Confirmed Slots */}
+                                {isHost && slot.status === 'confirmed' && (
+                                  <div className="flex space-x-2 mt-2">
+                                    <button
+                                      onClick={() => removePlayerFromSlot(slot.id, slot.players?.name || 'Player')}
+                                      className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                                    >
+                                      Remove Player
                                     </button>
                                   </div>
                                 )}
