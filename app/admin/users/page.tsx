@@ -1254,12 +1254,12 @@ export default function UserManagementPage() {
         {/* Skills Tab Content */}
         {activeTab === 'skills' && (
           <>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Player Skills Configuration</h2>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Player Skills Configuration</h2>
                 <button 
                   onClick={() => setIsAddingSkill(true)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   Add New Skill
                 </button>
@@ -1268,8 +1268,8 @@ export default function UserManagementPage() {
               {/* Add New Skill Form */}
               {isAddingSkill && (
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Player Skill</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4">Add New Player Skill</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Skill Name *
@@ -1346,20 +1346,20 @@ export default function UserManagementPage() {
                       </label>
                     </div>
                   </div>
-                  <div className="flex justify-end space-x-3 mt-4">
+                  <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 mt-4">
                     <button
                       onClick={() => {
                         setIsAddingSkill(false)
                         setNewSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
                       }}
-                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={addPlayerSkill}
                       disabled={!newSkill.name}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Add Skill
                     </button>
@@ -1373,13 +1373,13 @@ export default function UserManagementPage() {
                   <div key={skill.id} className="border border-gray-200 rounded-lg">
                     {/* Skill Header - Always Visible */}
                     <div className="p-4">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+                        <div className="flex items-center space-x-3 flex-1">
                           <button
                             onClick={() => toggleSkillExpansion(skill.id)}
-                            className="flex items-center space-x-2 text-left hover:bg-gray-50 p-2 rounded transition-colors"
+                            className="flex items-center space-x-2 text-left hover:bg-gray-50 p-2 rounded transition-colors flex-1"
                           >
-                            <div className="w-5 h-5 flex items-center justify-center">
+                            <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
                               {expandedSkills.has(skill.id) ? (
                                 <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -1390,11 +1390,11 @@ export default function UserManagementPage() {
                                 </svg>
                               )}
                             </div>
-                            <div>
-                              <h3 className="text-lg font-medium text-gray-900">{skill.skill_name}</h3>
-                              <div className="flex items-center space-x-4 mt-1">
-                                <span className="text-sm text-gray-500">Type: {skill.skill_type}</span>
-                                <span className="text-sm text-gray-500">Order: {skill.display_order}</span>
+                            <div className="flex-1">
+                              <h3 className="text-base sm:text-lg font-medium text-gray-900">{skill.skill_name}</h3>
+                              <div className="flex flex-wrap items-center gap-2 mt-1">
+                                <span className="text-xs sm:text-sm text-gray-500">Type: {skill.skill_type}</span>
+                                <span className="text-xs sm:text-sm text-gray-500">Order: {skill.display_order}</span>
                                 {skill.is_required && (
                                   <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
                                     Required
@@ -1411,7 +1411,7 @@ export default function UserManagementPage() {
                                   </span>
                                 )}
                                 {skill.values && skill.values.length > 0 && (
-                                  <span className="text-sm text-gray-500">
+                                  <span className="text-xs sm:text-sm text-gray-500">
                                     {skill.values.length} value{skill.values.length !== 1 ? 's' : ''}
                                   </span>
                                 )}
@@ -1419,7 +1419,7 @@ export default function UserManagementPage() {
                             </div>
                           </button>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                           <button
                             onClick={() => {
                               setIsEditingSkill(skill.id)
@@ -1432,13 +1432,13 @@ export default function UserManagementPage() {
                                 viewerCanSee: skill.viewer_can_see
                               })
                             }}
-                            className="px-3 py-1 text-blue-600 hover:text-blue-800 text-sm"
+                            className="w-full sm:w-auto px-3 py-1 text-blue-600 hover:text-blue-800 text-sm border border-blue-200 rounded hover:bg-blue-50 transition-colors"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => deletePlayerSkill(skill.id)}
-                            className="px-3 py-1 text-red-600 hover:text-red-800 text-sm"
+                            className="w-full sm:w-auto px-3 py-1 text-red-600 hover:text-red-800 text-sm border border-red-200 rounded hover:bg-red-50 transition-colors"
                           >
                             Delete
                           </button>
@@ -1506,7 +1506,7 @@ export default function UserManagementPage() {
                       {isAddingValue && newValue.skillId === skill.id && (
                         <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
                           <h5 className="text-sm font-medium text-gray-900 mb-2">Add New Value</h5>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
                                 Value Name *
@@ -1532,20 +1532,20 @@ export default function UserManagementPage() {
                               />
                             </div>
                           </div>
-                          <div className="flex justify-end space-x-2 mt-3">
+                          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-3">
                             <button
                               onClick={() => {
                                 setIsAddingValue(false)
                                 setNewValue({ skillId: '', valueName: '', displayOrder: 0 })
                               }}
-                              className="px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                              className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
                             >
                               Cancel
                             </button>
                             <button
                               onClick={addSkillValue}
                               disabled={!newValue.valueName}
-                              className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              className="w-full sm:w-auto px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                               Add Value
                             </button>
@@ -1557,7 +1557,7 @@ export default function UserManagementPage() {
                       {isEditingValue && editingValue.skillId === skill.id && (
                         <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                           <h5 className="text-sm font-medium text-gray-900 mb-2">Edit Value</h5>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
                                 Value Name *
@@ -1583,20 +1583,20 @@ export default function UserManagementPage() {
                               />
                             </div>
                           </div>
-                          <div className="flex justify-end space-x-2 mt-3">
+                          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-3">
                             <button
                               onClick={() => {
                                 setIsEditingValue(false)
                                 setEditingValue({ skillId: '', valueId: '', valueName: '', displayOrder: 0 })
                               }}
-                              className="px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                              className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
                             >
                               Cancel
                             </button>
                             <button
                               onClick={editSkillValue}
                               disabled={!editingValue.valueName}
-                              className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              className="w-full sm:w-auto px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                               Update Value
                             </button>
@@ -1611,7 +1611,7 @@ export default function UserManagementPage() {
                     {isEditingSkill === skill.id && (
                       <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                         <h4 className="text-sm font-medium text-gray-900 mb-3">Edit Skill</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                               Skill Name *
@@ -1688,20 +1688,20 @@ export default function UserManagementPage() {
                             </label>
                           </div>
                         </div>
-                        <div className="flex justify-end space-x-3 mt-4">
+                        <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 mt-4">
                           <button
                             onClick={() => {
                               setIsEditingSkill(null)
                               setEditingSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
                             }}
-                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                           >
                             Cancel
                           </button>
                           <button
                             onClick={editPlayerSkill}
                             disabled={!editingSkill.name}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             Update Skill
                           </button>
