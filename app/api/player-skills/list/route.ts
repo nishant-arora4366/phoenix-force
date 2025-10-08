@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
         ?.sort((a: any, b: any) => a.display_order - b.display_order)
         .map((value: any) => ({
           id: value.id,
+          name: value.value_name,
           value_name: value.value_name,
           display_order: value.display_order
         })) || []
