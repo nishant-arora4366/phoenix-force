@@ -1091,11 +1091,14 @@ export default function TournamentDetailsPage() {
                         {userRegistration ? (
                           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
                             <div className="flex items-center space-x-2 mb-2">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              <h4 className="text-sm font-semibold text-blue-900">Registered</h4>
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <h4 className="text-sm font-semibold text-green-900">Registered</h4>
                             </div>
                             <div className="text-xs text-blue-700">
-                              Position #{userRegistration.position || 'Calculating...'} • {userRegistration.status}
+                              Slot #{userRegistration.position || 'Calculating...'} • 
+                              <span className={userRegistration.status === 'pending' ? 'text-yellow-600 font-medium' : 'text-blue-700'}>
+                                {userRegistration.status === 'pending' ? 'Awaiting Payment Confirmation' : userRegistration.status}
+                              </span>
                             </div>
                             <button
                               onClick={withdrawFromTournament}
@@ -1408,7 +1411,7 @@ export default function TournamentDetailsPage() {
                                     ? 'bg-green-100 text-green-800' 
                                     : 'bg-yellow-100 text-yellow-800'
                                 }`}>
-                                  {slot.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                                  {slot.status === 'confirmed' ? 'Confirmed' : 'Awaiting Payment Confirmation'}
                                 </span>
                               </div>
                               <div className="space-y-2">
@@ -1472,7 +1475,7 @@ export default function TournamentDetailsPage() {
                                     ? 'bg-green-100 text-green-800' 
                                     : 'bg-yellow-100 text-yellow-800'
                                 }`}>
-                                  {slot.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                                  {slot.status === 'confirmed' ? 'Confirmed' : 'Awaiting Payment Confirmation'}
                                 </span>
                               </div>
                               <div className="col-span-3">
@@ -1528,7 +1531,7 @@ export default function TournamentDetailsPage() {
                                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-400">
                                       {slotNumber}
                                     </div>
-                                    <div className="text-sm">Available position</div>
+                                    <div className="text-sm">Available slot</div>
                                   </div>
                                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                                     Empty
@@ -1544,7 +1547,7 @@ export default function TournamentDetailsPage() {
                                   </div>
                                 </div>
                                 <div className="col-span-4">
-                                  <div className="text-sm">Available position</div>
+                                  <div className="text-sm">Available slot</div>
                                 </div>
                                 <div className="col-span-2">
                                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
