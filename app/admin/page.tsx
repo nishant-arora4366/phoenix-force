@@ -89,7 +89,7 @@ export default function AdminPanel() {
     valueName: '',
     displayOrder: 0
   })
-  const [isEditingValue, setIsEditingValue] = useState(false)
+  const [isEditingValue, setIsEditingValue] = useState<string | null>(null)
   const [isAddingValue, setIsAddingValue] = useState(false)
   const [newValue, setNewValue] = useState({
     skillId: '',
@@ -603,7 +603,7 @@ export default function AdminPanel() {
       const result = await response.json()
       if (result.success) {
         setMessage('Skill value updated successfully!')
-        setIsEditingValue(false)
+        setIsEditingValue(null)
         setEditingValue({ skillId: '', valueId: '', valueName: '', displayOrder: 0 })
         fetchPlayerSkills()
       } else {
@@ -1374,7 +1374,7 @@ export default function AdminPanel() {
                                     <div className="flex space-x-2">
                                       <button
                                         onClick={() => {
-                                          setIsEditingValue(true)
+                                          setIsEditingValue(value.id)
                                           setEditingValue({
                                             skillId: skill.id,
                                             valueId: value.id,
@@ -1399,6 +1399,57 @@ export default function AdminPanel() {
                                 <p className="text-sm text-gray-500 italic">No values defined for this skill</p>
                               )}
                             </div>
+                            
+                            {/* Edit Value Form */}
+                            {isEditingValue && editingValue.skillId === skill.id && (
+                              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <h5 className="text-sm font-medium text-gray-900 mb-2">Edit Value</h5>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                      Value Name *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={editingValue.valueName}
+                                      onChange={(e) => setEditingValue(prev => ({ ...prev, valueName: e.target.value }))}
+                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="e.g., Right Hand"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                      Display Order
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={editingValue.displayOrder}
+                                      onChange={(e) => setEditingValue(prev => ({ ...prev, displayOrder: parseInt(e.target.value) || 0 }))}
+                                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                      min="0"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-3">
+                                  <button
+                                    onClick={() => {
+                                      setIsEditingValue(null)
+                                      setEditingValue({ skillId: '', valueId: '', valueName: '', displayOrder: 0 })
+                                    }}
+                                    className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={editSkillValue}
+                                    disabled={!editingValue.valueName}
+                                    className="w-full sm:w-auto px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                  >
+                                    Update Value
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}

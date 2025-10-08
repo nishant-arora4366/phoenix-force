@@ -88,7 +88,7 @@ export default function UserManagementPage() {
     valueName: '',
     displayOrder: 0
   })
-  const [isEditingValue, setIsEditingValue] = useState(false)
+  const [isEditingValue, setIsEditingValue] = useState<string | null>(null)
   const [isAddingValue, setIsAddingValue] = useState(false)
   const [newValue, setNewValue] = useState({
     skillId: '',
@@ -603,7 +603,7 @@ export default function UserManagementPage() {
       const result = await response.json()
       if (result.success) {
         setMessage('Skill value updated successfully')
-        setIsEditingValue(false)
+        setIsEditingValue(null)
         setEditingValue({ skillId: '', valueId: '', valueName: '', displayOrder: 0 })
         fetchPlayerSkills()
       } else {
@@ -1478,7 +1478,7 @@ export default function UserManagementPage() {
                               <div className="flex space-x-1">
                                 <button
                                   onClick={() => {
-                                    setIsEditingValue(true)
+                                    setIsEditingValue(value.id)
                                     setEditingValue({
                                       skillId: skill.id,
                                       valueId: value.id,
@@ -1586,7 +1586,7 @@ export default function UserManagementPage() {
                           <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-3">
                             <button
                               onClick={() => {
-                                setIsEditingValue(false)
+                                setIsEditingValue(null)
                                 setEditingValue({ skillId: '', valueId: '', valueName: '', displayOrder: 0 })
                               }}
                               className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
