@@ -380,6 +380,11 @@ export default function TournamentDetailsPage() {
 
   // Load all players function
   const loadAllPlayers = async () => {
+    if (!tournamentId) {
+      console.error('Tournament ID is not available')
+      return
+    }
+    
     setIsLoadingPlayers(true)
     try {
       const params = new URLSearchParams({
@@ -399,18 +404,25 @@ export default function TournamentDetailsPage() {
         }
       })
 
+      console.log('Fetching players with params:', params.toString())
       const response = await fetch(`/api/players/search?${params.toString()}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const result = await response.json()
+      console.log('Players API response:', result)
       
       if (result.success) {
-        setAllPlayers(result.players)
+        setAllPlayers(result.players || [])
         // Apply hide assigned players filter if active
         const filtered = hideAssignedPlayers 
-          ? result.players.filter((p: any) => !p.isRegistered)
-          : result.players
+          ? (result.players || []).filter((p: any) => !p.isRegistered)
+          : (result.players || [])
         setFilteredPlayers(filtered)
       } else {
-        console.error('Error loading players:', result.error)
+        console.error('Error loading players:', result.error || 'Unknown error')
         setAllPlayers([])
         setFilteredPlayers([])
       }
