@@ -440,6 +440,25 @@ export default function TournamentDetailsPage() {
     Object.entries(skillFilterValues).forEach(([skillId, values]) => {
       if (values.length > 0) {
         console.log(`Applying skill filter for skill ${skillId} with values:`, values)
+        
+        // Get the skill definition to understand the skill type and get value names
+        const skill = availableSkills.find(s => s.id === skillId)
+        if (!skill) {
+          console.log(`Skill ${skillId} not found in available skills`)
+          return
+        }
+        
+        // Convert skill value IDs to names for multiselect skills
+        const selectedValueNames = values.map(valueId => {
+          if (skill.type === 'multiselect' && skill.values) {
+            const valueObj = skill.values.find((v: any) => v.id === valueId)
+            return valueObj ? valueObj.name : valueId
+          }
+          return valueId
+        })
+        
+        console.log(`Converted selected values to names:`, selectedValueNames)
+        
         filtered = filtered.filter(player => {
           // Check if player has skills data
           if (!player.skills || !Array.isArray(player.skills)) {
@@ -458,25 +477,88 @@ export default function TournamentDetailsPage() {
           console.log(`Player ${player.display_name} skill assignment:`, skillAssignment)
 
           // Check if any of the selected values match the player's skill values
-          const matches = values.some(selectedValue => {
-            // Convert both values to strings for comparison to handle type mismatches
-            const selectedStr = String(selectedValue)
+          let matches = false
+          
+          if (skill.type === 'number') {
+            // Handle number range filtering (min/max)
+            const minValue = values[0] ? parseFloat(values[0]) : null
+            const maxValue = values[1] ? parseFloat(values[1]) : null
             
-            // Handle different skill value types
-            if (skillAssignment.skill_value_id && String(skillAssignment.skill_value_id) === selectedStr) {
-              console.log(`Match found: skill_value_id ${skillAssignment.skill_value_id} === selectedValue ${selectedValue}`)
-              return true
+            console.log(`Number filter for skill ${skill.name}: min=${minValue}, max=${maxValue}`)
+            console.log(`Player skill assignment:`, skillAssignment)
+            console.log(`Available skill values:`, skill.values)
+            
+            // Get the player's skill value (could be in different fields)
+            let playerValue = null
+            
+            // Try different ways to get the player's number value
+            if (skillAssignment.skill_value_id && skill.values) {
+              const valueObj = skill.values.find((v: any) => v.id === skillAssignment.skill_value_id)
+              if (valueObj) {
+                playerValue = parseFloat(valueObj.name)
+                console.log(`Found player value from skill_value_id: ${playerValue} (from value name: ${valueObj.name})`)
+              }
             }
             
-            // Handle array values (for multiselect skills)
-            if (skillAssignment.value_array && Array.isArray(skillAssignment.value_array)) {
-              const arrayMatch = skillAssignment.value_array.some((val: any) => String(val) === selectedStr)
-              console.log(`Array check: ${skillAssignment.value_array} includes ${selectedValue} = ${arrayMatch}`)
-              return arrayMatch
+            if (playerValue === null && skillAssignment.value_array && Array.isArray(skillAssignment.value_array) && skillAssignment.value_array.length > 0) {
+              // For number skills, value_array might contain the actual number
+              playerValue = parseFloat(skillAssignment.value_array[0])
+              console.log(`Found player value from value_array: ${playerValue} (from array: ${skillAssignment.value_array})`)
             }
             
-            return false
-          })
+            // If still no value, try to parse any string value directly
+            if (playerValue === null && skillAssignment.value) {
+              playerValue = parseFloat(skillAssignment.value)
+              console.log(`Found player value from value field: ${playerValue}`)
+            }
+            
+            console.log(`Final player value: ${playerValue}, min: ${minValue}, max: ${maxValue}`)
+            
+            if (playerValue !== null && !isNaN(playerValue)) {
+              matches = true
+              if (minValue !== null && playerValue < minValue) {
+                matches = false
+                console.log(`Player value ${playerValue} is below minimum ${minValue}`)
+              }
+              if (maxValue !== null && playerValue > maxValue) {
+                matches = false
+                console.log(`Player value ${playerValue} is above maximum ${maxValue}`)
+              }
+            } else {
+              console.log(`No valid player value found for number skill`)
+              matches = false
+            }
+            
+            console.log(`Number range match result: ${matches}`)
+          } else {
+            // Handle other skill types (select, multiselect, text)
+            matches = selectedValueNames.some(selectedValueName => {
+              // Handle different skill value types
+              if (skillAssignment.skill_value_id) {
+                // For single select skills, we need to get the value name from the skill definition
+                if (skill.type === 'select' && skill.values) {
+                  const valueObj = skill.values.find((v: any) => v.id === skillAssignment.skill_value_id)
+                  const valueName = valueObj ? valueObj.name : String(skillAssignment.skill_value_id)
+                  const match = valueName === selectedValueName
+                  console.log(`Single select match: ${valueName} === ${selectedValueName} = ${match}`)
+                  return match
+                }
+                // For other types, compare IDs directly
+                const match = String(skillAssignment.skill_value_id) === String(selectedValueName)
+                console.log(`ID match: ${skillAssignment.skill_value_id} === ${selectedValueName} = ${match}`)
+                return match
+              }
+              
+              // Handle array values (for multiselect skills)
+              if (skillAssignment.value_array && Array.isArray(skillAssignment.value_array)) {
+                const arrayMatch = skillAssignment.value_array.some((val: any) => String(val) === String(selectedValueName))
+                console.log(`Array check: ${skillAssignment.value_array} includes ${selectedValueName} = ${arrayMatch}`)
+                return arrayMatch
+              }
+              
+              return false
+            })
+          }
 
           console.log(`Player ${player.display_name} matches filter: ${matches}`)
           return matches
