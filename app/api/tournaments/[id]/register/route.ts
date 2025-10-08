@@ -123,25 +123,21 @@ export async function POST(
           continue
         }
 
-        // Simple FCFS system - no slot numbers needed
-        // Check if we should go to waitlist or main slots based on current registrations
-        const mainSlotsFilled = currentSlots?.filter(s => s.player_id && s.status !== 'waitlist').length || 0
-        const isWaitlist = mainSlotsFilled >= tournament.total_slots
+        // Simple FCFS system - all registrations start as pending
+        // Waitlist vs main slot is determined by position in frontend, not status in DB
         
         console.log('Attempting to register:', {
-          isWaitlist,
           currentSlotsCount: currentSlots?.length || 0,
-          tournamentTotalSlots: tournament.total_slots,
-          mainSlotsFilled
+          tournamentTotalSlots: tournament.total_slots
         })
         
-        // Create new slot entry - no slot_number needed!
+        // Create new slot entry - all start as pending until host approves
         const { data: slot, error: registerError } = await supabase
           .from('tournament_slots')
           .insert({
             tournament_id: tournamentId,
             player_id: player.id,
-            status: isWaitlist ? 'waitlist' : 'pending',
+            status: 'pending', // All registrations start as pending
             requested_at: new Date().toISOString()
           })
           .select()
@@ -177,9 +173,7 @@ export async function POST(
           console.log('Registration successful:', slot)
           return NextResponse.json({
             success: true,
-            message: isWaitlist 
-              ? `Registered for waitlist. Position will be assigned based on registration time.`
-              : `Registered for tournament. Slot will be assigned based on registration time.`,
+            message: `Registered for tournament. Position will be assigned based on registration time.`,
             slot: slot
           })
         }
