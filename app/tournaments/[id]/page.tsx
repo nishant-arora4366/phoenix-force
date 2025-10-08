@@ -1349,7 +1349,7 @@ export default function TournamentDetailsPage() {
                             month: 'short', 
                             day: 'numeric',
                             year: 'numeric'
-                          })}
+                          }).replace(',', '')}
                         </div>
                       </div>
                       
@@ -1358,7 +1358,7 @@ export default function TournamentDetailsPage() {
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => setShowAssignModal(true)}
-                            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
+                            className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
                           >
                             Register Player
                           </button>
@@ -1367,7 +1367,7 @@ export default function TournamentDetailsPage() {
                             <button
                               onClick={openStatusModal}
                               disabled={isUpdatingStatus}
-                              className="px-3 py-1.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="flex-1 px-3 py-1.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {isUpdatingStatus ? 'Updating...' : 'Manage Status'}
                             </button>
@@ -1382,7 +1382,7 @@ export default function TournamentDetailsPage() {
                                   key={status}
                                   onClick={() => handleStatusChange(status)}
                                   disabled={isUpdatingStatus}
-                                  className={`px-3 py-1.5 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+                                  className={`flex-1 px-3 py-1.5 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
                                     isForward 
                                       ? 'bg-green-600 hover:bg-green-700' 
                                       : isBackward 
@@ -1400,7 +1400,7 @@ export default function TournamentDetailsPage() {
                           )}
                           <Link
                             href={`/tournaments/${tournament.id}/edit`}
-                            className="px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
+                            className="flex-1 px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md text-center"
                           >
                             Edit
                           </Link>
@@ -1886,41 +1886,41 @@ export default function TournamentDetailsPage() {
                     </label>
                   </div>
                   
-                  {/* Select Skills Button */}
+                  {/* Add Filter on Skills Button */}
                   <button
                     onClick={() => setShowSkillConfig(!showSkillConfig)}
                     className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm font-medium"
                   >
-                    {showSkillConfig ? 'Hide Skills' : 'Select Skills'}
+                    {showSkillConfig ? 'Clear Skills Filter' : 'Add Filter on Skills'}
                   </button>
                 </div>
               </div>
 
               {/* Skills Filter Section */}
               {showSkillConfig && (
-                <div className="bg-white rounded-lg p-4 border border-gray-200 mb-6">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="bg-white rounded-lg p-3 border border-gray-200 mb-4">
+                  <div className="flex items-center justify-between mb-3">
                     <h4 className="text-sm font-medium text-gray-700">Select Skills to Filter By</h4>
                     <button
                       onClick={() => setShowSkillConfig(false)}
                       className="text-gray-400 hover:text-gray-600"
                     >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
                   
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
                     {availableSkills.map((skill) => (
-                      <label key={skill.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <label key={skill.id} className="flex items-center space-x-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={enabledSkills.includes(skill.id)}
                           onChange={() => toggleSkillEnabled(skill.id)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        <span className="text-sm text-gray-700">{skill.name}</span>
+                        <span className="text-xs text-gray-700">{skill.name}</span>
                       </label>
                     ))}
                   </div>
@@ -1928,13 +1928,13 @@ export default function TournamentDetailsPage() {
                   <div className="flex justify-end space-x-2">
                     <button
                       onClick={() => setEnabledSkills([])}
-                      className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+                      className="px-2 py-1 text-xs text-red-600 hover:text-red-800"
                     >
                       Clear All
                     </button>
                     <button
                       onClick={() => setEnabledSkills(availableSkills.map(s => s.id))}
-                      className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800"
+                      className="px-2 py-1 text-xs text-blue-600 hover:text-blue-800"
                     >
                       Select All
                     </button>
@@ -1944,23 +1944,44 @@ export default function TournamentDetailsPage() {
 
               {/* Active Skills Filter */}
               {enabledSkills.length > 0 && (
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 mb-6">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Active Filters</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 mb-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <h4 className="text-sm font-semibold text-blue-900">Active Filters</h4>
+                    </div>
+                    <button
+                      onClick={clearAllSkillFilters}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {enabledSkills.map((skillId) => {
                       const skill = availableSkills.find(s => s.id === skillId)
                       if (!skill) return null
                       
                       return (
-                        <div key={skillId} className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-700">
-                            {skill.name}
-                          </label>
+                        <div key={skillId} className="bg-white rounded-lg p-3 border border-blue-100 shadow-sm">
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="text-xs font-semibold text-blue-800 uppercase tracking-wide">
+                              {skill.name}
+                            </label>
+                            <button
+                              onClick={() => clearSkillFilter(skillId)}
+                              className="text-xs text-red-500 hover:text-red-700"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          
                           {skill.type === 'select' ? (
                             <select
                               value={skillFilterValues[skillId]?.[0] || ''}
                               onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                              className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs bg-gray-50"
                             >
                               <option value="">All {skill.name}</option>
                               {skill.values?.map((value: any) => (
@@ -1970,7 +1991,7 @@ export default function TournamentDetailsPage() {
                               ))}
                             </select>
                           ) : skill.type === 'multiselect' ? (
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                               <select
                                 multiple
                                 value={skillFilterValues[skillId] || []}
@@ -1978,8 +1999,8 @@ export default function TournamentDetailsPage() {
                                   const values = Array.from(e.target.selectedOptions, option => option.value)
                                   updateSkillFilterValue(skillId, values)
                                 }}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                size={3}
+                                className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs bg-gray-50"
+                                size={2}
                               >
                                 {skill.values?.map((value: any) => (
                                   <option key={value.id} value={value.id}>
@@ -1987,15 +2008,9 @@ export default function TournamentDetailsPage() {
                                   </option>
                                 ))}
                               </select>
-                              <button
-                                onClick={() => clearSkillFilter(skillId)}
-                                className="text-xs text-red-600 hover:text-red-800"
-                              >
-                                Clear {skill.name}
-                              </button>
                             </div>
                           ) : skill.type === 'number' ? (
-                            <div className="flex space-x-2">
+                            <div className="flex space-x-1">
                               <input
                                 type="number"
                                 placeholder="Min"
@@ -2005,7 +2020,7 @@ export default function TournamentDetailsPage() {
                                   values[0] = e.target.value
                                   updateSkillFilterValue(skillId, values)
                                 }}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs bg-gray-50"
                               />
                               <input
                                 type="number"
@@ -2016,7 +2031,7 @@ export default function TournamentDetailsPage() {
                                   values[1] = e.target.value
                                   updateSkillFilterValue(skillId, values)
                                 }}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs bg-gray-50"
                               />
                             </div>
                           ) : (
@@ -2025,7 +2040,7 @@ export default function TournamentDetailsPage() {
                               value={skillFilterValues[skillId]?.[0] || ''}
                               onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
                               placeholder={`Filter by ${skill.name.toLowerCase()}...`}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                              className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs bg-gray-50"
                             />
                           )}
                         </div>
