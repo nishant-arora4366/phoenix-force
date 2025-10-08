@@ -114,9 +114,8 @@ export async function POST(
         // Get current slots to determine next slot number
         const { data: currentSlots, error: slotsError } = await supabase
           .from('tournament_slots')
-          .select('slot_number')
+          .select('player_id, status')
           .eq('tournament_id', tournamentId)
-          .order('slot_number')
 
         if (slotsError) {
           console.error('Failed to get current slots:', slotsError)
@@ -124,30 +123,23 @@ export async function POST(
           continue
         }
 
-        // Find the next available slot number
-        const existingSlotNumbers = currentSlots?.map(s => s.slot_number) || []
-        let nextSlotNumber = 1
-        
-        // Find the first available slot number
-        while (existingSlotNumbers.includes(nextSlotNumber)) {
-          nextSlotNumber++
-        }
-        
-        const isWaitlist = nextSlotNumber > tournament.total_slots
+        // Simple FCFS system - no slot numbers needed
+        // Check if we should go to waitlist or main slots based on current registrations
+        const mainSlotsFilled = currentSlots?.filter(s => s.player_id && s.status !== 'waitlist').length || 0
+        const isWaitlist = mainSlotsFilled >= tournament.total_slots
         
         console.log('Attempting to register:', {
-          nextSlotNumber,
           isWaitlist,
           currentSlotsCount: currentSlots?.length || 0,
-          tournamentTotalSlots: tournament.total_slots
+          tournamentTotalSlots: tournament.total_slots,
+          mainSlotsFilled
         })
         
-        // Create new slot entry dynamically
+        // Create new slot entry - no slot_number needed!
         const { data: slot, error: registerError } = await supabase
           .from('tournament_slots')
           .insert({
             tournament_id: tournamentId,
-            slot_number: nextSlotNumber,
             player_id: player.id,
             status: isWaitlist ? 'waitlist' : 'pending',
             requested_at: new Date().toISOString()
@@ -186,8 +178,8 @@ export async function POST(
           return NextResponse.json({
             success: true,
             message: isWaitlist 
-              ? `Registered for waitlist position ${nextSlotNumber - tournament.total_slots}`
-              : `Registered for slot ${nextSlotNumber}`,
+              ? `Registered for waitlist. Position will be assigned based on registration time.`
+              : `Registered for tournament. Slot will be assigned based on registration time.`,
             slot: slot
           })
         }

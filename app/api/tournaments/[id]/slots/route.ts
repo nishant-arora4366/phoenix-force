@@ -80,28 +80,45 @@ export async function GET(
     console.log('All slots from database:', allSlotsData?.length || 0)
     
     const totalSlots = tournament.total_slots
-    const existingSlots = allSlotsData?.map(slot => ({
-      ...slot,
-      is_main_slot: slot.slot_number <= totalSlots,
-      waitlist_position: slot.slot_number > totalSlots ? slot.slot_number - totalSlots : null,
-      players: slot.players
-    })) || []
+    
+    // Simple FCFS system - calculate positions based on requested_at timestamp
+    const allSlotsWithPlayers = allSlotsData?.filter(slot => slot.player_id) || []
+    
+    // Sort all slots by requested_at (FCFS)
+    const sortedSlots = allSlotsWithPlayers.sort((a, b) => 
+      new Date(a.requested_at).getTime() - new Date(b.requested_at).getTime()
+    )
+    
+    // Assign positions dynamically
+    const slotsWithPositions = sortedSlots.map((slot, index) => {
+      const isMainSlot = index < totalSlots
+      const position = index + 1
+      const waitlistPosition = isMainSlot ? null : position - totalSlots
+      
+      return {
+        ...slot,
+        position,
+        is_main_slot: isMainSlot,
+        waitlist_position: waitlistPosition,
+        players: slot.players
+      }
+    })
 
-    // Create intelligent slot display
+    // Create slot display using dynamic positions
     const allSlots = []
     
-    // Add main slots (1 to total_slots)
+    // Add main slots (positions 1 to total_slots)
     for (let i = 1; i <= totalSlots; i++) {
-      const existingSlot = existingSlots.find(s => s.slot_number === i)
-      if (existingSlot) {
+      const slotAtPosition = slotsWithPositions.find(s => s.position === i)
+      if (slotAtPosition) {
         // Slot exists and is filled
-        allSlots.push(existingSlot)
+        allSlots.push(slotAtPosition)
       } else {
         // Slot doesn't exist yet - show as available
         allSlots.push({
           id: `available-${i}`,
           tournament_id: tournamentId,
-          slot_number: i,
+          position: i,
           player_id: null,
           status: 'available',
           is_host_assigned: false,
@@ -115,30 +132,29 @@ export async function GET(
       }
     }
     
-    // Add waitlist slots (total_slots + 1 to total_slots + 10)
-    const waitlistSlots = 10 // Standard waitlist size
-    for (let i = totalSlots + 1; i <= totalSlots + waitlistSlots; i++) {
-      const existingSlot = existingSlots.find(s => s.slot_number === i)
-      if (existingSlot) {
-        // Waitlist slot exists and is filled
-        allSlots.push(existingSlot)
-      } else {
-        // Waitlist slot doesn't exist yet - show as available
-        allSlots.push({
-          id: `available-waitlist-${i}`,
-          tournament_id: tournamentId,
-          slot_number: i,
-          player_id: null,
-          status: 'available',
-          is_host_assigned: false,
-          requested_at: null,
-          confirmed_at: null,
-          created_at: null,
-          is_main_slot: false,
-          waitlist_position: i - totalSlots,
-          players: null
-        })
-      }
+    // Add waitlist slots (positions > total_slots)
+    const waitlistSlots = slotsWithPositions.filter(s => !s.is_main_slot)
+    waitlistSlots.forEach(slot => {
+      allSlots.push(slot)
+    })
+    
+    // Add next available waitlist position if there are waitlist players
+    if (waitlistSlots.length > 0) {
+      const nextWaitlistPosition = waitlistSlots.length + 1
+      allSlots.push({
+        id: `available-waitlist-${nextWaitlistPosition}`,
+        tournament_id: tournamentId,
+        position: totalSlots + nextWaitlistPosition,
+        player_id: null,
+        status: 'available',
+        is_host_assigned: false,
+        requested_at: null,
+        confirmed_at: null,
+        created_at: null,
+        is_main_slot: false,
+        waitlist_position: nextWaitlistPosition,
+        players: null
+      })
     }
 
     console.log('Processed slots:', allSlots.length)
