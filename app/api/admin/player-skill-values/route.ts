@@ -9,9 +9,13 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, skillId, value } = body
+    const { userId, skillId, valueName, displayOrder, value } = body
 
-    if (!userId || !skillId || !value) {
+    // Support both old format (value object) and new format (direct fields)
+    const finalValueName = valueName || value?.valueName
+    const finalDisplayOrder = displayOrder || value?.displayOrder || 0
+
+    if (!userId || !skillId || !finalValueName) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -31,8 +35,8 @@ export async function POST(request: NextRequest) {
       .from('player_skill_values')
       .insert({
         skill_id: skillId,
-        value_name: value.valueName,
-        display_order: value.displayOrder || 0,
+        value_name: finalValueName,
+        display_order: finalDisplayOrder,
         is_active: true
       })
       .select()
@@ -57,9 +61,13 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, valueId, value } = body
+    const { userId, valueId, valueName, displayOrder, value } = body
 
-    if (!userId || !valueId || !value) {
+    // Support both old format (value object) and new format (direct fields)
+    const finalValueName = valueName || value?.valueName
+    const finalDisplayOrder = displayOrder || value?.displayOrder || 0
+
+    if (!userId || !valueId || !finalValueName) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -78,8 +86,8 @@ export async function PUT(request: NextRequest) {
     const { data: updatedValue, error: valueError } = await supabase
       .from('player_skill_values')
       .update({
-        value_name: value.valueName,
-        display_order: value.displayOrder
+        value_name: finalValueName,
+        display_order: finalDisplayOrder
       })
       .eq('id', valueId)
       .select()
