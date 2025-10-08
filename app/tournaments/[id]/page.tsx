@@ -69,6 +69,7 @@ export default function TournamentDetailsPage() {
   const [selectedSkill, setSelectedSkill] = useState('')
   const [selectedSkillValue, setSelectedSkillValue] = useState('')
   const [isLoadingSkills, setIsLoadingSkills] = useState(false)
+  const [hideAssignedPlayers, setHideAssignedPlayers] = useState(false)
 
   // Initialize Supabase client for realtime (singleton to avoid multiple instances)
   const supabase = getSupabaseClient()
@@ -253,7 +254,7 @@ export default function TournamentDetailsPage() {
     if (showAssignModal) {
       loadAllPlayers()
     }
-  }, [searchTerm, selectedSkill, selectedSkillValue])
+  }, [searchTerm, selectedSkill, selectedSkillValue, hideAssignedPlayers])
 
   // Helper function to format datetime in readable format
   const formatDateTime = (dateString: string) => {
@@ -296,7 +297,11 @@ export default function TournamentDetailsPage() {
       
       if (result.success) {
         setAllPlayers(result.players)
-        setFilteredPlayers(result.players)
+        // Apply hide assigned players filter
+        const filtered = hideAssignedPlayers 
+          ? result.players.filter((p: any) => !p.isRegistered)
+          : result.players
+        setFilteredPlayers(filtered)
       } else {
         console.error('Error loading players:', result.error)
         setAllPlayers([])
@@ -894,9 +899,9 @@ export default function TournamentDetailsPage() {
                   <>
                     <button
                       onClick={() => setShowAssignModal(true)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                      className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
                     >
-                      Assign Player
+                      Register Player
                     </button>
                     <Link
                       href={`/tournaments/${tournament.id}/edit`}
@@ -1650,11 +1655,11 @@ export default function TournamentDetailsPage() {
 
       {/* Enhanced Player Assignment Modal */}
       {showAssignModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">Assign Players to Tournament</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Register Players to Tournament</h3>
                 <button
                   onClick={() => {
                     setShowAssignModal(false)
@@ -1675,7 +1680,7 @@ export default function TournamentDetailsPage() {
               </div>
 
               {/* Filters Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="space-y-4 mb-6">
                 {/* Search Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1686,7 +1691,7 @@ export default function TournamentDetailsPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Type player name to filter..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   />
                 </div>
 
@@ -1695,14 +1700,14 @@ export default function TournamentDetailsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Filter by Skill
                   </label>
-                  <div className="flex space-x-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <select
                       value={selectedSkill}
                       onChange={(e) => {
                         setSelectedSkill(e.target.value)
                         setSelectedSkillValue('')
                       }}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                     >
                       <option value="">All Skills</option>
                       {availableSkills.map((skill) => (
@@ -1716,7 +1721,7 @@ export default function TournamentDetailsPage() {
                       <select
                         value={selectedSkillValue}
                         onChange={(e) => setSelectedSkillValue(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       >
                         <option value="">All Values</option>
                         {availableSkills
@@ -1729,6 +1734,21 @@ export default function TournamentDetailsPage() {
                       </select>
                     )}
                   </div>
+                </div>
+
+                {/* Hide Assigned Players Filter */}
+                <div>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={hideAssignedPlayers}
+                      onChange={(e) => setHideAssignedPlayers(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Hide Assigned Players
+                    </span>
+                  </label>
                 </div>
               </div>
 
@@ -1768,7 +1788,7 @@ export default function TournamentDetailsPage() {
                   </button>
                 </div>
                 
-                <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                <div className="max-h-48 sm:max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
                   {isLoadingPlayers ? (
                     <div className="p-4 text-center text-gray-500">
                       <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -1783,14 +1803,14 @@ export default function TournamentDetailsPage() {
                         return (
                           <div
                             key={player.id}
-                            className={`p-3 transition-colors ${
+                            className={`p-2 sm:p-3 transition-colors ${
                               isRegistered 
                                 ? 'bg-gray-50 opacity-60 cursor-not-allowed' 
                                 : 'hover:bg-gray-50 cursor-pointer'
                             }`}
                             onClick={() => !isRegistered && togglePlayerSelection(player)}
                           >
-                            <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-2 sm:space-x-3">
                               <input
                                 type="checkbox"
                                 checked={isSelected}
@@ -1800,14 +1820,14 @@ export default function TournamentDetailsPage() {
                               />
                               <div className="flex-1">
                                 <div className="font-medium text-gray-900">
-                                  {player.display_name}
+                                  <div className="truncate">{player.display_name}</div>
                                   {isRegistered && (
-                                    <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                                    <span className="inline-block mt-1 text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
                                       Already Registered
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-sm text-gray-500">
+                                <div className="text-xs sm:text-sm text-gray-500">
                                   {player.user ? (
                                     player.user.firstname && player.user.lastname 
                                       ? `${player.user.firstname} ${player.user.lastname}` 
@@ -1866,7 +1886,7 @@ export default function TournamentDetailsPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                 <button
                   onClick={() => {
                     setShowAssignModal(false)
@@ -1877,23 +1897,24 @@ export default function TournamentDetailsPage() {
                     setSelectedSkill('')
                     setSelectedSkillValue('')
                     setAssignStatus('pending')
+                    setHideAssignedPlayers(false)
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="w-full sm:flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={assignPlayers}
                   disabled={selectedPlayers.length === 0 || isAssigning}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full sm:flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                 >
                   {isAssigning ? (
                     <div className="flex items-center justify-center">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Assigning...
+                      Registering...
                     </div>
                   ) : (
-                    `Assign ${selectedPlayers.length} Player(s) as ${assignStatus === 'confirmed' ? 'Confirmed' : 'Pending'}`
+                    `Register ${selectedPlayers.length} Player(s) as ${assignStatus === 'confirmed' ? 'Confirmed' : 'Pending'}`
                   )}
                 </button>
               </div>

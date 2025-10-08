@@ -38,9 +38,20 @@ export async function GET(request: NextRequest) {
 
     // Apply skill filter if provided
     if (skillFilter && skillValue) {
-      // For now, we'll implement a simpler approach without complex joins
-      // This can be enhanced later with proper skill filtering
-      console.log('Skill filtering not yet implemented:', { skillFilter, skillValue })
+      // Get player IDs that have the specified skill value
+      const { data: skillAssignments } = await supabaseAdmin
+        .from('player_skill_assignments')
+        .select('player_id')
+        .eq('skill_id', skillFilter)
+        .or(`skill_value_id.eq.${skillValue},value_array.cs.{${skillValue}}`)
+
+      if (skillAssignments && skillAssignments.length > 0) {
+        const filteredPlayerIds = skillAssignments.map(assignment => assignment.player_id)
+        query = query.in('id', filteredPlayerIds)
+      } else {
+        // No players found with this skill value, return empty result
+        query = query.eq('id', 'no-match')
+      }
     }
 
     // Apply limit

@@ -8,20 +8,24 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function GET(request: NextRequest) {
   try {
-    // Get all skills with their values
+    // Get all skills with their values using the correct table structure
     const { data: skills, error } = await supabaseAdmin
       .from('player_skills')
       .select(`
         id,
-        name,
-        type,
-        player_skill_values(
+        skill_name,
+        skill_type,
+        is_required,
+        display_order,
+        is_admin_managed,
+        viewer_can_see,
+        values:player_skill_values(
           id,
           value_name,
-          display_order
+          display_order,
+          is_active
         )
       `)
-      .eq('is_active', true)
       .order('display_order')
 
     if (error) {
@@ -35,9 +39,14 @@ export async function GET(request: NextRequest) {
     // Format the response
     const formattedSkills = skills?.map(skill => ({
       id: skill.id,
-      name: skill.name,
-      type: skill.type,
-      values: skill.player_skill_values
+      name: skill.skill_name,
+      type: skill.skill_type,
+      is_required: skill.is_required,
+      display_order: skill.display_order,
+      is_admin_managed: skill.is_admin_managed,
+      viewer_can_see: skill.viewer_can_see,
+      values: skill.values
+        ?.filter((value: any) => value.is_active)
         ?.sort((a: any, b: any) => a.display_order - b.display_order)
         .map((value: any) => ({
           id: value.id,
