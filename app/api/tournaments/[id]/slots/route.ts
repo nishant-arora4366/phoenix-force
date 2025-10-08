@@ -89,10 +89,10 @@ export async function GET(
       new Date(a.requested_at).getTime() - new Date(b.requested_at).getTime()
     )
     
-    // Assign positions dynamically
+    // Assign positions dynamically based on FCFS order
     const slotsWithPositions = sortedSlots.map((slot, index) => {
-      const isMainSlot = index < totalSlots
-      const position = index + 1
+      const position = index + 1 // Position in FCFS order
+      const isMainSlot = position <= totalSlots
       const waitlistPosition = isMainSlot ? null : position - totalSlots
       
       return {

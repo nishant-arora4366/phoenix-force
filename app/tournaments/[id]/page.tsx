@@ -463,11 +463,6 @@ export default function TournamentDetailsPage() {
               return skillAssignment.value_array.includes(selectedValue)
             }
             
-            // Handle direct value matching
-            if (skillAssignment.value === selectedValue) {
-              return true
-            }
-            
             return false
           })
         })

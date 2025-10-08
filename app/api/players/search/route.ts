@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
         player_skill_assignments(
           skill_id,
           skill_value_id,
-          value_array,
-          value
+          value_array
         )
       `)
 

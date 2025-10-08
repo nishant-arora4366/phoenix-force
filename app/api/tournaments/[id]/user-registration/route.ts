@@ -66,11 +66,12 @@ export async function GET(
         }, { status: 500 })
       }
 
-      // Get all slots for this tournament, sorted by requested_at
+      // Get all FILLED slots for this tournament, sorted by requested_at
       const { data: allSlots, error: allSlotsError } = await supabase
         .from('tournament_slots')
-        .select('id, requested_at, status')
+        .select('id, requested_at, status, player_id')
         .eq('tournament_id', tournamentId)
+        .not('player_id', 'is', null) // Only get slots with players
         .order('requested_at')
 
       if (allSlotsError) {
@@ -81,7 +82,7 @@ export async function GET(
         }, { status: 500 })
       }
 
-      // Find position based on requested_at timestamp
+      // Find position based on requested_at timestamp (FCFS)
       const sortedSlots = allSlots?.sort((a, b) => 
         new Date(a.requested_at).getTime() - new Date(b.requested_at).getTime()
       ) || []
