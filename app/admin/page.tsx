@@ -1304,6 +1304,108 @@ export default function AdminPanel() {
                         </div>
                       </div>
                       
+                      {/* Edit Form */}
+                      {isEditingSkill === skill.id && (
+                        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <h4 className="text-sm font-medium text-gray-900 mb-3">Edit Skill</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Skill Name *
+                              </label>
+                              <input
+                                type="text"
+                                value={editingSkill.name}
+                                onChange={(e) => setEditingSkill(prev => ({ ...prev, name: e.target.value }))}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g., Experience Level"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Skill Type *
+                              </label>
+                              <select
+                                value={editingSkill.type}
+                                onChange={(e) => setEditingSkill(prev => ({ ...prev, type: e.target.value }))}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              >
+                                <option value="select">Select (Dropdown)</option>
+                                <option value="multiselect">Multi-Select (Checkboxes)</option>
+                                <option value="number">Number</option>
+                                <option value="text">Text</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Display Order
+                              </label>
+                              <input
+                                type="number"
+                                value={editingSkill.displayOrder}
+                                onChange={(e) => setEditingSkill(prev => ({ ...prev, displayOrder: parseInt(e.target.value) || 0 }))}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                min="0"
+                              />
+                            </div>
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id={`required-${skill.id}`}
+                                checked={editingSkill.required}
+                                onChange={(e) => setEditingSkill(prev => ({ ...prev, required: e.target.checked }))}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                              />
+                              <label htmlFor={`required-${skill.id}`} className="ml-2 text-sm text-gray-700">
+                                Required field
+                              </label>
+                            </div>
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id={`admin-managed-${skill.id}`}
+                                checked={editingSkill.isAdminManaged}
+                                onChange={(e) => setEditingSkill(prev => ({ ...prev, isAdminManaged: e.target.checked }))}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                              />
+                              <label htmlFor={`admin-managed-${skill.id}`} className="ml-2 text-sm text-gray-700">
+                                Admin managed (only admins/hosts can edit)
+                              </label>
+                            </div>
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id={`viewer-can-see-${skill.id}`}
+                                checked={editingSkill.viewerCanSee}
+                                onChange={(e) => setEditingSkill(prev => ({ ...prev, viewerCanSee: e.target.checked }))}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                              />
+                              <label htmlFor={`viewer-can-see-${skill.id}`} className="ml-2 text-sm text-gray-700">
+                                Viewer can see this skill
+                              </label>
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 mt-4">
+                            <button
+                              onClick={() => {
+                                setIsEditingSkill(null)
+                                setEditingSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
+                              }}
+                              className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={editPlayerSkill}
+                              disabled={!editingSkill.name}
+                              className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                              Update Skill
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      
                       {/* Collapsible Content */}
                       {expandedSkills.has(skill.id) && (
                         <div className="border-t border-gray-200 p-4 bg-gray-50">
