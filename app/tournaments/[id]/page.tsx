@@ -1367,10 +1367,10 @@ export default function TournamentDetailsPage() {
                       
                       {/* Host Actions */}
                       {isHost && (
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 flex-wrap sm:flex-nowrap">
                           <button
                             onClick={() => setShowAssignModal(true)}
-                            className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
+                            className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md whitespace-nowrap"
                           >
                             Register Player
                           </button>
@@ -1379,7 +1379,7 @@ export default function TournamentDetailsPage() {
                             <button
                               onClick={openStatusModal}
                               disabled={isUpdatingStatus}
-                              className="flex-1 px-3 py-1.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="flex-1 px-3 py-1.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                             >
                               {isUpdatingStatus ? 'Updating...' : 'Manage Status'}
                             </button>
@@ -1394,7 +1394,7 @@ export default function TournamentDetailsPage() {
                                   key={status}
                                   onClick={() => handleStatusChange(status)}
                                   disabled={isUpdatingStatus}
-                                  className={`flex-1 px-3 py-1.5 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+                                  className={`flex-1 px-3 py-1.5 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
                                     isForward 
                                       ? 'bg-green-600 hover:bg-green-700' 
                                       : isBackward 
@@ -1412,7 +1412,7 @@ export default function TournamentDetailsPage() {
                           )}
                           <Link
                             href={`/tournaments/${tournament.id}/edit`}
-                            className="flex-1 px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md text-center"
+                            className="flex-1 px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md text-center whitespace-nowrap"
                           >
                             Edit
                           </Link>
