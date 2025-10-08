@@ -103,28 +103,7 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to delete slot' }, { status: 500 })
     }
 
-    // Try to promote a waitlist player to the now-empty main slot
-    try {
-      const promotionResponse = await fetch(`${request.nextUrl.origin}/api/tournaments/${tournamentId}/auto-promote`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (promotionResponse.ok) {
-        const promotionResult = await promotionResponse.json()
-        if (promotionResult.success) {
-          console.log('Successfully promoted waitlist player:', promotionResult.promoted_player)
-        } else {
-          console.log('No waitlist players to promote:', promotionResult.message)
-        }
-      } else {
-        console.log('Promotion failed or no waitlist players available')
-      }
-    } catch (promotionError) {
-      console.error('Error calling auto-promote:', promotionError)
-    }
+    // No auto-promotion needed - positions are calculated dynamically in frontend
 
     // Send notification to the removed player
     if (slot.player_id) {

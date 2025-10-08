@@ -117,8 +117,7 @@ export default function TournamentDetailsPage() {
               // Check if user is already registered for this tournament
               await checkUserRegistration()
               
-              // Fetch waitlist status
-              await fetchWaitlistStatus()
+              // No waitlist status needed - positions calculated dynamically
             }
           }
         }
@@ -161,8 +160,7 @@ export default function TournamentDetailsPage() {
           // Also refresh user registration status in case it was affected
           checkUserRegistration()
           
-          // Check for waitlist promotions
-          checkWaitlistPromotion(payload)
+          // No promotion logic needed - positions calculated dynamically
         }
       )
       .subscribe((status: any) => {
@@ -361,96 +359,11 @@ export default function TournamentDetailsPage() {
     }
   }
 
-  const checkWaitlistPromotion = async (payload: any) => {
-    // Check if a main slot became empty and trigger auto-promotion
-    const isMainSlotEmpty = 
-      (payload.eventType === 'UPDATE' && payload.old.player_id && !payload.new.player_id) ||
-      (payload.eventType === 'DELETE' && payload.old.player_id)
-    
-    if (isMainSlotEmpty) {
-      console.log('Main slot became empty, triggering automatic waitlist promotion')
-      
-      // Automatically call the promotion API
-      try {
-        const response = await fetch(`/api/tournaments/${tournamentId}/auto-promote`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
+  // No promotion logic needed - positions are calculated dynamically in frontend
 
-        if (response.ok) {
-          const result = await response.json()
-          console.log('Automatic promotion result:', result)
-          
-          if (result.success) {
-            console.log('Waitlist player automatically promoted:', result.promoted_player)
-          }
-        } else {
-          console.log('No waitlist players to promote or promotion failed')
-        }
-      } catch (error) {
-        console.error('Error during automatic promotion:', error)
-      }
-      
-      // Refresh the data to show the updated state
-      setTimeout(() => {
-        fetchSlots()
-        checkUserRegistration()
-      }, 500) // Small delay to allow promotion to complete
-    }
-  }
+  // No waitlist status needed - positions calculated dynamically
 
-  const fetchWaitlistStatus = async () => {
-    if (!user) return
-
-    try {
-      const response = await fetch(`/api/tournaments/${tournamentId}/promote-waitlist`, {
-        method: 'GET',
-        headers: {
-          'Authorization': JSON.stringify(user)
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setWaitlistStatus(data.waitlist)
-      }
-    } catch (error) {
-      console.error('Error fetching waitlist status:', error)
-    }
-  }
-
-  const promoteWaitlistManually = async () => {
-    if (!user) return
-
-    try {
-      const response = await fetch(`/api/tournaments/${tournamentId}/promote-waitlist`, {
-        method: 'POST',
-        headers: {
-          'Authorization': JSON.stringify(user)
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setRegistrationMessage(`✅ ${data.message}`)
-        setTimeout(() => setRegistrationMessage(''), 5000)
-        
-        // Refresh data
-        fetchSlots()
-        fetchWaitlistStatus()
-      } else {
-        const error = await response.json()
-        setRegistrationMessage(`❌ ${error.error}`)
-        setTimeout(() => setRegistrationMessage(''), 5000)
-      }
-    } catch (error) {
-      console.error('Error promoting waitlist:', error)
-      setRegistrationMessage('❌ Failed to promote waitlist player')
-      setTimeout(() => setRegistrationMessage(''), 5000)
-    }
-  }
+  // No manual promotion needed - positions calculated dynamically
 
   const registerForTournament = async () => {
     setIsRegistering(true)
@@ -1354,23 +1267,7 @@ export default function TournamentDetailsPage() {
                                   </div>
                                 </div>
                                 
-                                {/* Host Controls for Waitlist Management */}
-                                {isHost && waitlistSlots.length > 0 && (
-                                  <div className="mt-4 p-3 bg-blue-100 rounded-lg">
-                                    <div className="flex items-center justify-between">
-                                      <div className="text-sm text-blue-800">
-                                        <div className="font-medium">Host Controls</div>
-                                        <div className="text-xs">Manually promote waitlist players</div>
-                                      </div>
-                                      <button
-                                        onClick={promoteWaitlistManually}
-                                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                                      >
-                                        Promote Next Player
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
+                                {/* No manual promotion needed - positions calculated dynamically */}
                               </div>
                             )
                           })()}
