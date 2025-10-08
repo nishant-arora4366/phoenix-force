@@ -892,8 +892,8 @@ export default function TournamentDetailsPage() {
                     </div>
                   ) : (
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                      {/* Header */}
-                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                      {/* Header - Hidden on mobile, shown on desktop */}
+                      <div className="hidden md:block bg-gray-50 px-6 py-4 border-b border-gray-200">
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
                           <div className="col-span-1">#</div>
                           <div className="col-span-4">Player Name</div>
@@ -906,8 +906,73 @@ export default function TournamentDetailsPage() {
                       {/* Main Slots List */}
                       <div className="divide-y divide-gray-200">
                         {slots.filter(slot => slot.is_main_slot && slot.players).map((slot, index) => (
-                          <div key={slot.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                            <div className="grid grid-cols-12 gap-4 items-center">
+                          <div key={slot.id} className="px-4 md:px-6 py-4 hover:bg-gray-50 transition-colors">
+                            {/* Mobile Layout */}
+                            <div className="md:hidden">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
+                                    {slot.position || index + 1}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">
+                                      {slot.players.users?.firstname && slot.players.users?.lastname 
+                                        ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                        : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                      }
+                                    </div>
+                                    <div className="text-sm text-gray-500">{slot.players.display_name}</div>
+                                  </div>
+                                </div>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  slot.status === 'confirmed' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {slot.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm text-gray-600">
+                                  Joined: {new Date(slot.requested_at).toLocaleDateString()}
+                                  {slot.confirmed_at && (
+                                    <div className="text-xs text-gray-500">
+                                      Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
+                                    </div>
+                                  )}
+                                </div>
+                                {isHost && (
+                                  <div className="flex space-x-2">
+                                    {slot.status === 'pending' ? (
+                                      <>
+                                        <button
+                                          onClick={() => approveSlot(slot.id)}
+                                          className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors"
+                                        >
+                                          Approve
+                                        </button>
+                                        <button
+                                          onClick={() => rejectSlot(slot.id)}
+                                          className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                        >
+                                          Reject
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <button
+                                        onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
+                                        className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                      >
+                                        Remove
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Desktop Layout */}
+                            <div className="hidden md:grid grid-cols-12 gap-4 items-center">
                               <div className="col-span-1">
                                 <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
                                   {slot.position || index + 1}
@@ -976,8 +1041,24 @@ export default function TournamentDetailsPage() {
                         {Array.from({ length: Math.max(0, tournament.total_slots - slots.filter(slot => slot.is_main_slot && slot.players).length) }).map((_, index) => {
                           const slotNumber = slots.filter(slot => slot.is_main_slot && slot.players).length + index + 1
                           return (
-                            <div key={`empty-${slotNumber}`} className="px-6 py-4 text-gray-400">
-                              <div className="grid grid-cols-12 gap-4 items-center">
+                            <div key={`empty-${slotNumber}`} className="px-4 md:px-6 py-4 text-gray-400">
+                              {/* Mobile Layout */}
+                              <div className="md:hidden">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-400">
+                                      {slotNumber}
+                                    </div>
+                                    <div className="text-sm">Available slot</div>
+                                  </div>
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                    Empty
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              {/* Desktop Layout */}
+                              <div className="hidden md:grid grid-cols-12 gap-4 items-center">
                                 <div className="col-span-1">
                                   <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-400">
                                     {slotNumber}
@@ -1020,8 +1101,8 @@ export default function TournamentDetailsPage() {
                     </div>
                   ) : (
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                      {/* Header */}
-                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                      {/* Header - Hidden on mobile, shown on desktop */}
+                      <div className="hidden md:block bg-gray-50 px-6 py-4 border-b border-gray-200">
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
                           <div className="col-span-1">#</div>
                           <div className="col-span-4">Player Name</div>
@@ -1034,8 +1115,45 @@ export default function TournamentDetailsPage() {
                       {/* Waitlist */}
                       <div className="divide-y divide-gray-200">
                         {slots.filter(slot => !slot.is_main_slot && slot.players).map((slot, index) => (
-                          <div key={slot.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                            <div className="grid grid-cols-12 gap-4 items-center">
+                          <div key={slot.id} className="px-4 md:px-6 py-4 hover:bg-gray-50 transition-colors">
+                            {/* Mobile Layout */}
+                            <div className="md:hidden">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-700">
+                                    {slot.waitlist_position || index + 1}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">
+                                      {slot.players.users?.firstname && slot.players.users?.lastname 
+                                        ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                        : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                      }
+                                    </div>
+                                    <div className="text-sm text-gray-500">{slot.players.display_name}</div>
+                                  </div>
+                                </div>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  Waitlist
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm text-gray-600">
+                                  Joined: {new Date(slot.requested_at).toLocaleDateString()}
+                                </div>
+                                {isHost && (
+                                  <button
+                                    onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
+                                    className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Desktop Layout */}
+                            <div className="hidden md:grid grid-cols-12 gap-4 items-center">
                               <div className="col-span-1">
                                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-700">
                                   {slot.waitlist_position || index + 1}
@@ -1076,7 +1194,7 @@ export default function TournamentDetailsPage() {
                         
                         {/* No waitlist message */}
                         {slots.filter(slot => !slot.is_main_slot && slot.players).length === 0 && (
-                          <div className="px-6 py-8 text-center text-gray-500">
+                          <div className="px-4 md:px-6 py-8 text-center text-gray-500">
                             <div className="text-lg font-medium mb-2">No waitlist</div>
                             <div className="text-sm">All main tournament slots are available</div>
                           </div>
