@@ -1093,9 +1093,11 @@ export default function TournamentDetailsPage() {
                             <div className="flex items-center space-x-2 mb-2">
                               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                               <h4 className="text-sm font-semibold text-green-900">Registered</h4>
+                              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                                Slot #{userRegistration.position || 'Calculating...'}
+                              </span>
                             </div>
                             <div className="text-xs text-blue-700">
-                              Slot #{userRegistration.position || 'Calculating...'} • 
                               <span className={userRegistration.status === 'pending' ? 'text-yellow-600 font-medium' : 'text-blue-700'}>
                                 {userRegistration.status === 'pending' ? 'Awaiting Payment Confirmation' : userRegistration.status}
                               </span>
