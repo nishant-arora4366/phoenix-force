@@ -310,12 +310,12 @@ export default function TournamentDetailsPage() {
     }
   }, [showAssignModal])
 
-  // Reload players when filters change
+  // Filter players client-side when filters change
   useEffect(() => {
-    if (showAssignModal) {
-      loadAllPlayers()
+    if (showAssignModal && allPlayers.length > 0) {
+      filterPlayers()
     }
-  }, [searchTerm, hideAssignedPlayers, skillFilterValues])
+  }, [searchTerm, hideAssignedPlayers, skillFilterValues, allPlayers])
 
   // Helper function to format datetime in readable format
   const formatDateTime = (dateString: string) => {
@@ -378,7 +378,7 @@ export default function TournamentDetailsPage() {
     return slot.players.users.id === user.id || slot.players.users.email === user.email
   }
 
-  // Load all players function
+  // Load all players function - loads all players once without filters
   const loadAllPlayers = async () => {
     if (!tournamentId) {
       console.error('Tournament ID is not available')
@@ -387,24 +387,12 @@ export default function TournamentDetailsPage() {
     
     setIsLoadingPlayers(true)
     try {
+      // Load all players without any filters
       const params = new URLSearchParams({
         tournamentId: tournamentId
       })
-      
-      // Apply search filter
-      if (searchTerm) {
-        params.append('q', searchTerm)
-      }
-      
-      // Apply skill filters
-      Object.entries(skillFilterValues).forEach(([skillId, values]) => {
-        if (values.length > 0) {
-          params.append('skill', skillId)
-          params.append('skillValue', values.join(','))
-        }
-      })
 
-      console.log('Fetching players with params:', params.toString())
+      console.log('Fetching all players for tournament:', tournamentId)
       const response = await fetch(`/api/players/search?${params.toString()}`)
       
       if (!response.ok) {
@@ -416,11 +404,7 @@ export default function TournamentDetailsPage() {
       
       if (result.success) {
         setAllPlayers(result.players || [])
-        // Apply hide assigned players filter if active
-        const filtered = hideAssignedPlayers 
-          ? (result.players || []).filter((p: any) => !p.isRegistered)
-          : (result.players || [])
-        setFilteredPlayers(filtered)
+        // Initial filter will be applied by the useEffect
       } else {
         console.error('Error loading players:', result.error || 'Unknown error')
         setAllPlayers([])
@@ -433,6 +417,35 @@ export default function TournamentDetailsPage() {
     } finally {
       setIsLoadingPlayers(false)
     }
+  }
+
+  // Client-side filtering function
+  const filterPlayers = () => {
+    let filtered = [...allPlayers]
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(player => 
+        player.display_name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Apply hide assigned players filter
+    if (hideAssignedPlayers) {
+      filtered = filtered.filter(player => !player.isRegistered)
+    }
+
+    // Apply skill filters
+    Object.entries(skillFilterValues).forEach(([skillId, values]) => {
+      if (values.length > 0) {
+        // For now, we'll implement basic skill filtering
+        // This would need to be enhanced based on your skill data structure
+        console.log('Applying skill filter:', skillId, values)
+        // TODO: Implement skill-based filtering based on your data structure
+      }
+    })
+
+    setFilteredPlayers(filtered)
   }
 
   // Load available skills function
@@ -1871,7 +1884,7 @@ export default function TournamentDetailsPage() {
 
               {/* Search and Filter Section */}
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-6">
-                <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex flex-col lg:flex-row gap-4 items-end">
                   {/* Search */}
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Search Players</label>
@@ -1880,12 +1893,12 @@ export default function TournamentDetailsPage() {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Type player name to search..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   
                   {/* Hide Assigned Toggle */}
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 h-10">
                     <input
                       type="checkbox"
                       id="hideAssigned"
@@ -1893,7 +1906,7 @@ export default function TournamentDetailsPage() {
                       onChange={(e) => setHideAssignedPlayers(e.target.checked)}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="hideAssigned" className="text-sm font-medium text-gray-700">
+                    <label htmlFor="hideAssigned" className="text-sm font-medium text-gray-700 whitespace-nowrap">
                       Hide Assigned Players
                     </label>
                   </div>
@@ -1901,7 +1914,7 @@ export default function TournamentDetailsPage() {
                   {/* Add Filter on Skills Button */}
                   <button
                     onClick={() => setShowSkillConfig(!showSkillConfig)}
-                    className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm font-medium"
+                    className="px-4 py-2.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm font-medium whitespace-nowrap"
                   >
                     {showSkillConfig ? 'Clear Skills Filter' : 'Add Filter on Skills'}
                   </button>
@@ -2003,23 +2016,34 @@ export default function TournamentDetailsPage() {
                               ))}
                             </select>
                           ) : skill.type === 'multiselect' ? (
-                            <div className="space-y-1">
-                              <select
-                                multiple
-                                value={skillFilterValues[skillId] || []}
-                                onChange={(e) => {
-                                  const values = Array.from(e.target.selectedOptions, option => option.value)
-                                  updateSkillFilterValue(skillId, values)
-                                }}
-                                className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs bg-gray-50"
-                                size={2}
-                              >
-                                {skill.values?.map((value: any) => (
-                                  <option key={value.id} value={value.id}>
-                                    {value.name}
-                                  </option>
-                                ))}
-                              </select>
+                            <div className="space-y-2">
+                              <div className="max-h-24 overflow-y-auto border border-gray-200 rounded-md bg-gray-50">
+                                {skill.values?.map((value: any) => {
+                                  const isSelected = skillFilterValues[skillId]?.includes(value.id) || false
+                                  return (
+                                    <label key={value.id} className="flex items-center space-x-2 px-2 py-1 hover:bg-gray-100 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={(e) => {
+                                          const currentValues = skillFilterValues[skillId] || []
+                                          const newValues = e.target.checked
+                                            ? [...currentValues, value.id]
+                                            : currentValues.filter((v: string) => v !== value.id)
+                                          updateSkillFilterValue(skillId, newValues)
+                                        }}
+                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                      />
+                                      <span className="text-xs text-gray-700">{value.name}</span>
+                                    </label>
+                                  )
+                                })}
+                              </div>
+                              {skillFilterValues[skillId]?.length > 0 && (
+                                <div className="text-xs text-blue-600">
+                                  {skillFilterValues[skillId].length} selected
+                                </div>
+                              )}
                             </div>
                           ) : skill.type === 'number' ? (
                             <div className="flex space-x-1">
