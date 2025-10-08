@@ -36,20 +36,55 @@ export async function GET(request: NextRequest) {
       query = query.ilike('display_name', `%${searchTerm}%`)
     }
 
-    // Apply skill filter if provided
-    if (skillFilter && skillValue) {
-      // Get player IDs that have the specified skill value
-      const { data: skillAssignments } = await supabaseAdmin
-        .from('player_skill_assignments')
-        .select('player_id')
-        .eq('skill_id', skillFilter)
-        .or(`skill_value_id.eq.${skillValue},value_array.cs.{${skillValue}}`)
-
-      if (skillAssignments && skillAssignments.length > 0) {
-        const filteredPlayerIds = skillAssignments.map(assignment => assignment.player_id)
-        query = query.in('id', filteredPlayerIds)
+    // Apply skill filters if provided
+    const skillFilters = url.searchParams.getAll('skill')
+    const skillValues = url.searchParams.getAll('skillValue')
+    
+    if (skillFilters.length > 0 && skillValues.length > 0) {
+      let allFilteredPlayerIds: string[] = []
+      
+      for (let i = 0; i < skillFilters.length; i++) {
+        const skillFilter = skillFilters[i]
+        const skillValue = skillValues[i]
+        
+        if (skillFilter && skillValue) {
+          // Handle multiple values for a single skill (comma-separated)
+          const values = skillValue.split(',')
+          let skillQuery = supabaseAdmin
+            .from('player_skill_assignments')
+            .select('player_id')
+            .eq('skill_id', skillFilter)
+          
+          if (values.length === 1) {
+            skillQuery = skillQuery.or(`skill_value_id.eq.${values[0]},value_array.cs.{${values[0]}}`)
+          } else {
+            // Multiple values - use OR condition
+            const orConditions = values.map(v => `skill_value_id.eq.${v},value_array.cs.{${v}}`).join(',')
+            skillQuery = skillQuery.or(orConditions)
+          }
+          
+          const { data: skillAssignments } = await skillQuery
+          
+          if (skillAssignments && skillAssignments.length > 0) {
+            const filteredPlayerIds = skillAssignments.map(assignment => assignment.player_id)
+            if (i === 0) {
+              allFilteredPlayerIds = filteredPlayerIds
+            } else {
+              // Intersect with previous results (AND logic between different skills)
+              allFilteredPlayerIds = allFilteredPlayerIds.filter(id => filteredPlayerIds.includes(id))
+            }
+          } else {
+            // No players found with this skill value, return empty result
+            allFilteredPlayerIds = []
+            break
+          }
+        }
+      }
+      
+      if (allFilteredPlayerIds.length > 0) {
+        query = query.in('id', allFilteredPlayerIds)
       } else {
-        // No players found with this skill value, return empty result
+        // No players found with the skill filters, return empty result
         query = query.eq('id', 'no-match')
       }
     }

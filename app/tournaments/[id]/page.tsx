@@ -125,6 +125,11 @@ export default function TournamentDetailsPage() {
     value: string
     valueName: string
   }>>([])
+  
+  // New filter system state
+  const [enabledSkills, setEnabledSkills] = useState<string[]>([])
+  const [skillFilterValues, setSkillFilterValues] = useState<{[key: string]: string[]}>({})
+  const [showSkillConfig, setShowSkillConfig] = useState(false)
 
   // Initialize Supabase client for realtime (singleton to avoid multiple instances)
   const supabase = getSupabaseClient()
@@ -309,7 +314,7 @@ export default function TournamentDetailsPage() {
     if (showAssignModal) {
       loadAllPlayers()
     }
-  }, [searchTerm, selectedSkill, selectedSkillValue, hideAssignedPlayers, activeFilters, multipleSkillFilters])
+  }, [searchTerm, hideAssignedPlayers, skillFilterValues])
 
   // Helper function to format datetime in readable format
   const formatDateTime = (dateString: string) => {
@@ -358,9 +363,6 @@ export default function TournamentDetailsPage() {
     setMultipleSkillFilters(multipleSkillFilters.filter((_, i) => i !== index))
   }
 
-  const clearAllSkillFilters = () => {
-    setMultipleSkillFilters([])
-  }
 
   const toggleFilter = (filterType: keyof typeof activeFilters) => {
     setActiveFilters(prev => ({
@@ -383,18 +385,18 @@ export default function TournamentDetailsPage() {
         tournamentId: tournamentId
       })
       
-      // Apply search filter if active
-      if (activeFilters.search && searchTerm) {
+      // Apply search filter
+      if (searchTerm) {
         params.append('q', searchTerm)
       }
       
-      // Apply multiple skill filters if active
-      if (activeFilters.skills && multipleSkillFilters.length > 0) {
-        // For now, we'll use the first skill filter (can be enhanced to support multiple)
-        const firstFilter = multipleSkillFilters[0]
-        params.append('skill', firstFilter.skillId)
-        params.append('skillValue', firstFilter.value)
-      }
+      // Apply skill filters
+      Object.entries(skillFilterValues).forEach(([skillId, values]) => {
+        if (values.length > 0) {
+          params.append('skill', skillId)
+          params.append('skillValue', values.join(','))
+        }
+      })
 
       const response = await fetch(`/api/players/search?${params.toString()}`)
       const result = await response.json()
@@ -512,6 +514,34 @@ export default function TournamentDetailsPage() {
   // Clear all selections
   const clearAllSelections = () => {
     setSelectedPlayers([])
+  }
+
+  // New filter system helper functions
+  const toggleSkillEnabled = (skillId: string) => {
+    setEnabledSkills(prev => 
+      prev.includes(skillId) 
+        ? prev.filter(id => id !== skillId)
+        : [...prev, skillId]
+    )
+  }
+
+  const updateSkillFilterValue = (skillId: string, values: string[]) => {
+    setSkillFilterValues(prev => ({
+      ...prev,
+      [skillId]: values
+    }))
+  }
+
+  const clearSkillFilter = (skillId: string) => {
+    setSkillFilterValues(prev => {
+      const newValues = { ...prev }
+      delete newValues[skillId]
+      return newValues
+    })
+  }
+
+  const clearAllSkillFilters = () => {
+    setSkillFilterValues({})
   }
 
   const getStatusColor = (status: string) => {
@@ -1776,185 +1806,177 @@ export default function TournamentDetailsPage() {
                 </button>
               </div>
 
-              {/* Enhanced Filters Section */}
+              {/* New Filter System */}
               <div className="space-y-4 mb-6">
-                {/* Filter Controls Header */}
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium text-gray-700">Filters</h4>
-                  <button
-                    onClick={() => setShowFilterPanel(!showFilterPanel)}
-                    className="flex items-center space-x-2 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
-                    </svg>
-                    <span>Configure Filters</span>
-                  </button>
-                </div>
-
-                {/* Active Filter Chips */}
-                {(activeFilters.search || activeFilters.skills || activeFilters.hideAssigned || multipleSkillFilters.length > 0) && (
-                  <div className="flex flex-wrap gap-2">
-                    {activeFilters.search && searchTerm && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        Search: "{searchTerm}"
-                      </span>
-                    )}
-                    {multipleSkillFilters.map((filter, index) => (
-                      <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {filter.skillName}: {filter.valueName}
-                        <button
-                          onClick={() => removeSkillFilter(index)}
-                          className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 hover:bg-green-200 hover:text-green-500"
-                        >
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </span>
-                    ))}
-                    {activeFilters.hideAssigned && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        Hide Assigned
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Filter Panel */}
-                {showFilterPanel && (
-                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
-                    {/* Filter Toggles */}
-                    <div className="space-y-3">
-                      <h5 className="text-sm font-medium text-gray-700">Active Filters</h5>
-                      <div className="space-y-2">
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={activeFilters.search}
-                            onChange={() => toggleFilter('search')}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <span className="text-sm text-gray-700">Search by name</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={activeFilters.skills}
-                            onChange={() => toggleFilter('skills')}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <span className="text-sm text-gray-700">Filter by skills</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={activeFilters.hideAssigned}
-                            onChange={() => toggleFilter('hideAssigned')}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <span className="text-sm text-gray-700">Hide assigned players</span>
-                        </label>
-                      </div>
+                {/* Always Visible Filter Bar */}
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  {/* Row 1: Search and Hide Assigned */}
+                  <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Search by Name</label>
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Type player name..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      />
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="hideAssigned"
+                        checked={hideAssignedPlayers}
+                        onChange={(e) => setHideAssignedPlayers(e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="hideAssigned" className="text-sm text-gray-700">
+                        Hide Assigned
+                      </label>
+                    </div>
+                    <button
+                      onClick={() => setShowSkillConfig(!showSkillConfig)}
+                      className="px-3 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm"
+                    >
+                      Configure Skills
+                    </button>
+                  </div>
 
-                    {/* Search Input */}
-                    {activeFilters.search && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Search Players
-                        </label>
-                        <input
-                          type="text"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          placeholder="Type player name to filter..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      </div>
-                    )}
-
-                    {/* Skills Filter */}
-                    {activeFilters.skills && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Add Skill Filter
-                        </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <select
-                            value={selectedSkill}
-                            onChange={(e) => {
-                              setSelectedSkill(e.target.value)
-                              setSelectedSkillValue('')
-                            }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          >
-                            <option value="">Select Skill</option>
-                            {availableSkills.map((skill) => (
-                              <option key={skill.id} value={skill.id}>
+                  {/* Row 2: Skills Filter (only show enabled skills) */}
+                  {enabledSkills.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="text-xs font-medium text-gray-700">Skills Filter</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {enabledSkills.map((skillId) => {
+                          const skill = availableSkills.find(s => s.id === skillId)
+                          if (!skill) return null
+                          
+                          return (
+                            <div key={skillId} className="space-y-1">
+                              <label className="block text-xs font-medium text-gray-700">
                                 {skill.name}
-                              </option>
-                            ))}
-                          </select>
-                          
-                          {selectedSkill && (
-                            <select
-                              value={selectedSkillValue}
-                              onChange={(e) => setSelectedSkillValue(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                            >
-                              <option value="">Select Value</option>
-                              {availableSkills
-                                .find(s => s.id === selectedSkill)
-                                ?.values.map((value: any) => (
-                                  <option key={value.id} value={value.value_name}>
-                                    {value.value_name}
-                                  </option>
-                                ))}
-                            </select>
-                          )}
-                          
-                          <button
-                            onClick={addSkillFilter}
-                            disabled={!selectedSkill || !selectedSkillValue}
-                            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-                          >
-                            Add Filter
-                          </button>
-                        </div>
-                        
-                        {multipleSkillFilters.length > 0 && (
-                          <div className="mt-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-gray-700">Active Skill Filters</span>
-                              <button
-                                onClick={clearAllSkillFilters}
-                                className="text-xs text-red-600 hover:text-red-800 underline"
-                              >
-                                Clear All
-                              </button>
-                            </div>
-                            <div className="space-y-2">
-                              {multipleSkillFilters.map((filter, index) => (
-                                <div key={index} className="flex items-center justify-between p-2 bg-white rounded border border-gray-200">
-                                  <span className="text-sm text-gray-700">
-                                    {filter.skillName}: {filter.valueName}
-                                  </span>
-                                  <button
-                                    onClick={() => removeSkillFilter(index)}
-                                    className="text-red-500 hover:text-red-700"
+                              </label>
+                              {skill.type === 'select' ? (
+                                <select
+                                  value={skillFilterValues[skillId]?.[0] || ''}
+                                  onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                  <option value="">All</option>
+                                  {skill.values?.map((value: any) => (
+                                    <option key={value.id} value={value.id}>
+                                      {value.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : skill.type === 'multiselect' ? (
+                                <div className="space-y-1">
+                                  <select
+                                    multiple
+                                    value={skillFilterValues[skillId] || []}
+                                    onChange={(e) => {
+                                      const values = Array.from(e.target.selectedOptions, option => option.value)
+                                      updateSkillFilterValue(skillId, values)
+                                    }}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    size={3}
                                   >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    {skill.values?.map((value: any) => (
+                                      <option key={value.id} value={value.id}>
+                                        {value.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    onClick={() => clearSkillFilter(skillId)}
+                                    className="text-xs text-red-600 hover:text-red-800"
+                                  >
+                                    Clear
                                   </button>
                                 </div>
-                              ))}
+                              ) : skill.type === 'number' ? (
+                                <div className="flex space-x-1">
+                                  <input
+                                    type="number"
+                                    placeholder="Min"
+                                    value={skillFilterValues[skillId]?.[0] || ''}
+                                    onChange={(e) => {
+                                      const values = [...(skillFilterValues[skillId] || ['', ''])]
+                                      values[0] = e.target.value
+                                      updateSkillFilterValue(skillId, values)
+                                    }}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                  />
+                                  <input
+                                    type="number"
+                                    placeholder="Max"
+                                    value={skillFilterValues[skillId]?.[1] || ''}
+                                    onChange={(e) => {
+                                      const values = [...(skillFilterValues[skillId] || ['', ''])]
+                                      values[1] = e.target.value
+                                      updateSkillFilterValue(skillId, values)
+                                    }}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                  />
+                                </div>
+                              ) : (
+                                <input
+                                  type="text"
+                                  value={skillFilterValues[skillId]?.[0] || ''}
+                                  onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
+                                  placeholder={`Filter by ${skill.name.toLowerCase()}...`}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                              )}
                             </div>
-                          </div>
-                        )}
+                          )
+                        })}
                       </div>
-                    )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Skill Configuration Panel */}
+                {showSkillConfig && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h5 className="text-sm font-medium text-gray-700">Configure Skills Filter</h5>
+                      <button
+                        onClick={() => setShowSkillConfig(false)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {availableSkills.map((skill) => (
+                        <label key={skill.id} className="flex items-center space-x-2 p-2 border rounded hover:bg-gray-50">
+                          <input
+                            type="checkbox"
+                            checked={enabledSkills.includes(skill.id)}
+                            onChange={() => toggleSkillEnabled(skill.id)}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-700">{skill.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="mt-3 flex justify-end space-x-2">
+                      <button
+                        onClick={() => setEnabledSkills([])}
+                        className="px-3 py-1 text-xs text-red-600 hover:text-red-800"
+                      >
+                        Clear All
+                      </button>
+                      <button
+                        onClick={() => setEnabledSkills(availableSkills.map(s => s.id))}
+                        className="px-3 py-1 text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        Select All
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
