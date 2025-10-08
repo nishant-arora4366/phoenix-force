@@ -998,28 +998,44 @@ export default function TournamentDetailsPage() {
                 )}
 
 
-                {/* Player Registration Section - Moved to Top */}
+                {/* Player Registration Section - Modernized */}
                 {user && tournament.status === 'registration_open' && !isHost && (
-                  <div className="mb-6 p-4 rounded-lg border">
+                  <div className="mb-8">
                     {userRegistration ? (
-                      // User is already registered
-                      <div className="bg-green-50 border-green-200">
-                        <h3 className="text-lg font-semibold text-green-900 mb-2">Registration Status</h3>
-                        <div className="text-green-700 text-sm mb-4">
-                          <p>You are registered for this tournament!</p>
-                          <p className="mt-1">
-                            <strong>Position:</strong> {userRegistration.position || 'Calculating...'} | 
-                            <strong> Status:</strong> {userRegistration.status} | 
-                            <strong> Requested:</strong> {new Date(userRegistration.requested_at).toLocaleDateString()}
-                          </p>
+                      // User is already registered - Modern Card Design
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 shadow-sm">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <h3 className="text-xl font-semibold text-green-900">Registration Confirmed</h3>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-green-800">#{userRegistration.position || 'Calculating...'}</div>
+                            <div className="text-sm text-green-600">Position</div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="bg-white/60 rounded-lg p-3">
+                            <div className="text-sm text-gray-600 mb-1">Status</div>
+                            <div className="font-medium text-gray-900 capitalize">{userRegistration.status}</div>
+                          </div>
+                          <div className="bg-white/60 rounded-lg p-3">
+                            <div className="text-sm text-gray-600 mb-1">Registered</div>
+                            <div className="font-medium text-gray-900">{new Date(userRegistration.requested_at).toLocaleDateString()}</div>
+                          </div>
                           {userRegistration.confirmed_at && (
-                            <p><strong>Confirmed:</strong> {new Date(userRegistration.confirmed_at).toLocaleDateString()}</p>
+                            <div className="bg-white/60 rounded-lg p-3">
+                              <div className="text-sm text-gray-600 mb-1">Confirmed</div>
+                              <div className="font-medium text-gray-900">{new Date(userRegistration.confirmed_at).toLocaleDateString()}</div>
+                            </div>
                           )}
                         </div>
+                        
                         <button
                           onClick={withdrawFromTournament}
                           disabled={isWithdrawing}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full md:w-auto px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                         >
                           {isWithdrawing ? 'Withdrawing...' : 'Withdraw from Tournament'}
                         </button>
@@ -1081,9 +1097,16 @@ export default function TournamentDetailsPage() {
                       </div>
                     )}
 
-                    {/* Main Tournament Slots - Status Based Grouping */}
+                    {/* Main Tournament Slots - Modern List View */}
                     <div className="mb-8">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Main Tournament Slots</h3>
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900">
+                          {isHost ? 'Main Tournament Slots' : 'Slots'}
+                        </h3>
+                        <div className="text-sm text-gray-500">
+                          {slots.filter(slot => slot.is_main_slot && slot.players).length}/{tournament.total_slots} filled
+                        </div>
+                      </div>
                       
                       {slotsLoading ? (
                         <div className="text-center py-8 text-gray-500">
@@ -1091,140 +1114,127 @@ export default function TournamentDetailsPage() {
                           <div className="text-sm">Please wait while we fetch the latest information.</div>
                         </div>
                       ) : (
-                        <div className="space-y-6">
-                          {/* Confirmed Players */}
-                          {(() => {
-                            const confirmedSlots = slots.filter(slot => slot.is_main_slot && slot.status === 'confirmed' && slot.players)
-                            return confirmedSlots.length > 0 && (
-                              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-3">
-                                  <h4 className="text-lg font-semibold text-green-800">Confirmed Players ({confirmedSlots.length})</h4>
-                                  <span className="px-3 py-1 bg-green-200 text-green-800 text-sm font-medium rounded-full">
-                                    {confirmedSlots.length}/{tournament.total_slots}
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                                  {confirmedSlots.map((slot) => (
-                                    <div key={slot.id} className="bg-white border border-green-200 rounded-lg p-3">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="font-medium text-gray-900">Position {slot.position || confirmedSlots.indexOf(slot) + 1}</span>
-                                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                                          Confirmed
-                                        </span>
-                                      </div>
-                                      <div className="text-sm">
-                                        <div className="font-medium text-gray-900">
-                                          {slot.players.users?.firstname && slot.players.users?.lastname 
-                                            ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                            : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                          }
-                                        </div>
-                                        <div className="text-gray-600 text-xs">{slot.players.display_name}</div>
-                                        {slot.confirmed_at && (
-                                          <div className="text-xs text-gray-500 mt-1">
-                                            Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
-                                          </div>
-                                        )}
-                                      </div>
-                                      {isHost && (
-                                        <div className="mt-2">
-                                          <button
-                                            onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                            className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
-                                          >
-                                            Remove Player
-                                          </button>
-                                        </div>
-                                      )}
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                          {/* Header */}
+                          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                            <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
+                              <div className="col-span-1">#</div>
+                              <div className="col-span-4">Player Name</div>
+                              <div className="col-span-2">Status</div>
+                              <div className="col-span-3">Joined</div>
+                              {isHost && <div className="col-span-2">Actions</div>}
+                            </div>
+                          </div>
+                          
+                          {/* Main Slots List */}
+                          <div className="divide-y divide-gray-200">
+                            {slots.filter(slot => slot.is_main_slot && slot.players).map((slot, index) => (
+                              <div key={slot.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                                <div className="grid grid-cols-12 gap-4 items-center">
+                                  <div className="col-span-1">
+                                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
+                                      {slot.position || index + 1}
                                     </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )
-                          })()}
-
-                          {/* Pending Approval */}
-                          {(() => {
-                            const pendingSlots = slots.filter(slot => slot.is_main_slot && slot.status === 'pending' && slot.players)
-                            return pendingSlots.length > 0 && (
-                              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-3">
-                                  <h4 className="text-lg font-semibold text-yellow-800">Pending Approval ({pendingSlots.length})</h4>
-                                  <span className="px-3 py-1 bg-yellow-200 text-yellow-800 text-sm font-medium rounded-full">
-                                    Awaiting Host Action
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                                  {pendingSlots.map((slot) => (
-                                    <div key={slot.id} className="bg-white border border-yellow-200 rounded-lg p-3">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="font-medium text-gray-900">Position {slot.position || pendingSlots.indexOf(slot) + 1}</span>
-                                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                                          Pending
-                                        </span>
+                                  </div>
+                                  <div className="col-span-4">
+                                    <div className="font-medium text-gray-900">
+                                      {slot.players.users?.firstname && slot.players.users?.lastname 
+                                        ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                        : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                      }
+                                    </div>
+                                    <div className="text-sm text-gray-500">{slot.players.display_name}</div>
+                                  </div>
+                                  <div className="col-span-2">
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                      slot.status === 'confirmed' 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                      {slot.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                                    </span>
+                                  </div>
+                                  <div className="col-span-3">
+                                    <div className="text-sm text-gray-900">
+                                      {new Date(slot.requested_at).toLocaleDateString()}
+                                    </div>
+                                    {slot.confirmed_at && (
+                                      <div className="text-xs text-gray-500">
+                                        Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
                                       </div>
-                                      <div className="text-sm">
-                                        <div className="font-medium text-gray-900">
-                                          {slot.players.users?.firstname && slot.players.users?.lastname 
-                                            ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                            : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                          }
-                                        </div>
-                                        <div className="text-gray-600 text-xs">{slot.players.display_name}</div>
-                                        {slot.requested_at && (
-                                          <div className="text-xs text-gray-500 mt-1">
-                                            Requested: {new Date(slot.requested_at).toLocaleDateString()}
-                                          </div>
-                                        )}
-                                      </div>
-                                      {isHost && (
-                                        <div className="flex space-x-2 mt-2">
+                                    )}
+                                  </div>
+                                  {isHost && (
+                                    <div className="col-span-2">
+                                      {slot.status === 'pending' ? (
+                                        <div className="flex space-x-2">
                                           <button
                                             onClick={() => approveSlot(slot.id)}
-                                            className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                                            className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors"
                                           >
                                             Approve
                                           </button>
                                           <button
                                             onClick={() => rejectSlot(slot.id)}
-                                            className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                                            className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
                                           >
                                             Reject
                                           </button>
                                         </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
+                                          className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                        >
+                                          Remove
+                                        </button>
                                       )}
                                     </div>
-                                  ))}
+                                  )}
                                 </div>
                               </div>
-                            )
-                          })()}
-
-                          {/* Available Slots */}
-                          {(() => {
-                            const filledSlots = slots.filter(slot => slot.is_main_slot && slot.players).length
-                            const availableSlots = tournament.total_slots - filledSlots
-                            return availableSlots > 0 && (
-                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-3">
-                                  <h4 className="text-lg font-semibold text-gray-800">Available Slots ({availableSlots})</h4>
-                                  <span className="px-3 py-1 bg-gray-200 text-gray-800 text-sm font-medium rounded-full">
-                                    Open for Registration
-                                  </span>
+                            ))}
+                            
+                            {/* Empty slots */}
+                            {Array.from({ length: Math.max(0, tournament.total_slots - slots.filter(slot => slot.is_main_slot && slot.players).length) }).map((_, index) => {
+                              const slotNumber = slots.filter(slot => slot.is_main_slot && slot.players).length + index + 1
+                              return (
+                                <div key={`empty-${slotNumber}`} className="px-6 py-4 text-gray-400">
+                                  <div className="grid grid-cols-12 gap-4 items-center">
+                                    <div className="col-span-1">
+                                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-400">
+                                        {slotNumber}
+                                      </div>
+                                    </div>
+                                    <div className="col-span-4">
+                                      <div className="text-sm">Available slot</div>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                        Empty
+                                      </span>
+                                    </div>
+                                    <div className="col-span-3">
+                                      <div className="text-sm">-</div>
+                                    </div>
+                                    {isHost && <div className="col-span-2"></div>}
+                                  </div>
                                 </div>
-                                <div className="text-sm text-gray-600">
-                                  {availableSlots} main tournament slots are available for registration.
-                                </div>
-                              </div>
-                            )
-                          })()}
+                              )
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
 
-                    {/* Waitlist Slots - Status Based Grouping */}
+                    {/* Waitlist - Modern List View */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Waitlist</h3>
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900">Waitlist</h3>
+                        <div className="text-sm text-gray-500">
+                          {slots.filter(slot => !slot.is_main_slot && slot.players).length} players waiting
+                        </div>
+                      </div>
                       
                       {slotsLoading ? (
                         <div className="text-center py-8 text-gray-500">
@@ -1232,83 +1242,69 @@ export default function TournamentDetailsPage() {
                           <div className="text-sm">Please wait while we fetch the latest information.</div>
                         </div>
                       ) : (
-                        <div className="space-y-6">
-                          {/* Waitlisted Players */}
-                          {(() => {
-                            const waitlistSlots = slots.filter(slot => !slot.is_main_slot && slot.players)
-                            return waitlistSlots.length > 0 && (
-                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-3">
-                                  <h4 className="text-lg font-semibold text-blue-800">Waitlisted Players ({waitlistSlots.length})</h4>
-                                  <span className="px-3 py-1 bg-blue-200 text-blue-800 text-sm font-medium rounded-full">
-                                    First Come, First Served
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                                  {waitlistSlots.map((slot) => (
-                                    <div key={slot.id} className="bg-white border border-blue-200 rounded-lg p-3">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="font-medium text-gray-900">Position {slot.position || waitlistSlots.indexOf(slot) + 1}</span>
-                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                                          Waitlist
-                                        </span>
-                                      </div>
-                                      <div className="text-sm">
-                                        <div className="font-medium text-gray-900">
-                                          {slot.players.users?.firstname && slot.players.users?.lastname 
-                                            ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                            : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                          }
-                                        </div>
-                                        <div className="text-gray-600 text-xs">{slot.players.display_name}</div>
-                                        {slot.requested_at && (
-                                          <div className="text-xs text-gray-500 mt-1">
-                                            Joined: {new Date(slot.requested_at).toLocaleDateString()}
-                                          </div>
-                                        )}
-                                      </div>
-                                      {isHost && (
-                                        <div className="mt-2">
-                                          <button
-                                            onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                            className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
-                                          >
-                                            Remove from Waitlist
-                                          </button>
-                                        </div>
-                                      )}
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                          {/* Header */}
+                          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                            <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
+                              <div className="col-span-1">#</div>
+                              <div className="col-span-4">Player Name</div>
+                              <div className="col-span-2">Status</div>
+                              <div className="col-span-3">Joined</div>
+                              {isHost && <div className="col-span-2">Actions</div>}
+                            </div>
+                          </div>
+                          
+                          {/* Waitlist */}
+                          <div className="divide-y divide-gray-200">
+                            {slots.filter(slot => !slot.is_main_slot && slot.players).map((slot, index) => (
+                              <div key={slot.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                                <div className="grid grid-cols-12 gap-4 items-center">
+                                  <div className="col-span-1">
+                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-700">
+                                      {slot.waitlist_position || index + 1}
                                     </div>
-                                  ))}
-                                </div>
-                                <div className="mt-3 text-sm text-blue-700">
-                                  <div className="font-medium">How it works:</div>
-                                  <div className="text-xs mt-1">
-                                    When a main slot becomes available, the first person on the waitlist will be automatically promoted.
                                   </div>
+                                  <div className="col-span-4">
+                                    <div className="font-medium text-gray-900">
+                                      {slot.players.users?.firstname && slot.players.users?.lastname 
+                                        ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                        : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                      }
+                                    </div>
+                                    <div className="text-sm text-gray-500">{slot.players.display_name}</div>
+                                  </div>
+                                  <div className="col-span-2">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                      Waitlist
+                                    </span>
+                                  </div>
+                                  <div className="col-span-3">
+                                    <div className="text-sm text-gray-900">
+                                      {new Date(slot.requested_at).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                  {isHost && (
+                                    <div className="col-span-2">
+                                      <button
+                                        onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
+                                        className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
-                                
-                                {/* No manual promotion needed - positions calculated dynamically */}
                               </div>
-                            )
-                          })()}
-
-                          {/* No Waitlist */}
-                          {(() => {
-                            const waitlistSlots = slots.filter(slot => !slot.is_main_slot && slot.players)
-                            return waitlistSlots.length === 0 && (
-                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-3">
-                                  <h4 className="text-lg font-semibold text-gray-800">No Waitlist</h4>
-                                  <span className="px-3 py-1 bg-gray-200 text-gray-800 text-sm font-medium rounded-full">
-                                    Main Slots Available
-                                  </span>
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                  All main tournament slots are available. No waitlist needed.
-                                </div>
+                            ))}
+                            
+                            {/* No waitlist message */}
+                            {slots.filter(slot => !slot.is_main_slot && slot.players).length === 0 && (
+                              <div className="px-6 py-8 text-center text-gray-500">
+                                <div className="text-lg font-medium mb-2">No waitlist</div>
+                                <div className="text-sm">All main tournament slots are available</div>
                               </div>
-                            )
-                          })()}
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
