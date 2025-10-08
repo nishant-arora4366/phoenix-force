@@ -146,21 +146,43 @@ export default function TournamentDetailsPage() {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          event: 'INSERT',
           schema: 'public',
           table: 'tournament_slots',
           filter: `tournament_id=eq.${tournamentId}`
         },
         (payload: any) => {
-          console.log('Realtime update received:', payload)
-          
-          // Refresh slots data when any slot changes
+          console.log('Realtime INSERT received:', payload)
           fetchSlots()
-          
-          // Also refresh user registration status in case it was affected
           checkUserRegistration()
-          
-          // No promotion logic needed - positions calculated dynamically
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tournament_slots',
+          filter: `tournament_id=eq.${tournamentId}`
+        },
+        (payload: any) => {
+          console.log('Realtime UPDATE received:', payload)
+          fetchSlots()
+          checkUserRegistration()
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'tournament_slots',
+          filter: `tournament_id=eq.${tournamentId}`
+        },
+        (payload: any) => {
+          console.log('Realtime DELETE received:', payload)
+          fetchSlots()
+          checkUserRegistration()
         }
       )
       .subscribe((status: any) => {
