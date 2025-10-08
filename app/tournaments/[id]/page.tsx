@@ -448,9 +448,13 @@ export default function TournamentDetailsPage() {
           return
         }
         
-        // Convert skill value IDs to names for multiselect skills
+        // Convert skill value IDs to names for multiselect skills, but keep IDs for number skills
         const selectedValueNames = values.map(valueId => {
           if (skill.type === 'multiselect' && skill.values) {
+            const valueObj = skill.values.find((v: any) => v.id === valueId)
+            return valueObj ? valueObj.name : valueId
+          } else if (skill.type === 'number' && skill.values) {
+            // For number skills, convert ID to the actual numeric value
             const valueObj = skill.values.find((v: any) => v.id === valueId)
             return valueObj ? valueObj.name : valueId
           }
@@ -481,8 +485,9 @@ export default function TournamentDetailsPage() {
           
           if (skill.type === 'number') {
             // Handle number range filtering (min/max)
-            const minValue = values[0] ? parseFloat(values[0]) : null
-            const maxValue = values[1] ? parseFloat(values[1]) : null
+            // For number skills, selectedValueNames contains the actual numeric values
+            const minValue = selectedValueNames[0] ? parseFloat(selectedValueNames[0]) : null
+            const maxValue = selectedValueNames[1] ? parseFloat(selectedValueNames[1]) : null
             
             console.log(`Number filter for skill ${skill.name}: min=${minValue}, max=${maxValue}`)
             console.log(`Player skill assignment:`, skillAssignment)
