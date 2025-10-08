@@ -224,6 +224,24 @@ export default function TournamentDetailsPage() {
     }
   }, [tournamentId, user])
 
+  // Helper function to format datetime in readable format
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
+  // Helper function to check if a slot belongs to the current user
+  const isCurrentUserSlot = (slot: any) => {
+    if (!user || !slot.players?.users) return false
+    return slot.players.users.id === user.id || slot.players.users.email === user.email
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -301,7 +319,7 @@ export default function TournamentDetailsPage() {
         ]
       case 'registration_open':
         return [
-          { value: 'registration_closed', label: 'Close Registration', color: 'bg-orange-600 hover:bg-orange-700' }
+          { value: 'registration_closed', label: 'Close Registration', color: 'bg-red-600 hover:bg-red-700' }
         ]
       case 'registration_closed':
         return [
@@ -704,13 +722,13 @@ export default function TournamentDetailsPage() {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-              <span className={`px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(tournament.status)}`}>
+              <span className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm ${getStatusColor(tournament.status)}`}>
                 {getStatusText(tournament.status)}
               </span>
               {isHost && (
                 <Link
                   href={`/tournaments/${tournament.id}/edit`}
-                  className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
+                  className="w-full sm:w-auto px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                 >
                   Edit Tournament
                 </Link>
@@ -726,7 +744,7 @@ export default function TournamentDetailsPage() {
                       key={option.value}
                       onClick={() => updateTournamentStatus(option.value)}
                       disabled={isUpdatingStatus}
-                      className={`px-4 py-2 text-white rounded-lg transition-colors text-sm font-medium ${option.color} ${
+                      className={`px-6 py-3 text-white rounded-xl transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md ${option.color} ${
                         isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
                     >
@@ -778,12 +796,12 @@ export default function TournamentDetailsPage() {
                         </div>
                         <div className="bg-white/60 rounded-lg p-3">
                           <div className="text-sm text-gray-600 mb-1">Registered</div>
-                          <div className="font-medium text-gray-900">{new Date(userRegistration.requested_at).toLocaleDateString()}</div>
+                          <div className="font-medium text-gray-900">{formatDateTime(userRegistration.requested_at)}</div>
                         </div>
                         {userRegistration.confirmed_at && (
                           <div className="bg-white/60 rounded-lg p-3">
                             <div className="text-sm text-gray-600 mb-1">Confirmed</div>
-                            <div className="font-medium text-gray-900">{new Date(userRegistration.confirmed_at).toLocaleDateString()}</div>
+                            <div className="font-medium text-gray-900">{formatDateTime(userRegistration.confirmed_at)}</div>
                           </div>
                         )}
                       </div>
@@ -799,14 +817,9 @@ export default function TournamentDetailsPage() {
                   ) : (
                     // User is not registered - Modern Design
                     <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-6 shadow-sm">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-                          <h3 className="text-xl font-semibold text-emerald-900">Join Tournament</h3>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm text-emerald-600">Registration Open</div>
-                        </div>
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <h3 className="text-xl font-semibold text-emerald-900">Join Tournament</h3>
                       </div>
                       
                       <p className="text-emerald-700 text-sm mb-6">
@@ -906,7 +919,11 @@ export default function TournamentDetailsPage() {
                       {/* Main Slots List */}
                       <div className="divide-y divide-gray-200">
                         {slots.filter(slot => slot.is_main_slot && slot.players).map((slot, index) => (
-                          <div key={slot.id} className="px-4 md:px-6 py-4 hover:bg-gray-50 transition-colors">
+                          <div key={slot.id} className={`px-4 md:px-6 py-4 transition-colors ${
+                            isCurrentUserSlot(slot) 
+                              ? 'bg-blue-50 border-l-4 border-blue-400 hover:bg-blue-100' 
+                              : 'hover:bg-gray-50'
+                          }`}>
                             {/* Mobile Layout */}
                             <div className="md:hidden">
                               <div className="flex items-center justify-between mb-2">
@@ -934,10 +951,10 @@ export default function TournamentDetailsPage() {
                               </div>
                               <div className="flex items-center justify-between">
                                 <div className="text-sm text-gray-600">
-                                  Joined: {new Date(slot.requested_at).toLocaleDateString()}
+                                  <div>Joined: {formatDateTime(slot.requested_at)}</div>
                                   {slot.confirmed_at && (
                                     <div className="text-xs text-gray-500">
-                                      Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
+                                      Confirmed: {formatDateTime(slot.confirmed_at)}
                                     </div>
                                   )}
                                 </div>
@@ -998,11 +1015,11 @@ export default function TournamentDetailsPage() {
                               </div>
                               <div className="col-span-3">
                                 <div className="text-sm text-gray-900">
-                                  {new Date(slot.requested_at).toLocaleDateString()}
+                                  {formatDateTime(slot.requested_at)}
                                 </div>
                                 {slot.confirmed_at && (
                                   <div className="text-xs text-gray-500">
-                                    Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
+                                    Confirmed: {formatDateTime(slot.confirmed_at)}
                                   </div>
                                 )}
                               </div>
@@ -1115,7 +1132,11 @@ export default function TournamentDetailsPage() {
                       {/* Waitlist */}
                       <div className="divide-y divide-gray-200">
                         {slots.filter(slot => !slot.is_main_slot && slot.players).map((slot, index) => (
-                          <div key={slot.id} className="px-4 md:px-6 py-4 hover:bg-gray-50 transition-colors">
+                          <div key={slot.id} className={`px-4 md:px-6 py-4 transition-colors ${
+                            isCurrentUserSlot(slot) 
+                              ? 'bg-blue-50 border-l-4 border-blue-400 hover:bg-blue-100' 
+                              : 'hover:bg-gray-50'
+                          }`}>
                             {/* Mobile Layout */}
                             <div className="md:hidden">
                               <div className="flex items-center justify-between mb-2">
@@ -1139,7 +1160,7 @@ export default function TournamentDetailsPage() {
                               </div>
                               <div className="flex items-center justify-between">
                                 <div className="text-sm text-gray-600">
-                                  Joined: {new Date(slot.requested_at).toLocaleDateString()}
+                                  Joined: {formatDateTime(slot.requested_at)}
                                 </div>
                                 {isHost && (
                                   <button
@@ -1175,7 +1196,7 @@ export default function TournamentDetailsPage() {
                               </div>
                               <div className="col-span-3">
                                 <div className="text-sm text-gray-900">
-                                  {new Date(slot.requested_at).toLocaleDateString()}
+                                  {formatDateTime(slot.requested_at)}
                                 </div>
                               </div>
                               {isHost && (
