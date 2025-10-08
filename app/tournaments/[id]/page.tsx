@@ -332,10 +332,6 @@ export default function TournamentDetailsPage() {
         if (slotsResult.success) {
           setSlots(slotsResult.slots)
           setSlotsStats(slotsResult.stats)
-          
-          // Temporarily disabled automatic promotion to prevent infinite loop
-          // TODO: Re-enable once the promotion logic is fixed
-          console.log('Automatic promotion check disabled to prevent infinite loop')
         }
       }
     } catch (error) {
