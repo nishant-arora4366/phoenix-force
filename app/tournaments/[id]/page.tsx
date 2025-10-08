@@ -456,6 +456,7 @@ export default function TournamentDetailsPage() {
           } else if (skill.type === 'number' && skill.values) {
             // For number skills, convert ID to the actual numeric value
             const valueObj = skill.values.find((v: any) => v.id === valueId)
+            console.log(`Converting number skill value: ID ${valueId} -> Value ${valueObj ? valueObj.name : valueId}`)
             return valueObj ? valueObj.name : valueId
           }
           return valueId
@@ -1318,8 +1319,8 @@ export default function TournamentDetailsPage() {
                               </span>
                             </div>
                             <div className="text-xs text-blue-700">
-                              <span className={userRegistration.status === 'pending' ? 'text-yellow-600 font-medium' : 'text-blue-700'}>
-                                {userRegistration.status === 'pending' ? 'Awaiting Payment Confirmation' : userRegistration.status}
+                              <span className={userRegistration.status === 'pending' ? 'text-yellow-600 font-medium' : 'text-green-600 font-medium'}>
+                                {userRegistration.status === 'pending' ? 'Awaiting Payment Confirmation' : 'Payment Verified'}
                               </span>
                             </div>
                             <button
@@ -1506,10 +1507,10 @@ export default function TournamentDetailsPage() {
                       
                       {/* Host Actions */}
                       {isHost && (
-                        <div className="flex items-center space-x-2 flex-wrap sm:flex-nowrap">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                           <button
                             onClick={() => setShowAssignModal(true)}
-                            className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md whitespace-nowrap"
+                            className="w-full sm:flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md whitespace-nowrap"
                           >
                             Register Player
                           </button>
@@ -1518,7 +1519,7 @@ export default function TournamentDetailsPage() {
                             <button
                               onClick={openStatusModal}
                               disabled={isUpdatingStatus}
-                              className="flex-1 px-3 py-1.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                              className="w-full sm:flex-1 px-3 py-1.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                             >
                               {isUpdatingStatus ? 'Updating...' : 'Manage Status'}
                             </button>
@@ -1533,7 +1534,7 @@ export default function TournamentDetailsPage() {
                                   key={status}
                                   onClick={() => handleStatusChange(status)}
                                   disabled={isUpdatingStatus}
-                                  className={`flex-1 px-3 py-1.5 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
+                                  className={`w-full sm:flex-1 px-3 py-1.5 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
                                     isForward 
                                       ? 'bg-green-600 hover:bg-green-700' 
                                       : isBackward 
@@ -1551,7 +1552,7 @@ export default function TournamentDetailsPage() {
                           )}
                           <Link
                             href={`/tournaments/${tournament.id}/edit`}
-                            className="flex-1 px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md text-center whitespace-nowrap"
+                            className="w-full sm:flex-1 px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md text-center whitespace-nowrap"
                           >
                             Edit
                           </Link>
@@ -1712,7 +1713,7 @@ export default function TournamentDetailsPage() {
                                 </div>
                                 {slot.confirmed_at && (
                                   <div className="text-xs text-gray-500">
-                                    Confirmed: {formatDateTime(slot.confirmed_at)}
+                                    Payment Verified: {formatDateTime(slot.confirmed_at)}
                                   </div>
                                 )}
                               </div>
