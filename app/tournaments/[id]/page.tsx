@@ -749,84 +749,415 @@ export default function TournamentDetailsPage() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Tournament Information */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-4 sm:px-8 py-4 sm:py-6">
-                <h2 className="text-lg sm:text-2xl font-bold text-white">Tournament Information</h2>
-                <p className="text-gray-200 mt-1 sm:mt-2 text-sm sm:text-base">Complete tournament details and configuration</p>
-              </div>
-              
-              <div className="p-4 sm:p-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-500">Tournament Format</label>
-                    <div className="text-lg font-semibold text-gray-900">{tournament.format}</div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-500">Number of Teams</label>
-                    <div className="text-lg font-semibold text-gray-900">{tournament.selected_teams}</div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-500">Total Player Slots</label>
-                    <div className="text-lg font-semibold text-gray-900">{tournament.total_slots}</div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-500">Tournament Date</label>
-                    <div className="text-lg font-semibold text-gray-900">
-                      {new Date(tournament.tournament_date).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
+        {/* Main Content - Reorganized Layout */}
+        <div className="space-y-8">
+          {/* Tournament Slots - Now at the top for better focus */}
+          {tournament && (
+            <div className="space-y-6">
+              {/* Player Registration Section - Modernized */}
+              {user && tournament.status === 'registration_open' && !isHost && (
+                <div className="mb-8">
+                  {userRegistration ? (
+                    // User is already registered - Modern Card Design
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 shadow-sm">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                          <h3 className="text-xl font-semibold text-green-900">Registration Confirmed</h3>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-green-800">#{userRegistration.position || 'Calculating...'}</div>
+                          <div className="text-sm text-green-600">Position</div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div className="bg-white/60 rounded-lg p-3">
+                          <div className="text-sm text-gray-600 mb-1">Status</div>
+                          <div className="font-medium text-gray-900 capitalize">{userRegistration.status}</div>
+                        </div>
+                        <div className="bg-white/60 rounded-lg p-3">
+                          <div className="text-sm text-gray-600 mb-1">Registered</div>
+                          <div className="font-medium text-gray-900">{new Date(userRegistration.requested_at).toLocaleDateString()}</div>
+                        </div>
+                        {userRegistration.confirmed_at && (
+                          <div className="bg-white/60 rounded-lg p-3">
+                            <div className="text-sm text-gray-600 mb-1">Confirmed</div>
+                            <div className="font-medium text-gray-900">{new Date(userRegistration.confirmed_at).toLocaleDateString()}</div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <button
+                        onClick={withdrawFromTournament}
+                        disabled={isWithdrawing}
+                        className="w-full md:w-auto px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      >
+                        {isWithdrawing ? 'Withdrawing...' : 'Withdraw from Tournament'}
+                      </button>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-500">Tournament Host</label>
-                    <div className="text-lg font-semibold text-gray-900">
-                      {hostInfo ? (
-                        hostInfo.firstname && hostInfo.lastname 
-                          ? `${hostInfo.firstname} ${hostInfo.lastname}`
-                          : hostInfo.username || hostInfo.email
-                      ) : (
-                        <span className="text-gray-500">Loading...</span>
-                      )}
+                  ) : (
+                    // User is not registered - Modern Design
+                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-6 shadow-sm">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                          <h3 className="text-xl font-semibold text-emerald-900">Join Tournament</h3>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-emerald-600">Registration Open</div>
+                        </div>
+                      </div>
+                      
+                      <p className="text-emerald-700 text-sm mb-6">
+                        Secure your spot in this tournament. Registration is first-come, first-served.
+                      </p>
+                      
+                      <button
+                        onClick={registerForTournament}
+                        disabled={isRegistering}
+                        className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                      >
+                        {isRegistering ? (
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Registering...</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center space-x-2">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            <span>Register Now</span>
+                          </div>
+                        )}
+                      </button>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-500">Created</label>
-                    <div className="text-lg font-semibold text-gray-900">
-                      {new Date(tournament.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-500">Last Updated</label>
-                    <div className="text-lg font-semibold text-gray-900">
-                      {new Date(tournament.updated_at).toLocaleDateString()}
-                    </div>
-                  </div>
+                  )}
                 </div>
+              )}
 
-                {tournament.description && (
-                  <div className="mt-8">
-                    <label className="text-sm font-medium text-gray-500">Description</label>
-                    <div className="mt-2 p-4 bg-gray-50 rounded-lg">
-                      <p className="text-gray-900">{tournament.description}</p>
+              {/* Slots Display */}
+              <div className="space-y-4">
+                {/* Stats */}
+                {slotsStats && (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                    <div className="bg-gray-50 p-3 rounded-lg text-center">
+                      <div className="text-lg font-bold text-gray-900">{slotsStats.filled_main_slots}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Main Slots Filled</div>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg text-center">
+                      <div className="text-lg font-bold text-gray-900">{slotsStats.filled_waitlist_slots}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Waitlist Filled</div>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg text-center">
+                      <div className="text-lg font-bold text-gray-900">{slotsStats.pending_approvals}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Pending Approval</div>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg text-center">
+                      <div className="text-lg font-bold text-gray-900">{slotsStats.total_slots}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Total Slots</div>
                     </div>
                   </div>
                 )}
+
+                {/* Show message if no slots are available (should not happen with intelligent slots) */}
+                {slots.length === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-gray-600 mb-4">No tournament slots available</p>
+                    <button
+                      onClick={fetchSlots}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                      Refresh Slots
+                    </button>
+                  </div>
+                )}
+
+                {/* Main Tournament Slots - Modern List View */}
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {isHost ? 'Main Tournament Slots' : 'Slots'}
+                    </h3>
+                    <div className="text-sm text-gray-500">
+                      {slots.filter(slot => slot.is_main_slot && slot.players).length}/{tournament.total_slots} filled
+                    </div>
+                  </div>
+                  
+                  {slotsLoading ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="text-lg font-medium mb-2">Loading tournament slots...</div>
+                      <div className="text-sm">Please wait while we fetch the latest information.</div>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      {/* Header */}
+                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
+                          <div className="col-span-1">#</div>
+                          <div className="col-span-4">Player Name</div>
+                          <div className="col-span-2">Status</div>
+                          <div className="col-span-3">Joined</div>
+                          {isHost && <div className="col-span-2">Actions</div>}
+                        </div>
+                      </div>
+                      
+                      {/* Main Slots List */}
+                      <div className="divide-y divide-gray-200">
+                        {slots.filter(slot => slot.is_main_slot && slot.players).map((slot, index) => (
+                          <div key={slot.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                            <div className="grid grid-cols-12 gap-4 items-center">
+                              <div className="col-span-1">
+                                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
+                                  {slot.position || index + 1}
+                                </div>
+                              </div>
+                              <div className="col-span-4">
+                                <div className="font-medium text-gray-900">
+                                  {slot.players.users?.firstname && slot.players.users?.lastname 
+                                    ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                    : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                  }
+                                </div>
+                                <div className="text-sm text-gray-500">{slot.players.display_name}</div>
+                              </div>
+                              <div className="col-span-2">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  slot.status === 'confirmed' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {slot.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                                </span>
+                              </div>
+                              <div className="col-span-3">
+                                <div className="text-sm text-gray-900">
+                                  {new Date(slot.requested_at).toLocaleDateString()}
+                                </div>
+                                {slot.confirmed_at && (
+                                  <div className="text-xs text-gray-500">
+                                    Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
+                                  </div>
+                                )}
+                              </div>
+                              {isHost && (
+                                <div className="col-span-2">
+                                  {slot.status === 'pending' ? (
+                                    <div className="flex space-x-2">
+                                      <button
+                                        onClick={() => approveSlot(slot.id)}
+                                        className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors"
+                                      >
+                                        Approve
+                                      </button>
+                                      <button
+                                        onClick={() => rejectSlot(slot.id)}
+                                        className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                      >
+                                        Reject
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
+                                      className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {/* Empty slots */}
+                        {Array.from({ length: Math.max(0, tournament.total_slots - slots.filter(slot => slot.is_main_slot && slot.players).length) }).map((_, index) => {
+                          const slotNumber = slots.filter(slot => slot.is_main_slot && slot.players).length + index + 1
+                          return (
+                            <div key={`empty-${slotNumber}`} className="px-6 py-4 text-gray-400">
+                              <div className="grid grid-cols-12 gap-4 items-center">
+                                <div className="col-span-1">
+                                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-400">
+                                    {slotNumber}
+                                  </div>
+                                </div>
+                                <div className="col-span-4">
+                                  <div className="text-sm">Available slot</div>
+                                </div>
+                                <div className="col-span-2">
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                    Empty
+                                  </span>
+                                </div>
+                                <div className="col-span-3">
+                                  <div className="text-sm">-</div>
+                                </div>
+                                {isHost && <div className="col-span-2"></div>}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Waitlist - Modern List View */}
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold text-gray-900">Waitlist</h3>
+                    <div className="text-sm text-gray-500">
+                      {slots.filter(slot => !slot.is_main_slot && slot.players).length} players waiting
+                    </div>
+                  </div>
+                  
+                  {slotsLoading ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="text-lg font-medium mb-2">Loading waitlist...</div>
+                      <div className="text-sm">Please wait while we fetch the latest information.</div>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      {/* Header */}
+                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
+                          <div className="col-span-1">#</div>
+                          <div className="col-span-4">Player Name</div>
+                          <div className="col-span-2">Status</div>
+                          <div className="col-span-3">Joined</div>
+                          {isHost && <div className="col-span-2">Actions</div>}
+                        </div>
+                      </div>
+                      
+                      {/* Waitlist */}
+                      <div className="divide-y divide-gray-200">
+                        {slots.filter(slot => !slot.is_main_slot && slot.players).map((slot, index) => (
+                          <div key={slot.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                            <div className="grid grid-cols-12 gap-4 items-center">
+                              <div className="col-span-1">
+                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-700">
+                                  {slot.waitlist_position || index + 1}
+                                </div>
+                              </div>
+                              <div className="col-span-4">
+                                <div className="font-medium text-gray-900">
+                                  {slot.players.users?.firstname && slot.players.users?.lastname 
+                                    ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
+                                    : slot.players.users?.username || slot.players.users?.email || slot.players.name
+                                  }
+                                </div>
+                                <div className="text-sm text-gray-500">{slot.players.display_name}</div>
+                              </div>
+                              <div className="col-span-2">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  Waitlist
+                                </span>
+                              </div>
+                              <div className="col-span-3">
+                                <div className="text-sm text-gray-900">
+                                  {new Date(slot.requested_at).toLocaleDateString()}
+                                </div>
+                              </div>
+                              {isHost && (
+                                <div className="col-span-2">
+                                  <button
+                                    onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
+                                    className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {/* No waitlist message */}
+                        {slots.filter(slot => !slot.is_main_slot && slot.players).length === 0 && (
+                          <div className="px-6 py-8 text-center text-gray-500">
+                            <div className="text-lg font-medium mb-2">No waitlist</div>
+                            <div className="text-sm">All main tournament slots are available</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Tournament Information - Now more compact */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            {/* Compact Tournament Information */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-6 py-4">
+                  <h2 className="text-xl font-bold text-white">Tournament Details</h2>
+                </div>
+                
+                <div className="p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-500">Format</label>
+                      <div className="text-lg font-semibold text-gray-900">{tournament.format}</div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-500">Teams</label>
+                      <div className="text-lg font-semibold text-gray-900">{tournament.selected_teams}</div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-500">Player Slots</label>
+                      <div className="text-lg font-semibold text-gray-900">{tournament.total_slots}</div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-500">Date</label>
+                      <div className="text-lg font-semibold text-gray-900">
+                        {new Date(tournament.tournament_date).toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-500">Host</label>
+                      <div className="text-lg font-semibold text-gray-900">
+                        {hostInfo ? (
+                          hostInfo.firstname && hostInfo.lastname 
+                            ? `${hostInfo.firstname} ${hostInfo.lastname}`
+                            : hostInfo.username || hostInfo.email
+                        ) : (
+                          <span className="text-gray-500">Loading...</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-500">Created</label>
+                      <div className="text-lg font-semibold text-gray-900">
+                        {new Date(tournament.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+
+                  {tournament.description && (
+                    <div className="mt-6">
+                      <label className="text-sm font-medium text-gray-500">Description</label>
+                      <div className="mt-2 p-4 bg-gray-50 rounded-lg">
+                        <p className="text-gray-900">{tournament.description}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
@@ -939,381 +1270,7 @@ export default function TournamentDetailsPage() {
             </div>
           </div>
         </div>
-
-        {/* Tournament Slots Section */}
-        {tournament && (
-          <div className="mt-6 sm:mt-8">
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-4 sm:px-8 py-4 sm:py-6">
-                <h2 className="text-lg sm:text-2xl font-bold text-white">Tournament Slots</h2>
-                <p className="text-gray-200 mt-1 sm:mt-2 text-sm sm:text-base">Player registrations and slot management</p>
-                {/* Realtime connection indicator */}
-                <div className="flex items-center mt-2">
-                  <div className={`w-2 h-2 rounded-full mr-2 ${isRealtimeConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                  <span className="text-xs text-gray-300">
-                    {isRealtimeConnected ? 'Live updates enabled' : 'Connecting...'}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="p-4 sm:p-8">
-                {/* Registration Messages */}
-                {registrationMessage && (
-                  <div className={`mb-4 p-3 rounded-lg text-sm ${
-                    registrationMessage.includes('Error') 
-                      ? 'bg-red-50 text-red-700 border border-red-200' 
-                      : 'bg-green-50 text-green-700 border border-green-200'
-                  }`}>
-                    {registrationMessage}
-                  </div>
-                )}
-
-                {/* Notifications Display */}
-                {notifications.length > 0 && (
-                  <div className="mb-6 space-y-3">
-                    {notifications.slice(0, 3).map((notification, index) => (
-                      <div key={notification.id || index} className={`p-4 rounded-lg border ${
-                        notification.type === 'waitlist_promotion' 
-                          ? 'bg-green-50 border-green-200 text-green-800'
-                          : 'bg-blue-50 border-blue-200 text-blue-800'
-                      }`}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">{notification.title}</div>
-                            <div className="text-sm mt-1">{notification.message}</div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {new Date(notification.created_at).toLocaleString()}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => setNotifications(prev => prev.filter(n => n.id !== notification.id))}
-                            className="ml-4 text-gray-500 hover:text-gray-700"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-
-                {/* Player Registration Section - Modernized */}
-                {user && tournament.status === 'registration_open' && !isHost && (
-                  <div className="mb-8">
-                    {userRegistration ? (
-                      // User is already registered - Modern Card Design
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                            <h3 className="text-xl font-semibold text-green-900">Registration Confirmed</h3>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-green-800">#{userRegistration.position || 'Calculating...'}</div>
-                            <div className="text-sm text-green-600">Position</div>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                          <div className="bg-white/60 rounded-lg p-3">
-                            <div className="text-sm text-gray-600 mb-1">Status</div>
-                            <div className="font-medium text-gray-900 capitalize">{userRegistration.status}</div>
-                          </div>
-                          <div className="bg-white/60 rounded-lg p-3">
-                            <div className="text-sm text-gray-600 mb-1">Registered</div>
-                            <div className="font-medium text-gray-900">{new Date(userRegistration.requested_at).toLocaleDateString()}</div>
-                          </div>
-                          {userRegistration.confirmed_at && (
-                            <div className="bg-white/60 rounded-lg p-3">
-                              <div className="text-sm text-gray-600 mb-1">Confirmed</div>
-                              <div className="font-medium text-gray-900">{new Date(userRegistration.confirmed_at).toLocaleDateString()}</div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <button
-                          onClick={withdrawFromTournament}
-                          disabled={isWithdrawing}
-                          className="w-full md:w-auto px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                        >
-                          {isWithdrawing ? 'Withdrawing...' : 'Withdraw from Tournament'}
-                        </button>
-                      </div>
-                    ) : (
-                      // User is not registered
-                      <div className="bg-blue-50 border-blue-200">
-                        <h3 className="text-lg font-semibold text-blue-900 mb-2">Register for Tournament</h3>
-                        <p className="text-blue-700 text-sm mb-4">
-                          Registration is open! Click below to register for a tournament slot.
-                        </p>
-                        <button
-                          onClick={registerForTournament}
-                          disabled={isRegistering}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isRegistering ? 'Registering...' : 'Register for Tournament'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Slots Display */}
-                {tournament && (
-                  <div className="space-y-4">
-                    {/* Stats */}
-                    {slotsStats && (
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-                        <div className="bg-gray-50 p-3 rounded-lg text-center">
-                          <div className="text-lg font-bold text-gray-900">{slotsStats.filled_main_slots}</div>
-                          <div className="text-xs sm:text-sm text-gray-600">Main Slots Filled</div>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded-lg text-center">
-                          <div className="text-lg font-bold text-gray-900">{slotsStats.filled_waitlist_slots}</div>
-                          <div className="text-xs sm:text-sm text-gray-600">Waitlist Filled</div>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded-lg text-center">
-                          <div className="text-lg font-bold text-gray-900">{slotsStats.pending_approvals}</div>
-                          <div className="text-xs sm:text-sm text-gray-600">Pending Approval</div>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded-lg text-center">
-                          <div className="text-lg font-bold text-gray-900">{slotsStats.total_slots}</div>
-                          <div className="text-xs sm:text-sm text-gray-600">Total Slots</div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Show message if no slots are available (should not happen with intelligent slots) */}
-                    {slots.length === 0 && (
-                      <div className="text-center py-4">
-                        <p className="text-gray-600 mb-4">No tournament slots available</p>
-                        <button
-                          onClick={fetchSlots}
-                          className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                        >
-                          Refresh Slots
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Main Tournament Slots - Modern List View */}
-                    <div className="mb-8">
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {isHost ? 'Main Tournament Slots' : 'Slots'}
-                        </h3>
-                        <div className="text-sm text-gray-500">
-                          {slots.filter(slot => slot.is_main_slot && slot.players).length}/{tournament.total_slots} filled
-                        </div>
-                      </div>
-                      
-                      {slotsLoading ? (
-                        <div className="text-center py-8 text-gray-500">
-                          <div className="text-lg font-medium mb-2">Loading tournament slots...</div>
-                          <div className="text-sm">Please wait while we fetch the latest information.</div>
-                        </div>
-                      ) : (
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                          {/* Header */}
-                          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                            <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
-                              <div className="col-span-1">#</div>
-                              <div className="col-span-4">Player Name</div>
-                              <div className="col-span-2">Status</div>
-                              <div className="col-span-3">Joined</div>
-                              {isHost && <div className="col-span-2">Actions</div>}
-                            </div>
-                          </div>
-                          
-                          {/* Main Slots List */}
-                          <div className="divide-y divide-gray-200">
-                            {slots.filter(slot => slot.is_main_slot && slot.players).map((slot, index) => (
-                              <div key={slot.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                                <div className="grid grid-cols-12 gap-4 items-center">
-                                  <div className="col-span-1">
-                                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                                      {slot.position || index + 1}
-                                    </div>
-                                  </div>
-                                  <div className="col-span-4">
-                                    <div className="font-medium text-gray-900">
-                                      {slot.players.users?.firstname && slot.players.users?.lastname 
-                                        ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                        : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                      }
-                                    </div>
-                                    <div className="text-sm text-gray-500">{slot.players.display_name}</div>
-                                  </div>
-                                  <div className="col-span-2">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                      slot.status === 'confirmed' 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : 'bg-yellow-100 text-yellow-800'
-                                    }`}>
-                                      {slot.status === 'confirmed' ? 'Confirmed' : 'Pending'}
-                                    </span>
-                                  </div>
-                                  <div className="col-span-3">
-                                    <div className="text-sm text-gray-900">
-                                      {new Date(slot.requested_at).toLocaleDateString()}
-                                    </div>
-                                    {slot.confirmed_at && (
-                                      <div className="text-xs text-gray-500">
-                                        Confirmed: {new Date(slot.confirmed_at).toLocaleDateString()}
-                                      </div>
-                                    )}
-                                  </div>
-                                  {isHost && (
-                                    <div className="col-span-2">
-                                      {slot.status === 'pending' ? (
-                                        <div className="flex space-x-2">
-                                          <button
-                                            onClick={() => approveSlot(slot.id)}
-                                            className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors"
-                                          >
-                                            Approve
-                                          </button>
-                                          <button
-                                            onClick={() => rejectSlot(slot.id)}
-                                            className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
-                                          >
-                                            Reject
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        <button
-                                          onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                          className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
-                                        >
-                                          Remove
-                                        </button>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                            
-                            {/* Empty slots */}
-                            {Array.from({ length: Math.max(0, tournament.total_slots - slots.filter(slot => slot.is_main_slot && slot.players).length) }).map((_, index) => {
-                              const slotNumber = slots.filter(slot => slot.is_main_slot && slot.players).length + index + 1
-                              return (
-                                <div key={`empty-${slotNumber}`} className="px-6 py-4 text-gray-400">
-                                  <div className="grid grid-cols-12 gap-4 items-center">
-                                    <div className="col-span-1">
-                                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-400">
-                                        {slotNumber}
-                                      </div>
-                                    </div>
-                                    <div className="col-span-4">
-                                      <div className="text-sm">Available slot</div>
-                                    </div>
-                                    <div className="col-span-2">
-                                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                                        Empty
-                                      </span>
-                                    </div>
-                                    <div className="col-span-3">
-                                      <div className="text-sm">-</div>
-                                    </div>
-                                    {isHost && <div className="col-span-2"></div>}
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Waitlist - Modern List View */}
-                    <div>
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-semibold text-gray-900">Waitlist</h3>
-                        <div className="text-sm text-gray-500">
-                          {slots.filter(slot => !slot.is_main_slot && slot.players).length} players waiting
-                        </div>
-                      </div>
-                      
-                      {slotsLoading ? (
-                        <div className="text-center py-8 text-gray-500">
-                          <div className="text-lg font-medium mb-2">Loading waitlist...</div>
-                          <div className="text-sm">Please wait while we fetch the latest information.</div>
-                        </div>
-                      ) : (
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                          {/* Header */}
-                          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                            <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
-                              <div className="col-span-1">#</div>
-                              <div className="col-span-4">Player Name</div>
-                              <div className="col-span-2">Status</div>
-                              <div className="col-span-3">Joined</div>
-                              {isHost && <div className="col-span-2">Actions</div>}
-                            </div>
-                          </div>
-                          
-                          {/* Waitlist */}
-                          <div className="divide-y divide-gray-200">
-                            {slots.filter(slot => !slot.is_main_slot && slot.players).map((slot, index) => (
-                              <div key={slot.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                                <div className="grid grid-cols-12 gap-4 items-center">
-                                  <div className="col-span-1">
-                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-700">
-                                      {slot.waitlist_position || index + 1}
-                                    </div>
-                                  </div>
-                                  <div className="col-span-4">
-                                    <div className="font-medium text-gray-900">
-                                      {slot.players.users?.firstname && slot.players.users?.lastname 
-                                        ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                        : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                      }
-                                    </div>
-                                    <div className="text-sm text-gray-500">{slot.players.display_name}</div>
-                                  </div>
-                                  <div className="col-span-2">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                      Waitlist
-                                    </span>
-                                  </div>
-                                  <div className="col-span-3">
-                                    <div className="text-sm text-gray-900">
-                                      {new Date(slot.requested_at).toLocaleDateString()}
-                                    </div>
-                                  </div>
-                                  {isHost && (
-                                    <div className="col-span-2">
-                                      <button
-                                        onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                        className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
-                                      >
-                                        Remove
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                            
-                            {/* No waitlist message */}
-                            {slots.filter(slot => !slot.is_main_slot && slot.players).length === 0 && (
-                              <div className="px-6 py-8 text-center text-gray-500">
-                                <div className="text-lg font-medium mb-2">No waitlist</div>
-                                <div className="text-sm">All main tournament slots are available</div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+      </div>
       </div>
     </div>
   )
