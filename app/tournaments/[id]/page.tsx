@@ -1115,7 +1115,7 @@ export default function TournamentDetailsPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-2xl font-bold text-blue-900">{slotsStats.filled_main_slots}</div>
-                            <div className="text-sm text-blue-700 font-medium">Main Slots</div>
+                            <div className="text-sm text-blue-700 font-medium">Playing</div>
                             <div className="text-xs text-blue-600 mt-1">
                               {slotsStats.total_slots > 0 ? Math.round((slotsStats.filled_main_slots / slotsStats.total_slots) * 100) : 0}% filled
                             </div>
@@ -1195,11 +1195,11 @@ export default function TournamentDetailsPage() {
                   </div>
                 )}
 
-                {/* Main Tournament Slots - Modern List View */}
+                {/* Playing Roster - Modern List View */}
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-semibold text-gray-900">
-                      {isHost ? 'Main Tournament Slots' : 'Slots'}
+                      {isHost ? `Playing ${tournament.total_slots}` : `Playing ${tournament.total_slots}`}
                     </h3>
                     <div className="text-sm text-gray-500">
                       {slots.filter(slot => slot.is_main_slot && slot.players).length}/{tournament.total_slots} filled
@@ -1224,7 +1224,7 @@ export default function TournamentDetailsPage() {
                         </div>
                       </div>
                       
-                      {/* Main Slots List */}
+                      {/* Playing Roster List */}
                       <div className="divide-y divide-gray-200">
                         {slots.filter(slot => slot.is_main_slot && slot.players).map((slot, index) => (
                           <div key={slot.id} className={`px-4 md:px-6 py-4 transition-colors ${
@@ -1374,7 +1374,7 @@ export default function TournamentDetailsPage() {
                                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-400">
                                       {slotNumber}
                                     </div>
-                                    <div className="text-sm">Available slot</div>
+                                    <div className="text-sm">Available position</div>
                                   </div>
                                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                                     Empty
@@ -1390,7 +1390,7 @@ export default function TournamentDetailsPage() {
                                   </div>
                                 </div>
                                 <div className="col-span-4">
-                                  <div className="text-sm">Available slot</div>
+                                  <div className="text-sm">Available position</div>
                                 </div>
                                 <div className="col-span-2">
                                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
