@@ -76,6 +76,7 @@ export default function TournamentDetailsPage() {
   const [slotsStats, setSlotsStats] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [slotsLoading, setSlotsLoading] = useState(true)
+  const [isRealtimeUpdating, setIsRealtimeUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isHost, setIsHost] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
@@ -230,7 +231,7 @@ export default function TournamentDetailsPage() {
         },
         (payload: any) => {
           console.log('Realtime INSERT received:', payload)
-          fetchSlots()
+          fetchSlots(true)
           checkUserRegistration()
         }
       )
@@ -244,7 +245,7 @@ export default function TournamentDetailsPage() {
         },
         (payload: any) => {
           console.log('Realtime UPDATE received:', payload)
-          fetchSlots()
+          fetchSlots(true)
           checkUserRegistration()
         }
       )
@@ -260,7 +261,7 @@ export default function TournamentDetailsPage() {
           // Since DELETE payload only contains id, we'll refresh for any DELETE
           // The fetchSlots() will only return slots for the current tournament anyway
           console.log('DELETE event received, refreshing slots...')
-          fetchSlots()
+          fetchSlots(true)
           checkUserRegistration()
         }
       )
@@ -544,6 +545,34 @@ export default function TournamentDetailsPage() {
     setSkillFilterValues({})
   }
 
+  // Skeleton loading components
+  const SlotSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="flex items-center space-x-4 p-4 border-b border-gray-100">
+        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+      </div>
+    </div>
+  )
+
+  const SlotsSkeleton = () => (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="p-4 border-b border-gray-200">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+        </div>
+      </div>
+      <div className="divide-y divide-gray-100">
+        {[...Array(3)].map((_, i) => <SlotSkeleton key={i} />)}
+      </div>
+    </div>
+  )
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft':
@@ -714,9 +743,14 @@ export default function TournamentDetailsPage() {
     }
   }
 
-  const fetchSlots = async () => {
+  const fetchSlots = async (isRealtimeUpdate = false) => {
     try {
-      setSlotsLoading(true)
+      if (isRealtimeUpdate) {
+        setIsRealtimeUpdating(true)
+      } else {
+        setSlotsLoading(true)
+      }
+      
       const sessionUser = sessionManager.getUser()
       if (!sessionUser) return
 
@@ -735,7 +769,12 @@ export default function TournamentDetailsPage() {
     } catch (error) {
       console.error('Error fetching slots:', error)
     } finally {
-      setSlotsLoading(false)
+      if (isRealtimeUpdate) {
+        // Add a small delay for visual feedback
+        setTimeout(() => setIsRealtimeUpdating(false), 500)
+      } else {
+        setSlotsLoading(false)
+      }
     }
   }
 
@@ -1376,7 +1415,7 @@ export default function TournamentDetailsPage() {
                   <div className="text-center py-4">
                     <p className="text-gray-600 mb-4">No tournament slots available</p>
                     <button
-                      onClick={fetchSlots}
+                      onClick={() => fetchSlots()}
                       className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                     >
                       Refresh Slots
@@ -1387,21 +1426,27 @@ export default function TournamentDetailsPage() {
                 {/* Playing Roster - Modern List View */}
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      {isHost ? `Playing ${tournament.total_slots}` : `Playing ${tournament.total_slots}`}
-                    </h3>
+                    <div className="flex items-center space-x-2">
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {isHost ? `Playing ${tournament.total_slots}` : `Playing ${tournament.total_slots}`}
+                      </h3>
+                      {isRealtimeUpdating && (
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      )}
+                    </div>
                     <div className="text-sm text-gray-500">
                       {slots.filter(slot => slot.is_main_slot && slot.players).length}/{tournament.total_slots} filled
                     </div>
                   </div>
                   
                   {slotsLoading ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <div className="text-lg font-medium mb-2">Loading tournament slots...</div>
-                      <div className="text-sm">Please wait while we fetch the latest information.</div>
-                    </div>
+                    <SlotsSkeleton />
                   ) : (
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all duration-300 ${
+                      isRealtimeUpdating 
+                        ? 'border-blue-300 shadow-blue-100' 
+                        : 'border-gray-200'
+                    }`}>
                       {/* Header - Hidden on mobile, shown on desktop */}
                       <div className="hidden md:block bg-gray-50 px-6 py-4 border-b border-gray-200">
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
@@ -1602,19 +1647,25 @@ export default function TournamentDetailsPage() {
                 {/* Waitlist - Modern List View */}
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-gray-900">Waitlist</h3>
+                    <div className="flex items-center space-x-2">
+                      <h3 className="text-xl font-semibold text-gray-900">Waitlist</h3>
+                      {isRealtimeUpdating && (
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      )}
+                    </div>
                     <div className="text-sm text-gray-500">
                       {slots.filter(slot => !slot.is_main_slot && slot.players).length} players waiting
                     </div>
                   </div>
                   
                   {slotsLoading ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <div className="text-lg font-medium mb-2">Loading waitlist...</div>
-                      <div className="text-sm">Please wait while we fetch the latest information.</div>
-                    </div>
+                    <SlotsSkeleton />
                   ) : (
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all duration-300 ${
+                      isRealtimeUpdating 
+                        ? 'border-blue-300 shadow-blue-100' 
+                        : 'border-gray-200'
+                    }`}>
                       {/* Header - Hidden on mobile, shown on desktop */}
                       <div className="hidden md:block bg-gray-50 px-6 py-4 border-b border-gray-200">
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
