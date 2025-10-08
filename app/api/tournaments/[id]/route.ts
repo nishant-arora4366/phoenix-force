@@ -41,10 +41,10 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const { name, format, selected_teams, tournament_date, description, total_slots, status } = body
+    const { name, format, selected_teams, tournament_date, description, total_slots, status, venue, google_maps_link } = body
 
     // Handle status-only updates
-    if (status && !name && !format && !selected_teams && !tournament_date && !description && !total_slots) {
+    if (status && !name && !format && !selected_teams && !tournament_date && !description && !total_slots && !venue && !google_maps_link) {
       const { data: tournament, error } = await supabaseAdmin
         .from('tournaments')
         .update({
@@ -77,6 +77,8 @@ export async function PUT(
         tournament_date,
         description,
         total_slots,
+        venue,
+        google_maps_link,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

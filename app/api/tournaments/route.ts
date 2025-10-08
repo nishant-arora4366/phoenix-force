@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, format, selected_teams, tournament_date, description, total_slots, host_id, status } = body
+    const { name, format, selected_teams, tournament_date, description, total_slots, host_id, status, venue, google_maps_link } = body
 
     // Validate required fields
     if (!name || !format || !selected_teams || !tournament_date || !total_slots || !host_id) {
@@ -45,7 +45,9 @@ export async function POST(request: NextRequest) {
         description,
         total_slots,
         host_id,
-        status: status || 'draft'
+        status: status || 'draft',
+        venue,
+        google_maps_link
       })
       .select()
       .single()
