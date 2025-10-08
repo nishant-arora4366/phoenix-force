@@ -403,6 +403,7 @@ export default function TournamentDetailsPage() {
       console.log('Players API response:', result)
       
       if (result.success) {
+        console.log('Loaded players with skills data:', result.players)
         setAllPlayers(result.players || [])
         // Initial filter will be applied by the useEffect
       } else {
@@ -438,9 +439,11 @@ export default function TournamentDetailsPage() {
     // Apply skill filters
     Object.entries(skillFilterValues).forEach(([skillId, values]) => {
       if (values.length > 0) {
+        console.log(`Applying skill filter for skill ${skillId} with values:`, values)
         filtered = filtered.filter(player => {
           // Check if player has skills data
           if (!player.skills || !Array.isArray(player.skills)) {
+            console.log(`Player ${player.display_name} has no skills data`)
             return false
           }
 
@@ -448,23 +451,35 @@ export default function TournamentDetailsPage() {
           const skillAssignment = player.skills.find((skill: any) => skill.skill_id === skillId)
           
           if (!skillAssignment) {
+            console.log(`Player ${player.display_name} has no assignment for skill ${skillId}`)
             return false
           }
 
+          console.log(`Player ${player.display_name} skill assignment:`, skillAssignment)
+
           // Check if any of the selected values match the player's skill values
-          return values.some(selectedValue => {
+          const matches = values.some(selectedValue => {
+            // Convert both values to strings for comparison to handle type mismatches
+            const selectedStr = String(selectedValue)
+            
             // Handle different skill value types
-            if (skillAssignment.skill_value_id === selectedValue) {
+            if (skillAssignment.skill_value_id && String(skillAssignment.skill_value_id) === selectedStr) {
+              console.log(`Match found: skill_value_id ${skillAssignment.skill_value_id} === selectedValue ${selectedValue}`)
               return true
             }
             
             // Handle array values (for multiselect skills)
             if (skillAssignment.value_array && Array.isArray(skillAssignment.value_array)) {
-              return skillAssignment.value_array.includes(selectedValue)
+              const arrayMatch = skillAssignment.value_array.some((val: any) => String(val) === selectedStr)
+              console.log(`Array check: ${skillAssignment.value_array} includes ${selectedValue} = ${arrayMatch}`)
+              return arrayMatch
             }
             
             return false
           })
+
+          console.log(`Player ${player.display_name} matches filter: ${matches}`)
+          return matches
         })
       }
     })
