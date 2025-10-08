@@ -180,12 +180,11 @@ export default function TournamentDetailsPage() {
         },
         (payload: any) => {
           console.log('Realtime DELETE received (no filter):', payload)
-          // Check if this DELETE is for our tournament
-          if (payload.old && payload.old.tournament_id === tournamentId) {
-            console.log('DELETE is for our tournament, refreshing...')
-            fetchSlots()
-            checkUserRegistration()
-          }
+          // Since DELETE payload only contains id, we'll refresh for any DELETE
+          // The fetchSlots() will only return slots for the current tournament anyway
+          console.log('DELETE event received, refreshing slots...')
+          fetchSlots()
+          checkUserRegistration()
         }
       )
       .subscribe((status: any) => {
