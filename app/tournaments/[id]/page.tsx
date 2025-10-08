@@ -176,13 +176,16 @@ export default function TournamentDetailsPage() {
         {
           event: 'DELETE',
           schema: 'public',
-          table: 'tournament_slots',
-          filter: `tournament_id=eq.${tournamentId}`
+          table: 'tournament_slots'
         },
         (payload: any) => {
-          console.log('Realtime DELETE received:', payload)
-          fetchSlots()
-          checkUserRegistration()
+          console.log('Realtime DELETE received (no filter):', payload)
+          // Check if this DELETE is for our tournament
+          if (payload.old && payload.old.tournament_id === tournamentId) {
+            console.log('DELETE is for our tournament, refreshing...')
+            fetchSlots()
+            checkUserRegistration()
+          }
         }
       )
       .subscribe((status: any) => {
