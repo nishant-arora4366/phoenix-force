@@ -12,6 +12,8 @@ interface TournamentFormData {
   tournament_date: string
   description: string
   total_slots: number
+  venue: string
+  google_maps_link: string
 }
 
 export default function CreateTournamentPage() {
@@ -27,7 +29,9 @@ export default function CreateTournamentPage() {
     selected_teams: 8,
     tournament_date: '',
     description: '',
-    total_slots: 88
+    total_slots: 88,
+    venue: '',
+    google_maps_link: ''
   })
 
   // Check if user is authenticated and has permission to create tournaments
@@ -411,6 +415,41 @@ export default function CreateTournamentPage() {
                     <span className="font-semibold">Recommended:</span> {formData.selected_teams * 8} slots ({formData.selected_teams} teams × 8 players per team)
                   </p>
                 </div>
+              </div>
+
+              {/* Venue */}
+              <div className="space-y-2">
+                <label htmlFor="venue" className="block text-sm font-semibold text-gray-700">
+                  Venue
+                </label>
+                <input
+                  type="text"
+                  id="venue"
+                  name="venue"
+                  value={formData.venue}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
+                  placeholder="e.g., Community Center, Sports Complex, etc."
+                />
+              </div>
+
+              {/* Google Maps Link */}
+              <div className="space-y-2">
+                <label htmlFor="google_maps_link" className="block text-sm font-semibold text-gray-700">
+                  Google Maps Link
+                </label>
+                <input
+                  type="url"
+                  id="google_maps_link"
+                  name="google_maps_link"
+                  value={formData.google_maps_link}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 bg-gray-50"
+                  placeholder="https://maps.google.com/..."
+                />
+                <p className="text-xs text-gray-500">
+                  Optional: Share a Google Maps link to help players find the venue location
+                </p>
               </div>
 
               {/* Message */}

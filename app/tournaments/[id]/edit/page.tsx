@@ -15,6 +15,8 @@ interface Tournament {
   host_id: string
   status: string
   total_slots: number
+  venue?: string
+  google_maps_link?: string
   created_at: string
   updated_at: string
 }
@@ -36,7 +38,9 @@ export default function EditTournamentPage() {
     selected_teams: 8,
     tournament_date: '',
     description: '',
-    total_slots: 88
+    total_slots: 88,
+    venue: '',
+    google_maps_link: ''
   })
 
   useEffect(() => {
@@ -97,7 +101,9 @@ export default function EditTournamentPage() {
           selected_teams: tournamentData.selected_teams || 8,
           tournament_date: tournamentData.tournament_date || '',
           description: tournamentData.description || '',
-          total_slots: tournamentData.total_slots || 88
+          total_slots: tournamentData.total_slots || 88,
+          venue: tournamentData.venue || '',
+          google_maps_link: tournamentData.google_maps_link || ''
         })
       } catch (error) {
         console.error('Error fetching tournament:', error)
@@ -314,6 +320,41 @@ export default function EditTournamentPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
                 placeholder="Total player slots"
               />
+            </div>
+
+            {/* Venue */}
+            <div>
+              <label htmlFor="venue" className="block text-sm font-medium text-gray-700 mb-2">
+                Venue
+              </label>
+              <input
+                type="text"
+                id="venue"
+                name="venue"
+                value={formData.venue}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
+                placeholder="e.g., Community Center, Sports Complex, etc."
+              />
+            </div>
+
+            {/* Google Maps Link */}
+            <div>
+              <label htmlFor="google_maps_link" className="block text-sm font-medium text-gray-700 mb-2">
+                Google Maps Link
+              </label>
+              <input
+                type="url"
+                id="google_maps_link"
+                name="google_maps_link"
+                value={formData.google_maps_link}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
+                placeholder="https://maps.google.com/..."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Optional: Share a Google Maps link to help players find the venue location
+              </p>
             </div>
 
             {/* Error Message */}

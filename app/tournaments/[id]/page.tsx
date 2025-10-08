@@ -16,6 +16,8 @@ interface Tournament {
   host_id: string
   status: string
   total_slots: number
+  venue?: string
+  google_maps_link?: string
   created_at: string
   updated_at: string
 }
@@ -1004,7 +1006,7 @@ export default function TournamentDetailsPage() {
                   </div>
 
                   {/* Tournament Details Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Format</label>
                       <div className="text-sm font-semibold text-gray-900">{tournament.format}</div>
@@ -1030,6 +1032,26 @@ export default function TournamentDetailsPage() {
                         }
                       </div>
                     </div>
+                    
+                    {tournament.venue && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Venue</label>
+                        <div className="text-sm font-semibold text-gray-900">
+                          {tournament.google_maps_link ? (
+                            <a 
+                              href={tournament.google_maps_link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline"
+                            >
+                              {tournament.venue}
+                            </a>
+                          ) : (
+                            tournament.venue
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Stats Grid */}
