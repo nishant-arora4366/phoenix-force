@@ -28,6 +28,12 @@ export async function GET(request: NextRequest) {
           lastname,
           username,
           status
+        ),
+        player_skill_assignments(
+          skill_id,
+          skill_value_id,
+          value_array,
+          value
         )
       `)
 
@@ -125,6 +131,7 @@ export async function GET(request: NextRequest) {
         username: (player.users as any).username,
         status: (player.users as any).status
       } : null,
+      skills: (player.player_skill_assignments as any[]) || [],
       isRegistered: registeredPlayerIds.includes(player.id)
     })) || []
 

@@ -438,10 +438,39 @@ export default function TournamentDetailsPage() {
     // Apply skill filters
     Object.entries(skillFilterValues).forEach(([skillId, values]) => {
       if (values.length > 0) {
-        // For now, we'll implement basic skill filtering
-        // This would need to be enhanced based on your skill data structure
-        console.log('Applying skill filter:', skillId, values)
-        // TODO: Implement skill-based filtering based on your data structure
+        filtered = filtered.filter(player => {
+          // Check if player has skills data
+          if (!player.skills || !Array.isArray(player.skills)) {
+            return false
+          }
+
+          // Find the skill assignment for this skill ID
+          const skillAssignment = player.skills.find((skill: any) => skill.skill_id === skillId)
+          
+          if (!skillAssignment) {
+            return false
+          }
+
+          // Check if any of the selected values match the player's skill values
+          return values.some(selectedValue => {
+            // Handle different skill value types
+            if (skillAssignment.skill_value_id === selectedValue) {
+              return true
+            }
+            
+            // Handle array values (for multiselect skills)
+            if (skillAssignment.value_array && Array.isArray(skillAssignment.value_array)) {
+              return skillAssignment.value_array.includes(selectedValue)
+            }
+            
+            // Handle direct value matching
+            if (skillAssignment.value === selectedValue) {
+              return true
+            }
+            
+            return false
+          })
+        })
       }
     })
 
@@ -1969,15 +1998,15 @@ export default function TournamentDetailsPage() {
 
               {/* Active Skills Filter */}
               {enabledSkills.length > 0 && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 mb-6 shadow-sm">
+                <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200 mb-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <h4 className="text-sm font-semibold text-blue-900">Active Filters</h4>
+                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                      <h4 className="text-sm font-semibold text-gray-900">Active Filters</h4>
                     </div>
                     <button
                       onClick={clearAllSkillFilters}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                      className="text-xs text-gray-600 hover:text-gray-800 font-medium"
                     >
                       Clear All
                     </button>
@@ -1989,9 +2018,9 @@ export default function TournamentDetailsPage() {
                       if (!skill) return null
                       
                       return (
-                        <div key={skillId} className="bg-white rounded-lg p-3 border border-blue-100 shadow-sm">
+                        <div key={skillId} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
                           <div className="flex items-center justify-between mb-2">
-                            <label className="text-xs font-semibold text-blue-800 uppercase tracking-wide">
+                            <label className="text-xs font-semibold text-gray-800 uppercase tracking-wide">
                               {skill.name}
                             </label>
                             <button
@@ -2006,7 +2035,7 @@ export default function TournamentDetailsPage() {
                             <select
                               value={skillFilterValues[skillId]?.[0] || ''}
                               onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
-                              className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs bg-gray-50"
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs bg-gray-50"
                             >
                               <option value="">All {skill.name}</option>
                               {skill.values?.map((value: any) => (
@@ -2032,7 +2061,7 @@ export default function TournamentDetailsPage() {
                                             : currentValues.filter((v: string) => v !== value.id)
                                           updateSkillFilterValue(skillId, newValues)
                                         }}
-                                        className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        className="h-3 w-3 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
                                       />
                                       <span className="text-xs text-gray-700">{value.name}</span>
                                     </label>
@@ -2040,7 +2069,7 @@ export default function TournamentDetailsPage() {
                                 })}
                               </div>
                               {skillFilterValues[skillId]?.length > 0 && (
-                                <div className="text-xs text-blue-600">
+                                <div className="text-xs text-gray-600">
                                   {skillFilterValues[skillId].length} selected
                                 </div>
                               )}
@@ -2056,7 +2085,7 @@ export default function TournamentDetailsPage() {
                                   values[0] = e.target.value
                                   updateSkillFilterValue(skillId, values)
                                 }}
-                                className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs bg-gray-50"
+                                className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs bg-gray-50"
                               />
                               <input
                                 type="number"
@@ -2067,7 +2096,7 @@ export default function TournamentDetailsPage() {
                                   values[1] = e.target.value
                                   updateSkillFilterValue(skillId, values)
                                 }}
-                                className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs bg-gray-50"
+                                className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs bg-gray-50"
                               />
                             </div>
                           ) : (
@@ -2076,7 +2105,7 @@ export default function TournamentDetailsPage() {
                               value={skillFilterValues[skillId]?.[0] || ''}
                               onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
                               placeholder={`Filter by ${skill.name.toLowerCase()}...`}
-                              className="w-full px-2 py-1.5 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs bg-gray-50"
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs bg-gray-50"
                             />
                           )}
                         </div>
