@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { sessionManager } from '@/lib/session'
-import { getSupabaseClient } from '@/lib/supabaseClient'
+import { sessionManager } from '@/src/lib/session'
+import { getSupabaseClient } from '@/src/lib/supabaseClient'
 
 interface Tournament {
   id: string

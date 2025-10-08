@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AuthService } from '@/lib/auth'
+import { AuthService } from '@/src/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {

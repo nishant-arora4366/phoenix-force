@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import AuthForm from '@/components/AuthForm'
-import PlayerProfilePrompt from '@/components/PlayerProfilePrompt'
-import { sessionManager } from '@/lib/session'
+import AuthForm from '@/src/components/AuthForm'
+import PlayerProfilePrompt from '@/src/components/PlayerProfilePrompt'
+import { sessionManager } from '@/src/lib/session'
 
 export default function Home() {
   const [user, setUser] = useState<any>(null)

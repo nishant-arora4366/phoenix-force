@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { sessionManager } from '@/lib/session'
+import { sessionManager } from '@/src/lib/session'
 
 export default function Auctions() {
   const [user, setUser] = useState<any>(null)

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
-import { sessionManager } from '@/lib/session'
+import { sessionManager } from '@/src/lib/session'
 
 interface Tournament {
   id: string

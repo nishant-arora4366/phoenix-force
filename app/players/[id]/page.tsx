@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { sessionManager } from '@/lib/session'
+import { sessionManager } from '@/src/lib/session'
 
 interface Player {
   id: string

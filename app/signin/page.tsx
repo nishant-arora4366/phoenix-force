@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import AuthFormExtended from '@/components/AuthFormExtended'
-import PlayerProfilePrompt from '@/components/PlayerProfilePrompt'
-import { sessionManager } from '@/lib/session'
+import AuthFormExtended from '@/src/components/AuthFormExtended'
+import PlayerProfilePrompt from '@/src/components/PlayerProfilePrompt'
+import { sessionManager } from '@/src/lib/session'
 
 export default function SignIn() {
   const [user, setUser] = useState<any>(null)

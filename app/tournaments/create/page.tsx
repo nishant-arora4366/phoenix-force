@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { sessionManager } from '@/lib/session'
-import { PermissionService } from '@/lib/permissions'
+import { sessionManager } from '@/src/lib/session'
+import { PermissionService } from '@/src/lib/permissions'
 
 interface TournamentFormData {
   name: string
