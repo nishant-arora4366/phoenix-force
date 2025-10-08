@@ -71,10 +71,10 @@ export async function POST(
       .from('tournament_slots')
       .select('*')
       .eq('tournament_id', tournamentId)
-      .order('slot_number')
+      .order('requested_at')
 
     console.log('Existing slots for tournament:', existingSlots?.length || 0)
-    console.log('Slot details:', existingSlots?.map(s => ({ slot_number: s.slot_number, status: s.status, player_id: s.player_id })))
+    console.log('Slot details:', existingSlots?.map(s => ({ id: s.id, status: s.status, player_id: s.player_id, requested_at: s.requested_at })))
 
     // Check if user already has a player profile
     const { data: player, error: playerError } = await supabase

@@ -185,7 +185,7 @@ export default function TournamentDetailsPage() {
           
           // Show notification to user
           if (payload.new.type === 'waitlist_promotion') {
-            setRegistrationMessage(`🎉 You have been promoted from the waitlist to position ${payload.new.data.new_slot_number}!`)
+            setRegistrationMessage(`🎉 You have been promoted from the waitlist to a main slot!`)
             setTimeout(() => setRegistrationMessage(''), 10000)
           }
         }
@@ -988,7 +988,7 @@ export default function TournamentDetailsPage() {
                         <div className="text-green-700 text-sm mb-4">
                           <p>You are registered for this tournament!</p>
                           <p className="mt-1">
-                            <strong>Slot:</strong> {userRegistration.slot_number} | 
+                            <strong>Position:</strong> {userRegistration.position || 'Calculating...'} | 
                             <strong> Status:</strong> {userRegistration.status} | 
                             <strong> Requested:</strong> {new Date(userRegistration.requested_at).toLocaleDateString()}
                           </p>
@@ -1085,9 +1085,9 @@ export default function TournamentDetailsPage() {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                                   {confirmedSlots.map((slot) => (
-                                    <div key={slot.slot_number} className="bg-white border border-green-200 rounded-lg p-3">
+                                    <div key={slot.id} className="bg-white border border-green-200 rounded-lg p-3">
                                       <div className="flex items-center justify-between mb-2">
-                                        <span className="font-medium text-gray-900">Position {confirmedSlots.indexOf(slot) + 1}</span>
+                                        <span className="font-medium text-gray-900">Position {slot.position || confirmedSlots.indexOf(slot) + 1}</span>
                                         <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
                                           Confirmed
                                         </span>
@@ -1136,9 +1136,9 @@ export default function TournamentDetailsPage() {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                                   {pendingSlots.map((slot) => (
-                                    <div key={slot.slot_number} className="bg-white border border-yellow-200 rounded-lg p-3">
+                                    <div key={slot.id} className="bg-white border border-yellow-200 rounded-lg p-3">
                                       <div className="flex items-center justify-between mb-2">
-                                        <span className="font-medium text-gray-900">Position {pendingSlots.indexOf(slot) + 1}</span>
+                                        <span className="font-medium text-gray-900">Position {slot.position || pendingSlots.indexOf(slot) + 1}</span>
                                         <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
                                           Pending
                                         </span>
@@ -1226,9 +1226,9 @@ export default function TournamentDetailsPage() {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                                   {waitlistSlots.map((slot) => (
-                                    <div key={slot.slot_number} className="bg-white border border-blue-200 rounded-lg p-3">
+                                    <div key={slot.id} className="bg-white border border-blue-200 rounded-lg p-3">
                                       <div className="flex items-center justify-between mb-2">
-                                        <span className="font-medium text-gray-900">Position {waitlistSlots.indexOf(slot) + 1}</span>
+                                        <span className="font-medium text-gray-900">Position {slot.position || waitlistSlots.indexOf(slot) + 1}</span>
                                         <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
                                           Waitlist
                                         </span>

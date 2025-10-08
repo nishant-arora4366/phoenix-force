@@ -8,7 +8,7 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const { tournament_id, player_id, slot_number } = await request.json()
+    const { tournament_id, player_id } = await request.json()
 
     // Validate required fields
     if (!tournament_id || !player_id) {
@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase.rpc('reserve_slot', {
       p_tournament_id: tournament_id,
       p_player_id: player_id,
-      p_slot_number: slot_number || null,
       p_user_id: userData.id
     })
 

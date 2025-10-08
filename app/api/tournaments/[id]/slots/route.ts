@@ -70,7 +70,7 @@ export async function GET(
         )
       `)
       .eq('tournament_id', tournamentId)
-      .order('slot_number')
+      .order('requested_at')
 
     if (allSlotsError) {
       console.error('Error fetching all slots:', allSlotsError)

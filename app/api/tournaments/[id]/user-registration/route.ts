@@ -51,15 +51,56 @@ export async function GET(
     }
 
     if (registration) {
+      // Calculate position based on FCFS system
+      const { data: tournament, error: tournamentError } = await supabase
+        .from('tournaments')
+        .select('total_slots')
+        .eq('id', tournamentId)
+        .single()
+
+      if (tournamentError) {
+        console.error('Error fetching tournament:', tournamentError)
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Failed to fetch tournament details' 
+        }, { status: 500 })
+      }
+
+      // Get all slots for this tournament, sorted by requested_at
+      const { data: allSlots, error: allSlotsError } = await supabase
+        .from('tournament_slots')
+        .select('id, requested_at, status')
+        .eq('tournament_id', tournamentId)
+        .order('requested_at')
+
+      if (allSlotsError) {
+        console.error('Error fetching all slots:', allSlotsError)
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Failed to fetch slot positions' 
+        }, { status: 500 })
+      }
+
+      // Find position based on requested_at timestamp
+      const sortedSlots = allSlots?.sort((a, b) => 
+        new Date(a.requested_at).getTime() - new Date(b.requested_at).getTime()
+      ) || []
+      
+      const userSlotIndex = sortedSlots.findIndex(slot => slot.id === registration.id)
+      const position = userSlotIndex >= 0 ? userSlotIndex + 1 : null
+      const isMainSlot = position && position <= tournament.total_slots
+      const waitlistPosition = isMainSlot ? null : (position ? position - tournament.total_slots : null)
+
       return NextResponse.json({ 
         success: true, 
         registration: {
-          slot_number: registration.slot_number,
+          id: registration.id,
           status: registration.status,
           requested_at: registration.requested_at,
           confirmed_at: registration.confirmed_at,
-          is_main_slot: registration.is_main_slot,
-          waitlist_position: registration.waitlist_position
+          position: position,
+          is_main_slot: isMainSlot,
+          waitlist_position: waitlistPosition
         }
       })
     } else {

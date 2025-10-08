@@ -113,10 +113,10 @@ export async function POST(
           user_id: slot.player_id,
           type: 'player_removed',
           title: 'You have been removed from the tournament',
-          message: `You have been removed from position ${slot.slot_number} in the tournament by the host.`,
+          message: `You have been removed from the tournament by the host.`,
           data: {
             tournament_id: tournamentId,
-            slot_number: slot.slot_number,
+            slot_id: slot.id,
             removed_at: new Date().toISOString()
           }
         })
@@ -128,7 +128,7 @@ export async function POST(
       removed_player: {
         id: slot.player_id,
         name: slot.players?.display_name,
-        slot_number: slot.slot_number
+        slot_id: slot.id
       }
     })
 
