@@ -1482,188 +1482,59 @@ export default function TournamentDetailsPage() {
             </div>
           )}
 
-          {/* Tournament Information - Now more compact */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            {/* Compact Tournament Information */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-6 py-4">
-                  <h2 className="text-xl font-bold text-white">Tournament Details</h2>
-                </div>
-                
-                <div className="p-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-500">Format</label>
-                      <div className="text-lg font-semibold text-gray-900">{tournament.format}</div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-500">Teams</label>
-                      <div className="text-lg font-semibold text-gray-900">{tournament.selected_teams}</div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-500">Player Slots</label>
-                      <div className="text-lg font-semibold text-gray-900">{tournament.total_slots}</div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-500">Date</label>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {new Date(tournament.tournament_date).toLocaleDateString('en-US', {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-500">Host</label>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {hostInfo ? (
-                          hostInfo.firstname && hostInfo.lastname 
-                            ? `${hostInfo.firstname} ${hostInfo.lastname}`
-                            : hostInfo.username || hostInfo.email
-                        ) : (
-                          <span className="text-gray-500">Loading...</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-500">Created</label>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {new Date(tournament.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
+          {/* Tournament Timeline - Full Width */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h3>
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                <div>
+                  <div className="text-sm font-medium text-gray-900">Tournament Created</div>
+                  <div className="text-xs text-gray-500">
+                    {new Date(tournament.created_at).toLocaleDateString()}
                   </div>
-
-                  {tournament.description && (
-                    <div className="mt-6">
-                      <label className="text-sm font-medium text-gray-500">Description</label>
-                      <div className="mt-2 p-4 bg-gray-50 rounded-lg">
-                        <p className="text-gray-900">{tournament.description}</p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
-            </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Stats */}
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Teams</span>
-                  <span className="font-semibold text-gray-900">{tournament.selected_teams}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Player Slots</span>
-                  <span className="font-semibold text-gray-900">{tournament.total_slots}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Format</span>
-                  <span className="font-semibold text-gray-900">{tournament.format}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Status</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(tournament.status)}`}>
-                    {getStatusText(tournament.status)}
-                  </span>
+              
+              <div className="flex items-center">
+                <div className={`w-3 h-3 rounded-full mr-3 ${
+                  tournament.status === 'registration_open' || 
+                  tournament.status === 'registration_closed' || 
+                  tournament.status === 'auction_started' || 
+                  tournament.status === 'auction_completed' 
+                    ? 'bg-blue-500' : 'bg-gray-300'
+                }`}></div>
+                <div>
+                  <div className="text-sm font-medium text-gray-900">Registration Opens</div>
+                  <div className="text-xs text-gray-500">When ready</div>
                 </div>
               </div>
-            </div>
-
-            {/* Actions */}
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
-              <div className="space-y-3">
-                <Link
-                  href="/tournaments"
-                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  Back to Tournaments
-                </Link>
-                
-                {isHost && (
-                  <>
-                    <Link
-                      href={`/tournaments/${tournament.id}/edit`}
-                      className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit Tournament
-                    </Link>
-                  </>
-                )}
+              
+              <div className="flex items-center">
+                <div className={`w-3 h-3 rounded-full mr-3 ${
+                  tournament.status === 'auction_started' || 
+                  tournament.status === 'auction_completed' 
+                    ? 'bg-blue-500' : 'bg-gray-300'
+                }`}></div>
+                <div>
+                  <div className="text-sm font-medium text-gray-900">Auction Begins</div>
+                  <div className="text-xs text-gray-500">After registration</div>
+                </div>
               </div>
-            </div>
-
-            {/* Tournament Timeline */}
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h3>
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">Tournament Created</div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(tournament.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full mr-3 ${
-                    tournament.status === 'registration_open' || 
-                    tournament.status === 'registration_closed' || 
-                    tournament.status === 'auction_started' || 
-                    tournament.status === 'auction_completed' 
-                      ? 'bg-blue-500' : 'bg-gray-300'
-                  }`}></div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">Registration Opens</div>
-                    <div className="text-xs text-gray-500">When ready</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full mr-3 ${
-                    tournament.status === 'auction_started' || 
-                    tournament.status === 'auction_completed' 
-                      ? 'bg-blue-500' : 'bg-gray-300'
-                  }`}></div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">Auction Begins</div>
-                    <div className="text-xs text-gray-500">After registration</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full mr-3 ${
-                    tournament.status === 'auction_completed' 
-                      ? 'bg-green-500' : 'bg-gray-300'
-                  }`}></div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">Tournament Complete</div>
-                    <div className="text-xs text-gray-500">Final results</div>
-                  </div>
+              
+              <div className="flex items-center">
+                <div className={`w-3 h-3 rounded-full mr-3 ${
+                  tournament.status === 'auction_completed' 
+                    ? 'bg-green-500' : 'bg-gray-300'
+                }`}></div>
+                <div>
+                  <div className="text-sm font-medium text-gray-900">Tournament Complete</div>
+                  <div className="text-xs text-gray-500">Final results</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
 
       {/* Enhanced Player Assignment Modal */}
