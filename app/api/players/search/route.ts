@@ -9,24 +9,19 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
-    const searchTerm = url.searchParams.get('q')
+    const searchTerm = url.searchParams.get('q') || ''
     const tournamentId = url.searchParams.get('tournamentId')
-    const limit = parseInt(url.searchParams.get('limit') || '20')
+    const skillFilter = url.searchParams.get('skill')
+    const skillValue = url.searchParams.get('skillValue')
+    const limit = parseInt(url.searchParams.get('limit') || '100')
 
-    if (!searchTerm || searchTerm.length < 2) {
-      return NextResponse.json({
-        success: false,
-        error: 'Search term must be at least 2 characters'
-      }, { status: 400 })
-    }
-
-    // Build the query to search for players
+    // Build the base query to get all players (including those not linked to users)
     let query = supabaseAdmin
       .from('players')
       .select(`
         id,
         display_name,
-        users!inner(
+        users(
           id,
           email,
           firstname,
@@ -35,46 +30,56 @@ export async function GET(request: NextRequest) {
           status
         )
       `)
-      .ilike('display_name', `%${searchTerm}%`)
-      .limit(limit)
 
-    // If tournamentId is provided, exclude players already registered for this tournament
+    // Apply search filter if provided
+    if (searchTerm && searchTerm.length >= 2) {
+      query = query.ilike('display_name', `%${searchTerm}%`)
+    }
+
+    // Apply skill filter if provided
+    if (skillFilter && skillValue) {
+      // For now, we'll implement a simpler approach without complex joins
+      // This can be enhanced later with proper skill filtering
+      console.log('Skill filtering not yet implemented:', { skillFilter, skillValue })
+    }
+
+    // Apply limit
+    query = query.limit(limit)
+
+    const { data: players, error } = await query
+
+    if (error) {
+      console.error('Error fetching players:', error)
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to fetch players'
+      }, { status: 500 })
+    }
+
+    // Get registered players for this tournament if tournamentId is provided
+    let registeredPlayerIds: string[] = []
     if (tournamentId) {
-      // Get player IDs already registered for this tournament
       const { data: registeredPlayers } = await supabaseAdmin
         .from('tournament_slots')
         .select('player_id')
         .eq('tournament_id', tournamentId)
 
-      const registeredPlayerIds = registeredPlayers?.map(p => p.player_id) || []
-      
-      if (registeredPlayerIds.length > 0) {
-        query = query.not('id', 'in', `(${registeredPlayerIds.join(',')})`)
-      }
-    }
-
-    const { data: players, error } = await query
-
-    if (error) {
-      console.error('Error searching players:', error)
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to search players'
-      }, { status: 500 })
+      registeredPlayerIds = registeredPlayers?.map(p => p.player_id) || []
     }
 
     // Format the response
     const formattedPlayers = players?.map(player => ({
       id: player.id,
       display_name: player.display_name,
-      user: {
+      user: player.users ? {
         id: (player.users as any).id,
         email: (player.users as any).email,
         firstname: (player.users as any).firstname,
         lastname: (player.users as any).lastname,
         username: (player.users as any).username,
         status: (player.users as any).status
-      }
+      } : null,
+      isRegistered: registeredPlayerIds.includes(player.id)
     })) || []
 
     return NextResponse.json({

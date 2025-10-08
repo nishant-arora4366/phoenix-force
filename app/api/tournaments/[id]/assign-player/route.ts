@@ -13,12 +13,15 @@ export async function POST(
   try {
     const { id: tournamentId } = await params
     const body = await request.json()
-    const { playerId, status = 'pending' } = body
+    const { playerId, playerIds, status = 'pending' } = body
 
-    if (!playerId) {
+    // Support both single player and multiple players
+    const playersToAssign = playerIds || (playerId ? [playerId] : [])
+    
+    if (playersToAssign.length === 0) {
       return NextResponse.json({
         success: false,
-        error: 'Player ID is required'
+        error: 'Player ID(s) are required'
       }, { status: 400 })
     }
 
@@ -44,37 +47,45 @@ export async function POST(
       }, { status: 404 })
     }
 
-    // Check if player exists and get player details
-    const { data: player, error: playerError } = await supabaseAdmin
+    // Check if players exist and get player details
+    const { data: players, error: playersError } = await supabaseAdmin
       .from('players')
       .select(`
         id,
         user_id,
         display_name,
-        users!inner(id, email, firstname, lastname, username)
+        users(id, email, firstname, lastname, username)
       `)
-      .eq('id', playerId)
-      .single()
+      .in('id', playersToAssign)
 
-    if (playerError || !player) {
+    if (playersError || !players || players.length === 0) {
       return NextResponse.json({
         success: false,
-        error: 'Player not found'
+        error: 'One or more players not found'
       }, { status: 404 })
     }
 
-    // Check if player is already registered for this tournament
-    const { data: existingSlot, error: existingError } = await supabaseAdmin
+    // Check if any players are already registered for this tournament
+    const { data: existingSlots, error: existingError } = await supabaseAdmin
       .from('tournament_slots')
-      .select('id, status')
+      .select('player_id')
       .eq('tournament_id', tournamentId)
-      .eq('player_id', playerId)
-      .single()
+      .in('player_id', playersToAssign)
 
-    if (existingSlot) {
+    if (existingError) {
       return NextResponse.json({
         success: false,
-        error: 'Player is already registered for this tournament'
+        error: 'Failed to check existing registrations'
+      }, { status: 500 })
+    }
+
+    const registeredPlayerIds = existingSlots?.map(slot => slot.player_id) || []
+    if (registeredPlayerIds.length > 0) {
+      const registeredPlayers = players.filter(p => registeredPlayerIds.includes(p.id))
+      const playerNames = registeredPlayers.map(p => p.display_name).join(', ')
+      return NextResponse.json({
+        success: false,
+        error: `Player(s) already registered: ${playerNames}`
       }, { status: 400 })
     }
 
@@ -94,74 +105,83 @@ export async function POST(
     const currentSlotCount = currentSlots?.length || 0
     const isMainSlot = currentSlotCount < tournament.total_slots
 
-    // Insert the new slot
-    const { data: newSlot, error: insertError } = await supabaseAdmin
+    // Prepare slots data for insertion
+    const slotsData = players.map((player, index) => ({
+      tournament_id: tournamentId,
+      player_id: player.id,
+      status: status,
+      requested_at: new Date().toISOString(),
+      confirmed_at: status === 'confirmed' ? new Date().toISOString() : null
+    }))
+
+    // Insert the new slots
+    const { data: newSlots, error: insertError } = await supabaseAdmin
       .from('tournament_slots')
-      .insert({
-        tournament_id: tournamentId,
-        player_id: playerId,
-        status: status,
-        requested_at: new Date().toISOString(),
-        confirmed_at: status === 'confirmed' ? new Date().toISOString() : null
-      })
+      .insert(slotsData)
       .select(`
         id,
         status,
         requested_at,
         confirmed_at,
-        players!inner(
+        players(
           id,
           display_name,
-          users!inner(id, email, firstname, lastname, username)
+          users(id, email, firstname, lastname, username)
         )
       `)
-      .single()
 
     if (insertError) {
-      console.error('Error inserting tournament slot:', insertError)
+      console.error('Error inserting tournament slots:', insertError)
       return NextResponse.json({
         success: false,
-        error: 'Failed to assign player to tournament'
+        error: 'Failed to assign players to tournament'
       }, { status: 500 })
     }
 
-    // Create notification for the player
-    const { error: notificationError } = await supabaseAdmin
-      .from('notifications')
-      .insert({
-        user_id: player.user_id,
-        type: 'tournament_assignment',
-        title: 'Tournament Assignment',
-        message: `You have been ${status === 'confirmed' ? 'confirmed' : 'assigned'} to tournament "${tournament.name}" by the host.`,
-        data: {
-          tournament_id: tournamentId,
-          slot_id: newSlot.id,
-          status: status,
-          assigned_by_host: true
-        }
-      })
+    // Create notifications for all players
+    const notificationsData = players.map((player, index) => ({
+      user_id: player.user_id,
+      type: 'tournament_assignment',
+      title: 'Tournament Assignment',
+      message: `You have been ${status === 'confirmed' ? 'confirmed' : 'assigned'} to tournament "${tournament.name}" by the host.`,
+      data: {
+        tournament_id: tournamentId,
+        slot_id: newSlots[index]?.id,
+        status: status,
+        assigned_by_host: true
+      }
+    })).filter(notification => notification.user_id) // Only create notifications for players with user accounts
 
-    if (notificationError) {
-      console.error('Error creating notification:', notificationError)
-      // Don't fail the request if notification creation fails
+    if (notificationsData.length > 0) {
+      const { error: notificationError } = await supabaseAdmin
+        .from('notifications')
+        .insert(notificationsData)
+
+      if (notificationError) {
+        console.error('Error creating notifications:', notificationError)
+        // Don't fail the request if notification creation fails
+      }
     }
+
+    // Format response slots
+    const formattedSlots = newSlots?.map((slot, index) => ({
+      id: slot.id,
+      status: slot.status,
+      requested_at: slot.requested_at,
+      confirmed_at: slot.confirmed_at,
+      player: {
+        id: (slot.players as any)?.id,
+        display_name: (slot.players as any)?.display_name,
+        user: (slot.players as any)?.users
+      },
+      is_main_slot: (currentSlotCount + index + 1) <= tournament.total_slots,
+      position: currentSlotCount + index + 1
+    })) || []
 
     return NextResponse.json({
       success: true,
-      message: `Player successfully ${status === 'confirmed' ? 'confirmed' : 'assigned'} to tournament`,
-      slot: {
-        id: newSlot.id,
-        status: newSlot.status,
-        requested_at: newSlot.requested_at,
-        confirmed_at: newSlot.confirmed_at,
-        player: {
-          id: (newSlot.players as any).id,
-          display_name: (newSlot.players as any).display_name,
-          user: (newSlot.players as any).users
-        },
-        is_main_slot: isMainSlot,
-        position: currentSlotCount + 1
-      }
+      message: `${players.length} player(s) successfully ${status === 'confirmed' ? 'confirmed' : 'assigned'} to tournament`,
+      slots: formattedSlots
     })
 
   } catch (error: any) {

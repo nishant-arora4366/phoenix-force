@@ -57,11 +57,18 @@ export default function TournamentDetailsPage() {
   // Player assignment modal state
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [selectedPlayer, setSelectedPlayer] = useState<any>(null)
+  const [allPlayers, setAllPlayers] = useState<any[]>([])
+  const [filteredPlayers, setFilteredPlayers] = useState<any[]>([])
+  const [isLoadingPlayers, setIsLoadingPlayers] = useState(false)
+  const [selectedPlayers, setSelectedPlayers] = useState<any[]>([])
   const [assignStatus, setAssignStatus] = useState<'pending' | 'confirmed'>('pending')
   const [isAssigning, setIsAssigning] = useState(false)
+  
+  // Skills filtering state
+  const [availableSkills, setAvailableSkills] = useState<any[]>([])
+  const [selectedSkill, setSelectedSkill] = useState('')
+  const [selectedSkillValue, setSelectedSkillValue] = useState('')
+  const [isLoadingSkills, setIsLoadingSkills] = useState(false)
 
   // Initialize Supabase client for realtime (singleton to avoid multiple instances)
   const supabase = getSupabaseClient()
@@ -233,6 +240,21 @@ export default function TournamentDetailsPage() {
     }
   }, [tournamentId, user])
 
+  // Load players and skills when modal opens
+  useEffect(() => {
+    if (showAssignModal) {
+      loadAllPlayers()
+      loadSkills()
+    }
+  }, [showAssignModal])
+
+  // Reload players when filters change
+  useEffect(() => {
+    if (showAssignModal) {
+      loadAllPlayers()
+    }
+  }, [searchTerm, selectedSkill, selectedSkillValue])
+
   // Helper function to format datetime in readable format
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString)
@@ -252,35 +274,67 @@ export default function TournamentDetailsPage() {
     return slot.players.users.id === user.id || slot.players.users.email === user.email
   }
 
-  // Player search function
-  const searchPlayers = async (query: string) => {
-    if (query.length < 2) {
-      setSearchResults([])
-      return
-    }
-
-    setIsSearching(true)
+  // Load all players function
+  const loadAllPlayers = async () => {
+    setIsLoadingPlayers(true)
     try {
-      const response = await fetch(`/api/players/search?q=${encodeURIComponent(query)}&tournamentId=${tournamentId}`)
+      const params = new URLSearchParams({
+        tournamentId: tournamentId
+      })
+      
+      if (searchTerm) {
+        params.append('q', searchTerm)
+      }
+      
+      if (selectedSkill && selectedSkillValue) {
+        params.append('skill', selectedSkill)
+        params.append('skillValue', selectedSkillValue)
+      }
+
+      const response = await fetch(`/api/players/search?${params.toString()}`)
       const result = await response.json()
       
       if (result.success) {
-        setSearchResults(result.players)
+        setAllPlayers(result.players)
+        setFilteredPlayers(result.players)
       } else {
-        console.error('Search error:', result.error)
-        setSearchResults([])
+        console.error('Error loading players:', result.error)
+        setAllPlayers([])
+        setFilteredPlayers([])
       }
     } catch (error) {
-      console.error('Error searching players:', error)
-      setSearchResults([])
+      console.error('Error loading players:', error)
+      setAllPlayers([])
+      setFilteredPlayers([])
     } finally {
-      setIsSearching(false)
+      setIsLoadingPlayers(false)
     }
   }
 
-  // Assign player function
-  const assignPlayer = async () => {
-    if (!selectedPlayer) return
+  // Load available skills function
+  const loadSkills = async () => {
+    setIsLoadingSkills(true)
+    try {
+      const response = await fetch('/api/player-skills/list')
+      const result = await response.json()
+      
+      if (result.success) {
+        setAvailableSkills(result.skills)
+      } else {
+        console.error('Error loading skills:', result.error)
+        setAvailableSkills([])
+      }
+    } catch (error) {
+      console.error('Error loading skills:', error)
+      setAvailableSkills([])
+    } finally {
+      setIsLoadingSkills(false)
+    }
+  }
+
+  // Assign players function
+  const assignPlayers = async () => {
+    if (selectedPlayers.length === 0) return
 
     setIsAssigning(true)
     try {
@@ -290,7 +344,7 @@ export default function TournamentDetailsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          playerId: selectedPlayer.id,
+          playerIds: selectedPlayers.map(p => p.id),
           status: assignStatus
         })
       })
@@ -301,25 +355,54 @@ export default function TournamentDetailsPage() {
         // Refresh slots and close modal
         await fetchSlots()
         setShowAssignModal(false)
-        setSelectedPlayer(null)
+        setSelectedPlayers([])
         setSearchTerm('')
-        setSearchResults([])
+        setAllPlayers([])
+        setFilteredPlayers([])
+        setSelectedSkill('')
+        setSelectedSkillValue('')
         setAssignStatus('pending')
         
         // Show success message
-        setStatusMessage(`Player ${selectedPlayer.display_name} has been ${assignStatus === 'confirmed' ? 'confirmed' : 'assigned'} to the tournament.`)
+        const playerNames = selectedPlayers.map(p => p.display_name).join(', ')
+        setStatusMessage(`${selectedPlayers.length} player(s) (${playerNames}) have been ${assignStatus === 'confirmed' ? 'confirmed' : 'assigned'} to the tournament.`)
         setTimeout(() => setStatusMessage(''), 5000)
       } else {
         setStatusMessage(`Error: ${result.error}`)
         setTimeout(() => setStatusMessage(''), 5000)
       }
     } catch (error) {
-      console.error('Error assigning player:', error)
-      setStatusMessage('Error assigning player. Please try again.')
+      console.error('Error assigning players:', error)
+      setStatusMessage('Error assigning players. Please try again.')
       setTimeout(() => setStatusMessage(''), 5000)
     } finally {
       setIsAssigning(false)
     }
+  }
+
+  // Toggle player selection
+  const togglePlayerSelection = (player: any) => {
+    if (player.isRegistered) return // Don't allow selection of registered players
+    
+    setSelectedPlayers(prev => {
+      const isSelected = prev.some(p => p.id === player.id)
+      if (isSelected) {
+        return prev.filter(p => p.id !== player.id)
+      } else {
+        return [...prev, player]
+      }
+    })
+  }
+
+  // Select all available players
+  const selectAllPlayers = () => {
+    const availablePlayers = filteredPlayers.filter(p => !p.isRegistered)
+    setSelectedPlayers(availablePlayers)
+  }
+
+  // Clear all selections
+  const clearAllSelections = () => {
+    setSelectedPlayers([])
   }
 
   const getStatusColor = (status: string) => {
@@ -1565,19 +1648,22 @@ export default function TournamentDetailsPage() {
       </div>
       </div>
 
-      {/* Player Assignment Modal */}
+      {/* Enhanced Player Assignment Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Assign Player to Tournament</h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Assign Players to Tournament</h3>
                 <button
                   onClick={() => {
                     setShowAssignModal(false)
-                    setSelectedPlayer(null)
+                    setSelectedPlayers([])
                     setSearchTerm('')
-                    setSearchResults([])
+                    setAllPlayers([])
+                    setFilteredPlayers([])
+                    setSelectedSkill('')
+                    setSelectedSkillValue('')
                     setAssignStatus('pending')
                   }}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -1588,116 +1674,208 @@ export default function TournamentDetailsPage() {
                 </button>
               </div>
 
-              {/* Search Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Search for Player
-                </label>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value)
-                    searchPlayers(e.target.value)
-                  }}
-                  placeholder="Type player name to search..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+              {/* Filters Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* Search Input */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Search Players
+                  </label>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Type player name to filter..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Skills Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Filter by Skill
+                  </label>
+                  <div className="flex space-x-2">
+                    <select
+                      value={selectedSkill}
+                      onChange={(e) => {
+                        setSelectedSkill(e.target.value)
+                        setSelectedSkillValue('')
+                      }}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">All Skills</option>
+                      {availableSkills.map((skill) => (
+                        <option key={skill.id} value={skill.id}>
+                          {skill.name}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    {selectedSkill && (
+                      <select
+                        value={selectedSkillValue}
+                        onChange={(e) => setSelectedSkillValue(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">All Values</option>
+                        {availableSkills
+                          .find(s => s.id === selectedSkill)
+                          ?.values.map((value: any) => (
+                            <option key={value.id} value={value.value_name}>
+                              {value.value_name}
+                            </option>
+                          ))}
+                      </select>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Search Results */}
-              {searchTerm.length >= 2 && (
-                <div className="mb-4 max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
-                  {isSearching ? (
+              {/* Selection Summary */}
+              {selectedPlayers.length > 0 && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-blue-900">
+                        {selectedPlayers.length} player(s) selected
+                      </div>
+                      <div className="text-xs text-blue-600">
+                        {selectedPlayers.map(p => p.display_name).join(', ')}
+                      </div>
+                    </div>
+                    <button
+                      onClick={clearAllSelections}
+                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Players List */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium text-gray-700">
+                    Available Players ({filteredPlayers.filter(p => !p.isRegistered).length})
+                  </h4>
+                  <button
+                    onClick={selectAllPlayers}
+                    className="text-xs text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Select All Available
+                  </button>
+                </div>
+                
+                <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                  {isLoadingPlayers ? (
                     <div className="p-4 text-center text-gray-500">
                       <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                      Searching players...
+                      Loading players...
                     </div>
-                  ) : searchResults.length > 0 ? (
+                  ) : filteredPlayers.length > 0 ? (
                     <div className="divide-y divide-gray-200">
-                      {searchResults.map((player) => (
-                        <button
-                          key={player.id}
-                          onClick={() => setSelectedPlayer(player)}
-                          className={`w-full p-3 text-left hover:bg-gray-50 transition-colors ${
-                            selectedPlayer?.id === player.id ? 'bg-blue-50 border-l-4 border-blue-400' : ''
-                          }`}
-                        >
-                          <div className="font-medium text-gray-900">{player.display_name}</div>
-                          <div className="text-sm text-gray-500">
-                            {player.user.firstname && player.user.lastname 
-                              ? `${player.user.firstname} ${player.user.lastname}` 
-                              : player.user.username || player.user.email
-                            }
+                      {filteredPlayers.map((player) => {
+                        const isSelected = selectedPlayers.some(p => p.id === player.id)
+                        const isRegistered = player.isRegistered
+                        
+                        return (
+                          <div
+                            key={player.id}
+                            className={`p-3 transition-colors ${
+                              isRegistered 
+                                ? 'bg-gray-50 opacity-60 cursor-not-allowed' 
+                                : 'hover:bg-gray-50 cursor-pointer'
+                            }`}
+                            onClick={() => !isRegistered && togglePlayerSelection(player)}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                disabled={isRegistered}
+                                onChange={() => !isRegistered && togglePlayerSelection(player)}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                              />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">
+                                  {player.display_name}
+                                  {isRegistered && (
+                                    <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                                      Already Registered
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {player.user ? (
+                                    player.user.firstname && player.user.lastname 
+                                      ? `${player.user.firstname} ${player.user.lastname}` 
+                                      : player.user.username || player.user.email
+                                  ) : (
+                                    <span className="text-orange-600">No user account linked</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </button>
-                      ))}
+                        )
+                      })}
                     </div>
                   ) : (
                     <div className="p-4 text-center text-gray-500">
-                      No players found matching "{searchTerm}"
+                      No players found matching the current filters
                     </div>
                   )}
                 </div>
-              )}
-
-              {/* Selected Player */}
-              {selectedPlayer && (
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="text-sm font-medium text-blue-900">Selected Player:</div>
-                  <div className="text-blue-800">{selectedPlayer.display_name}</div>
-                  <div className="text-xs text-blue-600">
-                    {selectedPlayer.user.firstname && selectedPlayer.user.lastname 
-                      ? `${selectedPlayer.user.firstname} ${selectedPlayer.user.lastname}` 
-                      : selectedPlayer.user.username || selectedPlayer.user.email
-                    }
-                  </div>
-                </div>
-              )}
+              </div>
 
               {/* Status Selection */}
-              {selectedPlayer && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Assignment Status
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Assignment Status
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="pending"
+                      checked={assignStatus === 'pending'}
+                      onChange={(e) => setAssignStatus(e.target.value as 'pending' | 'confirmed')}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <div className="ml-3">
+                      <div className="text-sm font-medium text-gray-700">Pending</div>
+                      <div className="text-xs text-gray-500">Player needs approval</div>
+                    </div>
                   </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        value="pending"
-                        checked={assignStatus === 'pending'}
-                        onChange={(e) => setAssignStatus(e.target.value as 'pending' | 'confirmed')}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Pending - Player needs approval
-                      </span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        value="confirmed"
-                        checked={assignStatus === 'confirmed'}
-                        onChange={(e) => setAssignStatus(e.target.value as 'pending' | 'confirmed')}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Confirmed - Player is immediately confirmed
-                      </span>
-                    </label>
-                  </div>
+                  <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="confirmed"
+                      checked={assignStatus === 'confirmed'}
+                      onChange={(e) => setAssignStatus(e.target.value as 'pending' | 'confirmed')}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <div className="ml-3">
+                      <div className="text-sm font-medium text-gray-700">Confirmed</div>
+                      <div className="text-xs text-gray-500">Player is immediately confirmed</div>
+                    </div>
+                  </label>
                 </div>
-              )}
+              </div>
 
               {/* Action Buttons */}
               <div className="flex space-x-3">
                 <button
                   onClick={() => {
                     setShowAssignModal(false)
-                    setSelectedPlayer(null)
+                    setSelectedPlayers([])
                     setSearchTerm('')
-                    setSearchResults([])
+                    setAllPlayers([])
+                    setFilteredPlayers([])
+                    setSelectedSkill('')
+                    setSelectedSkillValue('')
                     setAssignStatus('pending')
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -1705,8 +1883,8 @@ export default function TournamentDetailsPage() {
                   Cancel
                 </button>
                 <button
-                  onClick={assignPlayer}
-                  disabled={!selectedPlayer || isAssigning}
+                  onClick={assignPlayers}
+                  disabled={selectedPlayers.length === 0 || isAssigning}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isAssigning ? (
@@ -1715,7 +1893,7 @@ export default function TournamentDetailsPage() {
                       Assigning...
                     </div>
                   ) : (
-                    `Assign as ${assignStatus === 'confirmed' ? 'Confirmed' : 'Pending'}`
+                    `Assign ${selectedPlayers.length} Player(s) as ${assignStatus === 'confirmed' ? 'Confirmed' : 'Pending'}`
                   )}
                 </button>
               </div>
