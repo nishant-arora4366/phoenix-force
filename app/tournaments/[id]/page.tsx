@@ -953,14 +953,9 @@ export default function TournamentDetailsPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
                     <div>
                       <h3 className="text-2xl font-bold text-gray-900 mb-2">{tournament.name}</h3>
-                      <div className="flex items-center space-x-3">
                         <span className={`px-3 py-1 rounded-lg text-sm font-medium shadow-sm ${getStatusColor(tournament.status)}`}>
                           {getStatusText(tournament.status)}
                         </span>
-                        <span className="text-sm text-gray-500">
-                          {slotsStats ? `${slotsStats.filled_main_slots + slotsStats.filled_waitlist_slots}/${slotsStats.total_slots} Players` : 'Loading...'}
-                        </span>
-                      </div>
                     </div>
                     
                     {/* Register Now Button for Players */}
@@ -1009,19 +1004,14 @@ export default function TournamentDetailsPage() {
                   </div>
 
                   {/* Tournament Details Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Format</label>
                       <div className="text-sm font-semibold text-gray-900">{tournament.format}</div>
                     </div>
                     
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Teams</label>
-                      <div className="text-sm font-semibold text-gray-900">{tournament.selected_teams}</div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Date</label>
+                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Tournament Date</label>
                       <div className="text-sm font-semibold text-gray-900">
                         {new Date(tournament.tournament_date).toLocaleDateString('en-US', { 
                           weekday: 'short', 
@@ -1047,7 +1037,15 @@ export default function TournamentDetailsPage() {
                     <div className="mt-6 pt-6 border-t border-gray-100">
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Playing</label>
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Slots</label>
+                          <div className="text-sm font-semibold text-gray-900">{slotsStats.total_slots}</div>
+                          <div className="text-xs text-gray-600">
+                            {slotsStats.total_slots - slotsStats.filled_main_slots} available
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Filled</label>
                           <div className="text-sm font-semibold text-blue-900">{slotsStats.filled_main_slots}</div>
                           <div className="text-xs text-blue-600">
                             {slotsStats.total_slots > 0 ? Math.round((slotsStats.filled_main_slots / slotsStats.total_slots) * 100) : 0}% filled
@@ -1067,14 +1065,6 @@ export default function TournamentDetailsPage() {
                           <div className="text-sm font-semibold text-yellow-900">{slotsStats.pending_approvals}</div>
                           <div className="text-xs text-yellow-600">
                             {slotsStats.pending_approvals > 0 ? 'Awaiting approval' : 'All approved'}
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Slots</label>
-                          <div className="text-sm font-semibold text-gray-900">{slotsStats.total_slots}</div>
-                          <div className="text-xs text-gray-600">
-                            {slotsStats.total_slots - slotsStats.filled_main_slots} available
                           </div>
                         </div>
                       </div>
