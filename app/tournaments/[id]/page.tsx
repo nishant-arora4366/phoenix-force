@@ -704,66 +704,70 @@ export default function TournamentDetailsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Header */}
-        <div className="mb-4 sm:mb-8">
-          <div className="flex flex-col space-y-3 sm:space-y-0">
-            <div className="flex items-center justify-between">
+        {/* Enhanced Header */}
+        <div className="mb-6 sm:mb-8">
+          {/* Tournament Title Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
               <div className="flex items-center space-x-3">
                 <Link
                   href="/tournaments"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  className="text-gray-600 hover:text-gray-900 transition-colors p-1 rounded-lg hover:bg-gray-100"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </Link>
                 <div>
-                  <h1 className="text-xl sm:text-4xl font-bold text-gray-900">{tournament.name}</h1>
-                  <p className="text-gray-600 text-xs sm:text-base">Tournament Details</p>
+                  <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">{tournament.name}</h1>
+                  <p className="text-gray-600 text-sm sm:text-base mt-1">Tournament Management</p>
                 </div>
               </div>
-              <div className="flex flex-col items-end space-y-1">
-                <span className={`px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm ${getStatusColor(tournament.status)}`}>
+              
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                <span className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm ${getStatusColor(tournament.status)}`}>
                   {getStatusText(tournament.status)}
                 </span>
                 {isHost && (
                   <Link
                     href={`/tournaments/${tournament.id}/edit`}
-                    className="px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 text-xs font-medium shadow-sm"
+                    className="px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                   >
-                    Edit
+                    Edit Tournament
                   </Link>
                 )}
               </div>
             </div>
             
-            {/* Status Management */}
+            {/* Status Management Actions */}
             {isHost && (
-              <div className="mt-4 space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  {getNextStatusOptions(tournament.status).map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => updateTournamentStatus(option.value)}
-                      disabled={isUpdatingStatus}
-                      className={`px-3 sm:px-6 py-2 sm:py-3 text-white rounded-lg sm:rounded-xl transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md ${option.color} ${
-                        isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      {isUpdatingStatus ? 'Updating...' : option.label}
-                    </button>
-                  ))}
-                </div>
-                
-                {statusMessage && (
-                  <div className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
-                    statusMessage.includes('Error') 
-                      ? 'bg-red-50 text-red-700 border border-red-200' 
-                      : 'bg-green-50 text-green-700 border border-green-200'
-                  }`}>
-                    {statusMessage}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
+                  <div className="flex flex-wrap gap-2">
+                    {getNextStatusOptions(tournament.status).map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => updateTournamentStatus(option.value)}
+                        disabled={isUpdatingStatus}
+                        className={`px-4 py-2 text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md ${option.color} ${
+                          isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        {isUpdatingStatus ? 'Updating...' : option.label}
+                      </button>
+                    ))}
                   </div>
-                )}
+                  
+                  {statusMessage && (
+                    <div className={`px-3 py-2 rounded-lg text-sm ${
+                      statusMessage.includes('Error') 
+                        ? 'bg-red-50 text-red-700 border border-red-200' 
+                        : 'bg-green-50 text-green-700 border border-green-200'
+                    }`}>
+                      {statusMessage}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -854,24 +858,84 @@ export default function TournamentDetailsPage() {
 
               {/* Slots Display */}
               <div className="space-y-4">
-                {/* Stats */}
+                {/* Enhanced Stats Section */}
                 {slotsStats && (
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
-                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg text-center">
-                      <div className="text-base sm:text-lg font-bold text-gray-900">{slotsStats.filled_main_slots}</div>
-                      <div className="text-xs text-gray-600">Main Filled</div>
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Tournament Overview</h3>
+                      <div className="text-sm text-gray-500">
+                        {slotsStats.filled_main_slots + slotsStats.filled_waitlist_slots}/{slotsStats.total_slots} Total Players
+                      </div>
                     </div>
-                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg text-center">
-                      <div className="text-base sm:text-lg font-bold text-gray-900">{slotsStats.filled_waitlist_slots}</div>
-                      <div className="text-xs text-gray-600">Waitlist</div>
-                    </div>
-                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg text-center">
-                      <div className="text-base sm:text-lg font-bold text-gray-900">{slotsStats.pending_approvals}</div>
-                      <div className="text-xs text-gray-600">Pending</div>
-                    </div>
-                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg text-center">
-                      <div className="text-base sm:text-lg font-bold text-gray-900">{slotsStats.total_slots}</div>
-                      <div className="text-xs text-gray-600">Total</div>
+                    
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-2xl font-bold text-blue-900">{slotsStats.filled_main_slots}</div>
+                            <div className="text-sm text-blue-700 font-medium">Main Slots</div>
+                            <div className="text-xs text-blue-600 mt-1">
+                              {slotsStats.total_slots > 0 ? Math.round((slotsStats.filled_main_slots / slotsStats.total_slots) * 100) : 0}% filled
+                            </div>
+                          </div>
+                          <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-2xl font-bold text-orange-900">{slotsStats.filled_waitlist_slots}</div>
+                            <div className="text-sm text-orange-700 font-medium">Waitlist</div>
+                            <div className="text-xs text-orange-600 mt-1">
+                              {slotsStats.filled_waitlist_slots > 0 ? 'Players waiting' : 'No waitlist'}
+                            </div>
+                          </div>
+                          <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-orange-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-2xl font-bold text-yellow-900">{slotsStats.pending_approvals}</div>
+                            <div className="text-sm text-yellow-700 font-medium">Pending</div>
+                            <div className="text-xs text-yellow-600 mt-1">
+                              {slotsStats.pending_approvals > 0 ? 'Awaiting approval' : 'All approved'}
+                            </div>
+                          </div>
+                          <div className="w-10 h-10 bg-yellow-200 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-yellow-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-2xl font-bold text-gray-900">{slotsStats.total_slots}</div>
+                            <div className="text-sm text-gray-700 font-medium">Total Slots</div>
+                            <div className="text-xs text-gray-600 mt-1">
+                              {slotsStats.total_slots - slotsStats.filled_main_slots} available
+                            </div>
+                          </div>
+                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
