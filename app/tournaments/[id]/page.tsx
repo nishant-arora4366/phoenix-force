@@ -1020,167 +1020,189 @@ export default function TournamentDetailsPage() {
           {/* Tournament Slots - Now at the top for better focus */}
           {tournament && (
             <div className="space-y-6">
-              {/* Player Registration Section - Modernized */}
-              {user && tournament.status === 'registration_open' && !isHost && (
-                <div className="mb-8">
-                  {userRegistration ? (
-                    // User is already registered - Modern Card Design
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 shadow-sm">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                          <h3 className="text-xl font-semibold text-green-900">Registration Confirmed</h3>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-green-800">#{userRegistration.position || 'Calculating...'}</div>
-                          <div className="text-sm text-green-600">Position</div>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div className="bg-white/60 rounded-lg p-3">
-                          <div className="text-sm text-gray-600 mb-1">Status</div>
-                          <div className="font-medium text-gray-900 capitalize">{userRegistration.status}</div>
-                        </div>
-                        <div className="bg-white/60 rounded-lg p-3">
-                          <div className="text-sm text-gray-600 mb-1">Registered</div>
-                          <div className="font-medium text-gray-900">{formatDateTime(userRegistration.requested_at)}</div>
-                        </div>
-                        {userRegistration.confirmed_at && (
-                          <div className="bg-white/60 rounded-lg p-3">
-                            <div className="text-sm text-gray-600 mb-1">Confirmed</div>
-                            <div className="font-medium text-gray-900">{formatDateTime(userRegistration.confirmed_at)}</div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <button
-                        onClick={withdrawFromTournament}
-                        disabled={isWithdrawing}
-                        className="w-full md:w-auto px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                      >
-                        {isWithdrawing ? 'Withdrawing...' : 'Withdraw from Tournament'}
-                      </button>
-                    </div>
-                  ) : (
-                    // User is not registered - Modern Design
-                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-6 shadow-sm">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <h3 className="text-xl font-semibold text-emerald-900">Join Tournament</h3>
-                      </div>
-                      
-                      <p className="text-emerald-700 text-sm mb-6">
-                        Secure your spot in this tournament. Registration is first-come, first-served.
-                      </p>
-                      
-                      <button
-                        onClick={registerForTournament}
-                        disabled={isRegistering}
-                        className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                      >
-                        {isRegistering ? (
-                          <div className="flex items-center justify-center space-x-2">
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            <span>Registering...</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center space-x-2">
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            <span>Register Now</span>
-                          </div>
-                        )}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Slots Display */}
               <div className="space-y-4">
-                {/* Enhanced Stats Section */}
-                {slotsStats && (
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Tournament Overview</h3>
-                      <div className="text-sm text-gray-500">
-                        {slotsStats.filled_main_slots + slotsStats.filled_waitlist_slots}/{slotsStats.total_slots} Total Players
+                {/* Comprehensive Tournament Overview */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+                  {/* Tournament Name and Status Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">{tournament.name}</h3>
+                      <div className="flex items-center space-x-3">
+                        <span className={`px-3 py-1 rounded-lg text-sm font-medium shadow-sm ${getStatusColor(tournament.status)}`}>
+                          {getStatusText(tournament.status)}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {slotsStats ? `${slotsStats.filled_main_slots + slotsStats.filled_waitlist_slots}/${slotsStats.total_slots} Players` : 'Loading...'}
+                        </span>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-2xl font-bold text-blue-900">{slotsStats.filled_main_slots}</div>
-                            <div className="text-sm text-blue-700 font-medium">Playing</div>
-                            <div className="text-xs text-blue-600 mt-1">
-                              {slotsStats.total_slots > 0 ? Math.round((slotsStats.filled_main_slots / slotsStats.total_slots) * 100) : 0}% filled
+                    {/* Register Now Button for Players */}
+                    {!isHost && (
+                      <div className="mt-4 sm:mt-0">
+                        {userRegistration ? (
+                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <h4 className="text-sm font-semibold text-blue-900">Registered</h4>
                             </div>
+                            <div className="text-xs text-blue-700">
+                              Position #{userRegistration.position || 'Calculating...'} • {userRegistration.status}
+                            </div>
+                            <button
+                              onClick={withdrawFromTournament}
+                              disabled={isWithdrawing}
+                              className="mt-2 w-full px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                            >
+                              {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
+                            </button>
                           </div>
-                          <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
-                            <svg className="w-5 h-5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
+                        ) : (
+                          <button
+                            onClick={registerForTournament}
+                            disabled={isRegistering}
+                            className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                          >
+                            {isRegistering ? (
+                              <div className="flex items-center">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                Registering...
+                              </div>
+                            ) : (
+                              <div className="flex items-center">
+                                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Register Now
+                              </div>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tournament Details Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Format</label>
+                      <div className="text-sm font-semibold text-gray-900">{tournament.format}</div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Teams</label>
+                      <div className="text-sm font-semibold text-gray-900">{tournament.selected_teams}</div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Date</label>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {new Date(tournament.tournament_date).toLocaleDateString('en-US', { 
+                          weekday: 'short', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Host</label>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {hostInfo?.firstname && hostInfo?.lastname 
+                          ? `${hostInfo.firstname} ${hostInfo.lastname}`
+                          : hostInfo?.username || hostInfo?.email || 'Unknown'
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats Grid */}
+                  {slotsStats && (
+                    <div className="mt-6 pt-6 border-t border-gray-100">
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Playing</label>
+                          <div className="text-sm font-semibold text-blue-900">{slotsStats.filled_main_slots}</div>
+                          <div className="text-xs text-blue-600">
+                            {slotsStats.total_slots > 0 ? Math.round((slotsStats.filled_main_slots / slotsStats.total_slots) * 100) : 0}% filled
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-2xl font-bold text-orange-900">{slotsStats.filled_waitlist_slots}</div>
-                            <div className="text-sm text-orange-700 font-medium">Waitlist</div>
-                            <div className="text-xs text-orange-600 mt-1">
-                              {slotsStats.filled_waitlist_slots > 0 ? 'Players waiting' : 'No waitlist'}
-                            </div>
-                          </div>
-                          <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center">
-                            <svg className="w-5 h-5 text-orange-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                        
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Waitlist</label>
+                          <div className="text-sm font-semibold text-orange-900">{slotsStats.filled_waitlist_slots}</div>
+                          <div className="text-xs text-orange-600">
+                            {slotsStats.filled_waitlist_slots > 0 ? 'Players waiting' : 'No waitlist'}
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-2xl font-bold text-yellow-900">{slotsStats.pending_approvals}</div>
-                            <div className="text-sm text-yellow-700 font-medium">Pending</div>
-                            <div className="text-xs text-yellow-600 mt-1">
-                              {slotsStats.pending_approvals > 0 ? 'Awaiting approval' : 'All approved'}
-                            </div>
-                          </div>
-                          <div className="w-10 h-10 bg-yellow-200 rounded-full flex items-center justify-center">
-                            <svg className="w-5 h-5 text-yellow-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                        
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Pending</label>
+                          <div className="text-sm font-semibold text-yellow-900">{slotsStats.pending_approvals}</div>
+                          <div className="text-xs text-yellow-600">
+                            {slotsStats.pending_approvals > 0 ? 'Awaiting approval' : 'All approved'}
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-lg border border-gray-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-2xl font-bold text-gray-900">{slotsStats.total_slots}</div>
-                            <div className="text-sm text-gray-700 font-medium">Total Slots</div>
-                            <div className="text-xs text-gray-600 mt-1">
-                              {slotsStats.total_slots - slotsStats.filled_main_slots} available
-                            </div>
-                          </div>
-                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                            <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
+                        
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Slots</label>
+                          <div className="text-sm font-semibold text-gray-900">{slotsStats.total_slots}</div>
+                          <div className="text-xs text-gray-600">
+                            {slotsStats.total_slots - slotsStats.filled_main_slots} available
                           </div>
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  {/* Created At */}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Created</label>
+                        <div className="text-sm font-semibold text-gray-900">
+                          {new Date(tournament.created_at).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                      
+                      {/* Host Actions */}
+                      {isHost && (
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setShowAssignModal(true)}
+                            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
+                          >
+                            Register Player
+                          </button>
+                          {getNextStatusOptions(tournament.status).map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() => updateTournamentStatus(option.value)}
+                              disabled={isUpdatingStatus}
+                              className={`px-3 py-1.5 text-white rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md ${option.color} ${
+                                isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : ''
+                              }`}
+                            >
+                              {isUpdatingStatus ? 'Updating...' : option.label}
+                            </button>
+                          ))}
+                          <Link
+                            href={`/tournaments/${tournament.id}/edit`}
+                            className="px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
+                          >
+                            Edit
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+                </div>
 
                 {/* Show message if no slots are available (should not happen with intelligent slots) */}
                 {slots.length === 0 && (
