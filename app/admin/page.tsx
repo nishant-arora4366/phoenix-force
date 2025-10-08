@@ -149,14 +149,22 @@ export default function AdminPanel() {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('/api/users')
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch(`/api/admin/users?userId=${sessionUser.id}`)
       const result = await response.json()
       
       if (result.success) {
-        setUsers(result.data)
+        setUsers(result.users || [])
+      } else {
+        throw new Error('Failed to fetch users')
       }
     } catch (error) {
       console.error('Error loading users:', error)
+      setMessage('Error loading users')
     }
   }
 
