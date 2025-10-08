@@ -526,7 +526,7 @@ export default function TournamentDetailsPage() {
         
         // Show success message
         const playerNames = selectedPlayers.map(p => p.display_name).join(', ')
-        setStatusMessage(`${selectedPlayers.length} player(s) (${playerNames}) have been ${assignStatus === 'confirmed' ? 'confirmed' : 'assigned'} to the tournament.`)
+        setStatusMessage(`${selectedPlayers.length} player(s) (${playerNames}) have been ${assignStatus === 'confirmed' ? 'registered with payment verified' : 'assigned'} to the tournament.`)
         setTimeout(() => setStatusMessage(''), 5000)
       } else {
         setStatusMessage(`Error: ${result.error}`)
@@ -1537,7 +1537,7 @@ export default function TournamentDetailsPage() {
                                     ? 'bg-green-100 text-green-800' 
                                     : 'bg-yellow-100 text-yellow-800'
                                 }`}>
-                                  {slot.status === 'confirmed' ? 'Confirmed' : 'Awaiting Payment Confirmation'}
+                                  {slot.status === 'confirmed' ? 'Payment Verified' : 'Awaiting Payment Confirmation'}
                                 </span>
                               </div>
                               <div className="space-y-2">
@@ -1545,7 +1545,7 @@ export default function TournamentDetailsPage() {
                                   <div>Joined: {formatDateTime(slot.requested_at)}</div>
                                   {slot.confirmed_at && (
                                     <div className="text-xs text-gray-500">
-                                      Confirmed: {formatDateTime(slot.confirmed_at)}
+                                      Payment Verified: {formatDateTime(slot.confirmed_at)}
                                     </div>
                                   )}
                                 </div>
@@ -1601,7 +1601,7 @@ export default function TournamentDetailsPage() {
                                     ? 'bg-green-100 text-green-800' 
                                     : 'bg-yellow-100 text-yellow-800'
                                 }`}>
-                                  {slot.status === 'confirmed' ? 'Confirmed' : 'Awaiting Payment Confirmation'}
+                                  {slot.status === 'confirmed' ? 'Payment Verified' : 'Awaiting Payment Confirmation'}
                                 </span>
                               </div>
                               <div className="col-span-3">
@@ -2236,8 +2236,8 @@ export default function TournamentDetailsPage() {
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <div className="ml-3">
-                      <div className="text-sm font-medium text-gray-700">Confirmed</div>
-                      <div className="text-xs text-gray-500">Player is immediately confirmed</div>
+                      <div className="text-sm font-medium text-gray-700">Payment Verified</div>
+                      <div className="text-xs text-gray-500">Player payment is verified</div>
                     </div>
                   </label>
                 </div>
@@ -2279,7 +2279,7 @@ export default function TournamentDetailsPage() {
                       Registering...
                     </div>
                   ) : (
-                    `Register ${selectedPlayers.length} Player(s) as ${assignStatus === 'confirmed' ? 'Confirmed' : 'Pending'}`
+                    `Register ${selectedPlayers.length} Player(s) as ${assignStatus === 'confirmed' ? 'Payment Verified' : 'Pending'}`
                   )}
                 </button>
               </div>
