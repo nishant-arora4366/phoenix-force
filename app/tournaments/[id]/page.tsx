@@ -705,34 +705,36 @@ export default function TournamentDetailsPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 space-y-4 sm:space-y-0">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <Link
-                href="/tournaments"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-              </Link>
-              <div>
-                <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">{tournament.name}</h1>
-                <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Tournament Details</p>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-              <span className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm ${getStatusColor(tournament.status)}`}>
-                {getStatusText(tournament.status)}
-              </span>
-              {isHost && (
+        <div className="mb-4 sm:mb-8">
+          <div className="flex flex-col space-y-3 sm:space-y-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
                 <Link
-                  href={`/tournaments/${tournament.id}/edit`}
-                  className="w-full sm:w-auto px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                  href="/tournaments"
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  Edit Tournament
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
                 </Link>
-              )}
+                <div>
+                  <h1 className="text-xl sm:text-4xl font-bold text-gray-900">{tournament.name}</h1>
+                  <p className="text-gray-600 text-xs sm:text-base">Tournament Details</p>
+                </div>
+              </div>
+              <div className="flex flex-col items-end space-y-1">
+                <span className={`px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm ${getStatusColor(tournament.status)}`}>
+                  {getStatusText(tournament.status)}
+                </span>
+                {isHost && (
+                  <Link
+                    href={`/tournaments/${tournament.id}/edit`}
+                    className="px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 text-xs font-medium shadow-sm"
+                  >
+                    Edit
+                  </Link>
+                )}
+              </div>
             </div>
             
             {/* Status Management */}
@@ -744,7 +746,7 @@ export default function TournamentDetailsPage() {
                       key={option.value}
                       onClick={() => updateTournamentStatus(option.value)}
                       disabled={isUpdatingStatus}
-                      className={`px-6 py-3 text-white rounded-xl transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md ${option.color} ${
+                      className={`px-3 sm:px-6 py-2 sm:py-3 text-white rounded-lg sm:rounded-xl transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md ${option.color} ${
                         isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
                     >
@@ -754,7 +756,7 @@ export default function TournamentDetailsPage() {
                 </div>
                 
                 {statusMessage && (
-                  <div className={`p-3 rounded-lg text-sm ${
+                  <div className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
                     statusMessage.includes('Error') 
                       ? 'bg-red-50 text-red-700 border border-red-200' 
                       : 'bg-green-50 text-green-700 border border-green-200'
@@ -854,22 +856,22 @@ export default function TournamentDetailsPage() {
               <div className="space-y-4">
                 {/* Stats */}
                 {slotsStats && (
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
-                      <div className="text-lg font-bold text-gray-900">{slotsStats.filled_main_slots}</div>
-                      <div className="text-xs sm:text-sm text-gray-600">Main Slots Filled</div>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg text-center">
+                      <div className="text-base sm:text-lg font-bold text-gray-900">{slotsStats.filled_main_slots}</div>
+                      <div className="text-xs text-gray-600">Main Filled</div>
                     </div>
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
-                      <div className="text-lg font-bold text-gray-900">{slotsStats.filled_waitlist_slots}</div>
-                      <div className="text-xs sm:text-sm text-gray-600">Waitlist Filled</div>
+                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg text-center">
+                      <div className="text-base sm:text-lg font-bold text-gray-900">{slotsStats.filled_waitlist_slots}</div>
+                      <div className="text-xs text-gray-600">Waitlist</div>
                     </div>
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
-                      <div className="text-lg font-bold text-gray-900">{slotsStats.pending_approvals}</div>
-                      <div className="text-xs sm:text-sm text-gray-600">Pending Approval</div>
+                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg text-center">
+                      <div className="text-base sm:text-lg font-bold text-gray-900">{slotsStats.pending_approvals}</div>
+                      <div className="text-xs text-gray-600">Pending</div>
                     </div>
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
-                      <div className="text-lg font-bold text-gray-900">{slotsStats.total_slots}</div>
-                      <div className="text-xs sm:text-sm text-gray-600">Total Slots</div>
+                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg text-center">
+                      <div className="text-base sm:text-lg font-bold text-gray-900">{slotsStats.total_slots}</div>
+                      <div className="text-xs text-gray-600">Total</div>
                     </div>
                   </div>
                 )}
@@ -949,7 +951,7 @@ export default function TournamentDetailsPage() {
                                   {slot.status === 'confirmed' ? 'Confirmed' : 'Pending'}
                                 </span>
                               </div>
-                              <div className="flex items-center justify-between">
+                              <div className="space-y-2">
                                 <div className="text-sm text-gray-600">
                                   <div>Joined: {formatDateTime(slot.requested_at)}</div>
                                   {slot.confirmed_at && (
@@ -959,28 +961,28 @@ export default function TournamentDetailsPage() {
                                   )}
                                 </div>
                                 {isHost && (
-                                  <div className="flex space-x-2">
+                                  <div className="flex flex-wrap gap-1.5">
                                     {slot.status === 'pending' ? (
                                       <>
                                         <button
                                           onClick={() => approveSlot(slot.id)}
-                                          className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors"
+                                          className="px-2.5 py-1.5 bg-green-600 text-white text-xs rounded-md hover:bg-green-700 transition-colors flex-1 min-w-0"
                                         >
-                                          Approve
+                                          ✓ Approve
                                         </button>
                                         <button
                                           onClick={() => rejectSlot(slot.id)}
-                                          className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                          className="px-2.5 py-1.5 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors flex-1 min-w-0"
                                         >
-                                          Reject
+                                          ✗ Reject
                                         </button>
                                       </>
                                     ) : (
                                       <button
                                         onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                        className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                        className="px-2.5 py-1.5 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors w-full"
                                       >
-                                        Remove
+                                        🗑️ Remove
                                       </button>
                                     )}
                                   </div>
@@ -1158,16 +1160,16 @@ export default function TournamentDetailsPage() {
                                   Waitlist
                                 </span>
                               </div>
-                              <div className="flex items-center justify-between">
+                              <div className="space-y-2">
                                 <div className="text-sm text-gray-600">
                                   Joined: {formatDateTime(slot.requested_at)}
                                 </div>
                                 {isHost && (
                                   <button
                                     onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                    className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                    className="px-2.5 py-1.5 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors w-full"
                                   >
-                                    Remove
+                                    🗑️ Remove
                                   </button>
                                 )}
                               </div>
