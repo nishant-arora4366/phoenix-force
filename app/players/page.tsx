@@ -446,18 +446,18 @@ export default function PlayersPage() {
                 Discover talented cricketers and build your dream team
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-            <div className="bg-[#09171F]/50 rounded-lg px-4 py-2 shadow-sm border border-[#CEA17A]/20">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+            <div className="bg-[#09171F]/50 rounded-lg px-4 py-2 shadow-sm border border-[#CEA17A]/20 w-full sm:w-auto">
                 <span className="text-sm text-[#CEA17A]">
                   {isLoading ? 'Loading...' : `${filteredPlayers?.length || 0} players`}
                 </span>
               </div>
               {isLoadingUser ? (
-              <div className="bg-[#09171F]/50 animate-pulse px-4 py-2 rounded-lg h-10 w-24 border border-[#CEA17A]/20"></div>
+              <div className="bg-[#09171F]/50 animate-pulse px-4 py-2 rounded-lg h-10 w-full sm:w-24 border border-[#CEA17A]/20"></div>
               ) : (userRole === 'admin' || userRole === 'host') ? (
                 <button
                   onClick={() => router.push('/players/create')}
-                className="bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium px-4 py-2"
+                className="bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium px-4 py-2 w-full sm:w-auto"
                 >
                   Add Player
                 </button>
@@ -486,17 +486,17 @@ export default function PlayersPage() {
               </div>
             </div>
 
-            {/* Sort and View Controls */}
+            {/* Sort Controls */}
             <div className="flex flex-col gap-4">
-              {/* First Row: Sort and View */}
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              {/* Sort and View Controls */}
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full">
                 {/* Sort */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
                   <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">Sort by:</label>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] shadow-lg"
+                    className="flex-1 sm:w-auto px-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] shadow-lg"
                   >
                     <option value="name">Name</option>
                     <option value="price">Price</option>
@@ -505,8 +505,8 @@ export default function PlayersPage() {
                   </select>
                 </div>
 
-                {/* View Toggle */}
-                <div className="flex items-center gap-2">
+                {/* View Toggle - Desktop Only */}
+                <div className="hidden sm:flex items-center gap-2">
                   <span className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">View:</span>
                   <button
                     onClick={() => setViewMode('grid')}
@@ -601,6 +601,41 @@ export default function PlayersPage() {
           </div>
         </div>
         )}
+
+        {/* View Toggle Tab Bar - Mobile Only */}
+        <div className="sm:hidden mb-6">
+          <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-4 border border-[#CEA17A]/20 shadow-xl">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide mr-4">View:</span>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`flex-1 py-3 px-4 rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2 ${
+                  viewMode === 'grid'
+                    ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
+                    : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                <span className="text-sm font-medium">Grid</span>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex-1 py-3 px-4 rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2 ${
+                  viewMode === 'list'
+                    ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
+                    : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm font-medium">List</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Players Display */}
         {isLoading ? (
