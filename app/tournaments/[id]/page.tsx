@@ -2751,7 +2751,7 @@ export default function TournamentDetailsPage() {
               <div className="flex space-x-3">
                 <button
                   onClick={closeStatusModal}
-                  className="flex-1 px-4 py-2 border border-[#CEA17A]/30 text-[#DBD0C0] rounded-lg hover:bg-[#3E4E5A] transition-colors bg-[#3E4E5A]"
+                  className="flex-1 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium"
                 >
                   Cancel
                 </button>
@@ -2807,7 +2807,7 @@ export default function TournamentDetailsPage() {
               <div className="flex space-x-3">
                 <button
                   onClick={cancelStatusChange}
-                  className="flex-1 px-4 py-2 border border-[#CEA17A]/30 text-[#DBD0C0] rounded-lg hover:bg-[#3E4E5A] transition-colors bg-[#3E4E5A]"
+                  className="flex-1 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium"
                 >
                   Cancel
                 </button>
