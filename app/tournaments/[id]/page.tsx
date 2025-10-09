@@ -1882,7 +1882,7 @@ export default function TournamentDetailsPage() {
                                         : slot.players.users?.username || slot.players.users?.email || slot.players.name
                                       }
                                     </div>
-                                    <div className="text-sm text-gray-500">{slot.players.display_name}</div>
+                                    <div className="text-sm text-[#DBD0C0]">{slot.players.display_name}</div>
                                   </div>
                                 </div>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -1890,7 +1890,7 @@ export default function TournamentDetailsPage() {
                                     ? 'bg-green-100 text-green-800' 
                                     : 'bg-yellow-100 text-yellow-800'
                                 }`}>
-                                  {slot.status === 'confirmed' ? 'Payment Verified' : 'Awaiting Payment Confirmation'}
+                                  {slot.status === 'confirmed' ? 'Approved' : 'Awaiting'}
                                 </span>
                               </div>
                               <div className="space-y-2">
@@ -1908,13 +1908,13 @@ export default function TournamentDetailsPage() {
                                       <>
                                         <button
                                           onClick={() => approveSlot(slot.id)}
-                                          className="px-2.5 py-1.5 bg-green-600 text-[#DBD0C0] text-xs rounded-md hover:bg-green-700 transition-colors flex-1 min-w-0"
+                                          className="px-2.5 py-1.5 bg-green-500/15 text-green-300 border border-green-500/25 shadow-lg shadow-green-500/10 backdrop-blur-sm rounded-md hover:bg-green-500/25 hover:border-green-500/40 transition-all duration-150 text-xs font-medium flex-1 min-w-0"
                                         >
                                           ✓ Approve
                                         </button>
                                         <button
                                           onClick={() => rejectSlot(slot.id)}
-                                          className="px-2.5 py-1.5 bg-red-600 text-[#DBD0C0] text-xs rounded-md hover:bg-red-700 transition-colors flex-1 min-w-0"
+                                          className="px-2.5 py-1.5 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-md hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs font-medium flex-1 min-w-0"
                                         >
                                           ✗ Reject
                                         </button>
@@ -1922,7 +1922,7 @@ export default function TournamentDetailsPage() {
                                     ) : (
                                       <button
                                         onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                        className="px-2.5 py-1.5 bg-red-600 text-[#DBD0C0] text-xs rounded-md hover:bg-red-700 transition-colors w-full"
+                                        className="px-2.5 py-1.5 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-md hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs font-medium w-full"
                                       >
                                         🗑️ Remove
                                       </button>
@@ -1973,13 +1973,13 @@ export default function TournamentDetailsPage() {
                                     <div className="flex space-x-2">
                                       <button
                                         onClick={() => approveSlot(slot.id)}
-                                        className="px-3 py-1 bg-green-600 text-[#DBD0C0] text-xs rounded-lg hover:bg-green-700 transition-colors"
+                                        className="px-3 py-1 bg-green-500/15 text-green-300 border border-green-500/25 shadow-lg shadow-green-500/10 backdrop-blur-sm rounded-lg hover:bg-green-500/25 hover:border-green-500/40 transition-all duration-150 text-xs font-medium"
                                       >
                                         Approve
                                       </button>
                                       <button
                                         onClick={() => rejectSlot(slot.id)}
-                                        className="px-3 py-1 bg-red-600 text-[#DBD0C0] text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                        className="px-3 py-1 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs font-medium"
                                       >
                                         Reject
                                       </button>
@@ -1987,7 +1987,7 @@ export default function TournamentDetailsPage() {
                                   ) : (
                                     <button
                                       onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                      className="px-3 py-1 bg-red-600 text-[#DBD0C0] text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                      className="px-3 py-1 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs font-medium"
                                     >
                                       Remove
                                     </button>
@@ -2101,11 +2101,11 @@ export default function TournamentDetailsPage() {
                                         : slot.players.users?.username || slot.players.users?.email || slot.players.name
                                       }
                                     </div>
-                                    <div className="text-sm text-gray-500">{slot.players.display_name}</div>
+                                    <div className="text-sm text-[#DBD0C0]">{slot.players.display_name}</div>
                                   </div>
                                 </div>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  Waitlist
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  Awaiting
                                 </span>
                               </div>
                               <div className="space-y-2">
