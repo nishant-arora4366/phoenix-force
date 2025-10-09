@@ -79,9 +79,10 @@ function SkillFilterInput({ skillName, skillValues, selectedValues, onSelectionC
         {skillName}
       </label>
       <div className="relative">
-        {/* Selected Values Display */}
-        {selectedValues.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-1">
+        {/* Input Field with Selected Values Inside */}
+        <div className="relative">
+          <div className="w-full min-h-[2.5rem] px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus-within:ring-4 focus-within:ring-[#CEA17A]/20 focus-within:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm shadow-lg flex flex-wrap items-center gap-1">
+            {/* Selected Values as Chips Inside Input */}
             {selectedValues.map(value => (
               <span
                 key={value}
@@ -96,23 +97,21 @@ function SkillFilterInput({ skillName, skillValues, selectedValues, onSelectionC
                 </button>
               </span>
             ))}
+            
+            {/* Search Input */}
+            <input
+              type="text"
+              value={searchValue}
+              onChange={(e) => {
+                setSearchValue(e.target.value)
+                setIsDropdownOpen(true)
+              }}
+              onFocus={() => setIsDropdownOpen(true)}
+              onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
+              placeholder={selectedValues.length === 0 ? `Search ${skillName.toLowerCase()}...` : ''}
+              className="flex-1 min-w-[120px] bg-transparent text-[#DBD0C0] text-sm outline-none placeholder-[#CEA17A]/50"
+            />
           </div>
-        )}
-        
-        {/* Input Field */}
-        <div className="relative">
-          <input
-            type="text"
-            value={searchValue}
-            onChange={(e) => {
-              setSearchValue(e.target.value)
-              setIsDropdownOpen(true)
-            }}
-            onFocus={() => setIsDropdownOpen(true)}
-            onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
-            placeholder={`Search ${skillName.toLowerCase()}...`}
-            className="w-full px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-sm shadow-lg"
-          />
           
           {/* Dropdown Arrow */}
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -155,6 +154,7 @@ export default function PlayersPage() {
   const [availableSkills, setAvailableSkills] = useState<Record<string, string[]>>({})
   const [visibleSkills, setVisibleSkills] = useState<string[]>([])
   const [showFilterSettings, setShowFilterSettings] = useState(false)
+  const [showFilterBar, setShowFilterBar] = useState(true)
   const [sortBy, setSortBy] = useState('name')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [user, setUser] = useState<any>(null)
@@ -495,12 +495,22 @@ export default function PlayersPage() {
               >
                 Clear Filters
               </button>
+
+              {/* Toggle Filter Bar */}
+              <button
+                onClick={() => setShowFilterBar(!showFilterBar)}
+                className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
+                title={showFilterBar ? "Hide filter bar" : "Show filter bar"}
+              >
+                {showFilterBar ? 'Hide Filters' : 'Show Filters'}
+              </button>
             </div>
           </div>
         </div>
 
         {/* Filter Bar Row */}
-        <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-8">
+        {showFilterBar && (
+          <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-8">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
             {/* Dynamic Skills Filters */}
             {visibleSkills.length > 0 && (
@@ -535,6 +545,7 @@ export default function PlayersPage() {
             </button>
           </div>
         </div>
+        )}
 
         {/* Players Display */}
         {isLoading ? (
