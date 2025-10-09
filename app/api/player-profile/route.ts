@@ -206,7 +206,8 @@ export async function POST(request: NextRequest) {
       bio: bio || null,
       profile_pic_url: profile_pic_url || null,
       mobile_number: mobile_number || null,
-      status: 'pending' // User-created profiles need admin approval
+      status: 'pending', // User-created profiles need admin approval
+      created_by: userData.id // Track who created this player
     }
 
     // Only include base_price for admins and hosts

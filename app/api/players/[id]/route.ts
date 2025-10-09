@@ -129,6 +129,7 @@ export async function GET(
       created_at: player.created_at,
       updated_at: player.updated_at,
       user_id: player.user_id, // Include user_id for navigation logic
+      created_by: player.created_by, // Include created_by for access control
       // Include filtered skills for detailed view
       skills: skills
     }
@@ -173,7 +174,7 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
     }
 
-    // Check if user has permission to update players (admin or host)
+    // Check if user has permission to update players
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('role, status')
@@ -187,10 +188,46 @@ export async function PUT(
       }, { status: 403 })
     }
 
-    if (user.role !== 'admin' && user.role !== 'host') {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Only admins and hosts can update players' 
+    // Get the player to check ownership
+    const { data: player, error: playerError } = await supabase
+      .from('players')
+      .select('created_by, user_id')
+      .eq('id', id)
+      .single()
+
+    if (playerError || !player) {
+      return NextResponse.json({
+        success: false,
+        error: 'Player not found'
+      }, { status: 404 })
+    }
+
+    // Access control logic:
+    // 1. Admin has all access
+    // 2. Host can only edit players they created (created_by = user.id)
+    // 3. Regular users can only edit their own profile (user_id = user.id)
+    if (user.role === 'admin') {
+      // Admin has full access - no additional checks needed
+    } else if (user.role === 'host') {
+      // Host can only edit players they created
+      if (player.created_by !== userData.id) {
+        return NextResponse.json({
+          success: false,
+          error: 'You can only edit players you created'
+        }, { status: 403 })
+      }
+    } else if (user.role === 'user') {
+      // Regular users can only edit their own profile
+      if (player.user_id !== userData.id) {
+        return NextResponse.json({
+          success: false,
+          error: 'You can only edit your own profile'
+        }, { status: 403 })
+      }
+    } else {
+      return NextResponse.json({
+        success: false,
+        error: 'Insufficient permissions to update players'
       }, { status: 403 })
     }
 
@@ -363,7 +400,7 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
     }
 
-    // Check if user has permission to delete players (admin only)
+    // Check if user has permission to delete players
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('role, status')
@@ -377,10 +414,46 @@ export async function DELETE(
       }, { status: 403 })
     }
 
-    if (user.role !== 'admin') {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Only admins can delete players' 
+    // Get the player to check ownership
+    const { data: player, error: playerError } = await supabase
+      .from('players')
+      .select('created_by, user_id')
+      .eq('id', id)
+      .single()
+
+    if (playerError || !player) {
+      return NextResponse.json({
+        success: false,
+        error: 'Player not found'
+      }, { status: 404 })
+    }
+
+    // Access control logic:
+    // 1. Admin has all access
+    // 2. Host can only delete players they created (created_by = user.id)
+    // 3. Regular users can only delete their own profile (user_id = user.id)
+    if (user.role === 'admin') {
+      // Admin has full access - no additional checks needed
+    } else if (user.role === 'host') {
+      // Host can only delete players they created
+      if (player.created_by !== userData.id) {
+        return NextResponse.json({
+          success: false,
+          error: 'You can only delete players you created'
+        }, { status: 403 })
+      }
+    } else if (user.role === 'user') {
+      // Regular users can only delete their own profile
+      if (player.user_id !== userData.id) {
+        return NextResponse.json({
+          success: false,
+          error: 'You can only delete your own profile'
+        }, { status: 403 })
+      }
+    } else {
+      return NextResponse.json({
+        success: false,
+        error: 'Insufficient permissions to delete players'
       }, { status: 403 })
     }
 

@@ -21,6 +21,7 @@ interface Player {
   wicket_keeping_rating?: number
   created_at: string
   user_id?: string
+  created_by?: string
   skills?: { [key: string]: string | string[] }
 }
 
@@ -714,32 +715,51 @@ export default function PlayersPage() {
                   
                 
                 {/* Action Buttons - Top Right */}
-                {(userRole === 'admin' || userRole === 'host') && (
-                  <div className="absolute top-3 right-3 flex space-x-1 z-20">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        router.push(`/players/${player.id}/edit`)
-                      }}
-                      className="bg-black/50 text-white border border-white/20 shadow-lg backdrop-blur-sm rounded-lg hover:bg-black/70 hover:border-white/40 transition-all duration-150 text-xs py-1 px-2"
-                      title="Edit Player"
-                    >
-                      ✏️
-                    </button>
-                    {userRole === 'admin' && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDelete(player.id, player.display_name)
-                        }}
-                        className="bg-red-500/80 text-white border border-red-400/50 shadow-lg backdrop-blur-sm rounded-lg hover:bg-red-600/80 hover:border-red-300/70 transition-all duration-150 text-xs py-1 px-2"
-                        title="Delete Player"
-                      >
-                        🗑️
-                      </button>
-                    )}
-                  </div>
-                )}
+                {(() => {
+                  // Access control logic:
+                  // 1. Admin has all access
+                  // 2. Host can only edit/delete players they created
+                  // 3. Regular users can only edit their own profile
+                  const canEdit = userRole === 'admin' || 
+                    (userRole === 'host' && player.created_by === currentUser?.id) ||
+                    (userRole === 'user' && player.user_id === currentUser?.id)
+                  
+                  const canDelete = userRole === 'admin' || 
+                    (userRole === 'host' && player.created_by === currentUser?.id) ||
+                    (userRole === 'user' && player.user_id === currentUser?.id)
+                  
+                  if (canEdit || canDelete) {
+                    return (
+                      <div className="absolute top-3 right-3 flex space-x-1 z-20">
+                        {canEdit && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/players/${player.id}/edit`)
+                            }}
+                            className="bg-black/50 text-white border border-white/20 shadow-lg backdrop-blur-sm rounded-lg hover:bg-black/70 hover:border-white/40 transition-all duration-150 text-xs py-1 px-2"
+                            title="Edit Player"
+                          >
+                            ✏️
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDelete(player.id, player.display_name)
+                            }}
+                            className="bg-red-500/80 text-white border border-red-400/50 shadow-lg backdrop-blur-sm rounded-lg hover:bg-red-600/80 hover:border-red-300/70 transition-all duration-150 text-xs py-1 px-2"
+                            title="Delete Player"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
                   
                 {/* Group Badge - Top Left */}
                   {player.group_name && (

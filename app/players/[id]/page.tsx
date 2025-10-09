@@ -13,6 +13,7 @@ interface Player {
   created_at: string
   updated_at?: string
   user_id?: string
+  created_by?: string
   skills?: { [key: string]: string | string[] }
 }
 
@@ -24,6 +25,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
   const [user, setUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [shouldRedirect, setShouldRedirect] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,6 +55,14 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         const player = result.data
         console.log('Player data received:', player)
         console.log('Player skills:', player.skills)
+        
+        // Check if current user matches player's user_id and should redirect
+        if (currentUser && player.user_id && currentUser.id === player.user_id) {
+          setShouldRedirect(true)
+          router.push('/player-profile')
+          return // Don't set player state, just redirect
+        }
+        
         setPlayer(player)
       } catch (error: any) {
         console.error('Error fetching player:', error)
@@ -78,13 +88,6 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
     return () => unsubscribe()
   }, [params])
 
-  // Check if current user matches player's user_id and redirect to profile page
-  useEffect(() => {
-    if (currentUser && player && player.user_id && currentUser.id === player.user_id) {
-      // Redirect to player profile page if user is viewing their own player
-      router.push('/player-profile')
-    }
-  }, [currentUser, player, router])
 
   const handleDelete = async () => {
     if (!player || !confirm('Are you sure you want to delete this player? This action cannot be undone.')) {
@@ -118,7 +121,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
     }
   }
 
-  if (loading) {
+  if (loading || shouldRedirect) {
     return (
       <div className="min-h-screen bg-[#19171b] py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -126,10 +129,10 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto mb-4"></div>
               <h2 className="text-xl font-semibold text-[#DBD0C0] mb-2">
-                Loading Player...
+                {shouldRedirect ? 'Redirecting...' : 'Loading Player...'}
               </h2>
               <p className="text-[#CEA17A]">
-                Fetching player information
+                {shouldRedirect ? 'Taking you to your profile page...' : 'Fetching player information'}
               </p>
             </div>
           </div>
@@ -294,24 +297,43 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
                 )}
 
                 {/* Action Buttons */}
-                {(userRole === 'admin' || userRole === 'host') && (
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#CEA17A]/20">
-                    <button
-                      onClick={() => router.push(`/players/${player.id}/edit`)}
-                      className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium text-sm sm:text-base"
-                    >
-                      Edit Player
-                    </button>
-                    {userRole === 'admin' && (
-                      <button
-                        onClick={handleDelete}
-                        className="px-6 py-3 bg-[#75020f]/15 text-[#75020f] border border-[#75020f]/25 shadow-lg shadow-[#75020f]/10 backdrop-blur-sm rounded-lg hover:bg-[#75020f]/25 hover:border-[#75020f]/40 transition-all duration-200 font-medium text-sm sm:text-base"
-                      >
-                        Delete Player
-                      </button>
-                    )}
-                  </div>
-                )}
+                {(() => {
+                  // Access control logic:
+                  // 1. Admin has all access
+                  // 2. Host can only edit/delete players they created
+                  // 3. Regular users can only edit their own profile
+                  const canEdit = userRole === 'admin' || 
+                    (userRole === 'host' && player.created_by === currentUser?.id) ||
+                    (userRole === 'user' && player.user_id === currentUser?.id)
+                  
+                  const canDelete = userRole === 'admin' || 
+                    (userRole === 'host' && player.created_by === currentUser?.id) ||
+                    (userRole === 'user' && player.user_id === currentUser?.id)
+                  
+                  if (canEdit || canDelete) {
+                    return (
+                      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#CEA17A]/20">
+                        {canEdit && (
+                          <button
+                            onClick={() => router.push(`/players/${player.id}/edit`)}
+                            className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium text-sm sm:text-base"
+                          >
+                            Edit Player
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={handleDelete}
+                            className="px-6 py-3 bg-[#75020f]/15 text-[#75020f] border border-[#75020f]/25 shadow-lg shadow-[#75020f]/10 backdrop-blur-sm rounded-lg hover:bg-[#75020f]/25 hover:border-[#75020f]/40 transition-all duration-200 font-medium text-sm sm:text-base"
+                          >
+                            Delete Player
+                          </button>
+                        )}
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
               </div>
             </div>
           </div>

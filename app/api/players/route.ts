@@ -130,7 +130,8 @@ export async function POST(request: NextRequest) {
         bio: bio || null,
         profile_pic_url: profile_pic_url || null,
         mobile_number: mobile_number || null,
-        status: 'approved' // Admin-created players are auto-approved
+        status: 'approved', // Admin-created players are auto-approved
+        created_by: userData.id // Track who created this player
       })
       .select()
       .single()
