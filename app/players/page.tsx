@@ -81,22 +81,24 @@ function SkillFilterInput({ skillName, skillValues, selectedValues, onSelectionC
       <div className="relative">
         {/* Input Field with Selected Values Inside */}
         <div className="relative">
-          <div className="w-full min-h-[2.5rem] px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus-within:ring-4 focus-within:ring-[#CEA17A]/20 focus-within:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm shadow-lg flex flex-wrap items-center gap-1">
-            {/* Selected Values as Chips Inside Input */}
-            {selectedValues.map(value => (
-              <span
-                key={value}
-                className="inline-flex items-center gap-1 px-2 py-1 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded text-xs"
-              >
-                {value}
-                <button
-                  onClick={() => removeValue(value)}
-                  className="hover:text-red-400 transition-colors"
+          <div className="w-full h-[2.5rem] px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus-within:ring-4 focus-within:ring-[#CEA17A]/20 focus-within:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm shadow-lg flex items-center gap-1 overflow-hidden">
+            {/* Selected Values Container - Scrollable */}
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-shrink-0">
+              {selectedValues.map(value => (
+                <span
+                  key={value}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded text-xs whitespace-nowrap flex-shrink-0"
                 >
-                  ×
-                </button>
-              </span>
-            ))}
+                  {value}
+                  <button
+                    onClick={() => removeValue(value)}
+                    className="hover:text-red-400 transition-colors"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
             
             {/* Search Input */}
             <input
