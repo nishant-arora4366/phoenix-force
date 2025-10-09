@@ -408,7 +408,7 @@ export default function CreatePlayerPage() {
                             // Multi-select with checkboxes
                             <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-[#CEA17A]/20 rounded-xl p-3 bg-[#19171b]/50 backdrop-blur-sm">
                               {skill.values && skill.values.map((value) => (
-                                <label key={value.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                                <label key={value.id} className="flex items-center space-x-2 cursor-pointer hover:bg-[#CEA17A]/10 p-1 rounded transition-colors duration-200">
                                   <input
                                     type="checkbox"
                                     checked={Array.isArray(currentValue) && currentValue.includes(value.value_name)}
@@ -423,13 +423,13 @@ export default function CreatePlayerPage() {
                                       }
                                       setFormData({ ...formData, skills: newSkills })
                                     }}
-                                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-[#CEA17A] focus:ring-[#CEA17A]/20 border-[#CEA17A]/30 rounded bg-[#19171b]/50"
                                   />
                                   <span className="text-sm text-[#CEA17A]">{value.value_name}</span>
                                 </label>
                               ))}
                               {Array.isArray(currentValue) && currentValue.length > 0 && (
-                                <div className="text-xs text-gray-500 mt-2">
+                                <div className="text-xs text-[#CEA17A]/70 mt-2">
                                   Selected: {currentValue.join(', ')}
                                 </div>
                               )}
