@@ -796,7 +796,7 @@ export default function PlayersPage() {
                 <div 
                   key={player.id} 
                   onClick={() => router.push(`/players/${player.id}`)}
-                  className={`grid gap-4 p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
+                  className={`grid gap-2 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
                     (userRole === 'admin' || userRole === 'host') 
                       ? 'grid-cols-12' 
                       : 'grid-cols-10'
@@ -804,7 +804,7 @@ export default function PlayersPage() {
                 >
                   {/* Photo */}
                   <div className="col-span-2 sm:col-span-1 flex items-center">
-                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-[#3E4E5A] to-[#09171F] flex items-center justify-center overflow-hidden border border-[#CEA17A]/20">
+                    <div className="h-6 w-6 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-[#3E4E5A] to-[#09171F] flex items-center justify-center overflow-hidden border border-[#CEA17A]/20">
                       {player.profile_pic_url ? (
                         <img
                           src={player.profile_pic_url}
@@ -812,7 +812,7 @@ export default function PlayersPage() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="text-sm sm:text-base text-[#CEA17A]/60">🏏</div>
+                        <div className="text-xs sm:text-base text-[#CEA17A]/60">🏏</div>
                       )}
                     </div>
                   </div>
@@ -820,18 +820,18 @@ export default function PlayersPage() {
                   {/* Name */}
                   <div className="col-span-3 sm:col-span-2 flex items-center">
                     <div>
-                      <div className="text-sm sm:text-base font-medium text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors">
+                      <div className="text-xs sm:text-base font-medium text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors truncate">
                         {player.display_name}
                       </div>
                       {player.stage_name && (
-                        <div className="text-xs text-[#CEA17A]/70 italic">"{player.stage_name}"</div>
+                        <div className="text-xs text-[#CEA17A]/70 italic truncate">"{player.stage_name}"</div>
                       )}
                     </div>
                   </div>
 
                   {/* Role */}
                   <div className="col-span-2 sm:col-span-1 flex items-center">
-                    <div className="flex gap-1">
+                    <div className="flex gap-0.5">
                       {player.skills?.Role ? (
                         Array.isArray(player.skills.Role) ? (
                           player.skills.Role.map((role, index) => {
@@ -839,7 +839,7 @@ export default function PlayersPage() {
                                             role.toLowerCase().includes('bowler') ? '🎾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
                             return (
-                              <span key={index} className="text-sm sm:text-base" title={role}>
+                              <span key={index} className="text-xs sm:text-base" title={role}>
                                 {roleEmoji}
                               </span>
                             )
@@ -851,7 +851,7 @@ export default function PlayersPage() {
                                             role.toLowerCase().includes('bowler') ? '🎾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
                             return (
-                              <span className="text-sm sm:text-base" title={role}>
+                              <span className="text-xs sm:text-base" title={role}>
                                 {roleEmoji}
                               </span>
                             )
@@ -865,16 +865,34 @@ export default function PlayersPage() {
 
                   {/* Community */}
                   <div className="col-span-3 sm:col-span-2 flex items-center">
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex items-center gap-1 max-w-full overflow-hidden">
                       {player.skills?.Community ? (
                         Array.isArray(player.skills.Community) ? (
-                          player.skills.Community.map((community, index) => (
-                            <span key={index} className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                              {community}
+                          player.skills.Community.length > 1 ? (
+                            <div className="flex items-center gap-1">
+                              <span className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
+                                {player.skills.Community[0]}
+                              </span>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  // Show all communities in a tooltip or modal
+                                  const communities = Array.isArray(player.skills?.Community) ? player.skills.Community : [player.skills?.Community]
+                                  alert(`Communities: ${communities.join(', ')}`)
+                                }}
+                                className="text-[#CEA17A] text-xs hover:text-[#CEA17A]/80 transition-colors"
+                                title={`View all communities: ${Array.isArray(player.skills?.Community) ? player.skills.Community.join(', ') : player.skills?.Community}`}
+                              >
+                                +{player.skills.Community.length - 1}
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
+                              {player.skills.Community[0]}
                             </span>
-                          ))
+                          )
                         ) : (
-                          <span className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                          <span className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
                             {player.skills.Community}
                           </span>
                         )
@@ -887,7 +905,7 @@ export default function PlayersPage() {
                   {/* Base Price */}
                   {(userRole === 'admin' || userRole === 'host') && (
                     <div className="col-span-2 sm:col-span-1 flex items-center">
-                      <div className="text-sm sm:text-base font-semibold text-[#CEA17A]">
+                      <div className="text-xs sm:text-base font-semibold text-[#CEA17A]">
                         ₹{player.base_price}
                       </div>
                     </div>
