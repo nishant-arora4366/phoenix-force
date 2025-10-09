@@ -2793,7 +2793,7 @@ export default function TournamentDetailsPage() {
                   </div>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-sm text-[#DBD0C0]">To:</span>
-                    <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-green-500/15 text-green-300 border border-green-500/25 shadow-lg shadow-green-500/10 backdrop-blur-sm">
                       {statusDisplayNames[selectedNewStatus as keyof typeof statusDisplayNames]}
                     </span>
                   </div>
