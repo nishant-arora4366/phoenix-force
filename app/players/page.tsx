@@ -394,128 +394,37 @@ export default function PlayersPage() {
                 </div>
 
                 {/* Player Info */}
-                <div className="relative z-10 p-6 flex-1 flex flex-col">
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors">
-                      {player.display_name}
-                    </h3>
-                    {player.stage_name && (
-                      <p className="text-sm text-[#CEA17A]/70 italic">
-                        "{player.stage_name}"
-                      </p>
-                    )}
-                  </div>
+                <div className="relative z-10 p-4 flex-1 flex flex-col">
+                  <h3 className="text-lg font-semibold text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors mb-3 line-clamp-1">
+                    {player.display_name}
+                  </h3>
 
                   {/* Roles */}
                   <div className="flex flex-wrap gap-2 mb-4">
                     {player.is_bowler && (
-                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium backdrop-blur-sm">
+                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
                         ⚾ Bowler
                       </span>
                     )}
                     {player.is_batter && (
-                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium backdrop-blur-sm">
+                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
                         🏏 Batter
                       </span>
                     )}
                     {player.is_wicket_keeper && (
-                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium backdrop-blur-sm">
+                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
                         🧤 WK
                       </span>
                     )}
-                    {/* Display additional skills from the skills object */}
-                    {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
-                      // Skip if it's already displayed as a role above
-                      if (['Role', 'Base Price'].includes(skillName)) return null;
-                      
-                      return (
-                        <span key={skillName} className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-3 py-1 rounded-full font-medium backdrop-blur-sm">
-                          {skillName}: {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                        </span>
-                      );
-                    })}
+                    {/* Community */}
+                    {player.skills?.Community && (
+                      <span className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
+                        {player.skills.Community}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Ratings */}
-                  <div className="space-y-3 mb-4">
-                    {player.batting_rating && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-[#CEA17A]">Batting</span>
-                        <div className="flex items-center">
-                          <div className="w-16 bg-[#3E4E5A]/30 rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-[#CEA17A] h-2 rounded-full" 
-                              style={{ width: `${(player.batting_rating / 10) * 100}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-semibold text-[#DBD0C0]">{player.batting_rating}/10</span>
-                        </div>
-                      </div>
-                    )}
-                    {player.bowling_rating && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-[#CEA17A]">Bowling</span>
-                        <div className="flex items-center">
-                          <div className="w-16 bg-[#3E4E5A]/30 rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-[#CEA17A] h-2 rounded-full" 
-                              style={{ width: `${(player.bowling_rating / 10) * 100}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-semibold text-[#DBD0C0]">{player.bowling_rating}/10</span>
-                        </div>
-                      </div>
-                    )}
-                    {player.wicket_keeping_rating && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-[#CEA17A]">Wicket Keeping</span>
-                        <div className="flex items-center">
-                          <div className="w-16 bg-[#3E4E5A]/30 rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-[#CEA17A] h-2 rounded-full" 
-                              style={{ width: `${(player.wicket_keeping_rating / 10) * 100}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-semibold text-[#DBD0C0]">{player.wicket_keeping_rating}/10</span>
-                        </div>
-                      </div>
-                    )}
-                    {/* Display additional skills as ratings */}
-                    {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
-                      // Skip if it's already displayed above or is not a rating
-                      if (['Role', 'Base Price', 'Batting Rating', 'Bowling Rating', 'Wicket Keeping Rating'].includes(skillName)) return null;
-                      
-                      return (
-                        <div key={skillName} className="flex items-center justify-between">
-                          <span className="text-sm text-[#CEA17A]">{skillName}</span>
-                          <span className="text-sm font-semibold text-[#DBD0C0]">
-                            {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
 
-                  {/* Bio */}
-                  {player.bio && (
-                    <div className="text-sm text-[#CEA17A]/80 mb-4">
-                      {player.bio.length > 100 ? (
-                        <div>
-                          <span className="line-clamp-2">
-                            {player.bio.substring(0, 100)}...
-                          </span>
-                          <button 
-                            onClick={() => router.push(`/players/${player.id}`)}
-                            className="text-[#CEA17A] hover:text-[#CEA17A]/80 text-xs mt-1 block"
-                          >
-                            Show more →
-                          </button>
-                        </div>
-                      ) : (
-                        <p className="line-clamp-2">{player.bio}</p>
-                      )}
-                    </div>
-                  )}
 
                   {/* Action Buttons */}
                   <div className="space-y-2 mt-auto">
