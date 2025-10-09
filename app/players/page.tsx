@@ -50,6 +50,8 @@ export default function PlayersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [skillFilters, setSkillFilters] = useState<Record<string, string[]>>({})
   const [availableSkills, setAvailableSkills] = useState<Record<string, string[]>>({})
+  const [visibleSkills, setVisibleSkills] = useState<string[]>([])
+  const [showFilterSettings, setShowFilterSettings] = useState(false)
   const [sortBy, setSortBy] = useState('name')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [user, setUser] = useState<any>(null)
@@ -130,6 +132,10 @@ export default function PlayersPage() {
       })
       
       setAvailableSkills(skillsWithValues)
+      
+      // Set initial visible skills (first 5 skills)
+      const skillNames = Object.keys(skillsWithValues)
+      setVisibleSkills(skillNames.slice(0, 5))
     }
   }, [players])
 
@@ -281,99 +287,61 @@ export default function PlayersPage() {
       <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
-          <div>
+            <div>
             <h1 className="text-2xl sm:text-4xl font-bold text-[#DBD0C0] mb-2 sm:mb-4">
-              Player Roster
-            </h1>
+                Player Roster
+              </h1>
             <p className="text-[#CEA17A] text-base sm:text-lg">
-              Discover talented cricketers and build your dream team
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-            <div className="bg-[#09171F]/50 rounded-lg px-4 py-2 shadow-sm border border-[#CEA17A]/20">
-              <span className="text-sm text-[#CEA17A]">
-                {isLoading ? 'Loading...' : `${filteredPlayers?.length || 0} players`}
-              </span>
+                Discover talented cricketers and build your dream team
+              </p>
             </div>
-            {isLoadingUser ? (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+            <div className="bg-[#09171F]/50 rounded-lg px-4 py-2 shadow-sm border border-[#CEA17A]/20">
+                <span className="text-sm text-[#CEA17A]">
+                  {isLoading ? 'Loading...' : `${filteredPlayers?.length || 0} players`}
+                </span>
+              </div>
+              {isLoadingUser ? (
               <div className="bg-[#09171F]/50 animate-pulse px-4 py-2 rounded-lg h-10 w-24 border border-[#CEA17A]/20"></div>
-            ) : (userRole === 'admin' || userRole === 'host') ? (
-              <button
-                onClick={() => router.push('/players/create')}
+              ) : (userRole === 'admin' || userRole === 'host') ? (
+                <button
+                  onClick={() => router.push('/players/create')}
                 className="bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium px-4 py-2"
-              >
-                Add Player
-              </button>
-            ) : null}
+                >
+                  Add Player
+                </button>
+              ) : null}
           </div>
         </div>
 
-        {/* Modern Dynamic Filters */}
-        <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-8">
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-[#CEA17A]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search players by name..."
-                className="w-full pl-12 pr-4 py-4 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-lg placeholder-[#CEA17A]/50"
-              />
-            </div>
-          </div>
-
-          {/* Dynamic Skills Filters */}
-          {Object.keys(availableSkills).length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {Object.entries(availableSkills).map(([skillName, skillValues]) => (
-                <div key={skillName} className="space-y-2">
-                  <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">
-                    {skillName}
-                  </label>
-                  <div className="relative">
-                    <select
-                      multiple
-                      value={skillFilters[skillName] || []}
-                      onChange={(e) => {
-                        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value)
-                        setSkillFilters(prev => ({
-                          ...prev,
-                          [skillName]: selectedOptions
-                        }))
-                      }}
-                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] min-h-[3rem] shadow-lg"
-                      size={Math.min(skillValues.length, 6)}
-                    >
-                      {skillValues.map(value => (
-                        <option key={value} value={value}>{value}</option>
-                      ))}
-                    </select>
-                    {(skillFilters[skillName]?.length || 0) > 0 && (
-                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-lg">
-                        {skillFilters[skillName]?.length || 0}
-                      </div>
-                    )}
-                  </div>
+        {/* Search and Sort Row */}
+        <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            {/* Search Bar */}
+            <div className="flex-1">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-[#CEA17A]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
                 </div>
-              ))}
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search players by name..."
+                  className="w-full pl-12 pr-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] placeholder-[#CEA17A]/50"
+                />
+              </div>
             </div>
-          )}
 
-          {/* Sort and View Controls */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             {/* Sort */}
             <div className="flex items-center gap-3">
               <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">Sort by:</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] shadow-lg"
+                className="px-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] shadow-lg"
               >
                 <option value="name">Name</option>
                 <option value="price">Price</option>
@@ -381,35 +349,94 @@ export default function PlayersPage() {
                 <option value="bowling">Bowling Rating</option>
               </select>
             </div>
+          </div>
+        </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide mr-2">View:</span>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
-                  viewMode === 'grid'
-                    ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
-                    : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
-                  viewMode === 'list'
-                    ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
-                    : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
+        {/* Filter Bar Row */}
+        <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-4">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+            {/* Dynamic Skills Filters */}
+            {visibleSkills.length > 0 && (
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {visibleSkills.map(skillName => {
+                  const skillValues = availableSkills[skillName] || []
+                  return (
+                    <div key={skillName} className="space-y-2">
+                      <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">
+                        {skillName}
+                      </label>
+                      <div className="relative">
+                        <select
+                          multiple
+                          value={skillFilters[skillName] || []}
+                          onChange={(e) => {
+                            const selectedOptions = Array.from(e.target.selectedOptions, option => option.value)
+                            setSkillFilters(prev => ({
+                              ...prev,
+                              [skillName]: selectedOptions
+                            }))
+                          }}
+                          className="w-full px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] min-h-[2.5rem] shadow-lg text-sm"
+                          size={Math.min(skillValues.length, 4)}
+                        >
+                          {skillValues.map(value => (
+                            <option key={value} value={value}>{value}</option>
+                          ))}
+                        </select>
+                        {(skillFilters[skillName]?.length || 0) > 0 && (
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
+                            {skillFilters[skillName]?.length || 0}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Filter Settings */}
+            <button
+              onClick={() => setShowFilterSettings(true)}
+              className="p-3 rounded-xl transition-all duration-300 shadow-lg bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30"
+              title="Filter Settings"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* View Toggle Row */}
+        <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-4 border border-[#CEA17A]/20 shadow-xl mb-8">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide mr-4">View:</span>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
+                viewMode === 'grid'
+                  ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
+                  : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
+                viewMode === 'list'
+                  ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
+                  : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -430,18 +457,18 @@ export default function PlayersPage() {
                 className="group relative aspect-square overflow-hidden bg-gradient-to-br from-[#3E4E5A] to-[#09171F] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 cursor-pointer"
               >
                 {/* Player Image Background */}
-                {player.profile_pic_url ? (
-                  <img
-                    src={player.profile_pic_url}
-                    alt={player.display_name}
-                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center">
+                  {player.profile_pic_url ? (
+                    <img
+                      src={player.profile_pic_url}
+                      alt={player.display_name}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
                     <div className="text-6xl text-[#CEA17A]/60">🏏</div>
-                  </div>
-                )}
-                
+                    </div>
+                  )}
+                  
                 
                 {/* Action Buttons - Top Right */}
                 {(userRole === 'admin' || userRole === 'host') && (
@@ -470,13 +497,13 @@ export default function PlayersPage() {
                     )}
                   </div>
                 )}
-                
+                  
                 {/* Group Badge - Top Left */}
-                {player.group_name && (
+                  {player.group_name && (
                   <div className="absolute top-3 left-3 bg-black/50 text-white border border-white/20 px-2 py-1 rounded-full text-xs font-medium shadow-lg backdrop-blur-sm">
-                    {player.group_name}
-                  </div>
-                )}
+                      {player.group_name}
+                    </div>
+                  )}
 
                 {/* Player Name - Bottom Left with Gradient Background */}
                 <div className="absolute bottom-0 left-0 right-0">
@@ -493,10 +520,10 @@ export default function PlayersPage() {
                             const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
                                             role.toLowerCase().includes('bowler') ? '🎾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
-                            return (
+                      return (
                               <span key={index} className="text-lg">
                                 {roleEmoji}
-                              </span>
+                        </span>
                             )
                           })
                         ) : (
@@ -505,10 +532,10 @@ export default function PlayersPage() {
                             const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
                                             role.toLowerCase().includes('bowler') ? '🎾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
-                            return (
+                      return (
                               <span className="text-lg">
                                 {roleEmoji}
-                              </span>
+                          </span>
                             )
                           })()
                         )}
@@ -657,8 +684,8 @@ export default function PlayersPage() {
                             <span className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">
                               {player.skills.Community}
                             </span>
-                          )}
-                        </div>
+                      )}
+                    </div>
                       </div>
                     )}
 
@@ -715,12 +742,12 @@ export default function PlayersPage() {
                         )}
                       </>
                     ) : null}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
         {/* Empty State */}
         {!isLoading && filteredPlayers?.length === 0 && (
@@ -746,6 +773,81 @@ export default function PlayersPage() {
           </div>
         )}
 
+        {/* Filter Settings Modal */}
+        {showFilterSettings && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+            <div className="bg-[#09171F] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-[#CEA17A]/30">
+              {/* Modal Header */}
+              <div className="p-6 border-b border-[#CEA17A]/20">
+                <h2 className="text-xl font-semibold text-white mb-2">Filter Settings</h2>
+                <p className="text-[#CEA17A] text-sm">Choose which skills to display in the filter bar (max 5)</p>
+              </div>
+
+              {/* Skills Selection */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 gap-3">
+                  {Object.keys(availableSkills).map(skillName => (
+                    <label key={skillName} className="flex items-center space-x-3 p-3 rounded-lg border border-[#CEA17A]/20 hover:bg-[#CEA17A]/10 transition-colors cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={visibleSkills.includes(skillName)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            if (visibleSkills.length < 5) {
+                              setVisibleSkills([...visibleSkills, skillName])
+                            }
+                          } else {
+                            setVisibleSkills(visibleSkills.filter(s => s !== skillName))
+                          }
+                        }}
+                        disabled={!visibleSkills.includes(skillName) && visibleSkills.length >= 5}
+                        className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A]/20 disabled:opacity-50"
+                      />
+                      <div className="flex-1">
+                        <span className="text-[#DBD0C0] text-sm font-medium">{skillName}</span>
+                        <div className="text-xs text-[#CEA17A]/70">
+                          {availableSkills[skillName]?.length || 0} values
+                        </div>
+                      </div>
+                      {visibleSkills.includes(skillName) && (
+                        <div className="text-xs text-[#CEA17A] font-medium">
+                          {visibleSkills.indexOf(skillName) + 1}
+                        </div>
+                      )}
+                    </label>
+                  ))}
+                </div>
+
+                {Object.keys(availableSkills).length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-[#CEA17A]">No skills found in player data</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-6 border-t border-[#CEA17A]/20 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowFilterSettings(false)}
+                  className="px-4 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-lg hover:bg-[#3E4E5A]/25 transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    // Reset to first 5 skills
+                    const skillNames = Object.keys(availableSkills)
+                    setVisibleSkills(skillNames.slice(0, 5))
+                    setShowFilterSettings(false)
+                  }}
+                  className="px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded-lg hover:bg-[#CEA17A]/25 transition-colors"
+                >
+                  Reset to Default
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
