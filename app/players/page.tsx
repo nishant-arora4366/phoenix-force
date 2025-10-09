@@ -48,8 +48,8 @@ const fetcher = async (url: string) => {
 export default function PlayersPage() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterCommunity, setFilterCommunity] = useState('')
-  const [filterRole, setFilterRole] = useState('')
+  const [filterCommunity, setFilterCommunity] = useState<string[]>([])
+  const [filterRole, setFilterRole] = useState<string[]>([])
   const [sortBy, setSortBy] = useState('name')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [user, setUser] = useState<any>(null)
@@ -100,20 +100,30 @@ export default function PlayersPage() {
   const filteredPlayers = players?.filter(player => {
     const matchesSearch = player.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          player.stage_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCommunity = !filterCommunity || 
+    const matchesCommunity = filterCommunity.length === 0 || 
       (player.skills?.Community && 
-        (Array.isArray(player.skills.Community) ? player.skills.Community.includes(filterCommunity) : 
-         player.skills.Community === filterCommunity))
-    const matchesRole = !filterRole || 
-      (filterRole === 'bowler' && player.skills?.Role && 
-        (Array.isArray(player.skills.Role) ? player.skills.Role.some(role => role.toLowerCase().includes('bowler')) : 
-         player.skills.Role.toLowerCase().includes('bowler'))) ||
-      (filterRole === 'batter' && player.skills?.Role && 
-        (Array.isArray(player.skills.Role) ? player.skills.Role.some(role => role.toLowerCase().includes('batter')) : 
-         player.skills.Role.toLowerCase().includes('batter'))) ||
-      (filterRole === 'wicket_keeper' && player.skills?.Role && 
-        (Array.isArray(player.skills.Role) ? player.skills.Role.some(role => role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk')) : 
-         player.skills.Role.toLowerCase().includes('wicket') || player.skills.Role.toLowerCase().includes('wk')))
+        (Array.isArray(player.skills.Community) ? 
+          filterCommunity.some(community => player.skills?.Community?.includes(community)) :
+          filterCommunity.includes(player.skills.Community)))
+    
+    const matchesRole = filterRole.length === 0 || 
+      (player.skills?.Role && 
+        (Array.isArray(player.skills.Role) ? 
+          filterRole.some(roleFilter => 
+            (player.skills?.Role as string[]).some((role: string) => {
+              if (roleFilter === 'bowler') return role.toLowerCase().includes('bowler')
+              if (roleFilter === 'batter') return role.toLowerCase().includes('batter')
+              if (roleFilter === 'wicket_keeper') return role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk')
+              return false
+            })
+          ) :
+          filterRole.some(roleFilter => {
+            const role = player.skills?.Role as string
+            if (roleFilter === 'bowler') return role?.toLowerCase().includes('bowler')
+            if (roleFilter === 'batter') return role?.toLowerCase().includes('batter')
+            if (roleFilter === 'wicket_keeper') return role?.toLowerCase().includes('wicket') || role?.toLowerCase().includes('wk')
+            return false
+          })))
     
     return matchesSearch && matchesCommunity && matchesRole
   })?.sort((a, b) => {
@@ -296,30 +306,52 @@ export default function PlayersPage() {
 
               {/* Community Filter */}
               <div className="sm:w-48">
-                <select
-                  value={filterCommunity}
-                  onChange={(e) => setFilterCommunity(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
-                >
-                  <option value="">All Communities</option>
-                  {uniqueCommunities.map(community => (
-                    <option key={community} value={community}>{community}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    multiple
+                    value={filterCommunity}
+                    onChange={(e) => {
+                      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value)
+                      setFilterCommunity(selectedOptions)
+                    }}
+                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] min-h-[3rem]"
+                    size={Math.min(uniqueCommunities.length + 1, 6)}
+                  >
+                    {uniqueCommunities.map(community => (
+                      <option key={community} value={community}>{community}</option>
+                    ))}
+                  </select>
+                  {filterCommunity.length > 0 && (
+                    <div className="absolute -top-2 -right-2 bg-[#CEA17A] text-[#09171F] text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      {filterCommunity.length}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Role Filter */}
               <div className="sm:w-48">
-                <select
-                  value={filterRole}
-                  onChange={(e) => setFilterRole(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
-                >
-                  <option value="">All Roles</option>
-                  <option value="bowler">Bowler</option>
-                  <option value="batter">Batter</option>
-                  <option value="wicket_keeper">Wicket Keeper</option>
-                </select>
+                <div className="relative">
+                  <select
+                    multiple
+                    value={filterRole}
+                    onChange={(e) => {
+                      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value)
+                      setFilterRole(selectedOptions)
+                    }}
+                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] min-h-[3rem]"
+                    size={4}
+                  >
+                    <option value="bowler">Bowler</option>
+                    <option value="batter">Batter</option>
+                    <option value="wicket_keeper">Wicket Keeper</option>
+                  </select>
+                  {filterRole.length > 0 && (
+                    <div className="absolute -top-2 -right-2 bg-[#CEA17A] text-[#09171F] text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      {filterRole.length}
+                    </div>
+                  )}
+                </div>
               </div>
 
             </div>
@@ -691,8 +723,8 @@ export default function PlayersPage() {
               <button 
                 onClick={() => {
                   setSearchTerm('')
-                  setFilterCommunity('')
-                  setFilterRole('')
+                  setFilterCommunity([])
+                  setFilterRole([])
                 }}
                 className="bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium px-6 py-2"
               >
