@@ -311,7 +311,7 @@ export default function Home() {
             {/* Left Side - Content */}
             <div className="text-left relative z-20">
               <div className="animate-fade-in-up">
-                <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black mb-6 tracking-tight">
                   <span className="text-[#DBD0C0]">ELEVATE YOUR</span>
                   <br />
                   <span className="text-[#CEA17A]">CRICKET JOURNEY</span>
