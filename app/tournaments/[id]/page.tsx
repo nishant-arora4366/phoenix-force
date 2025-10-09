@@ -1646,7 +1646,7 @@ export default function TournamentDetailsPage() {
                     <div className="mt-6 pt-6 border-t border-[#CEA17A]/20">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {/* Total Slots Card */}
-                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 h-32">
                           {/* Luxury Gradient Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
                           <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
@@ -1669,7 +1669,7 @@ export default function TournamentDetailsPage() {
                         </div>
 
                         {/* Filled Card */}
-                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 h-32">
                           {/* Luxury Gradient Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
                           <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
@@ -1692,7 +1692,7 @@ export default function TournamentDetailsPage() {
                         </div>
 
                         {/* Waitlist Card */}
-                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 h-32">
                           {/* Luxury Gradient Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
                           <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
@@ -1715,7 +1715,7 @@ export default function TournamentDetailsPage() {
                         </div>
 
                         {/* Pending Approval Card */}
-                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 h-32">
                           {/* Luxury Gradient Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
                           <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
@@ -1726,7 +1726,7 @@ export default function TournamentDetailsPage() {
                               <div className="text-2xl font-bold text-[#DBD0C0]">{slotsStats.pending_approvals}</div>
                               <div className="text-sm font-medium text-[#DBD0C0]">Pending Approval</div>
                               <div className="text-xs text-yellow-400">
-                                Awaiting Payment Confirmation
+                                Awaiting Payment
                               </div>
                             </div>
                             <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
