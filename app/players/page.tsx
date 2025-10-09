@@ -20,6 +20,7 @@ interface Player {
   batting_rating?: number
   wicket_keeping_rating?: number
   created_at: string
+  user_id?: string
   skills?: { [key: string]: string | string[] }
 }
 
@@ -197,6 +198,18 @@ function SkillFilterInput({ skillName, skillValues, selectedValues, onSelectionC
 
 export default function PlayersPage() {
   const router = useRouter()
+
+  // Handle player card click - redirect to profile if it's the user's own player
+  const handlePlayerClick = (player: Player) => {
+    // Check if the current user matches the player's user_id
+    if (currentUser && player.user_id && currentUser.id === player.user_id) {
+      // Redirect to player profile page
+      router.push('/player-profile')
+    } else {
+      // Redirect to normal player details page
+      router.push(`/players/${player.id}`)
+    }
+  }
   const [searchTerm, setSearchTerm] = useState('')
   const [skillFilters, setSkillFilters] = useState<Record<string, string[]>>({})
   const [availableSkills, setAvailableSkills] = useState<Record<string, string[]>>({})
@@ -208,6 +221,7 @@ export default function PlayersPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [user, setUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
 
   const { data: players, error, isLoading, mutate } = useSWR<Player[]>('/api/players-public', fetcher)
@@ -220,14 +234,17 @@ export default function PlayersPage() {
         const currentUser = sessionManager.getUser()
         if (currentUser) {
           setUser(currentUser)
+          setCurrentUser(currentUser)
           setUserRole(currentUser.role || null)
         } else {
           setUser(null)
+          setCurrentUser(null)
           setUserRole(null)
         }
       } catch (error) {
         console.error('Error getting user:', error)
         setUser(null)
+        setCurrentUser(null)
         setUserRole(null)
       } finally {
         setIsLoadingUser(false)
@@ -239,9 +256,11 @@ export default function PlayersPage() {
     const unsubscribe = sessionManager.subscribe((userData) => {
       if (userData) {
         setUser(userData)
+        setCurrentUser(userData)
         setUserRole(userData.role || null)
       } else {
         setUser(null)
+        setCurrentUser(null)
         setUserRole(null)
       }
       setIsLoadingUser(false)
@@ -677,7 +696,7 @@ export default function PlayersPage() {
             {filteredPlayers?.map((player) => (
               <div 
                 key={player.id} 
-                onClick={() => router.push(`/players/${player.id}`)}
+                onClick={() => handlePlayerClick(player)}
                 className="group relative aspect-square overflow-hidden bg-gradient-to-br from-[#3E4E5A] to-[#09171F] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 cursor-pointer z-0"
               >
                 {/* Player Image Background */}
@@ -797,7 +816,7 @@ export default function PlayersPage() {
             {filteredPlayers?.map((player) => (
                 <div 
                   key={player.id} 
-                      onClick={() => router.push(`/players/${player.id}`)}
+                      onClick={() => handlePlayerClick(player)}
                   className={`grid gap-1 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
                     (userRole === 'admin' || userRole === 'host') 
                       ? 'grid-cols-8' 
