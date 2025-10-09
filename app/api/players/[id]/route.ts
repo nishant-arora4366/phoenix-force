@@ -128,6 +128,7 @@ export async function GET(
       mobile_number: player.mobile_number,
       created_at: player.created_at,
       updated_at: player.updated_at,
+      user_id: player.user_id, // Include user_id for navigation logic
       // Include filtered skills for detailed view
       skills: skills
     }

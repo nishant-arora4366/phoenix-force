@@ -12,6 +12,7 @@ interface Player {
   mobile_number?: string
   created_at: string
   updated_at?: string
+  user_id?: string
   skills?: { [key: string]: string | string[] }
 }
 
@@ -22,6 +23,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
   const [error, setError] = useState('')
   const [user, setUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,6 +34,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         const currentUser = sessionManager.getUser()
         if (currentUser) {
           setUser(currentUser)
+          setCurrentUser(currentUser)
           setUserRole(currentUser.role || null)
         }
 
@@ -74,6 +77,14 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
 
     return () => unsubscribe()
   }, [params])
+
+  // Check if current user matches player's user_id and redirect to profile page
+  useEffect(() => {
+    if (currentUser && player && player.user_id && currentUser.id === player.user_id) {
+      // Redirect to player profile page if user is viewing their own player
+      router.push('/player-profile')
+    }
+  }, [currentUser, player, router])
 
   const handleDelete = async () => {
     if (!player || !confirm('Are you sure you want to delete this player? This action cannot be undone.')) {
