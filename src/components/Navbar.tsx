@@ -35,6 +35,66 @@ export default function Navbar() {
     }
   }
 
+  const handleBackNavigation = () => {
+    // Define logical back navigation paths based on current page
+    const getBackPath = () => {
+      // Tournament-related pages
+      if (pathname.startsWith('/tournaments/') && pathname.includes('/edit')) {
+        return `/tournaments/${pathname.split('/')[2]}` // Back to tournament details
+      }
+      if (pathname.startsWith('/tournaments/') && !pathname.includes('/edit')) {
+        return '/tournaments' // Back to tournaments list
+      }
+      if (pathname === '/tournaments/create') {
+        return '/tournaments' // Back to tournaments list
+      }
+      
+      // Player-related pages
+      if (pathname.startsWith('/players/') && pathname.includes('/edit')) {
+        return `/players/${pathname.split('/')[2]}` // Back to player details
+      }
+      if (pathname.startsWith('/players/') && !pathname.includes('/edit')) {
+        return '/players' // Back to players list
+      }
+      if (pathname === '/players/create') {
+        return '/players' // Back to players list
+      }
+      
+      // Profile pages
+      if (pathname === '/profile') {
+        return '/tournaments' // Back to tournaments (main page)
+      }
+      if (pathname === '/player-profile') {
+        return '/profile' // Back to profile
+      }
+      
+      // Admin pages
+      if (pathname.startsWith('/admin/')) {
+        return '/admin' // Back to admin dashboard
+      }
+      if (pathname === '/admin') {
+        return '/tournaments' // Back to tournaments
+      }
+      
+      // Other pages
+      if (pathname === '/auctions') {
+        return '/tournaments' // Back to tournaments
+      }
+      if (pathname === '/tournament-rules') {
+        return '/tournaments' // Back to tournaments
+      }
+      
+      // Default fallback to home
+      return '/'
+    }
+
+    const backPath = getBackPath()
+    router.push(backPath)
+  }
+
+  // Check if we should show back button (not on home page)
+  const shouldShowBackButton = pathname !== '/'
+
   const getDisplayName = () => {
     if (user?.firstname && user?.lastname) {
       return `${user.firstname} ${user.lastname}`
@@ -131,15 +191,34 @@ export default function Navbar() {
             
             {/* Left Side - Brand (Desktop) / Hamburger (Mobile) */}
             <div className="flex items-center space-x-4">
-              {/* Hamburger Menu - Always Visible */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-3 rounded-lg text-[#DBD0C0] hover:text-[#75020f] hover:bg-[#75020f]/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#75020f] transition-all duration-300"
-              >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-              </button>
+              {/* Back Button Container - Always reserves space on desktop */}
+              <div className="hidden sm:block">
+                {shouldShowBackButton ? (
+                  <button
+                    onClick={handleBackNavigation}
+                    className="flex items-center space-x-2 p-3 rounded-lg text-[#DBD0C0] hover:text-[#75020f] hover:bg-[#75020f]/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#75020f] transition-all duration-300"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span className="text-sm font-medium">Back</span>
+                  </button>
+                ) : (
+                  <div className="w-20 h-12"></div>
+                )}
+              </div>
+
+              {/* Hamburger Menu Container - Always reserves space on mobile */}
+              <div className="sm:hidden">
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="p-3 rounded-lg text-[#DBD0C0] hover:text-[#75020f] hover:bg-[#75020f]/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#75020f] transition-all duration-300"
+                >
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+              </div>
 
               {/* Logo */}
               <Link href="/" className="flex items-center transition-all duration-300 hover:scale-105">
@@ -291,6 +370,18 @@ export default function Navbar() {
           className="fixed inset-0 z-40"
           onClick={() => setIsProfileDropdownOpen(false)}
         />
+      )}
+
+      {/* Floating Back Button - Mobile Only, Show on all pages except home */}
+      {shouldShowBackButton && (
+        <button
+          onClick={handleBackNavigation}
+          className="fixed bottom-6 left-6 sm:hidden z-40 w-14 h-14 bg-[#75020f] hover:bg-[#75020f]/90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+        >
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
       )}
     </>
   )
