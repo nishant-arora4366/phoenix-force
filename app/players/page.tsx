@@ -497,7 +497,7 @@ export default function PlayersPage() {
               <div className="flex">
                 <button
                   onClick={() => setSortDirection('asc')}
-                  className={`px-2 py-2 border-2 border-[#CEA17A]/30 rounded-l-lg transition-all duration-200 ${
+                  className={`px-3 py-3 border-2 border-[#CEA17A]/30 rounded-l-lg transition-all duration-200 ${
                     sortDirection === 'asc' 
                       ? 'bg-[#CEA17A] text-[#09171F] border-[#CEA17A]' 
                       : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20'
@@ -510,7 +510,7 @@ export default function PlayersPage() {
                 </button>
                 <button
                   onClick={() => setSortDirection('desc')}
-                  className={`px-2 py-2 border-2 border-[#CEA17A]/30 rounded-r-lg border-l-0 transition-all duration-200 ${
+                  className={`px-3 py-3 border-2 border-[#CEA17A]/30 rounded-r-lg border-l-0 transition-all duration-200 ${
                     sortDirection === 'desc' 
                       ? 'bg-[#CEA17A] text-[#09171F] border-[#CEA17A]' 
                       : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20'
@@ -527,7 +527,7 @@ export default function PlayersPage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-sm"
+                className="px-3 py-3 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-sm"
                 >
                   <option value="name">Name</option>
                 <option value="base_price">Base Price</option>
