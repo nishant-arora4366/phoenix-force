@@ -267,37 +267,60 @@ function PlayerProfileContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-4 sm:py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Hero Section Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+      <div className="absolute inset-0" 
+           style={{
+             background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+           }}></div>
+      {/* Enhanced Background Patterns */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(117,2,15,0.1)_1px,transparent_0)] bg-[length:20px_20px] opacity-30"></div>
+      <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,rgba(117,2,15,0.05)_60deg,transparent_120deg)] opacity-60"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(117,2,15,0.02)_50%,transparent_75%)] bg-[length:40px_40px] opacity-20"></div>
+      
+      {/* Sharp Geometric Patterns */}
+      <div className="absolute inset-0 bg-[linear-gradient(30deg,transparent_40%,rgba(206,161,122,0.03)_50%,transparent_60%)] bg-[length:60px_60px] opacity-25"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(117,2,15,0.04)_0%,transparent_70%)] opacity-30"></div>
+      <div className="absolute inset-0 bg-[conic-gradient(from_45deg_at_25%_25%,transparent_0deg,rgba(206,161,122,0.02)_90deg,transparent_180deg)] opacity-20"></div>
+      
+      {/* Animated Grid Lines */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#CEA17A] to-transparent animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-0 left-0 h-full w-px bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        <div className="absolute top-0 right-0 h-full w-px bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '1.5s'}}></div>
+      </div>
+      
+      {/* Background Glowing Orbs */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#CEA17A]/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0s'}}></div>
+        <div className="absolute bottom-1/3 right-1/4 w-24 h-24 bg-[#75020f]/8 rounded-full blur-2xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-[#2b0307]/6 rounded-full blur-xl animate-pulse" style={{animationDelay: '4s'}}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-[#CEA17A]/4 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}}></div>
+      </div>
+      
+      {/* Sharp Geometric Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/3 left-1/5 w-2 h-2 bg-[#CEA17A]/3 rotate-45 animate-pulse" style={{animationDelay: '0.3s'}}></div>
+        <div className="absolute top-2/3 right-1/4 w-3 h-3 bg-[#75020f]/4 rotate-12 animate-pulse" style={{animationDelay: '2.5s'}}></div>
+        <div className="absolute top-1/4 right-1/3 w-4 h-4 bg-[#2b0307]/7 rotate-12 animate-pulse" style={{animationDelay: '0.8s'}}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-6 h-6 bg-[#CEA17A]/4 rotate-45 animate-pulse" style={{animationDelay: '3.5s'}}></div>
+        <div className="absolute top-3/4 left-1/2 w-3 h-3 bg-[#75020f]/5 rotate-12 animate-pulse" style={{animationDelay: '1.2s'}}></div>
+      </div>
+      
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            <button
-              onClick={() => router.push('/')}
-              className="p-2 text-[#CEA17A] hover:text-[#DBD0C0] hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
-            <div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-[#DBD0C0]">
-                {playerProfile ? 'My Player Profile' : 'Create Player Profile'}
-              </h1>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          {playerProfile && !isEditing && (
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-              <button
-                onClick={() => setIsEditing(true)}
-                className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
-              >
-                Edit Profile
-              </button>
-            </div>
-          )}
+        <div className="text-left mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-4xl font-bold text-[#DBD0C0] mb-2 sm:mb-4">
+            {playerProfile ? 'My Player Profile' : 'Create Player Profile'}
+          </h1>
+          <p className="text-[#CEA17A] text-sm sm:text-base">
+            {playerProfile 
+              ? 'View and manage your cricket player profile'
+              : 'Create your cricket player profile to participate in tournaments'
+            }
+          </p>
         </div>
 
         {/* Player Profile Status */}
@@ -305,13 +328,16 @@ function PlayerProfileContent() {
           <div className="mb-8">
             <div className={`p-4 rounded-lg border-2 ${
               playerProfile.status === 'approved' 
-                ? 'bg-green-50 border-green-200 text-green-800'
+                ? 'bg-[#CEA17A]/20 border-[#CEA17A]/30 text-[#DBD0C0]'
                 : playerProfile.status === 'pending'
-                ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                : 'bg-red-50 border-red-200 text-red-800'
+                ? 'bg-[#CEA17A]/20 border-[#CEA17A]/30 text-[#DBD0C0]'
+                : 'bg-[#75020f]/20 border-[#75020f]/30 text-[#DBD0C0]'
             }`}>
               <div className="flex items-center">
-                <div className="w-5 h-5 mr-3">
+                <div className={`w-5 h-5 mr-3 ${
+                  playerProfile.status === 'approved' ? 'text-[#CEA17A]' : 
+                  playerProfile.status === 'pending' ? 'text-[#CEA17A]' : 'text-[#75020f]'
+                }`}>
                   {playerProfile.status === 'approved' ? (
                     <svg fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -346,7 +372,7 @@ function PlayerProfileContent() {
 
         {/* Player Card - Similar to Players Details Page */}
         {!isEditing && playerProfile && (
-          <div className="group bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
+          <div className="group bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150 mb-6 sm:mb-8">
             {/* Player Image Header */}
             <div className="relative h-64 sm:h-80 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
               {playerProfile.profile_pic_url ? (
@@ -381,9 +407,9 @@ function PlayerProfileContent() {
             </div>
 
             {/* Player Info */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="mb-4">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 group-hover:text-[#CEA17A] transition-colors mb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors mb-2">
                   {playerProfile.display_name}
                 </h1>
               </div>
@@ -397,7 +423,7 @@ function PlayerProfileContent() {
               {Object.keys(formData.skills).length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
                   {Object.entries(formData.skills).map(([skillName, skillValue]) => (
-                    <span key={skillName} className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full font-medium">
+                    <span key={skillName} className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium">
                       {skillName}: {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
                     </span>
                   ))}
@@ -412,10 +438,10 @@ function PlayerProfileContent() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-gray-100">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-[#CEA17A]/20">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-semibold"
+                  className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium text-sm sm:text-base"
                 >
                   Edit Profile
                 </button>
@@ -426,14 +452,14 @@ function PlayerProfileContent() {
 
         {/* No Profile State */}
         {!isEditing && !playerProfile && (
-          <div className="group bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
+          <div className="group bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150 mb-6 sm:mb-8">
             <div className="p-8 text-center">
               <div className="text-6xl mb-4">🏏</div>
               <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">No Player Profile</h2>
               <p className="text-[#CEA17A] mb-6">Create your cricket player profile to participate in tournaments</p>
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
+                className="px-8 py-3 bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] font-semibold rounded-xl hover:from-[#CEA17A]/90 hover:to-[#CEA17A]/70 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 Create Profile
               </button>
@@ -443,109 +469,111 @@ function PlayerProfileContent() {
 
         {/* Edit Form */}
         {isEditing && (
-          <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-[#DBD0C0] mb-2">
+          <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
+            <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-8 py-4 sm:py-6 border-b border-[#CEA17A]/20">
+              <h2 className="text-lg sm:text-2xl font-bold text-[#DBD0C0]">
                 {playerProfile ? 'Edit Player Profile' : 'Create Player Profile'}
               </h2>
-              <p className="text-[#CEA17A]">
+              <p className="text-[#CEA17A] text-sm sm:text-base mt-1">
                 {playerProfile 
                   ? 'Update your player information and skills'
                   : 'Fill in your player information to create your profile'
                 }
               </p>
             </div>
+            
+            <div className="p-4 sm:p-8">
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                {/* Basic Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label htmlFor="display_name" className="block text-sm font-semibold text-[#CEA17A]">
+                      Display Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="display_name"
+                      name="display_name"
+                      value={formData.display_name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
+                      placeholder="Enter your display name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="mobile_number" className="block text-sm font-semibold text-[#CEA17A]">
+                      Mobile Number
+                    </label>
+                    <input
+                      type="tel"
+                      id="mobile_number"
+                      name="mobile_number"
+                      value={formData.mobile_number}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
+                      placeholder="Enter mobile number (optional)"
+                    />
+                  </div>
+                </div>
+
+                {/* Profile Picture */}
                 <div className="space-y-2">
-                  <label htmlFor="display_name" className="block text-sm font-semibold text-[#CEA17A]">
-                    Display Name *
+                  <label htmlFor="profile_pic_url" className="block text-sm font-semibold text-[#CEA17A]">
+                    Profile Picture URL
                   </label>
                   <input
-                    type="text"
-                    id="display_name"
-                    name="display_name"
-                    value={formData.display_name}
+                    type="url"
+                    id="profile_pic_url"
+                    name="profile_pic_url"
+                    value={formData.profile_pic_url}
                     onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
-                    placeholder="Enter your display name"
+                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
+                    placeholder="Enter profile picture URL (optional)"
                   />
                 </div>
 
+                {/* Bio */}
                 <div className="space-y-2">
-                  <label htmlFor="mobile_number" className="block text-sm font-semibold text-[#CEA17A]">
-                    Mobile Number
+                  <label htmlFor="bio" className="block text-sm font-semibold text-[#CEA17A]">
+                    Bio
                   </label>
-                  <input
-                    type="tel"
-                    id="mobile_number"
-                    name="mobile_number"
-                    value={formData.mobile_number}
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    value={formData.bio}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
-                    placeholder="Enter mobile number (optional)"
+                    rows={4}
+                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] resize-none"
+                    placeholder="Tell us about yourself (optional)"
                   />
                 </div>
-              </div>
 
-              {/* Profile Picture */}
-              <div className="space-y-2">
-                <label htmlFor="profile_pic_url" className="block text-sm font-semibold text-[#CEA17A]">
-                  Profile Picture URL
-                </label>
-                <input
-                  type="url"
-                  id="profile_pic_url"
-                  name="profile_pic_url"
-                  value={formData.profile_pic_url}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
-                  placeholder="Enter profile picture URL (optional)"
-                />
-              </div>
-
-              {/* Bio */}
-              <div className="space-y-2">
-                <label htmlFor="bio" className="block text-sm font-semibold text-[#CEA17A]">
-                  Bio
-                </label>
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b] resize-none"
-                  placeholder="Tell us about yourself (optional)"
-                />
-              </div>
-
-              {/* Dynamic Player Skills */}
-              {isLoadingSkills ? (
-                <div className="space-y-4">
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                    <p className="text-[#CEA17A] mt-2">Loading player skills...</p>
+                {/* Dynamic Player Skills */}
+                {isLoadingSkills ? (
+                  <div className="space-y-4">
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#CEA17A] mx-auto"></div>
+                      <p className="text-[#CEA17A] mt-2">Loading player skills...</p>
+                    </div>
                   </div>
-                </div>
-              ) : playerSkills.length === 0 ? (
-                <div className="space-y-4">
-                  <div className="text-center py-8">
-                    <div className="text-gray-500 text-4xl mb-4">⚠️</div>
-                    <p className="text-[#CEA17A]">No player skills configured yet.</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Please contact an admin to configure player skills.
-                    </p>
+                ) : playerSkills.length === 0 ? (
+                  <div className="space-y-4">
+                    <div className="text-center py-8">
+                      <div className="text-[#CEA17A] text-4xl mb-4">⚠️</div>
+                      <p className="text-[#CEA17A]">No player skills configured yet.</p>
+                      <p className="text-sm text-[#CEA17A]/70 mt-2">
+                        Please contact an admin to configure player skills.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <label className="block text-sm font-semibold text-[#CEA17A]">
-                    Player Skills & Attributes
-                  </label>
+                ) : (
+                  <div className="space-y-6">
+                    <label className="block text-sm font-semibold text-[#CEA17A]">
+                      Player Skills & Attributes
+                    </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {playerSkills.map((skill) => {
                       if (!skill || !skill.skill_name) {
@@ -567,9 +595,9 @@ function PlayerProfileContent() {
                           
                           {isMultiSelect ? (
                             // Multi-select with checkboxes
-                            <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-[#CEA17A]/20 rounded-xl p-3 bg-[#19171b]">
+                            <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-[#CEA17A]/20 rounded-xl p-3 bg-[#19171b]/50 backdrop-blur-sm">
                               {skill.values && skill.values.map((value) => (
-                                <label key={value.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                                <label key={value.id} className="flex items-center space-x-2 cursor-pointer hover:bg-[#CEA17A]/10 p-1 rounded transition-colors duration-200">
                                   <input
                                     type="checkbox"
                                     checked={Array.isArray(currentValue) && currentValue.includes(value.value_name)}
@@ -584,13 +612,13 @@ function PlayerProfileContent() {
                                       }
                                       setFormData({ ...formData, skills: newSkills })
                                     }}
-                                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-[#CEA17A] focus:ring-[#CEA17A]/20 border-[#CEA17A]/30 rounded bg-[#19171b]/50"
                                   />
                                   <span className="text-sm text-[#CEA17A]">{value.value_name}</span>
                                 </label>
                               ))}
                               {Array.isArray(currentValue) && currentValue.length > 0 && (
-                                <div className="text-xs text-gray-500 mt-2">
+                                <div className="text-xs text-[#CEA17A]/70 mt-2">
                                   Selected: {currentValue.join(', ')}
                                 </div>
                               )}
@@ -607,7 +635,7 @@ function PlayerProfileContent() {
                                 setFormData({ ...formData, skills: newSkills })
                               }}
                               required={skill.is_required}
-                              className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
+                              className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
                             >
                               <option value="">Select {skill.skill_name}</option>
                               {skill.values && skill.values.map((value) => (
@@ -624,46 +652,62 @@ function PlayerProfileContent() {
                 </div>
               )}
 
-              {/* Message */}
-              {message && (
-                <div className={`p-4 rounded-xl border-2 ${
-                  message.includes('Error')
-                    ? 'bg-red-50 border-red-200 text-red-800'
-                    : 'bg-green-50 border-green-200 text-green-800'
-                }`}>
-                  <div className="flex items-center">
-                    <div className={`w-5 h-5 mr-3 ${
-                      message.includes('Error') ? 'text-red-500' : 'text-green-500'
-                    }`}>
-                      {message.includes('Error') ? (
-                        <svg fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <svg fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      )}
+                {/* Message */}
+                {message && (
+                  <div className={`p-4 rounded-xl border-2 ${
+                    message.includes('Error')
+                      ? 'bg-[#75020f]/20 border-[#75020f]/30 text-[#DBD0C0]'
+                      : 'bg-[#CEA17A]/20 border-[#CEA17A]/30 text-[#DBD0C0]'
+                  }`}>
+                    <div className="flex items-center">
+                      <div className={`w-5 h-5 mr-3 ${
+                        message.includes('Error') ? 'text-[#75020f]' : 'text-[#CEA17A]'
+                      }`}>
+                        {message.includes('Error') ? (
+                          <svg fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium">{message}</p>
                     </div>
-                    <p className="text-sm font-medium">{message}</p>
+                  </div>
+                )}
+
+                {/* Submit Section */}
+                <div className="bg-gradient-to-r from-[#CEA17A]/10 to-[#CEA17A]/5 rounded-xl p-4 sm:p-6 border-2 border-[#CEA17A]/20 backdrop-blur-sm">
+                  <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                    <div className="text-center sm:text-left">
+                      <h3 className="text-lg font-semibold text-[#DBD0C0]">Ready to {playerProfile ? 'Update' : 'Create'}?</h3>
+                      <p className="text-sm text-[#CEA17A]">Review your information and {playerProfile ? 'update' : 'create'} your profile</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="w-full sm:w-auto px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium text-sm sm:text-base"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] font-semibold rounded-xl hover:from-[#CEA17A]/90 hover:to-[#CEA17A]/70 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+                        disabled={loading}
+                      >
+                        {loading 
+                          ? (playerProfile ? 'Updating Profile...' : 'Creating Profile...') 
+                          : (playerProfile ? 'Update Profile' : 'Create Profile')
+                        }
+                      </button>
+                    </div>
                   </div>
                 </div>
-              )}
-
-              {/* Submit Button */}
-              <div className="pt-6">
-                <button
-                  type="submit"
-                  className="w-full bg-green-600 text-white px-6 py-3 rounded-xl font-semibold text-lg hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-green-100"
-                  disabled={loading}
-                >
-                  {loading 
-                    ? (playerProfile ? 'Updating Profile...' : 'Creating Profile...') 
-                    : (playerProfile ? 'Update Profile' : 'Create Profile')
-                  }
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         )}
 
@@ -671,73 +715,81 @@ function PlayerProfileContent() {
         {!isEditing && playerProfile && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Skills & Attributes */}
-            <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-6">
-              <h3 className="text-lg font-bold text-[#DBD0C0] mb-4 flex items-center">
-                <span className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center mr-3 text-sm">
-                  ⚡
-                </span>
-                Skills & Attributes
-              </h3>
-              {Object.keys(formData.skills).length > 0 ? (
-                <div className="space-y-3">
-                  {Object.entries(formData.skills).map(([skillName, skillValue]) => (
-                    <div key={skillName} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                      <span className="text-sm font-medium text-[#CEA17A]">{skillName}</span>
-                      <span className="text-sm font-bold text-[#DBD0C0]">
-                        {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 text-4xl mb-3">⚡</div>
-                  <p className="text-gray-500 text-sm">No skills and attributes configured yet</p>
-                </div>
-              )}
+            <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
+              <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
+                <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
+                  <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
+                    ⚡
+                  </span>
+                  Skills & Attributes
+                </h3>
+              </div>
+              <div className="p-4 sm:p-6">
+                {Object.keys(formData.skills).length > 0 ? (
+                  <div className="space-y-3">
+                    {Object.entries(formData.skills).map(([skillName, skillValue]) => (
+                      <div key={skillName} className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20 last:border-b-0">
+                        <span className="text-sm font-medium text-[#CEA17A]">{skillName}</span>
+                        <span className="text-sm font-bold text-[#DBD0C0]">
+                          {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-[#CEA17A]/50 text-4xl mb-3">⚡</div>
+                    <p className="text-[#CEA17A]/70 text-sm">No skills and attributes configured yet</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Profile Info */}
-            <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-6">
-              <h3 className="text-lg font-bold text-[#DBD0C0] mb-4 flex items-center">
-                <span className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center mr-3 text-sm">
-                  📊
-                </span>
-                Profile Info
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-[#CEA17A]">Status</span>
-                  <span className={`font-bold text-sm px-2 py-1 rounded-full ${
-                    playerProfile.status === 'approved' 
-                      ? 'bg-green-100 text-green-800'
-                      : playerProfile.status === 'pending'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {playerProfile.status.charAt(0).toUpperCase() + playerProfile.status.slice(1)}
+            <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
+              <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
+                <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
+                  <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
+                    📊
                   </span>
-                </div>
-                {formData.skills?.['Base Price'] && (
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-sm text-[#CEA17A]">Base Price</span>
-                    <span className="font-bold text-[#DBD0C0]">₹{formData.skills['Base Price']}</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-[#CEA17A]">Created</span>
-                  <span className="font-bold text-[#DBD0C0]">
-                    {new Date(playerProfile.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                {playerProfile.updated_at && (
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-[#CEA17A]">Updated</span>
-                    <span className="font-bold text-[#DBD0C0]">
-                      {new Date(playerProfile.updated_at).toLocaleDateString()}
+                  Profile Info
+                </h3>
+              </div>
+              <div className="p-4 sm:p-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
+                    <span className="text-sm text-[#CEA17A]">Status</span>
+                    <span className={`font-bold text-sm px-2 py-1 rounded-full ${
+                      playerProfile.status === 'approved' 
+                        ? 'bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
+                        : playerProfile.status === 'pending'
+                        ? 'bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
+                        : 'bg-[#75020f]/20 text-[#75020f] border border-[#75020f]/30'
+                    }`}>
+                      {playerProfile.status.charAt(0).toUpperCase() + playerProfile.status.slice(1)}
                     </span>
                   </div>
-                )}
+                  {formData.skills?.['Base Price'] && (
+                    <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
+                      <span className="text-sm text-[#CEA17A]">Base Price</span>
+                      <span className="font-bold text-[#DBD0C0]">₹{formData.skills['Base Price']}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
+                    <span className="text-sm text-[#CEA17A]">Created</span>
+                    <span className="font-bold text-[#DBD0C0]">
+                      {new Date(playerProfile.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {playerProfile.updated_at && (
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-sm text-[#CEA17A]">Updated</span>
+                      <span className="font-bold text-[#DBD0C0]">
+                        {new Date(playerProfile.updated_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -747,7 +799,7 @@ function PlayerProfileContent() {
         <div className="mt-8 text-center">
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
+            className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
           >
             ← Back to Home
           </button>
