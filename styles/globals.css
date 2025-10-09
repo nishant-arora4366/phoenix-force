@@ -2,15 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Prevent overscroll bounce and ensure full background coverage */
+/* Ensure full background coverage and allow swipe gestures */
 html, body {
   background-color: #19171b;
-  overscroll-behavior: none;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: auto;
 }
 
-/* Prevent bounce scrolling on mobile devices */
+/* Allow pull-to-refresh and swipe gestures on mobile */
 body {
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Custom animations for modern effects */

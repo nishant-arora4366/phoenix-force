@@ -226,8 +226,8 @@ export default function Home() {
           <div className="text-center">
             {user ? (
               <p className="text-[#DBD0C0] font-semibold text-base">
-                Welcome back, {user.firstname || user.email?.split('@')[0] || 'User'}! 
-                <span className="ml-2 text-[#CEA17A]">Ready to elevate your cricket journey?</span>
+                <span className="block sm:inline">Welcome back, {user.firstname || user.email?.split('@')[0] || 'User'}!</span>
+                <span className="block sm:inline sm:ml-2 text-[#CEA17A]">Ready to elevate your cricket journey?</span>
               </p>
             ) : (
               <p className="text-[#DBD0C0] font-semibold text-base">
