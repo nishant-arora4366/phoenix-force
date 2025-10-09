@@ -45,6 +45,109 @@ const fetcher = async (url: string) => {
   return result.data
 }
 
+interface SkillFilterInputProps {
+  skillName: string
+  skillValues: string[]
+  selectedValues: string[]
+  onSelectionChange: (newValues: string[]) => void
+}
+
+function SkillFilterInput({ skillName, skillValues, selectedValues, onSelectionChange }: SkillFilterInputProps) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState('')
+  
+  const filteredOptions = skillValues.filter(value => 
+    value.toLowerCase().includes(searchValue.toLowerCase()) &&
+    !selectedValues.includes(value)
+  )
+  
+  const addValue = (value: string) => {
+    if (!selectedValues.includes(value)) {
+      onSelectionChange([...selectedValues, value])
+    }
+    setSearchValue('')
+    setIsDropdownOpen(false)
+  }
+  
+  const removeValue = (value: string) => {
+    onSelectionChange(selectedValues.filter(v => v !== value))
+  }
+  
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">
+        {skillName}
+      </label>
+      <div className="relative">
+        {/* Selected Values Display */}
+        {selectedValues.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-1">
+            {selectedValues.map(value => (
+              <span
+                key={value}
+                className="inline-flex items-center gap-1 px-2 py-1 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded text-xs"
+              >
+                {value}
+                <button
+                  onClick={() => removeValue(value)}
+                  className="hover:text-red-400 transition-colors"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        
+        {/* Input Field */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchValue}
+            onChange={(e) => {
+              setSearchValue(e.target.value)
+              setIsDropdownOpen(true)
+            }}
+            onFocus={() => setIsDropdownOpen(true)}
+            onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
+            placeholder={`Search ${skillName.toLowerCase()}...`}
+            className="w-full px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-sm shadow-lg"
+          />
+          
+          {/* Dropdown Arrow */}
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <svg className="w-4 h-4 text-[#CEA17A]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+          
+          {/* Dropdown Options */}
+          {isDropdownOpen && filteredOptions.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg shadow-xl max-h-40 overflow-y-auto">
+              {filteredOptions.map(value => (
+                <button
+                  key={value}
+                  onClick={() => addValue(value)}
+                  className="w-full px-3 py-2 text-left text-[#DBD0C0] hover:bg-[#CEA17A]/20 transition-colors text-sm"
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Count Badge */}
+        {selectedValues.length > 0 && (
+          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
+            {selectedValues.length}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function PlayersPage() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
@@ -402,40 +505,20 @@ export default function PlayersPage() {
             {/* Dynamic Skills Filters */}
             {visibleSkills.length > 0 && (
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {visibleSkills.map(skillName => {
-                  const skillValues = availableSkills[skillName] || []
-                  return (
-                    <div key={skillName} className="space-y-2">
-                      <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">
-                        {skillName}
-                      </label>
-                      <div className="relative">
-                        <select
-                          multiple
-                          value={skillFilters[skillName] || []}
-                          onChange={(e) => {
-                            const selectedOptions = Array.from(e.target.selectedOptions, option => option.value)
-                            setSkillFilters(prev => ({
-                              ...prev,
-                              [skillName]: selectedOptions
-                            }))
-                          }}
-                          className="w-full px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] min-h-[2rem] shadow-lg text-sm"
-                          size={Math.min(skillValues.length, 3)}
-                        >
-                          {skillValues.map(value => (
-                            <option key={value} value={value}>{value}</option>
-                          ))}
-                        </select>
-                        {(skillFilters[skillName]?.length || 0) > 0 && (
-                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
-                            {skillFilters[skillName]?.length || 0}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                {visibleSkills.map(skillName => (
+                  <SkillFilterInput
+                    key={skillName}
+                    skillName={skillName}
+                    skillValues={availableSkills[skillName] || []}
+                    selectedValues={skillFilters[skillName] || []}
+                    onSelectionChange={(newValues) => {
+                      setSkillFilters(prev => ({
+                        ...prev,
+                        [skillName]: newValues
+                      }))
+                    }}
+                  />
+                ))}
               </div>
             )}
 
