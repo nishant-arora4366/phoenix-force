@@ -1946,7 +1946,7 @@ export default function TournamentDetailsPage() {
                                     : slot.players.users?.username || slot.players.users?.email || slot.players.name
                                   }
                                 </div>
-                                <div className="text-sm text-gray-500">{slot.players.display_name}</div>
+                                <div className="text-sm text-[#DBD0C0]">{slot.players.display_name}</div>
                               </div>
                               <div className="col-span-2">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -2137,7 +2137,7 @@ export default function TournamentDetailsPage() {
                                     : slot.players.users?.username || slot.players.users?.email || slot.players.name
                                   }
                                 </div>
-                                <div className="text-sm text-gray-500">{slot.players.display_name}</div>
+                                <div className="text-sm text-[#DBD0C0]">{slot.players.display_name}</div>
                               </div>
                               <div className="col-span-2">
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
