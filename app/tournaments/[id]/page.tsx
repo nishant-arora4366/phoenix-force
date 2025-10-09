@@ -2512,7 +2512,13 @@ export default function TournamentDetailsPage() {
                   </div>
                 </div>
                 
-                <div className="max-h-48 sm:max-h-64 overflow-y-auto border border-[#CEA17A]/20 rounded-lg">
+                <div className="max-h-48 sm:max-h-64 overflow-y-auto relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
+                  {/* Luxury Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                  
+                  <div className="relative z-10">
                   {/* Table-like Header Row */}
                   <div className="p-2 sm:p-3 bg-[#3E4E5A] border-b border-[#CEA17A]/20">
                     <div className="flex items-center space-x-2 sm:space-x-3">
@@ -2605,6 +2611,7 @@ export default function TournamentDetailsPage() {
                     </div>
                   )}
                 </div>
+                  </div>
               </div>
 
               {/* Status Selection */}
@@ -2613,30 +2620,44 @@ export default function TournamentDetailsPage() {
                   Assignment Status
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <label className="flex items-center p-3 bg-[#3E4E5A] border border-[#CEA17A]/20 rounded-lg hover:bg-[#09171F] cursor-pointer">
-                    <input
-                      type="radio"
-                      value="pending"
-                      checked={assignStatus === 'pending'}
-                      onChange={(e) => setAssignStatus(e.target.value as 'pending' | 'confirmed')}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <div className="ml-3">
-                      <div className="text-sm font-medium text-[#DBD0C0]">Pending</div>
-                      <div className="text-xs text-[#DBD0C0]">Player needs approval</div>
+                  <label className="flex items-center p-3 relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 cursor-pointer">
+                    {/* Luxury Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                    
+                    <div className="relative z-10 flex items-center">
+                      <input
+                        type="radio"
+                        value="pending"
+                        checked={assignStatus === 'pending'}
+                        onChange={(e) => setAssignStatus(e.target.value as 'pending' | 'confirmed')}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-[#DBD0C0]">Pending</div>
+                        <div className="text-xs text-[#DBD0C0]">Player needs approval</div>
+                      </div>
                     </div>
                   </label>
-                  <label className="flex items-center p-3 bg-[#3E4E5A] border border-[#CEA17A]/20 rounded-lg hover:bg-[#09171F] cursor-pointer">
-                    <input
-                      type="radio"
-                      value="confirmed"
-                      checked={assignStatus === 'confirmed'}
-                      onChange={(e) => setAssignStatus(e.target.value as 'pending' | 'confirmed')}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <div className="ml-3">
-                      <div className="text-sm font-medium text-[#DBD0C0]">Payment Verified</div>
-                      <div className="text-xs text-[#DBD0C0]">Player payment is verified</div>
+                  <label className="flex items-center p-3 relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 cursor-pointer">
+                    {/* Luxury Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                    
+                    <div className="relative z-10 flex items-center">
+                      <input
+                        type="radio"
+                        value="confirmed"
+                        checked={assignStatus === 'confirmed'}
+                        onChange={(e) => setAssignStatus(e.target.value as 'pending' | 'confirmed')}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-[#DBD0C0]">Payment Verified</div>
+                        <div className="text-xs text-[#DBD0C0]">Player payment is verified</div>
+                      </div>
                     </div>
                   </label>
                 </div>
