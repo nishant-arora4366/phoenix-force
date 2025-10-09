@@ -780,8 +780,7 @@ export default function PlayersPage() {
                   : 'grid-cols-8'
               }`}>
                 <div className="col-span-1 sm:col-span-1"></div>
-                <div className="col-span-2 sm:col-span-2">Name</div>
-                <div className="col-span-1 sm:col-span-1"></div>
+                <div className="col-span-3 sm:col-span-2">Name</div>
                 <div className="col-span-1 sm:col-span-1">Role</div>
                 <div className="col-span-2 sm:col-span-2">Community</div>
                 {(userRole === 'admin' || userRole === 'host') && (
@@ -821,7 +820,7 @@ export default function PlayersPage() {
                   </div>
 
                   {/* Name */}
-                  <div className="col-span-2 sm:col-span-2 flex items-center min-w-0">
+                  <div className="col-span-3 sm:col-span-2 flex items-center min-w-0">
                     <div className="min-w-0 flex-1">
                       <div className="text-xs sm:text-base font-medium text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors truncate">
                         {player.display_name}
@@ -831,9 +830,6 @@ export default function PlayersPage() {
                       )}
                     </div>
                   </div>
-
-                  {/* Empty space */}
-                  <div className="col-span-1 sm:col-span-1"></div>
 
                   {/* Role */}
                   <div className="col-span-1 sm:col-span-1 flex items-center">
