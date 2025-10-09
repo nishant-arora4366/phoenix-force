@@ -109,15 +109,15 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="min-h-screen bg-[#19171b] py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-8">
+          <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto mb-4"></div>
+              <h2 className="text-xl font-semibold text-[#DBD0C0] mb-2">
                 Loading Player...
               </h2>
-              <p className="text-gray-600 text-sm sm:text-base">
+              <p className="text-[#CEA17A]">
                 Fetching player information
               </p>
             </div>
@@ -129,20 +129,20 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
 
   if (error || !player) {
     return (
-      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="min-h-screen bg-[#19171b] py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-8">
+          <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8">
             <div className="text-center">
-              <div className="text-gray-500 text-4xl sm:text-6xl mb-4">⚠️</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <div className="text-red-400 text-6xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">
                 Player Not Found
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-[#CEA17A] mb-6">
                 {error || 'The requested player could not be found.'}
               </p>
               <button
                 onClick={() => router.push('/players')}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium"
               >
                 Back to Players
               </button>
@@ -154,47 +154,59 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Hero Section Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+      <div className="absolute inset-0" 
+           style={{
+             background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+           }}></div>
+      {/* Enhanced Background Patterns */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(117,2,15,0.1)_1px,transparent_0)] bg-[length:20px_20px] opacity-30"></div>
+      <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,rgba(117,2,15,0.05)_60deg,transparent_120deg)] opacity-60"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(117,2,15,0.02)_50%,transparent_75%)] bg-[length:40px_40px] opacity-20"></div>
+      
+      {/* Sharp Geometric Patterns */}
+      <div className="absolute inset-0 bg-[linear-gradient(30deg,transparent_40%,rgba(206,161,122,0.03)_50%,transparent_60%)] bg-[length:60px_60px] opacity-25"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(117,2,15,0.04)_0%,transparent_70%)] opacity-30"></div>
+      <div className="absolute inset-0 bg-[conic-gradient(from_45deg_at_25%_25%,transparent_0deg,rgba(206,161,122,0.02)_90deg,transparent_180deg)] opacity-20"></div>
+      
+      {/* Animated Grid Lines */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#CEA17A] to-transparent animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-0 left-0 h-full w-px bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        <div className="absolute top-0 right-0 h-full w-px bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '1.5s'}}></div>
+      </div>
+      
+      {/* Background Glowing Orbs */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#CEA17A]/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0s'}}></div>
+        <div className="absolute bottom-1/3 right-1/4 w-24 h-24 bg-[#75020f]/8 rounded-full blur-2xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-[#2b0307]/6 rounded-full blur-xl animate-pulse" style={{animationDelay: '4s'}}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-[#CEA17A]/4 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}}></div>
+      </div>
+      
+      {/* Sharp Geometric Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/3 left-1/5 w-2 h-2 bg-[#CEA17A]/3 rotate-45 animate-pulse" style={{animationDelay: '0.3s'}}></div>
+        <div className="absolute top-2/3 right-1/4 w-3 h-3 bg-[#75020f]/4 rotate-12 animate-pulse" style={{animationDelay: '2.5s'}}></div>
+        <div className="absolute top-1/4 right-1/3 w-4 h-4 bg-[#2b0307]/7 rotate-12 animate-pulse" style={{animationDelay: '0.8s'}}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-6 h-6 bg-[#CEA17A]/4 rotate-45 animate-pulse" style={{animationDelay: '3.5s'}}></div>
+        <div className="absolute top-3/4 left-1/2 w-3 h-3 bg-[#75020f]/5 rotate-12 animate-pulse" style={{animationDelay: '1.2s'}}></div>
+      </div>
+      
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
-            <div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">{player.display_name}</h1>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          {(userRole === 'admin' || userRole === 'host') && (
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-              <button
-                onClick={() => router.push(`/players/${player.id}/edit`)}
-                className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
-              >
-                Edit Player
-              </button>
-              {userRole === 'admin' && (
-                <button
-                  onClick={handleDelete}
-                  className="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm sm:text-base"
-                >
-                  Delete Player
-                </button>
-              )}
-            </div>
-          )}
+        <div className="text-left mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-4xl font-bold text-[#DBD0C0] mb-2 sm:mb-4">{player.display_name}</h1>
+          <p className="text-[#CEA17A] text-sm sm:text-base">
+            Player Details & Information
+          </p>
         </div>
 
         {/* Player Card - Similar to Players Page */}
-        <div className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
+        <div className="group bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150 mb-6 sm:mb-8">
           {/* Player Image Header */}
           <div className="relative h-64 sm:h-80 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
             {player.profile_pic_url ? (
@@ -225,9 +237,9 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
           </div>
 
           {/* Player Info */}
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="mb-4">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 group-hover:text-gray-600 transition-colors mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors mb-2">
                 {player.display_name}
               </h1>
             </div>
@@ -235,17 +247,17 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
             {/* Roles and Skills */}
             <div className="flex flex-wrap gap-2 mb-4">
               {player.skills?.Role && (
-                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
+                <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium">
                   🏏 {player.skills.Role}
                 </span>
               )}
               {player.skills?.['Batting Style'] && (
-                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
+                <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium">
                   ⚾ {player.skills['Batting Style']}
                 </span>
               )}
               {player.skills?.['Bowling Style'] && (
-                <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
+                <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium">
                   🎯 {player.skills['Bowling Style']}
                 </span>
               )}
@@ -255,7 +267,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
                 if (['Role', 'Base Price', 'Batting Style', 'Bowling Style', 'Group'].includes(skillName)) return null;
                 
                 return (
-                  <span key={skillName} className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full font-medium">
+                  <span key={skillName} className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium">
                     {skillName}: {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
                   </span>
                 );
@@ -264,22 +276,22 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
 
             {/* Bio */}
             {player.bio && (
-              <p className="text-gray-600 text-sm leading-relaxed mb-4">{player.bio}</p>
+              <p className="text-[#CEA17A] text-sm leading-relaxed mb-4">{player.bio}</p>
             )}
 
             {/* Action Buttons */}
             {(userRole === 'admin' || userRole === 'host') && (
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-gray-100">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-[#CEA17A]/20">
                 <button
                   onClick={() => router.push(`/players/${player.id}/edit`)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-semibold"
+                  className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium text-sm sm:text-base"
                 >
                   Edit Player
                 </button>
                 {userRole === 'admin' && (
                   <button
                     onClick={handleDelete}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
+                    className="px-6 py-3 bg-[#75020f]/15 text-[#75020f] border border-[#75020f]/25 shadow-lg shadow-[#75020f]/10 backdrop-blur-sm rounded-lg hover:bg-[#75020f]/25 hover:border-[#75020f]/40 transition-all duration-200 font-medium text-sm sm:text-base"
                   >
                     Delete Player
                   </button>
@@ -292,67 +304,75 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         {/* Additional Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Skills & Attributes */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <span className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center mr-3 text-sm">
-                ⚡
-              </span>
-              Skills & Attributes
-            </h3>
-            {player.skills && Object.keys(player.skills).length > 0 ? (
-              <div className="space-y-3">
-                {Object.entries(player.skills).map(([skillName, skillValue]) => (
-                  <div key={skillName} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                    <span className="text-sm font-medium text-gray-600">{skillName}</span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-gray-400 text-4xl mb-3">⚡</div>
-                <p className="text-gray-500 text-sm">No skills and attributes configured yet</p>
-              </div>
-            )}
+          <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
+            <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
+              <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
+                <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
+                  ⚡
+                </span>
+                Skills & Attributes
+              </h3>
+            </div>
+            <div className="p-4 sm:p-6">
+              {player.skills && Object.keys(player.skills).length > 0 ? (
+                <div className="space-y-3">
+                  {Object.entries(player.skills).map(([skillName, skillValue]) => (
+                    <div key={skillName} className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20 last:border-b-0">
+                      <span className="text-sm font-medium text-[#CEA17A]">{skillName}</span>
+                      <span className="text-sm font-bold text-[#DBD0C0]">
+                        {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-[#CEA17A]/50 text-4xl mb-3">⚡</div>
+                  <p className="text-[#CEA17A]/70 text-sm">No skills and attributes configured yet</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <span className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center mr-3 text-sm">
-                📊
-              </span>
-              Quick Stats
-            </h3>
-            <div className="space-y-3">
-              {player.skills?.['Base Price'] && (
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-600">Base Price</span>
-                  <span className="font-bold text-gray-900">₹{player.skills['Base Price']}</span>
-                </div>
-              )}
-              {player.skills?.Group && (
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-600">Group</span>
-                  <span className="font-bold text-gray-900">{player.skills.Group}</span>
-                </div>
-              )}
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-600">Created</span>
-                <span className="font-bold text-gray-900">
-                  {new Date(player.created_at).toLocaleDateString()}
+          <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
+            <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
+              <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
+                <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
+                  📊
                 </span>
-              </div>
-              {player.updated_at && (
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-600">Updated</span>
-                  <span className="font-bold text-gray-900">
-                    {new Date(player.updated_at).toLocaleDateString()}
+                Quick Stats
+              </h3>
+            </div>
+            <div className="p-4 sm:p-6">
+              <div className="space-y-3">
+                {player.skills?.['Base Price'] && (
+                  <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
+                    <span className="text-sm text-[#CEA17A]">Base Price</span>
+                    <span className="font-bold text-[#DBD0C0]">₹{player.skills['Base Price']}</span>
+                  </div>
+                )}
+                {player.skills?.Group && (
+                  <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
+                    <span className="text-sm text-[#CEA17A]">Group</span>
+                    <span className="font-bold text-[#DBD0C0]">{player.skills.Group}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
+                  <span className="text-sm text-[#CEA17A]">Created</span>
+                  <span className="font-bold text-[#DBD0C0]">
+                    {new Date(player.created_at).toLocaleDateString()}
                   </span>
                 </div>
-              )}
+                {player.updated_at && (
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm text-[#CEA17A]">Updated</span>
+                    <span className="font-bold text-[#DBD0C0]">
+                      {new Date(player.updated_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -361,7 +381,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         <div className="mt-8 text-center">
           <button
             onClick={() => router.push('/players')}
-            className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
+            className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
           >
             ← Back to Players
           </button>
