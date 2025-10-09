@@ -434,8 +434,8 @@ export default function PlayersPage() {
                         {Array.isArray(player.skills.Role) ? (
                           player.skills.Role.map((role, index) => {
                             const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                            role.toLowerCase().includes('bowler') ? '⚾' : 
-                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                                            role.toLowerCase().includes('bowler') ? '🎾' : 
+                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🏏' : '🏏'
                             return (
                               <span key={index} className="text-lg">
                                 {roleEmoji}
@@ -446,8 +446,8 @@ export default function PlayersPage() {
                           (() => {
                             const role = player.skills.Role
                             const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                            role.toLowerCase().includes('bowler') ? '⚾' : 
-                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                                            role.toLowerCase().includes('bowler') ? '🎾' : 
+                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🏏' : '🏏'
                             return (
                               <span className="text-lg">
                                 {roleEmoji}
@@ -559,9 +559,9 @@ export default function PlayersPage() {
                         <div className="flex flex-wrap gap-1">
                           {Array.isArray(player.skills.Role) ? (
                             player.skills.Role.map((role, index) => {
-                              const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                              role.toLowerCase().includes('bowler') ? '⚾' : 
-                                              role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                          const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                          role.toLowerCase().includes('bowler') ? '🎾' : 
+                                          role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🏏' : '🏏'
                               return (
                                 <span key={index} className="text-lg">
                                   {roleEmoji}
@@ -571,9 +571,9 @@ export default function PlayersPage() {
                           ) : (
                             (() => {
                               const role = player.skills.Role
-                              const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                              role.toLowerCase().includes('bowler') ? '⚾' : 
-                                              role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                          const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                          role.toLowerCase().includes('bowler') ? '🎾' : 
+                                          role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🏏' : '🏏'
                               return (
                                 <span className="text-lg">
                                   {roleEmoji}
