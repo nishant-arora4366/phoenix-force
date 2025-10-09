@@ -370,123 +370,94 @@ export default function PlayersPage() {
               <div 
                 key={player.id} 
                 onClick={() => router.push(`/players/${player.id}`)}
-                className="group relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 h-full flex flex-col cursor-pointer"
+                className="group relative aspect-square overflow-hidden bg-gradient-to-br from-[#3E4E5A] to-[#09171F] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 cursor-pointer"
               >
-                {/* Luxury Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
-                {/* Player Image */}
-                <div className="relative aspect-square bg-gradient-to-br from-[#3E4E5A] to-[#09171F] overflow-hidden">
-                  {player.profile_pic_url ? (
-                    <img
-                      src={player.profile_pic_url}
-                      alt={player.display_name}
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center">
-                      <div className="text-6xl text-[#CEA17A]/60">🏏</div>
-                    </div>
-                  )}
-                  
-                  {/* Action Buttons - Top Right */}
-                  {(userRole === 'admin' || userRole === 'host') && (
-                    <div className="absolute top-4 right-4 flex space-x-1">
+                {/* Player Image Background */}
+                {player.profile_pic_url ? (
+                  <img
+                    src={player.profile_pic_url}
+                    alt={player.display_name}
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center">
+                    <div className="text-6xl text-[#CEA17A]/60">🏏</div>
+                  </div>
+                )}
+                
+                {/* Dark Overlay for Text Readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                
+                {/* Action Buttons - Top Right */}
+                {(userRole === 'admin' || userRole === 'host') && (
+                  <div className="absolute top-3 right-3 flex space-x-1">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        router.push(`/players/${player.id}/edit`)
+                      }}
+                      className="bg-black/50 text-white border border-white/20 shadow-lg backdrop-blur-sm rounded-lg hover:bg-black/70 hover:border-white/40 transition-all duration-150 text-xs py-1 px-2"
+                      title="Edit Player"
+                    >
+                      ✏️
+                    </button>
+                    {userRole === 'admin' && (
                       <button 
                         onClick={(e) => {
                           e.stopPropagation()
-                          router.push(`/players/${player.id}/edit`)
+                          handleDelete(player.id, player.display_name)
                         }}
-                        className="bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-150 text-xs py-1 px-2"
-                        title="Edit Player"
+                        className="bg-red-500/80 text-white border border-red-400/50 shadow-lg backdrop-blur-sm rounded-lg hover:bg-red-600/80 hover:border-red-300/70 transition-all duration-150 text-xs py-1 px-2"
+                        title="Delete Player"
                       >
-                        ✏️
+                        🗑️
                       </button>
-                      {userRole === 'admin' && (
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDelete(player.id, player.display_name)
-                          }}
-                          className="bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs py-1 px-2"
-                          title="Delete Player"
-                        >
-                          🗑️
-                        </button>
+                    )}
+                  </div>
+                )}
+                
+                {/* Group Badge - Top Left */}
+                {player.group_name && (
+                  <div className="absolute top-3 left-3 bg-black/50 text-white border border-white/20 px-2 py-1 rounded-full text-xs font-medium shadow-lg backdrop-blur-sm">
+                    {player.group_name}
+                  </div>
+                )}
+
+                {/* Player Name - Bottom Left */}
+                <div className="absolute bottom-3 left-3">
+                  <h3 className="text-white font-semibold text-sm mb-1 drop-shadow-lg">
+                    {player.display_name}
+                  </h3>
+                  
+                  {/* Role Icons */}
+                  {player.skills?.Role && (
+                    <div className="flex flex-wrap gap-1">
+                      {Array.isArray(player.skills.Role) ? (
+                        player.skills.Role.map((role, index) => {
+                          const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                          role.toLowerCase().includes('bowler') ? '⚾' : 
+                                          role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                          return (
+                            <span key={index} className="text-lg drop-shadow-lg">
+                              {roleEmoji}
+                            </span>
+                          )
+                        })
+                      ) : (
+                        (() => {
+                          const role = player.skills.Role
+                          const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                          role.toLowerCase().includes('bowler') ? '⚾' : 
+                                          role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                          return (
+                            <span className="text-lg drop-shadow-lg">
+                              {roleEmoji}
+                            </span>
+                          )
+                        })()
                       )}
                     </div>
                   )}
-                  
-                  {/* Group Badge */}
-                  {player.group_name && (
-                    <div className="absolute top-4 left-4 bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 px-3 py-1 rounded-full text-sm font-medium shadow-lg backdrop-blur-sm">
-                      {player.group_name}
-                    </div>
-                  )}
-                </div>
-
-                {/* Player Info */}
-                <div className="relative z-10 p-4 flex-1 flex flex-col">
-                  <h3 className="text-lg font-semibold text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors mb-3 line-clamp-1">
-                    {player.display_name}
-                  </h3>
-
-                  {/* Role */}
-                  {player.skills?.Role && (
-                    <div className="mb-3">
-                      <div className="text-xs text-[#CEA17A]/70 font-medium mb-1">Role</div>
-                      <div className="flex flex-wrap gap-1">
-                        {Array.isArray(player.skills.Role) ? (
-                          player.skills.Role.map((role, index) => {
-                            const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                            role.toLowerCase().includes('bowler') ? '⚾' : 
-                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
-                            return (
-                              <span key={index} className="text-lg">
-                                {roleEmoji}
-                              </span>
-                            )
-                          })
-                        ) : (
-                          (() => {
-                            const role = player.skills.Role
-                            const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                            role.toLowerCase().includes('bowler') ? '⚾' : 
-                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
-                            return (
-                              <span className="text-lg">
-                                {roleEmoji}
-                              </span>
-                            )
-                          })()
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Community */}
-                  {player.skills?.Community && (
-                    <div className="mb-3">
-                      <div className="text-xs text-[#CEA17A]/70 font-medium mb-1">Community</div>
-                      <div className="flex flex-wrap gap-1">
-                        {Array.isArray(player.skills.Community) ? (
-                          player.skills.Community.map((community, index) => (
-                            <span key={index} className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                              {community}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                            {player.skills.Community}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-
-
                 </div>
               </div>
             ))}
