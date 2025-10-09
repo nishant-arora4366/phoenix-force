@@ -774,12 +774,12 @@ export default function PlayersPage() {
           <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl border border-[#CEA17A]/20 shadow-xl overflow-hidden">
             {/* Table Header */}
             <div className="bg-gradient-to-r from-[#CEA17A]/10 to-[#CEA17A]/5 border-b border-[#CEA17A]/20">
-              <div className={`grid gap-4 p-4 text-sm font-semibold text-[#CEA17A] uppercase tracking-wide ${
+              <div className={`grid gap-2 sm:gap-4 p-2 sm:p-4 text-xs sm:text-sm font-semibold text-[#CEA17A] uppercase tracking-wide ${
                 (userRole === 'admin' || userRole === 'host') 
                   ? 'grid-cols-12' 
                   : 'grid-cols-10'
               }`}>
-                <div className="col-span-2 sm:col-span-1">Photo</div>
+                <div className="col-span-2 sm:col-span-1"></div>
                 <div className="col-span-3 sm:col-span-2">Name</div>
                 <div className="col-span-2 sm:col-span-1">Role</div>
                 <div className="col-span-3 sm:col-span-2">Community</div>
