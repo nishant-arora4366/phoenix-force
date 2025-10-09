@@ -359,7 +359,7 @@ export default function PlayersPage() {
             </div>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
             {filteredPlayers?.map((player) => (
               <div key={player.id} className="group relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 h-full flex flex-col">
                 {/* Luxury Gradient Overlay */}
@@ -367,7 +367,7 @@ export default function PlayersPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
                 {/* Player Image */}
-                <div className="relative h-56 bg-gradient-to-br from-[#3E4E5A] to-[#09171F] overflow-hidden">
+                <div className="relative aspect-square bg-gradient-to-br from-[#3E4E5A] to-[#09171F] overflow-hidden">
                   {player.profile_pic_url ? (
                     <img
                       src={player.profile_pic_url}
