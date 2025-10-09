@@ -804,7 +804,7 @@ export default function TournamentDetailsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft':
-        return 'bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
+        return 'bg-[#3E4E5A]/20 text-white border border-[#CEA17A]/30'
       case 'registration_open':
         return 'bg-green-500/20 text-green-300 border border-green-500/30'
       case 'registration_closed':
@@ -818,7 +818,7 @@ export default function TournamentDetailsPage() {
       case 'completed':
         return 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
       default:
-        return 'bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
+        return 'bg-[#3E4E5A]/20 text-white border border-[#CEA17A]/30'
     }
   }
 
@@ -1367,12 +1367,12 @@ export default function TournamentDetailsPage() {
       <div className="min-h-screen bg-[#19171b] flex items-center justify-center py-4 sm:py-8">
         <div className="max-w-md mx-auto text-center px-4">
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#3E4E5A] rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#DBD0C0] mb-4">Tournament Not Found</h1>
-          <p className="text-[#CEA17A] mb-6 text-sm sm:text-base">{error || 'The tournament you are looking for does not exist.'}</p>
+          <p className="text-white mb-6 text-sm sm:text-base">{error || 'The tournament you are looking for does not exist.'}</p>
           <Link
             href="/tournaments"
             className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-[#CEA17A] text-[#09171F] rounded-lg hover:bg-[#DBD0C0] transition-colors text-sm sm:text-base font-semibold"
@@ -1462,7 +1462,7 @@ export default function TournamentDetailsPage() {
                     <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
                       Ready to Join?
                     </h3>
-                    <p className="text-[#CEA17A] text-sm sm:text-base leading-relaxed">
+                    <p className="text-white text-sm sm:text-base leading-relaxed">
                       Sign in to register for this tournament and secure your spot in the competition.
                     </p>
                   </div>
@@ -1482,7 +1482,7 @@ export default function TournamentDetailsPage() {
                   </Link>
                   <Link
                     href="/tournaments"
-                    className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#3E4E5A] text-[#CEA17A] border border-[#CEA17A]/30 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-[#3E4E5A]/80 hover:border-[#CEA17A]/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
+                    className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#3E4E5A] text-white border border-[#CEA17A]/30 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-[#3E4E5A]/80 hover:border-[#CEA17A]/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
                   >
                     <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -1655,13 +1655,13 @@ export default function TournamentDetailsPage() {
                           <div className="relative z-10 flex items-center justify-between">
                             <div>
                               <div className="text-2xl font-bold text-[#DBD0C0]">{slotsStats.total_slots}</div>
-                              <div className="text-sm font-medium text-[#CEA17A]">Total Slots</div>
+                              <div className="text-sm font-medium text-white">Total Slots</div>
                               <div className="text-xs text-green-400">
                                 {slotsStats.total_slots - slotsStats.filled_main_slots} available
                               </div>
                             </div>
                             <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                               </svg>
                             </div>
@@ -1678,13 +1678,13 @@ export default function TournamentDetailsPage() {
                           <div className="relative z-10 flex items-center justify-between">
                             <div>
                               <div className="text-2xl font-bold text-[#DBD0C0]">{slotsStats.filled_main_slots}</div>
-                              <div className="text-sm font-medium text-[#CEA17A]">Filled</div>
+                              <div className="text-sm font-medium text-white">Filled</div>
                               <div className="text-xs text-blue-400">
                                 {slotsStats.total_slots > 0 ? Math.round((slotsStats.filled_main_slots / slotsStats.total_slots) * 100) : 0}% filled
                               </div>
                             </div>
                             <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
@@ -1701,13 +1701,13 @@ export default function TournamentDetailsPage() {
                           <div className="relative z-10 flex items-center justify-between">
                             <div>
                               <div className="text-2xl font-bold text-[#DBD0C0]">{slotsStats.filled_waitlist_slots}</div>
-                              <div className="text-sm font-medium text-[#CEA17A]">Waitlist</div>
+                              <div className="text-sm font-medium text-white">Waitlist</div>
                               <div className="text-xs text-orange-400">
                                 {slotsStats.filled_waitlist_slots}
                               </div>
                             </div>
                             <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
@@ -1724,13 +1724,13 @@ export default function TournamentDetailsPage() {
                           <div className="relative z-10 flex items-center justify-between">
                             <div>
                               <div className="text-2xl font-bold text-[#DBD0C0]">{slotsStats.pending_approvals}</div>
-                              <div className="text-sm font-medium text-[#CEA17A]">Pending Approval</div>
+                              <div className="text-sm font-medium text-white">Pending Approval</div>
                               <div className="text-xs text-yellow-400">
                                 Awaiting Payment Confirmation
                               </div>
                             </div>
                             <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                               </svg>
                             </div>
@@ -1815,7 +1815,7 @@ export default function TournamentDetailsPage() {
                 {/* Show message if no slots are available (should not happen with intelligent slots) */}
                 {slots.length === 0 && user && (
                   <div className="text-center py-4">
-                    <p className="text-[#CEA17A] mb-4">No tournament slots available</p>
+                    <p className="text-white mb-4">No tournament slots available</p>
                     <button
                       onClick={() => fetchSlots()}
                       className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -1850,8 +1850,8 @@ export default function TournamentDetailsPage() {
                         : 'border-[#CEA17A]/20'
                     }`}>
                       {/* Header - Hidden on mobile, shown on desktop */}
-                      <div className="hidden md:block bg-gray-50 px-6 py-4 border-b border-[#CEA17A]/20">
-                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#CEA17A]">
+                      <div className="hidden md:block bg-[#51080d] px-6 py-4 border-b border-[#75020f]/20">
+                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-white">
                           <div className="col-span-1">#</div>
                           <div className="col-span-4">Player Name</div>
                           <div className="col-span-2">Status</div>
@@ -1866,7 +1866,7 @@ export default function TournamentDetailsPage() {
                           <div key={slot.id} className={`px-4 md:px-6 py-4 transition-colors ${
                             isCurrentUserSlot(slot) 
                               ? 'bg-blue-50 border-l-4 border-blue-400 hover:bg-blue-100' 
-                              : 'hover:bg-gray-50'
+                              : 'hover:bg-[#51080d]'
                           }`}>
                             {/* Mobile Layout */}
                             <div className="md:hidden">
@@ -1894,7 +1894,7 @@ export default function TournamentDetailsPage() {
                                 </span>
                               </div>
                               <div className="space-y-2">
-                                <div className="text-sm text-[#CEA17A]">
+                                <div className="text-sm text-white">
                                   <div>Joined: {formatDateTime(slot.requested_at)}</div>
                                   {slot.confirmed_at && (
                                     <div className="text-xs text-gray-500">
@@ -2069,8 +2069,8 @@ export default function TournamentDetailsPage() {
                         : 'border-[#CEA17A]/20'
                     }`}>
                       {/* Header - Hidden on mobile, shown on desktop */}
-                      <div className="hidden md:block bg-gray-50 px-6 py-4 border-b border-[#CEA17A]/20">
-                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#CEA17A]">
+                      <div className="hidden md:block bg-[#51080d] px-6 py-4 border-b border-[#75020f]/20">
+                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-white">
                           <div className="col-span-1">#</div>
                           <div className="col-span-4">Player Name</div>
                           <div className="col-span-2">Status</div>
@@ -2085,7 +2085,7 @@ export default function TournamentDetailsPage() {
                           <div key={slot.id} className={`px-4 md:px-6 py-4 transition-colors ${
                             isCurrentUserSlot(slot) 
                               ? 'bg-blue-50 border-l-4 border-blue-400 hover:bg-blue-100' 
-                              : 'hover:bg-gray-50'
+                              : 'hover:bg-[#51080d]'
                           }`}>
                             {/* Mobile Layout */}
                             <div className="md:hidden">
@@ -2109,7 +2109,7 @@ export default function TournamentDetailsPage() {
                                 </span>
                               </div>
                               <div className="space-y-2">
-                                <div className="text-sm text-[#CEA17A]">
+                                <div className="text-sm text-white">
                                   Joined: {formatDateTime(slot.requested_at)}
                                 </div>
                                 {isHost && (
@@ -2256,7 +2256,7 @@ export default function TournamentDetailsPage() {
                     setSelectedSkillValue('')
                     setAssignStatus('pending')
                   }}
-                  className="text-gray-400 hover:text-[#CEA17A] transition-colors"
+                  className="text-gray-400 hover:text-white transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2295,10 +2295,10 @@ export default function TournamentDetailsPage() {
               {showSkillConfig && (
                 <div className="bg-[#09171F]/50 rounded-lg p-3 border border-[#CEA17A]/20 mb-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-medium text-gray-700">Select Skills to Filter By</h4>
+                    <h4 className="text-sm font-medium text-white">Select Skills to Filter By</h4>
                     <button
                       onClick={() => setShowSkillConfig(false)}
-                      className="text-gray-400 hover:text-[#CEA17A]"
+                      className="text-gray-400 hover:text-white"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2315,7 +2315,7 @@ export default function TournamentDetailsPage() {
                           onChange={() => toggleSkillEnabled(skill.id)}
                           className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        <span className="text-xs text-gray-700">{skill.name}</span>
+                        <span className="text-xs text-white">{skill.name}</span>
                       </label>
                     ))}
                   </div>
@@ -2342,7 +2342,7 @@ export default function TournamentDetailsPage() {
                 <div className="bg-gradient-to-r from-[#51080d] to-[#2b0307] rounded-xl p-4 border border-[#75020f]/20 mb-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-[#51080d]0 rounded-full"></div>
                       <h4 className="text-sm font-semibold text-white">Active Filters</h4>
                     </div>
                     <button
@@ -2402,15 +2402,15 @@ export default function TournamentDetailsPage() {
                                             : currentValues.filter((v: string) => v !== value.id)
                                           updateSkillFilterValue(skillId, newValues)
                                         }}
-                                        className="h-3 w-3 text-[#CEA17A] focus:ring-gray-500 border-gray-300 rounded"
+                                        className="h-3 w-3 text-white focus:ring-gray-500 border-gray-300 rounded"
                                       />
-                                      <span className="text-xs text-gray-700">{value.name}</span>
+                                      <span className="text-xs text-white">{value.name}</span>
                                     </label>
                                   )
                                 })}
                               </div>
                               {skillFilterValues[skillId]?.length > 0 && (
-                                <div className="text-xs text-[#CEA17A]">
+                                <div className="text-xs text-white">
                                   {skillFilterValues[skillId].length} selected
                                 </div>
                               )}
@@ -2446,7 +2446,7 @@ export default function TournamentDetailsPage() {
                               value={skillFilterValues[skillId]?.[0] || ''}
                               onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
                               placeholder={`Filter by ${skill.name.toLowerCase()}...`}
-                              className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs bg-gray-50"
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs bg-[#51080d]"
                             />
                           )}
                         </div>
@@ -2494,7 +2494,7 @@ export default function TournamentDetailsPage() {
                       onChange={(e) => setHideAssignedPlayers(e.target.checked)}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="hideAssigned" className="text-sm font-medium text-gray-700">
+                    <label htmlFor="hideAssigned" className="text-sm font-medium text-white">
                       Hide Assigned Players
                     </label>
                   </div>
@@ -2502,7 +2502,7 @@ export default function TournamentDetailsPage() {
                 
                 <div className="max-h-48 sm:max-h-64 overflow-y-auto border border-[#CEA17A]/20 rounded-lg">
                   {/* Table-like Header Row */}
-                  <div className="p-2 sm:p-3 bg-gray-50 border-b border-[#CEA17A]/20">
+                  <div className="p-2 sm:p-3 bg-[#51080d] border-b border-[#75020f]/20">
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <input
                         type="checkbox"
@@ -2527,7 +2527,7 @@ export default function TournamentDetailsPage() {
                     </div>
                   </div>
                   {isLoadingPlayers ? (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-4 text-center text-white">
                       <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                       Loading players...
                     </div>
@@ -2580,7 +2580,7 @@ export default function TournamentDetailsPage() {
                       })}
                     </div>
                   ) : (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-4 text-center text-white">
                       No players found matching the current filters
                     </div>
                   )}
@@ -2676,7 +2676,7 @@ export default function TournamentDetailsPage() {
                 <h3 className="text-lg font-semibold text-[#DBD0C0]">Status Management</h3>
                 <button
                   onClick={closeStatusModal}
-                  className="text-gray-400 hover:text-[#CEA17A] transition-colors"
+                  className="text-gray-400 hover:text-white transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2685,7 +2685,7 @@ export default function TournamentDetailsPage() {
               </div>
               
               <div className="mb-4">
-                <p className="text-sm text-[#CEA17A] mb-2">Current Status:</p>
+                <p className="text-sm text-white mb-2">Current Status:</p>
                 <div className="flex items-center space-x-2">
                   <span className={`px-3 py-1 rounded-lg text-sm font-medium ${getStatusColor(tournament?.status || '')}`}>
                     {getStatusText(tournament?.status || '')}
@@ -2694,13 +2694,13 @@ export default function TournamentDetailsPage() {
               </div>
 
               <div className="mb-6">
-                <p className="text-sm text-[#CEA17A] mb-3">All Tournament Statuses:</p>
+                <p className="text-sm text-white mb-3">All Tournament Statuses:</p>
                 <div className="space-y-2">
                   {Object.keys(statusDisplayNames).map((status) => (
                     <button
                       key={status}
                       onClick={() => handleStatusChange(status)}
-                      className="w-full text-left p-3 border border-[#CEA17A]/20 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="w-full text-left p-3 border border-[#CEA17A]/20 rounded-lg hover:bg-[#51080d] transition-colors"
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -2730,7 +2730,7 @@ export default function TournamentDetailsPage() {
               <div className="flex space-x-3">
                 <button
                   onClick={closeStatusModal}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-[#51080d] transition-colors"
                 >
                   Cancel
                 </button>
@@ -2755,21 +2755,21 @@ export default function TournamentDetailsPage() {
               </div>
               
               <div className="mb-6">
-                <p className="text-sm text-[#CEA17A] mb-3">
+                <p className="text-sm text-white mb-3">
                   {isAdmin(userProfile) 
                     ? 'As an admin, you have full control over tournament status changes.'
                     : 'Are you sure you want to change the tournament status?'
                   }
                 </p>
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-[#51080d] rounded-lg p-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#CEA17A]">From:</span>
+                    <span className="text-sm text-white">From:</span>
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(tournament?.status || '')}`}>
                       {getStatusText(tournament?.status || '')}
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm text-[#CEA17A]">To:</span>
+                    <span className="text-sm text-white">To:</span>
                     <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
                       {statusDisplayNames[selectedNewStatus as keyof typeof statusDisplayNames]}
                     </span>
@@ -2786,7 +2786,7 @@ export default function TournamentDetailsPage() {
               <div className="flex space-x-3">
                 <button
                   onClick={cancelStatusChange}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-[#51080d] transition-colors"
                 >
                   Cancel
                 </button>
