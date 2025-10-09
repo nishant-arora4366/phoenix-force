@@ -13,11 +13,7 @@ export default function PlayerProfilePrompt({ onClose, returnUrl = '/' }: Player
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="relative bg-[#09171F] rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-[#CEA17A]/30">
-        {/* Luxury Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-2xl"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#09171F]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl"></div>
+      <div className="relative bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-[#CEA17A]/20">
         
         {/* Content */}
         <div className="relative z-10 p-6 sm:p-8">
@@ -40,7 +36,7 @@ export default function PlayerProfilePrompt({ onClose, returnUrl = '/' }: Player
           <div className="flex flex-col gap-3">
             <Link
               href={`/player-profile?returnUrl=${encodeURIComponent(returnUrl)}`}
-              className="group relative inline-flex items-center justify-center px-8 py-4 bg-[#CEA17A]/20 backdrop-blur-md hover:bg-[#CEA17A]/30 text-white rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/20 focus:ring-offset-2 focus:ring-offset-transparent border border-[#CEA17A]/40 hover:border-[#CEA17A]/60 shadow-lg shadow-[#CEA17A]/20"
+              className="group relative inline-flex items-center justify-center px-8 py-4 bg-[#CEA17A]/20 backdrop-blur-sm hover:bg-[#CEA17A]/30 text-white rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/20 focus:ring-offset-2 focus:ring-offset-transparent border border-[#CEA17A]/30 shadow-lg"
             >
               <span>Create Player Profile →</span>
             </Link>
@@ -49,7 +45,7 @@ export default function PlayerProfilePrompt({ onClose, returnUrl = '/' }: Player
                 onClose()
                 // Just close the dialog without navigation to preserve scroll position
               }}
-              className="group relative inline-flex items-center justify-center px-8 py-3 bg-[#3E4E5A]/20 backdrop-blur-md hover:bg-[#3E4E5A]/30 text-[#CEA17A] hover:text-white border border-[#CEA17A]/30 hover:border-[#CEA17A]/50 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/20 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg shadow-[#3E4E5A]/20"
+              className="group relative inline-flex items-center justify-center px-8 py-3 bg-transparent backdrop-blur-sm hover:bg-white/10 text-white border border-white/20 hover:border-white/40 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-transparent"
             >
               <span>Will Create Later</span>
             </button>
