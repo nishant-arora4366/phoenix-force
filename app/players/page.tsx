@@ -470,46 +470,46 @@ export default function PlayersPage() {
           <div className="flex flex-col gap-4">
             {/* Search Bar */}
             <div className="w-full">
-              <div className="relative">
+                <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-[#CEA17A]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search players by name..."
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search players by name..."
                   className="w-full pl-12 pr-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] placeholder-[#CEA17A]/50"
-                />
+                  />
+                </div>
               </div>
-            </div>
 
             {/* Sort Controls */}
             <div className="flex flex-col gap-4">
-              {/* Sort and View Controls */}
+            {/* Sort and View Controls */}
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full">
-                {/* Sort */}
+              {/* Sort */}
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                   <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">Sort by:</label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
                     className="flex-1 sm:w-auto px-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] shadow-lg"
-                  >
-                    <option value="name">Name</option>
-                    <option value="price">Price</option>
-                    <option value="batting">Batting Rating</option>
-                    <option value="bowling">Bowling Rating</option>
-                  </select>
-                </div>
+                >
+                  <option value="name">Name</option>
+                  <option value="price">Price</option>
+                  <option value="batting">Batting Rating</option>
+                  <option value="bowling">Bowling Rating</option>
+                </select>
+              </div>
 
                 {/* View Toggle - Desktop Only */}
                 <div className="hidden sm:flex items-center gap-2">
                   <span className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">View:</span>
-                  <button
-                    onClick={() => setViewMode('grid')}
+                <button
+                  onClick={() => setViewMode('grid')}
                     className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
                       viewMode === 'grid'
                         ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
@@ -518,10 +518,10 @@ export default function PlayersPage() {
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
                     className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
                       viewMode === 'list'
                         ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
@@ -530,9 +530,9 @@ export default function PlayersPage() {
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
+                  </svg>
+                </button>
+              </div>
               </div>
 
               {/* Second Row: Action Buttons */}
@@ -646,13 +646,13 @@ export default function PlayersPage() {
             </div>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 px-2 sm:px-0">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-4 px-1 sm:px-0">
             {filteredPlayers?.map((player) => (
               <div 
                 key={player.id} 
                 onClick={() => router.push(`/players/${player.id}`)}
                 className="group relative aspect-square overflow-hidden bg-gradient-to-br from-[#3E4E5A] to-[#09171F] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 cursor-pointer z-[-1]"
-                style={{ minHeight: '200px' }}
+                style={{ minHeight: '140px', maxHeight: '160px' }}
               >
                 {/* Player Image Background */}
                   {player.profile_pic_url ? (
@@ -705,21 +705,21 @@ export default function PlayersPage() {
 
                 {/* Player Name - Bottom Left with Gradient Background */}
                 <div className="absolute bottom-0 left-0 right-0 z-10">
-                  <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 pb-3">
-                    <h3 className="text-white font-semibold text-sm mb-2">
+                  <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-2 sm:p-4 pb-2 sm:pb-3">
+                    <h3 className="text-white font-semibold text-xs sm:text-sm mb-1 sm:mb-2">
                       {player.display_name}
                     </h3>
                     
                     {/* Role Icons */}
                     {player.skills?.Role && (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1 sm:gap-1.5">
                         {Array.isArray(player.skills.Role) ? (
                           player.skills.Role.map((role, index) => {
                             const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
                                             role.toLowerCase().includes('bowler') ? '🎾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
                       return (
-                              <span key={index} className="text-base">
+                              <span key={index} className="text-sm sm:text-base">
                                 {roleEmoji}
                         </span>
                             )
@@ -731,15 +731,15 @@ export default function PlayersPage() {
                                             role.toLowerCase().includes('bowler') ? '🎾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
                       return (
-                              <span className="text-base">
+                              <span className="text-sm sm:text-base">
                                 {roleEmoji}
                           </span>
                             )
                           })()
-                        )}
+                      )}
+                    </div>
+                  )}
                       </div>
-                    )}
-                  </div>
                 </div>
               </div>
             ))}
@@ -940,12 +940,12 @@ export default function PlayersPage() {
                         )}
                       </>
                     ) : null}
-                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Empty State */}
         {!isLoading && filteredPlayers?.length === 0 && (
