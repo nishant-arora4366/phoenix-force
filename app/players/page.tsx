@@ -786,6 +786,9 @@ export default function PlayersPage() {
                 {(userRole === 'admin' || userRole === 'host') && (
                   <div className="col-span-2 sm:col-span-1">Price</div>
                 )}
+                {!(userRole === 'admin' || userRole === 'host') && (
+                  <div className="col-span-2 sm:col-span-1"></div>
+                )}
                     </div>
             </div>
 
@@ -908,6 +911,11 @@ export default function PlayersPage() {
                         ₹{player.base_price}
                       </div>
                     </div>
+                  )}
+
+                  {/* Empty space for regular users */}
+                  {!(userRole === 'admin' || userRole === 'host') && (
+                    <div className="col-span-2 sm:col-span-1"></div>
                   )}
 
                 </div>
