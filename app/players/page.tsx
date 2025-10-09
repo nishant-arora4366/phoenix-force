@@ -367,7 +367,11 @@ export default function PlayersPage() {
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
             {filteredPlayers?.map((player) => (
-              <div key={player.id} className="group relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 h-full flex flex-col">
+              <div 
+                key={player.id} 
+                onClick={() => router.push(`/players/${player.id}`)}
+                className="group relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 h-full flex flex-col cursor-pointer"
+              >
                 {/* Luxury Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
@@ -390,7 +394,10 @@ export default function PlayersPage() {
                   {(userRole === 'admin' || userRole === 'host') && (
                     <div className="absolute top-4 right-4 flex space-x-1">
                       <button 
-                        onClick={() => router.push(`/players/${player.id}/edit`)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          router.push(`/players/${player.id}/edit`)
+                        }}
                         className="bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-150 text-xs py-1 px-2"
                         title="Edit Player"
                       >
@@ -398,7 +405,10 @@ export default function PlayersPage() {
                       </button>
                       {userRole === 'admin' && (
                         <button 
-                          onClick={() => handleDelete(player.id, player.display_name)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(player.id, player.display_name)
+                          }}
                           className="bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs py-1 px-2"
                           title="Delete Player"
                         >
@@ -477,15 +487,6 @@ export default function PlayersPage() {
 
 
 
-                  {/* View Details Button */}
-                  <div className="mt-auto">
-                    <button 
-                      onClick={() => router.push(`/players/${player.id}`)}
-                      className="w-full bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 text-xs font-medium py-1.5 px-3"
-                    >
-                      View Details
-                    </button>
-                  </div>
                 </div>
               </div>
             ))}
