@@ -192,15 +192,15 @@ export default function Navbar() {
             {/* Left Side - Brand (Desktop) / Hamburger (Mobile) */}
             <div className="flex items-center space-x-4">
               {/* Back Button - Desktop Only, Always Visible */}
-              <div className="block">
+              <div className="hidden sm:block">
                 <button
                   onClick={handleBackNavigation}
-                  className="flex items-center space-x-2 p-3 rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500 transition-all duration-300 border-2 border-red-800"
+                  className="flex items-center space-x-2 p-3 rounded-lg text-[#DBD0C0] hover:text-[#75020f] hover:bg-[#75020f]/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#75020f] transition-all duration-300"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
-                  <span className="text-sm font-bold">BACK</span>
+                  <span className="text-sm font-medium">Back</span>
                 </button>
               </div>
 
@@ -371,7 +371,7 @@ export default function Navbar() {
       {/* Floating Back Button - Mobile Only, Always Visible with Glass Effect */}
       <button
         onClick={handleBackNavigation}
-        className="fixed bottom-6 left-6 sm:hidden z-40 w-14 h-14 bg-red-500/50 backdrop-blur-md hover:bg-red-500/70 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center border border-red-500/50 hover:border-red-500/70"
+        className="fixed bottom-6 left-6 sm:hidden z-40 w-14 h-14 bg-white/10 backdrop-blur-md hover:bg-white/15 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center border border-white/20 hover:border-white/40"
       >
         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
