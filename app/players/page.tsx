@@ -464,27 +464,27 @@ export default function PlayersPage() {
                   <div className="space-y-2 mt-auto">
                     <button 
                       onClick={() => router.push(`/players/${player.id}`)}
-                      className="w-full bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium py-2 px-4"
+                      className="w-full bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 text-xs font-medium py-1.5 px-3"
                     >
                       View Details
                     </button>
                     {isLoadingUser ? (
                       <div className="flex space-x-2">
-                        <div className="flex-1 bg-[#09171F]/50 animate-pulse py-2 px-3 rounded-lg h-9 border border-[#CEA17A]/20"></div>
-                        <div className="flex-1 bg-[#09171F]/50 animate-pulse py-2 px-3 rounded-lg h-9 border border-[#CEA17A]/20"></div>
+                        <div className="flex-1 bg-[#09171F]/50 animate-pulse py-1.5 px-2 rounded-lg h-7 border border-[#CEA17A]/20"></div>
+                        <div className="flex-1 bg-[#09171F]/50 animate-pulse py-1.5 px-2 rounded-lg h-7 border border-[#CEA17A]/20"></div>
                       </div>
                     ) : (userRole === 'admin' || userRole === 'host') ? (
                       <div className="flex space-x-2">
                         <button 
                           onClick={() => router.push(`/players/${player.id}/edit`)}
-                          className="flex-1 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-150 text-sm py-2 px-3"
+                          className="flex-1 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-150 text-xs py-1.5 px-2"
                         >
                           Edit
                         </button>
                         {userRole === 'admin' && (
                           <button 
                             onClick={() => handleDelete(player.id, player.display_name)}
-                            className="flex-1 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-sm py-2 px-3"
+                            className="flex-1 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs py-1.5 px-2"
                           >
                             Delete
                           </button>
@@ -665,27 +665,27 @@ export default function PlayersPage() {
                   <div className="flex-shrink-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <button 
                       onClick={() => router.push(`/players/${player.id}`)}
-                      className="w-full sm:w-auto bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 text-sm py-2 px-4"
+                      className="w-full sm:w-auto bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 text-xs py-1.5 px-3"
                     >
                       View Details
                     </button>
                     {isLoadingUser ? (
                       <>
-                        <div className="w-full sm:w-auto bg-[#09171F]/50 animate-pulse py-2 px-3 rounded-lg h-9 border border-[#CEA17A]/20"></div>
-                        <div className="w-full sm:w-auto bg-[#09171F]/50 animate-pulse py-2 px-3 rounded-lg h-9 border border-[#CEA17A]/20"></div>
+                        <div className="w-full sm:w-auto bg-[#09171F]/50 animate-pulse py-1.5 px-2 rounded-lg h-7 border border-[#CEA17A]/20"></div>
+                        <div className="w-full sm:w-auto bg-[#09171F]/50 animate-pulse py-1.5 px-2 rounded-lg h-7 border border-[#CEA17A]/20"></div>
                       </>
                     ) : (userRole === 'admin' || userRole === 'host') ? (
                       <>
                         <button 
                           onClick={() => router.push(`/players/${player.id}/edit`)}
-                          className="w-full sm:w-auto bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-150 text-sm py-2 px-3"
+                          className="w-full sm:w-auto bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-150 text-xs py-1.5 px-2"
                         >
                           Edit
                         </button>
                         {userRole === 'admin' && (
                           <button 
                             onClick={() => handleDelete(player.id, player.display_name)}
-                            className="w-full sm:w-auto bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-sm py-2 px-3"
+                            className="w-full sm:w-auto bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs py-1.5 px-2"
                           >
                             Delete
                           </button>
