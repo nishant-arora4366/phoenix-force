@@ -1599,7 +1599,12 @@ export default function TournamentDetailsPage() {
                         {new Date(tournament.tournament_date).toLocaleDateString('en-US', { 
                           weekday: 'short', 
                           month: 'short', 
-                          day: 'numeric' 
+                          day: 'numeric',
+                          year: 'numeric'
+                        })} at {new Date(tournament.tournament_date).toLocaleTimeString('en-US', { 
+                          hour: 'numeric', 
+                          minute: '2-digit',
+                          hour12: true 
                         })}
                       </div>
                     </div>
