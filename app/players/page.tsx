@@ -786,7 +786,7 @@ export default function PlayersPage() {
                 {(userRole === 'admin' || userRole === 'host') && (
                   <div className="col-span-2 sm:col-span-1">Price</div>
                 )}
-                <div className="hidden sm:col-span-5">Actions</div>
+                <div className="col-span-2 sm:col-span-5">Actions</div>
                     </div>
             </div>
 
@@ -912,7 +912,7 @@ export default function PlayersPage() {
                   )}
 
                   {/* Actions - Desktop Only */}
-                  <div className="hidden sm:col-span-5 flex items-center gap-2">
+                  <div className="col-span-2 sm:col-span-5 flex items-center gap-2">
                     <button 
                       onClick={(e) => {
                         e.stopPropagation()
