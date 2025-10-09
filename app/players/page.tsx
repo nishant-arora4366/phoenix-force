@@ -157,9 +157,9 @@ export default function PlayersPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className="min-h-screen bg-[#19171b] py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-red-50 border border-red-200 text-red-800 p-6 rounded-xl shadow-sm">
+          <div className="bg-red-500/20 border border-red-500/30 text-red-300 p-6 rounded-xl shadow-sm">
             <div className="flex items-center">
               <svg className="h-5 w-5 text-red-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -176,13 +176,13 @@ export default function PlayersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-[#19171b]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Modern Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
             <div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-gray-800">
+              <h1 className="text-2xl sm:text-4xl font-bold text-[#DBD0C0]">
                 Player Roster
               </h1>
               <p className="text-gray-500 mt-2 text-base sm:text-lg">
@@ -190,8 +190,8 @@ export default function PlayersPage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <div className="bg-white rounded-lg px-4 py-2 shadow-sm border">
-                <span className="text-sm text-gray-600">
+              <div className="bg-[#09171F]/50 rounded-lg px-4 py-2 shadow-sm border">
+                <span className="text-sm text-[#CEA17A]">
                   {isLoading ? 'Loading...' : `${filteredPlayers?.length || 0} players`}
                 </span>
               </div>
@@ -210,7 +210,7 @@ export default function PlayersPage() {
         </div>
 
         {/* Modern Filters & Controls */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+        <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-6 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             {/* Search and Filters */}
             <div className="flex flex-col sm:flex-row gap-4 flex-1">
@@ -283,7 +283,7 @@ export default function PlayersPage() {
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    viewMode === 'grid' ? 'bg-[#09171F]/50 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -293,7 +293,7 @@ export default function PlayersPage() {
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'list' ? 'bg-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    viewMode === 'list' ? 'bg-[#09171F]/50 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -310,13 +310,13 @@ export default function PlayersPage() {
           <div className="flex justify-center items-center py-16">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading players...</p>
+              <p className="text-[#CEA17A]">Loading players...</p>
             </div>
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredPlayers?.map((player) => (
-              <div key={player.id} className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 h-full flex flex-col">
+              <div key={player.id} className="group bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 h-full flex flex-col">
                 {/* Player Image */}
                 <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                   {player.profile_pic_url ? (
@@ -347,7 +347,7 @@ export default function PlayersPage() {
                 {/* Player Info */}
                 <div className="p-6 flex-1 flex flex-col">
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-gray-800 group-hover:text-gray-600 transition-colors">
+                    <h3 className="text-xl font-bold text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors">
                       {player.display_name}
                     </h3>
                     {player.stage_name && (
@@ -391,7 +391,7 @@ export default function PlayersPage() {
                   <div className="space-y-3 mb-4">
                     {player.batting_rating && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Batting</span>
+                        <span className="text-sm text-[#CEA17A]">Batting</span>
                         <div className="flex items-center">
                           <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                             <div 
@@ -399,13 +399,13 @@ export default function PlayersPage() {
                               style={{ width: `${(player.batting_rating / 10) * 100}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-800">{player.batting_rating}/10</span>
+                          <span className="text-sm font-semibold text-[#DBD0C0]">{player.batting_rating}/10</span>
                         </div>
                       </div>
                     )}
                     {player.bowling_rating && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Bowling</span>
+                        <span className="text-sm text-[#CEA17A]">Bowling</span>
                         <div className="flex items-center">
                           <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                             <div 
@@ -413,13 +413,13 @@ export default function PlayersPage() {
                               style={{ width: `${(player.bowling_rating / 10) * 100}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-800">{player.bowling_rating}/10</span>
+                          <span className="text-sm font-semibold text-[#DBD0C0]">{player.bowling_rating}/10</span>
                         </div>
                       </div>
                     )}
                     {player.wicket_keeping_rating && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Wicket Keeping</span>
+                        <span className="text-sm text-[#CEA17A]">Wicket Keeping</span>
                         <div className="flex items-center">
                           <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                             <div 
@@ -427,7 +427,7 @@ export default function PlayersPage() {
                               style={{ width: `${(player.wicket_keeping_rating / 10) * 100}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-800">{player.wicket_keeping_rating}/10</span>
+                          <span className="text-sm font-semibold text-[#DBD0C0]">{player.wicket_keeping_rating}/10</span>
                         </div>
                       </div>
                     )}
@@ -438,8 +438,8 @@ export default function PlayersPage() {
                       
                       return (
                         <div key={skillName} className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">{skillName}</span>
-                          <span className="text-sm font-semibold text-gray-800">
+                          <span className="text-sm text-[#CEA17A]">{skillName}</span>
+                          <span className="text-sm font-semibold text-[#DBD0C0]">
                             {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
                           </span>
                         </div>
@@ -449,7 +449,7 @@ export default function PlayersPage() {
 
                   {/* Bio */}
                   {player.bio && (
-                    <div className="text-sm text-gray-600 mb-4">
+                    <div className="text-sm text-[#CEA17A] mb-4">
                       {player.bio.length > 100 ? (
                         <div>
                           <span className="line-clamp-2">
@@ -507,7 +507,7 @@ export default function PlayersPage() {
         ) : (
           <div className="space-y-4">
             {filteredPlayers?.map((player) => (
-              <div key={player.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
+              <div key={player.id} className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-4 sm:p-6 hover:shadow-md transition-shadow">
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
                   {/* Player Avatar */}
                   <div className="flex-shrink-0 flex items-center space-x-4">
@@ -553,13 +553,13 @@ export default function PlayersPage() {
                         <div className="text-2xl font-bold text-gray-700">₹{player.base_price}</div>
                         <div className="flex items-center space-x-4 mt-2">
                           {player.batting_rating && (
-                            <span className="text-sm text-gray-600">Bat: {player.batting_rating}/10</span>
+                            <span className="text-sm text-[#CEA17A]">Bat: {player.batting_rating}/10</span>
                           )}
                           {player.bowling_rating && (
-                            <span className="text-sm text-gray-600">Bowl: {player.bowling_rating}/10</span>
+                            <span className="text-sm text-[#CEA17A]">Bowl: {player.bowling_rating}/10</span>
                           )}
                           {player.wicket_keeping_rating && (
-                            <span className="text-sm text-gray-600">WK: {player.wicket_keeping_rating}/10</span>
+                            <span className="text-sm text-[#CEA17A]">WK: {player.wicket_keeping_rating}/10</span>
                           )}
                         </div>
                       </div>
@@ -580,13 +580,13 @@ export default function PlayersPage() {
                     {/* Ratings - Mobile */}
                     <div className="sm:hidden flex flex-wrap gap-2 mb-3">
                       {player.batting_rating && (
-                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">Bat: {player.batting_rating}/10</span>
+                        <span className="text-xs text-[#CEA17A] bg-gray-100 px-2 py-1 rounded">Bat: {player.batting_rating}/10</span>
                       )}
                       {player.bowling_rating && (
-                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">Bowl: {player.bowling_rating}/10</span>
+                        <span className="text-xs text-[#CEA17A] bg-gray-100 px-2 py-1 rounded">Bowl: {player.bowling_rating}/10</span>
                       )}
                       {player.wicket_keeping_rating && (
-                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">WK: {player.wicket_keeping_rating}/10</span>
+                        <span className="text-xs text-[#CEA17A] bg-gray-100 px-2 py-1 rounded">WK: {player.wicket_keeping_rating}/10</span>
                       )}
                     </div>
 
@@ -605,7 +605,7 @@ export default function PlayersPage() {
 
                     {/* Bio */}
                     {player.bio && (
-                      <div className="text-sm text-gray-600 mb-3">
+                      <div className="text-sm text-[#CEA17A] mb-3">
                         {player.bio.length > 80 ? (
                           <div>
                             <span className="line-clamp-1">
@@ -666,12 +666,12 @@ export default function PlayersPage() {
         {/* Empty State */}
         {!isLoading && filteredPlayers?.length === 0 && (
           <div className="text-center py-16">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 max-w-md mx-auto">
+            <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-12 max-w-md mx-auto">
               <div className="text-6xl mb-6">🏏</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 No players found
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-[#CEA17A] mb-6">
                 Try adjusting your search filters or check back later for new players.
               </p>
               <button 

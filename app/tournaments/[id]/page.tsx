@@ -788,8 +788,8 @@ export default function TournamentDetailsPage() {
   )
 
   const SlotsSkeleton = () => (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      <div className="p-4 border-b border-gray-200">
+    <div className="bg-[#09171F]/50 rounded-xl border border-[#CEA17A]/20 shadow-sm overflow-hidden">
+      <div className="p-4 border-b border-[#CEA17A]/20">
         <div className="animate-pulse">
           <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
           <div className="h-3 bg-gray-200 rounded w-1/3"></div>
@@ -804,21 +804,21 @@ export default function TournamentDetailsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft':
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
       case 'registration_open':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-500/20 text-green-300 border border-green-500/30'
       case 'registration_closed':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
       case 'auction_started':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
       case 'auction_completed':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
       case 'teams_formed':
-        return 'bg-indigo-100 text-indigo-800'
+        return 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
       case 'completed':
-        return 'bg-emerald-100 text-emerald-800'
+        return 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
     }
   }
 
@@ -1352,10 +1352,10 @@ export default function TournamentDetailsPage() {
   // Component render logic
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-4 sm:py-8">
+      <div className="min-h-screen bg-[#19171b] flex items-center justify-center py-4 sm:py-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-4 border-gray-600 mx-auto mb-4"></div>
-          <p className="text-lg sm:text-xl text-gray-600">Loading tournament...</p>
+          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-4 border-[#CEA17A] mx-auto mb-4"></div>
+          <p className="text-lg sm:text-xl text-[#DBD0C0]">Loading tournament...</p>
         </div>
       </div>
     )
@@ -1364,18 +1364,18 @@ export default function TournamentDetailsPage() {
 
   if (error || !tournament) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-4 sm:py-8">
+      <div className="min-h-screen bg-[#19171b] flex items-center justify-center py-4 sm:py-8">
         <div className="max-w-md mx-auto text-center px-4">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#3E4E5A] rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Tournament Not Found</h1>
-          <p className="text-gray-600 mb-6 text-sm sm:text-base">{error || 'The tournament you are looking for does not exist.'}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#DBD0C0] mb-4">Tournament Not Found</h1>
+          <p className="text-[#CEA17A] mb-6 text-sm sm:text-base">{error || 'The tournament you are looking for does not exist.'}</p>
           <Link
             href="/tournaments"
-            className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
+            className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-[#CEA17A] text-[#09171F] rounded-lg hover:bg-[#DBD0C0] transition-colors text-sm sm:text-base font-semibold"
           >
             <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -1388,28 +1388,25 @@ export default function TournamentDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-[#19171b]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         {/* Main Content - Reorganized Layout */}
         <div className="space-y-8">
           {/* Sign In Card for Unauthenticated Users */}
           {!user && !isHost && (
-            <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-700/50">
-              {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-40">
-                <div className="absolute inset-0" style={{
-                  backgroundImage: `radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-                  backgroundSize: '20px 20px'
-                }}></div>
-              </div>
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#09171F] via-[#3E4E5A] to-[#09171F] rounded-2xl p-6 sm:p-8 shadow-2xl border border-[#CEA17A]/30">
+              {/* Luxury Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#09171F]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl"></div>
               
               {/* Content */}
               <div className="relative z-10">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
                   <div className="flex-shrink-0">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
-                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#CEA17A] rounded-2xl flex items-center justify-center shadow-lg">
+                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#09171F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
                     </div>
@@ -1418,7 +1415,7 @@ export default function TournamentDetailsPage() {
                     <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
                       Ready to Join?
                     </h3>
-                    <p className="text-blue-100 text-sm sm:text-base leading-relaxed">
+                    <p className="text-[#CEA17A] text-sm sm:text-base leading-relaxed">
                       Sign in to register for this tournament and secure your spot in the competition.
                     </p>
                   </div>
@@ -1428,17 +1425,17 @@ export default function TournamentDetailsPage() {
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link
                   href={`/signin?returnUrl=${encodeURIComponent(`/tournaments/${tournament.id}`)}`}
-                  className="group relative flex-1 inline-flex items-center justify-center px-6 py-4 bg-white text-slate-900 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 hover:bg-blue-50 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  className="group relative flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#CEA17A] text-[#09171F] rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 hover:bg-[#DBD0C0] hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
                 >
                     <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                     </svg>
                     <span>Sign In to Register</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#CEA17A] to-[#DBD0C0] rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
                   </Link>
                   <Link
                     href="/tournaments"
-                    className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-slate-800/50 text-white border border-slate-600 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-slate-700/50 hover:border-slate-500 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                    className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#3E4E5A] text-[#CEA17A] border border-[#CEA17A]/30 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-[#3E4E5A]/80 hover:border-[#CEA17A]/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
                   >
                     <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -1465,15 +1462,15 @@ export default function TournamentDetailsPage() {
               <div className="space-y-4">
                 {/* Tournament Overview Label */}
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Tournament Overview</h2>
+                  <h2 className="text-xl font-semibold text-[#DBD0C0]">Tournament Overview</h2>
                 </div>
                 
                 {/* Comprehensive Tournament Overview */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+                <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-4 sm:p-6 mb-6">
                   {/* Tournament Name and Status Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">{tournament.name}</h3>
+                      <h3 className="text-2xl font-bold text-[#DBD0C0] mb-2">{tournament.name}</h3>
                         <span className={`px-3 py-1 rounded-lg text-sm font-medium shadow-sm ${getStatusColor(tournament.status)}`}>
                           {getStatusText(tournament.status)}
                         </span>
@@ -1546,12 +1543,12 @@ export default function TournamentDetailsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Format</label>
-                      <div className="text-sm font-semibold text-gray-900">{tournament.format}</div>
+                      <div className="text-sm font-semibold text-[#DBD0C0]">{tournament.format}</div>
                     </div>
                     
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Tournament Date</label>
-                      <div className="text-sm font-semibold text-gray-900">
+                      <div className="text-sm font-semibold text-[#DBD0C0]">
                         {new Date(tournament.tournament_date).toLocaleDateString('en-US', { 
                           weekday: 'short', 
                           month: 'short', 
@@ -1562,7 +1559,7 @@ export default function TournamentDetailsPage() {
                     
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Host</label>
-                      <div className="text-sm font-semibold text-gray-900">
+                      <div className="text-sm font-semibold text-[#DBD0C0]">
                         {hostInfo?.firstname && hostInfo?.lastname 
                           ? `${hostInfo.firstname} ${hostInfo.lastname}`
                           : hostInfo?.username || hostInfo?.email || 'Unknown'
@@ -1573,7 +1570,7 @@ export default function TournamentDetailsPage() {
                     {tournament.venue && (
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Venue</label>
-                        <div className="text-sm font-semibold text-gray-900">
+                        <div className="text-sm font-semibold text-[#DBD0C0]">
                           {tournament.venue}
                           {tournament.google_maps_link && (
                             <div className="mt-1">
@@ -1600,14 +1597,14 @@ export default function TournamentDetailsPage() {
                         <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="text-2xl font-bold text-gray-900">{slotsStats.total_slots}</div>
+                              <div className="text-2xl font-bold text-[#DBD0C0]">{slotsStats.total_slots}</div>
                               <div className="text-sm font-medium text-gray-700">Total Slots</div>
                               <div className="text-xs text-green-600">
                                 {slotsStats.total_slots - slotsStats.filled_main_slots} available
                               </div>
                             </div>
                             <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="w-5 h-5 text-[#CEA17A]" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                               </svg>
                             </div>
@@ -1676,7 +1673,7 @@ export default function TournamentDetailsPage() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Created</label>
-                        <div className="text-sm font-semibold text-gray-900">
+                        <div className="text-sm font-semibold text-[#DBD0C0]">
                           {new Date(tournament.created_at).toLocaleDateString('en-US', { 
                             month: 'short', 
                             day: 'numeric',
@@ -1746,7 +1743,7 @@ export default function TournamentDetailsPage() {
                 {/* Show message if no slots are available (should not happen with intelligent slots) */}
                 {slots.length === 0 && user && (
                   <div className="text-center py-4">
-                    <p className="text-gray-600 mb-4">No tournament slots available</p>
+                    <p className="text-[#CEA17A] mb-4">No tournament slots available</p>
                     <button
                       onClick={() => fetchSlots()}
                       className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -1760,7 +1757,7 @@ export default function TournamentDetailsPage() {
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-2">
-                      <h3 className="text-xl font-semibold text-gray-900">
+                      <h3 className="text-xl font-semibold text-[#DBD0C0]">
                         Playing Squad
                       </h3>
                       {isRealtimeUpdating && (
@@ -1775,14 +1772,14 @@ export default function TournamentDetailsPage() {
                   {slotsLoading ? (
                     <SlotsSkeleton />
                   ) : (
-                    <div className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all duration-300 ${
+                    <div className={`bg-[#09171F]/50 rounded-xl border shadow-sm overflow-hidden transition-all duration-300 ${
                       isRealtimeUpdating 
                         ? 'border-blue-300 shadow-blue-100' 
-                        : 'border-gray-200'
+                        : 'border-[#CEA17A]/20'
                     }`}>
                       {/* Header - Hidden on mobile, shown on desktop */}
-                      <div className="hidden md:block bg-gray-50 px-6 py-4 border-b border-gray-200">
-                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
+                      <div className="hidden md:block bg-gray-50 px-6 py-4 border-b border-[#CEA17A]/20">
+                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#CEA17A]">
                           <div className="col-span-1">#</div>
                           <div className="col-span-4">Player Name</div>
                           <div className="col-span-2">Status</div>
@@ -1807,7 +1804,7 @@ export default function TournamentDetailsPage() {
                                     {slot.position || index + 1}
                                   </div>
                                   <div>
-                                    <div className="font-medium text-gray-900">
+                                    <div className="font-medium text-[#DBD0C0]">
                                       {slot.players.users?.firstname && slot.players.users?.lastname 
                                         ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
                                         : slot.players.users?.username || slot.players.users?.email || slot.players.name
@@ -1825,7 +1822,7 @@ export default function TournamentDetailsPage() {
                                 </span>
                               </div>
                               <div className="space-y-2">
-                                <div className="text-sm text-gray-600">
+                                <div className="text-sm text-[#CEA17A]">
                                   <div>Joined: {formatDateTime(slot.requested_at)}</div>
                                   {slot.confirmed_at && (
                                     <div className="text-xs text-gray-500">
@@ -1871,7 +1868,7 @@ export default function TournamentDetailsPage() {
                                 </div>
                               </div>
                               <div className="col-span-4">
-                                <div className="font-medium text-gray-900">
+                                <div className="font-medium text-[#DBD0C0]">
                                   {slot.players.users?.firstname && slot.players.users?.lastname 
                                     ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
                                     : slot.players.users?.username || slot.players.users?.email || slot.players.name
@@ -1889,7 +1886,7 @@ export default function TournamentDetailsPage() {
                                 </span>
                               </div>
                               <div className="col-span-3">
-                                <div className="text-sm text-gray-900">
+                                <div className="text-sm text-[#DBD0C0]">
                                   {formatDateTime(slot.requested_at)}
                                 </div>
                                 {slot.confirmed_at && (
@@ -1981,7 +1978,7 @@ export default function TournamentDetailsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-2">
-                      <h3 className="text-xl font-semibold text-gray-900">Waitlist</h3>
+                      <h3 className="text-xl font-semibold text-[#DBD0C0]">Waitlist</h3>
                       {isRealtimeUpdating && (
                         <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                       )}
@@ -1994,14 +1991,14 @@ export default function TournamentDetailsPage() {
                   {slotsLoading ? (
                     <SlotsSkeleton />
                   ) : (
-                    <div className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all duration-300 ${
+                    <div className={`bg-[#09171F]/50 rounded-xl border shadow-sm overflow-hidden transition-all duration-300 ${
                       isRealtimeUpdating 
                         ? 'border-blue-300 shadow-blue-100' 
-                        : 'border-gray-200'
+                        : 'border-[#CEA17A]/20'
                     }`}>
                       {/* Header - Hidden on mobile, shown on desktop */}
-                      <div className="hidden md:block bg-gray-50 px-6 py-4 border-b border-gray-200">
-                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
+                      <div className="hidden md:block bg-gray-50 px-6 py-4 border-b border-[#CEA17A]/20">
+                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#CEA17A]">
                           <div className="col-span-1">#</div>
                           <div className="col-span-4">Player Name</div>
                           <div className="col-span-2">Status</div>
@@ -2026,7 +2023,7 @@ export default function TournamentDetailsPage() {
                                     {slot.waitlist_position || index + 1}
                                   </div>
                                   <div>
-                                    <div className="font-medium text-gray-900">
+                                    <div className="font-medium text-[#DBD0C0]">
                                       {slot.players.users?.firstname && slot.players.users?.lastname 
                                         ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
                                         : slot.players.users?.username || slot.players.users?.email || slot.players.name
@@ -2040,7 +2037,7 @@ export default function TournamentDetailsPage() {
                                 </span>
                               </div>
                               <div className="space-y-2">
-                                <div className="text-sm text-gray-600">
+                                <div className="text-sm text-[#CEA17A]">
                                   Joined: {formatDateTime(slot.requested_at)}
                                 </div>
                                 {isHost && (
@@ -2062,7 +2059,7 @@ export default function TournamentDetailsPage() {
                                 </div>
                               </div>
                               <div className="col-span-4">
-                                <div className="font-medium text-gray-900">
+                                <div className="font-medium text-[#DBD0C0]">
                                   {slot.players.users?.firstname && slot.players.users?.lastname 
                                     ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
                                     : slot.players.users?.username || slot.players.users?.email || slot.players.name
@@ -2076,7 +2073,7 @@ export default function TournamentDetailsPage() {
                                 </span>
                               </div>
                               <div className="col-span-3">
-                                <div className="text-sm text-gray-900">
+                                <div className="text-sm text-[#DBD0C0]">
                                   {formatDateTime(slot.requested_at)}
                                 </div>
                               </div>
@@ -2110,13 +2107,13 @@ export default function TournamentDetailsPage() {
           )}
 
           {/* Tournament Timeline - Full Width */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h3>
+          <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-4 sm:p-6">
+            <h3 className="text-lg font-semibold text-[#DBD0C0] mb-4">Timeline</h3>
             <div className="space-y-4">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900">Tournament Created</div>
+                  <div className="text-sm font-medium text-[#DBD0C0]">Tournament Created</div>
                   <div className="text-xs text-gray-500">
                     {new Date(tournament.created_at).toLocaleDateString()}
                   </div>
@@ -2132,7 +2129,7 @@ export default function TournamentDetailsPage() {
                     ? 'bg-blue-500' : 'bg-gray-300'
                 }`}></div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900">Registration Opens</div>
+                  <div className="text-sm font-medium text-[#DBD0C0]">Registration Opens</div>
                   <div className="text-xs text-gray-500">When ready</div>
                 </div>
               </div>
@@ -2144,7 +2141,7 @@ export default function TournamentDetailsPage() {
                     ? 'bg-blue-500' : 'bg-gray-300'
                 }`}></div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900">Auction Begins</div>
+                  <div className="text-sm font-medium text-[#DBD0C0]">Auction Begins</div>
                   <div className="text-xs text-gray-500">After registration</div>
                 </div>
               </div>
@@ -2155,7 +2152,7 @@ export default function TournamentDetailsPage() {
                     ? 'bg-green-500' : 'bg-gray-300'
                 }`}></div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900">Tournament Complete</div>
+                  <div className="text-sm font-medium text-[#DBD0C0]">Tournament Complete</div>
                   <div className="text-xs text-gray-500">Final results</div>
                 </div>
               </div>
@@ -2167,10 +2164,10 @@ export default function TournamentDetailsPage() {
       {/* Enhanced Player Assignment Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#09171F]/50 rounded-xl shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Register Players to Tournament</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-[#DBD0C0]">Register Players to Tournament</h3>
                 <button
                   onClick={() => {
                     setShowAssignModal(false)
@@ -2182,7 +2179,7 @@ export default function TournamentDetailsPage() {
                     setSelectedSkillValue('')
                     setAssignStatus('pending')
                   }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-[#CEA17A] transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2191,7 +2188,7 @@ export default function TournamentDetailsPage() {
               </div>
 
               {/* Search and Filter Section */}
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-6">
+              <div className="bg-gray-50 rounded-lg p-4 border border-[#CEA17A]/20 mb-6">
                 <div className="space-y-4">
                   {/* Search - Full width on mobile */}
                   <div className="w-full">
@@ -2219,12 +2216,12 @@ export default function TournamentDetailsPage() {
 
               {/* Skills Filter Section */}
               {showSkillConfig && (
-                <div className="bg-white rounded-lg p-3 border border-gray-200 mb-4">
+                <div className="bg-[#09171F]/50 rounded-lg p-3 border border-[#CEA17A]/20 mb-4">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="text-sm font-medium text-gray-700">Select Skills to Filter By</h4>
                     <button
                       onClick={() => setShowSkillConfig(false)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-gray-400 hover:text-[#CEA17A]"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2265,15 +2262,15 @@ export default function TournamentDetailsPage() {
 
               {/* Active Skills Filter */}
               {enabledSkills.length > 0 && (
-                <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200 mb-6 shadow-sm">
+                <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-[#CEA17A]/20 mb-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                      <h4 className="text-sm font-semibold text-gray-900">Active Filters</h4>
+                      <h4 className="text-sm font-semibold text-[#DBD0C0]">Active Filters</h4>
                     </div>
                     <button
                       onClick={clearAllSkillFilters}
-                      className="text-xs text-gray-600 hover:text-gray-800 font-medium"
+                      className="text-xs text-[#CEA17A] hover:text-gray-800 font-medium"
                     >
                       Clear All
                     </button>
@@ -2285,7 +2282,7 @@ export default function TournamentDetailsPage() {
                       if (!skill) return null
                       
                       return (
-                        <div key={skillId} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                        <div key={skillId} className="bg-[#09171F]/50 rounded-lg p-3 border border-[#CEA17A]/20 shadow-sm">
                           <div className="flex items-center justify-between mb-2">
                             <label className="text-xs font-semibold text-gray-800 uppercase tracking-wide">
                               {skill.name}
@@ -2313,7 +2310,7 @@ export default function TournamentDetailsPage() {
                             </select>
                           ) : skill.type === 'multiselect' ? (
                             <div className="space-y-2">
-                              <div className="max-h-24 overflow-y-auto border border-gray-200 rounded-md bg-gray-50">
+                              <div className="max-h-24 overflow-y-auto border border-[#CEA17A]/20 rounded-md bg-gray-50">
                                 {skill.values?.map((value: any) => {
                                   const isSelected = skillFilterValues[skillId]?.includes(value.id) || false
                                   return (
@@ -2328,7 +2325,7 @@ export default function TournamentDetailsPage() {
                                             : currentValues.filter((v: string) => v !== value.id)
                                           updateSkillFilterValue(skillId, newValues)
                                         }}
-                                        className="h-3 w-3 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                                        className="h-3 w-3 text-[#CEA17A] focus:ring-gray-500 border-gray-300 rounded"
                                       />
                                       <span className="text-xs text-gray-700">{value.name}</span>
                                     </label>
@@ -2336,7 +2333,7 @@ export default function TournamentDetailsPage() {
                                 })}
                               </div>
                               {skillFilterValues[skillId]?.length > 0 && (
-                                <div className="text-xs text-gray-600">
+                                <div className="text-xs text-[#CEA17A]">
                                   {skillFilterValues[skillId].length} selected
                                 </div>
                               )}
@@ -2426,9 +2423,9 @@ export default function TournamentDetailsPage() {
                   </div>
                 </div>
                 
-                <div className="max-h-48 sm:max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                <div className="max-h-48 sm:max-h-64 overflow-y-auto border border-[#CEA17A]/20 rounded-lg">
                   {/* Table-like Header Row */}
-                  <div className="p-2 sm:p-3 bg-gray-50 border-b border-gray-200">
+                  <div className="p-2 sm:p-3 bg-gray-50 border-b border-[#CEA17A]/20">
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <input
                         type="checkbox"
@@ -2482,7 +2479,7 @@ export default function TournamentDetailsPage() {
                                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                               />
                               <div className="flex-1">
-                                <div className="font-medium text-gray-900">
+                                <div className="font-medium text-[#DBD0C0]">
                                   <div className="truncate">{player.display_name}</div>
                                   {isRegistered && (
                                     <span className="inline-block mt-1 text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
@@ -2519,7 +2516,7 @@ export default function TournamentDetailsPage() {
                   Assignment Status
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <label className="flex items-center p-3 border border-[#CEA17A]/20 rounded-lg hover:bg-gray-50 cursor-pointer">
                     <input
                       type="radio"
                       value="pending"
@@ -2532,7 +2529,7 @@ export default function TournamentDetailsPage() {
                       <div className="text-xs text-gray-500">Player needs approval</div>
                     </div>
                   </label>
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <label className="flex items-center p-3 border border-[#CEA17A]/20 rounded-lg hover:bg-gray-50 cursor-pointer">
                     <input
                       type="radio"
                       value="confirmed"
@@ -2596,13 +2593,13 @@ export default function TournamentDetailsPage() {
       {/* Admin Status Management Modal - Only for Admins */}
       {showStatusModal && isAdmin(userProfile) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#09171F]/50 rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Status Management</h3>
+                <h3 className="text-lg font-semibold text-[#DBD0C0]">Status Management</h3>
                 <button
                   onClick={closeStatusModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-[#CEA17A] transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2611,7 +2608,7 @@ export default function TournamentDetailsPage() {
               </div>
               
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">Current Status:</p>
+                <p className="text-sm text-[#CEA17A] mb-2">Current Status:</p>
                 <div className="flex items-center space-x-2">
                   <span className={`px-3 py-1 rounded-lg text-sm font-medium ${getStatusColor(tournament?.status || '')}`}>
                     {getStatusText(tournament?.status || '')}
@@ -2620,17 +2617,17 @@ export default function TournamentDetailsPage() {
               </div>
 
               <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-3">All Tournament Statuses:</p>
+                <p className="text-sm text-[#CEA17A] mb-3">All Tournament Statuses:</p>
                 <div className="space-y-2">
                   {Object.keys(statusDisplayNames).map((status) => (
                     <button
                       key={status}
                       onClick={() => handleStatusChange(status)}
-                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="w-full text-left p-3 border border-[#CEA17A]/20 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-[#DBD0C0]">
                             {statusDisplayNames[status as keyof typeof statusDisplayNames]}
                           </div>
                           <div className="text-xs text-gray-500">
@@ -2669,7 +2666,7 @@ export default function TournamentDetailsPage() {
       {/* Status Change Confirmation Dialog */}
       {showStatusConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+          <div className="bg-[#09171F]/50 rounded-xl shadow-xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center mb-4">
                 <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
@@ -2677,11 +2674,11 @@ export default function TournamentDetailsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Status Change</h3>
+                <h3 className="text-lg font-semibold text-[#DBD0C0]">Status Change</h3>
               </div>
               
               <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm text-[#CEA17A] mb-3">
                   {isAdmin(userProfile) 
                     ? 'As an admin, you have full control over tournament status changes.'
                     : 'Are you sure you want to change the tournament status?'
@@ -2689,13 +2686,13 @@ export default function TournamentDetailsPage() {
                 </p>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">From:</span>
+                    <span className="text-sm text-[#CEA17A]">From:</span>
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(tournament?.status || '')}`}>
                       {getStatusText(tournament?.status || '')}
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm text-gray-600">To:</span>
+                    <span className="text-sm text-[#CEA17A]">To:</span>
                     <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
                       {statusDisplayNames[selectedNewStatus as keyof typeof statusDisplayNames]}
                     </span>

@@ -40,23 +40,23 @@ const fetcher = async (url: string) => {
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'draft':
-      return 'bg-gray-100 text-gray-700'
+      return 'bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
     case 'registration_open':
-      return 'bg-green-100 text-green-700'
+      return 'bg-green-500/20 text-green-300 border border-green-500/30'
     case 'registration_closed':
-      return 'bg-yellow-100 text-yellow-700'
+      return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
     case 'auction_started':
-      return 'bg-blue-100 text-blue-700'
+      return 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
     case 'auction_completed':
-      return 'bg-purple-100 text-purple-700'
+      return 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
     case 'teams_formed':
-      return 'bg-indigo-100 text-indigo-700'
+      return 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
     case 'completed':
-      return 'bg-green-100 text-green-700'
+      return 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
     case 'in_progress':
-      return 'bg-orange-100 text-orange-700'
+      return 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
     default:
-      return 'bg-gray-100 text-gray-700'
+      return 'bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
   }
 }
 
@@ -173,10 +173,10 @@ export default function TournamentsPage() {
 
   if (isUserLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex items-center justify-center py-20 bg-[#19171b] min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading tournaments...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto"></div>
+          <p className="mt-4 text-[#DBD0C0]">Loading tournaments...</p>
         </div>
       </div>
     )
@@ -184,8 +184,8 @@ export default function TournamentsPage() {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-red-100 text-red-800 p-4 rounded-lg">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-[#19171b] min-h-screen">
+        <div className="bg-red-500/20 text-red-300 border border-red-500/30 p-4 rounded-lg">
           <h2 className="text-lg font-semibold">Error loading tournaments</h2>
           <p className="text-sm">{error.message}</p>
         </div>
@@ -194,13 +194,13 @@ export default function TournamentsPage() {
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#19171b]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900">Tournaments</h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="text-4xl font-bold text-[#DBD0C0]">Tournaments</h1>
+            <p className="text-[#CEA17A] mt-2">
               Manage and participate in cricket tournaments
             </p>
           </div>
@@ -219,21 +219,21 @@ export default function TournamentsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-[#09171F]/50 rounded-lg shadow-lg p-6">
             <div className="flex items-center">
               <div className="p-3 bg-gray-100 rounded-lg">
-                <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-6 w-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Tournaments</p>
-                <p className="text-2xl font-bold text-gray-900">{tournaments?.length || 0}</p>
+                <p className="text-sm font-medium text-[#CEA17A]">Total Tournaments</p>
+                <p className="text-2xl font-bold text-[#DBD0C0]">{tournaments?.length || 0}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-[#09171F]/50 rounded-lg shadow-lg p-6">
             <div className="flex items-center">
               <div className="p-3 bg-green-100 rounded-lg">
                 <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -241,15 +241,15 @@ export default function TournamentsPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-[#CEA17A]">Active</p>
+                <p className="text-2xl font-bold text-[#DBD0C0]">
                   {tournaments?.filter(t => t.status === 'registration_open' || t.status === 'auction_started').length || 0}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-[#09171F]/50 rounded-lg shadow-lg p-6">
             <div className="flex items-center">
               <div className="p-3 bg-yellow-100 rounded-lg">
                 <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -257,15 +257,15 @@ export default function TournamentsPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Draft</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-[#CEA17A]">Draft</p>
+                <p className="text-2xl font-bold text-[#DBD0C0]">
                   {tournaments?.filter(t => t.status === 'draft').length || 0}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-[#09171F]/50 rounded-lg shadow-lg p-6">
             <div className="flex items-center">
               <div className="p-3 bg-purple-100 rounded-lg">
                 <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,8 +273,8 @@ export default function TournamentsPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-[#CEA17A]">Completed</p>
+                <p className="text-2xl font-bold text-[#DBD0C0]">
                   {tournaments?.filter(t => t.status === 'auction_completed').length || 0}
                 </p>
               </div>
@@ -290,11 +290,11 @@ export default function TournamentsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tournaments?.map((tournament) => (
-              <div key={tournament.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-gray-200">
+              <div key={tournament.id} className="bg-[#09171F]/50 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-[#CEA17A]/20">
                 <div className="p-6">
                   {/* Tournament Header */}
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-semibold text-gray-900 line-clamp-2">
+                    <h3 className="text-xl font-semibold text-[#DBD0C0] line-clamp-2">
                       {tournament.name}
                     </h3>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(tournament.status)}`}>
@@ -305,37 +305,37 @@ export default function TournamentsPage() {
                   {/* Tournament Details */}
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Format:</span>
-                      <span className="font-semibold text-gray-900">{tournament.format}</span>
+                      <span className="text-[#CEA17A]">Format:</span>
+                      <span className="font-semibold text-[#DBD0C0]">{tournament.format}</span>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Teams:</span>
-                      <span className="font-semibold text-gray-900">{tournament.selected_teams}</span>
+                      <span className="text-[#CEA17A]">Teams:</span>
+                      <span className="font-semibold text-[#DBD0C0]">{tournament.selected_teams}</span>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Total Slots:</span>
-                      <span className="font-semibold text-gray-900">{tournament.total_slots}</span>
+                      <span className="text-[#CEA17A]">Total Slots:</span>
+                      <span className="font-semibold text-[#DBD0C0]">{tournament.total_slots}</span>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Date:</span>
-                      <span className="font-semibold text-gray-900">
+                      <span className="text-[#CEA17A]">Date:</span>
+                      <span className="font-semibold text-[#DBD0C0]">
                         {new Date(tournament.tournament_date).toLocaleDateString()}
                       </span>
                     </div>
 
                     {tournament.description && (
                       <div className="mt-3">
-                        <span className="text-gray-600 text-sm">Description:</span>
+                        <span className="text-[#CEA17A] text-sm">Description:</span>
                         <p className="text-sm text-gray-700 mt-1 line-clamp-2">{tournament.description}</p>
                       </div>
                     )}
 
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Created:</span>
-                      <span className="font-semibold text-gray-900">
+                      <span className="text-[#CEA17A]">Created:</span>
+                      <span className="font-semibold text-[#DBD0C0]">
                         {new Date(tournament.created_at).toLocaleDateString()}
                       </span>
                     </div>
@@ -377,10 +377,10 @@ export default function TournamentsPage() {
         {!tournamentsLoading && tournaments?.length === 0 && (
           <div className="text-center py-16">
             <div className="text-gray-400 text-6xl mb-4">🏆</div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-2xl font-semibold text-[#DBD0C0] mb-2">
               No tournaments found
             </h3>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+            <p className="text-[#CEA17A] mb-8 max-w-md mx-auto">
               {isHost ? 'Create your first tournament to get started with managing cricket tournaments.' : 'Check back later for new tournaments to participate in.'}
             </p>
             {isHost && (
@@ -401,9 +401,9 @@ export default function TournamentsPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Tournament</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-[#09171F]/50 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-[#DBD0C0] mb-4">Delete Tournament</h3>
+            <p className="text-[#CEA17A] mb-6">
               Are you sure you want to delete this tournament? This action cannot be undone.
             </p>
             <div className="flex space-x-3">
