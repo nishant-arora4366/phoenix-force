@@ -679,7 +679,6 @@ export default function PlayersPage() {
                 key={player.id} 
                 onClick={() => router.push(`/players/${player.id}`)}
                 className="group relative aspect-square overflow-hidden bg-gradient-to-br from-[#3E4E5A] to-[#09171F] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 cursor-pointer z-[-1]"
-                style={{ minHeight: '140px', maxHeight: '160px' }}
               >
                 {/* Player Image Background */}
                   {player.profile_pic_url ? (
@@ -772,17 +771,30 @@ export default function PlayersPage() {
             ))}
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredPlayers?.map((player) => (
-              <div key={player.id} className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 p-4 sm:p-6 hover:animate-border-glow transition-all duration-300">
-                {/* Luxury Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
-                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                  {/* Player Avatar */}
-                  <div className="flex-shrink-0 flex items-center space-x-4">
-                    <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-[#3E4E5A] to-[#09171F] flex items-center justify-center overflow-hidden border border-[#CEA17A]/20">
+          <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl border border-[#CEA17A]/20 shadow-xl overflow-hidden">
+            {/* Table Header */}
+            <div className="bg-gradient-to-r from-[#CEA17A]/10 to-[#CEA17A]/5 border-b border-[#CEA17A]/20">
+              <div className="grid grid-cols-12 gap-4 p-4 text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">
+                <div className="col-span-2 sm:col-span-1">Photo</div>
+                <div className="col-span-3 sm:col-span-2">Name</div>
+                <div className="col-span-2 sm:col-span-1">Role</div>
+                <div className="col-span-3 sm:col-span-2">Community</div>
+                <div className="col-span-2 sm:col-span-1">Base Price</div>
+                <div className="hidden sm:col-span-5">Actions</div>
+              </div>
+            </div>
+
+            {/* Table Body */}
+            <div className="divide-y divide-[#CEA17A]/10">
+              {filteredPlayers?.map((player) => (
+                <div 
+                  key={player.id} 
+                  onClick={() => router.push(`/players/${player.id}`)}
+                  className="grid grid-cols-12 gap-4 p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group"
+                >
+                  {/* Photo */}
+                  <div className="col-span-2 sm:col-span-1 flex items-center">
+                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-[#3E4E5A] to-[#09171F] flex items-center justify-center overflow-hidden border border-[#CEA17A]/20">
                       {player.profile_pic_url ? (
                         <img
                           src={player.profile_pic_url}
@@ -790,187 +802,124 @@ export default function PlayersPage() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="text-xl sm:text-2xl text-[#CEA17A]/60">🏏</div>
+                        <div className="text-sm sm:text-base text-[#CEA17A]/60">🏏</div>
                       )}
                     </div>
-                    
-                    {/* Mobile: Player name and price */}
-                    <div className="flex-1 sm:hidden">
-                      <h3 className="text-lg font-semibold text-[#DBD0C0]">
+                  </div>
+
+                  {/* Name */}
+                  <div className="col-span-3 sm:col-span-2 flex items-center">
+                    <div>
+                      <div className="text-sm sm:text-base font-medium text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors">
                         {player.display_name}
-                      </h3>
-                      <div className="text-lg font-bold text-[#CEA17A]">₹{player.base_price}</div>
-                    </div>
-                  </div>
-
-                  {/* Player Info */}
-                  <div className="flex-1 min-w-0">
-                    {/* Desktop layout */}
-                    <div className="hidden sm:flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-[#DBD0C0]">
-                          {player.display_name}
-                        </h3>
-                        {player.stage_name && (
-                          <p className="text-sm text-[#CEA17A]/70 italic">"{player.stage_name}"</p>
-                        )}
-                        {player.group_name && (
-                          <span className="inline-block bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full mt-1 backdrop-blur-sm">
-                            {player.group_name}
-                          </span>
-                        )}
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-[#CEA17A]">₹{player.base_price}</div>
-                        <div className="flex items-center space-x-4 mt-2">
-                          {player.batting_rating && (
-                            <span className="text-sm text-[#CEA17A]">Bat: {player.batting_rating}/10</span>
-                          )}
-                          {player.bowling_rating && (
-                            <span className="text-sm text-[#CEA17A]">Bowl: {player.bowling_rating}/10</span>
-                          )}
-                          {player.wicket_keeping_rating && (
-                            <span className="text-sm text-[#CEA17A]">WK: {player.wicket_keeping_rating}/10</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Mobile layout */}
-                    <div className="sm:hidden">
                       {player.stage_name && (
-                        <p className="text-sm text-[#CEA17A]/70 italic mb-2">"{player.stage_name}"</p>
-                      )}
-                      {player.group_name && (
-                        <span className="inline-block bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full mb-2 backdrop-blur-sm">
-                          {player.group_name}
-                        </span>
+                        <div className="text-xs text-[#CEA17A]/70 italic">"{player.stage_name}"</div>
                       )}
                     </div>
-
-                    {/* Ratings - Mobile */}
-                    <div className="sm:hidden flex flex-wrap gap-2 mb-3">
-                      {player.batting_rating && (
-                        <span className="text-xs text-[#CEA17A] bg-[#CEA17A]/20 border border-[#CEA17A]/30 px-2 py-1 rounded backdrop-blur-sm">Bat: {player.batting_rating}/10</span>
-                      )}
-                      {player.bowling_rating && (
-                        <span className="text-xs text-[#CEA17A] bg-[#CEA17A]/20 border border-[#CEA17A]/30 px-2 py-1 rounded backdrop-blur-sm">Bowl: {player.bowling_rating}/10</span>
-                      )}
-                      {player.wicket_keeping_rating && (
-                        <span className="text-xs text-[#CEA17A] bg-[#CEA17A]/20 border border-[#CEA17A]/30 px-2 py-1 rounded backdrop-blur-sm">WK: {player.wicket_keeping_rating}/10</span>
-                      )}
-                    </div>
-
-                    {/* Role */}
-                    {player.skills?.Role && (
-                      <div className="mb-3">
-                        <div className="text-xs text-[#CEA17A]/70 font-medium mb-1">Role</div>
-                        <div className="flex flex-wrap gap-1">
-                          {Array.isArray(player.skills.Role) ? (
-                            player.skills.Role.map((role, index) => {
-                          const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                          role.toLowerCase().includes('bowler') ? '🎾' : 
-                                          role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
-                              return (
-                                <span key={index} className="text-lg">
-                                  {roleEmoji}
-                                </span>
-                              )
-                            })
-                          ) : (
-                            (() => {
-                              const role = player.skills.Role
-                          const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                          role.toLowerCase().includes('bowler') ? '🎾' : 
-                                          role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
-                              return (
-                                <span className="text-lg">
-                                  {roleEmoji}
-                                </span>
-                              )
-                            })()
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Community */}
-                    {player.skills?.Community && (
-                      <div className="mb-3">
-                        <div className="text-xs text-[#CEA17A]/70 font-medium mb-1">Community</div>
-                        <div className="flex flex-wrap gap-1">
-                          {Array.isArray(player.skills.Community) ? (
-                            player.skills.Community.map((community, index) => (
-                              <span key={index} className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">
-                                {community}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">
-                              {player.skills.Community}
-                            </span>
-                      )}
-                    </div>
-                      </div>
-                    )}
-
-                    {/* Bio */}
-                    {player.bio && (
-                      <div className="text-sm text-[#CEA17A]/80 mb-3">
-                        {player.bio.length > 80 ? (
-                          <div>
-                            <span className="line-clamp-1">
-                              {player.bio.substring(0, 80)}...
-                            </span>
-                            <button 
-                              onClick={() => router.push(`/players/${player.id}`)}
-                              className="text-[#CEA17A] hover:text-[#CEA17A]/80 text-xs ml-1"
-                            >
-                              more
-                            </button>
-                          </div>
-                        ) : (
-                          <p className="line-clamp-1">{player.bio}</p>
-                        )}
-                      </div>
-                    )}
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex-shrink-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                    <button 
-                      onClick={() => router.push(`/players/${player.id}`)}
-                      className="w-full sm:w-auto bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 text-xs py-1.5 px-3"
+                  {/* Role */}
+                  <div className="col-span-2 sm:col-span-1 flex items-center">
+                    <div className="flex gap-1">
+                      {player.skills?.Role ? (
+                        Array.isArray(player.skills.Role) ? (
+                          player.skills.Role.map((role, index) => {
+                            const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                            role.toLowerCase().includes('bowler') ? '🎾' : 
+                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
+                            return (
+                              <span key={index} className="text-sm sm:text-base" title={role}>
+                                {roleEmoji}
+                              </span>
+                            )
+                          })
+                        ) : (
+                          (() => {
+                            const role = player.skills.Role
+                            const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                            role.toLowerCase().includes('bowler') ? '🎾' : 
+                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
+                            return (
+                              <span className="text-sm sm:text-base" title={role}>
+                                {roleEmoji}
+                              </span>
+                            )
+                          })()
+                        )
+                      ) : (
+                        <span className="text-[#CEA17A]/50 text-xs">-</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Community */}
+                  <div className="col-span-3 sm:col-span-2 flex items-center">
+                    <div className="flex flex-wrap gap-1">
+                      {player.skills?.Community ? (
+                        Array.isArray(player.skills.Community) ? (
+                          player.skills.Community.map((community, index) => (
+                            <span key={index} className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                              {community}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                            {player.skills.Community}
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-[#CEA17A]/50 text-xs">-</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Base Price */}
+                  <div className="col-span-2 sm:col-span-1 flex items-center">
+                    <div className="text-sm sm:text-base font-semibold text-[#CEA17A]">
+                      ₹{player.base_price}
+                    </div>
+                  </div>
+
+                  {/* Actions - Desktop Only */}
+                  <div className="hidden sm:col-span-5 flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        router.push(`/players/${player.id}`)
+                      }}
+                      className="px-3 py-1.5 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/30 transition-all duration-200 text-xs font-medium"
                     >
                       View Details
                     </button>
-                    {isLoadingUser ? (
+                    {(userRole === 'admin' || userRole === 'host') && (
                       <>
-                        <div className="w-full sm:w-auto bg-[#09171F]/50 animate-pulse py-1.5 px-2 rounded-lg h-7 border border-[#CEA17A]/20"></div>
-                        <div className="w-full sm:w-auto bg-[#09171F]/50 animate-pulse py-1.5 px-2 rounded-lg h-7 border border-[#CEA17A]/20"></div>
-                      </>
-                    ) : (userRole === 'admin' || userRole === 'host') ? (
-                      <>
-                        <button 
-                          onClick={() => router.push(`/players/${player.id}/edit`)}
-                          className="w-full sm:w-auto bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-150 text-xs py-1.5 px-2"
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            router.push(`/players/${player.id}/edit`)
+                          }}
+                          className="px-3 py-1.5 bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 rounded-lg hover:bg-[#3E4E5A]/30 transition-all duration-200 text-xs font-medium"
                         >
                           Edit
                         </button>
                         {userRole === 'admin' && (
-                          <button 
-                            onClick={() => handleDelete(player.id, player.display_name)}
-                            className="w-full sm:w-auto bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs py-1.5 px-2"
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDelete(player.id, player.display_name)
+                            }}
+                            className="px-3 py-1.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-all duration-200 text-xs font-medium"
                           >
                             Delete
                           </button>
                         )}
                       </>
-                    ) : null}
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
