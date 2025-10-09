@@ -192,15 +192,15 @@ export default function Navbar() {
             {/* Left Side - Brand (Desktop) / Hamburger (Mobile) */}
             <div className="flex items-center space-x-4">
               {/* Back Button - Desktop Only, Always Visible */}
-              <div className="hidden sm:block">
+              <div className="block">
                 <button
                   onClick={handleBackNavigation}
-                  className="flex items-center space-x-2 p-3 rounded-lg text-[#DBD0C0] hover:text-[#75020f] hover:bg-[#75020f]/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#75020f] transition-all duration-300 bg-red-500/20"
+                  className="flex items-center space-x-2 p-3 rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500 transition-all duration-300 border-2 border-red-800"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
-                  <span className="text-sm font-medium">Back</span>
+                  <span className="text-sm font-bold">BACK</span>
                 </button>
               </div>
 
