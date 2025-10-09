@@ -2675,7 +2675,7 @@ export default function TournamentDetailsPage() {
       {/* Admin Status Management Modal - Only for Admins */}
       {showStatusModal && isAdmin(userProfile) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#09171F]/50 rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#09171F] rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-[#CEA17A]/30">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-[#DBD0C0]">Status Management</h3>
@@ -2705,7 +2705,7 @@ export default function TournamentDetailsPage() {
                     <button
                       key={status}
                       onClick={() => handleStatusChange(status)}
-                      className="w-full text-left p-3 border border-[#CEA17A]/20 rounded-lg hover:bg-[#51080d] transition-colors"
+                      className="w-full text-left p-3 border border-[#CEA17A]/20 rounded-lg hover:bg-[#3E4E5A] transition-colors bg-[#3E4E5A]"
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -2735,7 +2735,7 @@ export default function TournamentDetailsPage() {
               <div className="flex space-x-3">
                 <button
                   onClick={closeStatusModal}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-[#51080d] transition-colors"
+                  className="flex-1 px-4 py-2 border border-[#CEA17A]/30 text-[#DBD0C0] rounded-lg hover:bg-[#3E4E5A] transition-colors bg-[#3E4E5A]"
                 >
                   Cancel
                 </button>
@@ -2748,7 +2748,7 @@ export default function TournamentDetailsPage() {
       {/* Status Change Confirmation Dialog */}
       {showStatusConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#09171F]/50 rounded-xl shadow-xl max-w-md w-full">
+          <div className="bg-[#09171F] rounded-xl shadow-xl max-w-md w-full border border-[#CEA17A]/30">
             <div className="p-6">
               <div className="flex items-center mb-4">
                 <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
@@ -2791,14 +2791,14 @@ export default function TournamentDetailsPage() {
               <div className="flex space-x-3">
                 <button
                   onClick={cancelStatusChange}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-[#51080d] transition-colors"
+                  className="flex-1 px-4 py-2 border border-[#CEA17A]/30 text-[#DBD0C0] rounded-lg hover:bg-[#3E4E5A] transition-colors bg-[#3E4E5A]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmStatusChange}
                   disabled={isUpdatingStatus}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-[#DBD0C0] rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 px-4 py-2 bg-[#CEA17A] text-[#09171F] rounded-lg hover:bg-[#CEA17A]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isUpdatingStatus ? 'Updating...' : 'Confirm Change'}
                 </button>
