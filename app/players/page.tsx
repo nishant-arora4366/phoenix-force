@@ -774,12 +774,18 @@ export default function PlayersPage() {
           <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl border border-[#CEA17A]/20 shadow-xl overflow-hidden">
             {/* Table Header */}
             <div className="bg-gradient-to-r from-[#CEA17A]/10 to-[#CEA17A]/5 border-b border-[#CEA17A]/20">
-              <div className="grid grid-cols-12 gap-4 p-4 text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">
+              <div className={`grid gap-4 p-4 text-sm font-semibold text-[#CEA17A] uppercase tracking-wide ${
+                (userRole === 'admin' || userRole === 'host') 
+                  ? 'grid-cols-12' 
+                  : 'grid-cols-10'
+              }`}>
                 <div className="col-span-2 sm:col-span-1">Photo</div>
                 <div className="col-span-3 sm:col-span-2">Name</div>
                 <div className="col-span-2 sm:col-span-1">Role</div>
                 <div className="col-span-3 sm:col-span-2">Community</div>
-                <div className="col-span-2 sm:col-span-1">Base Price</div>
+                {(userRole === 'admin' || userRole === 'host') && (
+                  <div className="col-span-2 sm:col-span-1">Base Price</div>
+                )}
                 <div className="hidden sm:col-span-5">Actions</div>
               </div>
             </div>
@@ -790,7 +796,11 @@ export default function PlayersPage() {
                 <div 
                   key={player.id} 
                   onClick={() => router.push(`/players/${player.id}`)}
-                  className="grid grid-cols-12 gap-4 p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group"
+                  className={`grid gap-4 p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
+                    (userRole === 'admin' || userRole === 'host') 
+                      ? 'grid-cols-12' 
+                      : 'grid-cols-10'
+                  }`}
                 >
                   {/* Photo */}
                   <div className="col-span-2 sm:col-span-1 flex items-center">
@@ -875,11 +885,13 @@ export default function PlayersPage() {
                   </div>
 
                   {/* Base Price */}
-                  <div className="col-span-2 sm:col-span-1 flex items-center">
-                    <div className="text-sm sm:text-base font-semibold text-[#CEA17A]">
-                      ₹{player.base_price}
+                  {(userRole === 'admin' || userRole === 'host') && (
+                    <div className="col-span-2 sm:col-span-1 flex items-center">
+                      <div className="text-sm sm:text-base font-semibold text-[#CEA17A]">
+                        ₹{player.base_price}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Actions - Desktop Only */}
                   <div className="hidden sm:col-span-5 flex items-center gap-2">
