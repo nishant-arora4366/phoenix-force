@@ -205,174 +205,168 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
           </p>
         </div>
 
-        {/* Player Card - Similar to Players Page */}
-        <div className="group bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150 mb-6 sm:mb-8">
-          {/* Player Image Header */}
-          <div className="relative h-64 sm:h-80 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-            {player.profile_pic_url ? (
-              <img
-                src={player.profile_pic_url}
-                alt={player.display_name}
-                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center">
-                <div className="text-8xl text-gray-400">🏏</div>
-              </div>
-            )}
-            
-            {/* Price Badge */}
-            {player.skills?.['Base Price'] && (
-              <div className="absolute top-4 right-4 bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-                ₹{player.skills['Base Price']}
-              </div>
-            )}
-            
-            {/* Group Badge */}
-            {player.skills?.Group && (
-              <div className="absolute top-4 left-4 bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
-                {player.skills.Group}
-              </div>
-            )}
+        {/* Player Details Card */}
+        <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150 mb-6 sm:mb-8">
+          <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-8 py-4 sm:py-6 border-b border-[#CEA17A]/20">
+            <h2 className="text-lg sm:text-2xl font-bold text-[#DBD0C0]">Player Information</h2>
           </div>
+          
+          <div className="p-4 sm:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+              {/* Player Photo - Square on the side */}
+              <div className="lg:col-span-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-[#CEA17A]">
+                    Profile Picture
+                  </label>
+                  <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden border-2 border-[#CEA17A]/20">
+                    {player.profile_pic_url ? (
+                      <img
+                        src={player.profile_pic_url}
+                        alt={player.display_name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center">
+                        <div className="text-6xl text-[#CEA17A]/60">🏏</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-          {/* Player Info */}
-          <div className="p-4 sm:p-6">
-            <div className="mb-4">
-              <h1 className="text-2xl sm:text-3xl font-bold text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors mb-2">
-                {player.display_name}
-              </h1>
-            </div>
+              {/* Player Details - Label-Value Format */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Basic Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-[#CEA17A]">
+                      Display Name
+                    </label>
+                    <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] font-medium">
+                      {player.display_name}
+                    </div>
+                  </div>
 
-            {/* Roles and Skills */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {player.skills?.Role && (
-                <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium">
-                  🏏 {player.skills.Role}
-                </span>
-              )}
-              {player.skills?.['Batting Style'] && (
-                <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium">
-                  ⚾ {player.skills['Batting Style']}
-                </span>
-              )}
-              {player.skills?.['Bowling Style'] && (
-                <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium">
-                  🎯 {player.skills['Bowling Style']}
-                </span>
-              )}
-              {/* Display additional skills */}
-              {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
-                // Skip if it's already displayed as a role above
-                if (['Role', 'Base Price', 'Batting Style', 'Bowling Style', 'Group'].includes(skillName)) return null;
-                
-                return (
-                  <span key={skillName} className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium">
-                    {skillName}: {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                  </span>
-                );
-              })}
-            </div>
+                  {player.mobile_number && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-[#CEA17A]">
+                        Mobile Number
+                      </label>
+                      <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]">
+                        {player.mobile_number}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-            {/* Bio */}
-            {player.bio && (
-              <p className="text-[#CEA17A] text-sm leading-relaxed mb-4">{player.bio}</p>
-            )}
+                {/* Bio */}
+                {player.bio && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-[#CEA17A]">
+                      Bio
+                    </label>
+                    <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] leading-relaxed">
+                      {player.bio}
+                    </div>
+                  </div>
+                )}
 
-            {/* Action Buttons */}
-            {(userRole === 'admin' || userRole === 'host') && (
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-[#CEA17A]/20">
-                <button
-                  onClick={() => router.push(`/players/${player.id}/edit`)}
-                  className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium text-sm sm:text-base"
-                >
-                  Edit Player
-                </button>
-                {userRole === 'admin' && (
-                  <button
-                    onClick={handleDelete}
-                    className="px-6 py-3 bg-[#75020f]/15 text-[#75020f] border border-[#75020f]/25 shadow-lg shadow-[#75020f]/10 backdrop-blur-sm rounded-lg hover:bg-[#75020f]/25 hover:border-[#75020f]/40 transition-all duration-200 font-medium text-sm sm:text-base"
-                  >
-                    Delete Player
-                  </button>
+                {/* Player Skills & Attributes */}
+                {player.skills && Object.keys(player.skills).length > 0 && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-[#CEA17A]">
+                      Skills & Attributes
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(player.skills).map(([skillName, skillValue]) => (
+                        <div key={skillName} className="space-y-1">
+                          <label className="block text-xs font-medium text-[#CEA17A]/80">
+                            {skillName}
+                          </label>
+                          <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
+                            {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                {(userRole === 'admin' || userRole === 'host') && (
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#CEA17A]/20">
+                    <button
+                      onClick={() => router.push(`/players/${player.id}/edit`)}
+                      className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium text-sm sm:text-base"
+                    >
+                      Edit Player
+                    </button>
+                    {userRole === 'admin' && (
+                      <button
+                        onClick={handleDelete}
+                        className="px-6 py-3 bg-[#75020f]/15 text-[#75020f] border border-[#75020f]/25 shadow-lg shadow-[#75020f]/10 backdrop-blur-sm rounded-lg hover:bg-[#75020f]/25 hover:border-[#75020f]/40 transition-all duration-200 font-medium text-sm sm:text-base"
+                      >
+                        Delete Player
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* Additional Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Skills & Attributes */}
-          <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
-            <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
-              <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
-                <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
-                  ⚡
-                </span>
-                Skills & Attributes
-              </h3>
-            </div>
-            <div className="p-4 sm:p-6">
-              {player.skills && Object.keys(player.skills).length > 0 ? (
-                <div className="space-y-3">
-                  {Object.entries(player.skills).map(([skillName, skillValue]) => (
-                    <div key={skillName} className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20 last:border-b-0">
-                      <span className="text-sm font-medium text-[#CEA17A]">{skillName}</span>
-                      <span className="text-sm font-bold text-[#DBD0C0]">
-                        {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                      </span>
-                    </div>
-                  ))}
+        {/* Quick Stats Card */}
+        <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
+          <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
+            <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
+              <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
+                📊
+              </span>
+              Quick Stats
+            </h3>
+          </div>
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-[#CEA17A]/80">
+                  Created
+                </label>
+                <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
+                  {new Date(player.created_at).toLocaleDateString()}
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-[#CEA17A]/50 text-4xl mb-3">⚡</div>
-                  <p className="text-[#CEA17A]/70 text-sm">No skills and attributes configured yet</p>
+              </div>
+              {player.updated_at && (
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-[#CEA17A]/80">
+                    Updated
+                  </label>
+                  <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
+                    {new Date(player.updated_at).toLocaleDateString()}
+                  </div>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
-            <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
-              <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
-                <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
-                  📊
-                </span>
-                Quick Stats
-              </h3>
-            </div>
-            <div className="p-4 sm:p-6">
-              <div className="space-y-3">
-                {player.skills?.['Base Price'] && (
-                  <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
-                    <span className="text-sm text-[#CEA17A]">Base Price</span>
-                    <span className="font-bold text-[#DBD0C0]">₹{player.skills['Base Price']}</span>
+              {player.skills?.['Base Price'] && (
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-[#CEA17A]/80">
+                    Base Price
+                  </label>
+                  <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm font-medium">
+                    ₹{player.skills['Base Price']}
                   </div>
-                )}
-                {player.skills?.Group && (
-                  <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
-                    <span className="text-sm text-[#CEA17A]">Group</span>
-                    <span className="font-bold text-[#DBD0C0]">{player.skills.Group}</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
-                  <span className="text-sm text-[#CEA17A]">Created</span>
-                  <span className="font-bold text-[#DBD0C0]">
-                    {new Date(player.created_at).toLocaleDateString()}
-                  </span>
                 </div>
-                {player.updated_at && (
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-[#CEA17A]">Updated</span>
-                    <span className="font-bold text-[#DBD0C0]">
-                      {new Date(player.updated_at).toLocaleDateString()}
-                    </span>
+              )}
+              {player.skills?.Group && (
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-[#CEA17A]/80">
+                    Group
+                  </label>
+                  <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
+                    {player.skills.Group}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
