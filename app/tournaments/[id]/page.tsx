@@ -2717,15 +2717,26 @@ export default function TournamentDetailsPage() {
                           <div className="font-medium text-[#DBD0C0]">
                             {statusDisplayNames[status as keyof typeof statusDisplayNames]}
                           </div>
-                          <div className="text-xs text-[#DBD0C0]">
+                          <div className={`text-xs flex items-center space-x-1 ${
+                            status === tournament?.status ? 'text-[#DBD0C0]' : 
+                            statusFlow[tournament?.status as keyof typeof statusFlow]?.includes(status) ? 'text-green-400' : 
+                            'text-yellow-400'
+                          }`}>
                             {status === tournament?.status ? 'Current Status' : 
                              statusFlow[tournament?.status as keyof typeof statusFlow]?.includes(status) ? 'Available Transition' : 
-                             'Admin Override'}
+                             (
+                               <>
+                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                 </svg>
+                                 <span>Admin Override</span>
+                               </>
+                             )}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
                           {status === tournament?.status && (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">Current</span>
+                            <span className="px-2 py-1 bg-green-500/20 text-green-300 border border-green-500/30 text-xs rounded">Current</span>
                           )}
                           <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
