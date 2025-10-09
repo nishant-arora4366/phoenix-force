@@ -416,12 +416,27 @@ export default function PlayersPage() {
                         🧤 WK
                       </span>
                     )}
-                    {/* Community */}
-                    {player.skills?.Community && (
-                      <span className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                        {player.skills.Community}
-                      </span>
-                    )}
+                    {/* Community and Other Skills */}
+                    {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
+                      // Skip if it's already displayed as a role above or is empty
+                      if (['Role', 'Base Price', 'Batting Rating', 'Bowling Rating', 'Wicket Keeping Rating'].includes(skillName) || !skillValue) return null;
+                      
+                      return (
+                        <div key={skillName} className="flex flex-wrap gap-1">
+                          {Array.isArray(skillValue) ? (
+                            skillValue.map((value, index) => (
+                              <span key={index} className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
+                                {value}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
+                              {skillValue}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
 
 
