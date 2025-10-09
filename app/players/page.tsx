@@ -782,7 +782,7 @@ export default function PlayersPage() {
                 <div className="col-span-1 sm:col-span-1"></div>
                 <div className="col-span-2 sm:col-span-2">Name</div>
                 <div className="col-span-1 sm:col-span-1">Role</div>
-                <div className="col-span-2 sm:col-span-2">Community</div>
+                <div className="col-span-2 sm:col-span-2 text-right">Community</div>
                 {(userRole === 'admin' || userRole === 'host') && (
                   <div className="col-span-2 sm:col-span-1 text-right">Price</div>
                 )}
@@ -798,7 +798,7 @@ export default function PlayersPage() {
                 <div 
                   key={player.id} 
                       onClick={() => router.push(`/players/${player.id}`)}
-                  className={`grid gap-2 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
+                  className={`grid gap-1 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
                     (userRole === 'admin' || userRole === 'host') 
                       ? 'grid-cols-8' 
                       : 'grid-cols-8'
@@ -866,7 +866,7 @@ export default function PlayersPage() {
                   </div>
 
                   {/* Community */}
-                  <div className="col-span-2 sm:col-span-2 flex items-center">
+                  <div className="col-span-2 sm:col-span-2 flex items-center justify-end">
                     <div className="flex items-center gap-1 max-w-full overflow-hidden">
                       {player.skills?.Community ? (
                         Array.isArray(player.skills.Community) ? (
