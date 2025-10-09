@@ -145,7 +145,7 @@ function SkillFilterInput({ skillName, skillValues, selectedValues, onSelectionC
         
         {/* Dropdown Options with Checkboxes */}
         {isDropdownOpen && (
-          <div className="absolute z-10 w-full mt-1 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg shadow-xl max-h-60 overflow-hidden">
+          <div className="absolute z-50 w-full mt-1 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg shadow-xl max-h-60 overflow-hidden">
             {/* Search Input */}
             <div className="p-3 border-b border-[#CEA17A]/20">
               <input
@@ -609,7 +609,8 @@ export default function PlayersPage() {
               <div 
                 key={player.id} 
                 onClick={() => router.push(`/players/${player.id}`)}
-                className="group relative aspect-square overflow-hidden bg-gradient-to-br from-[#3E4E5A] to-[#09171F] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 cursor-pointer"
+                className="group relative aspect-square overflow-hidden bg-gradient-to-br from-[#3E4E5A] to-[#09171F] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 cursor-pointer z-0"
+                style={{ minHeight: '200px' }}
               >
                 {/* Player Image Background */}
                   {player.profile_pic_url ? (
@@ -627,7 +628,7 @@ export default function PlayersPage() {
                 
                 {/* Action Buttons - Top Right */}
                 {(userRole === 'admin' || userRole === 'host') && (
-                  <div className="absolute top-3 right-3 flex space-x-1">
+                  <div className="absolute top-3 right-3 flex space-x-1 z-10">
                     <button 
                       onClick={(e) => {
                         e.stopPropagation()
@@ -655,28 +656,28 @@ export default function PlayersPage() {
                   
                 {/* Group Badge - Top Left */}
                   {player.group_name && (
-                  <div className="absolute top-3 left-3 bg-black/50 text-white border border-white/20 px-2 py-1 rounded-full text-xs font-medium shadow-lg backdrop-blur-sm">
+                  <div className="absolute top-3 left-3 bg-black/50 text-white border border-white/20 px-2 py-1 rounded-full text-xs font-medium shadow-lg backdrop-blur-sm z-10">
                       {player.group_name}
                     </div>
                   )}
 
                 {/* Player Name - Bottom Left with Gradient Background */}
-                <div className="absolute bottom-0 left-0 right-0">
-                  <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-3">
-                    <h3 className="text-white font-semibold text-sm mb-1">
+                <div className="absolute bottom-0 left-0 right-0 z-10">
+                  <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 pb-3">
+                    <h3 className="text-white font-semibold text-sm mb-2">
                       {player.display_name}
                     </h3>
                     
                     {/* Role Icons */}
                     {player.skills?.Role && (
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5">
                         {Array.isArray(player.skills.Role) ? (
                           player.skills.Role.map((role, index) => {
                             const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
                                             role.toLowerCase().includes('bowler') ? '🎾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
                       return (
-                              <span key={index} className="text-lg">
+                              <span key={index} className="text-base">
                                 {roleEmoji}
                         </span>
                             )
@@ -688,7 +689,7 @@ export default function PlayersPage() {
                                             role.toLowerCase().includes('bowler') ? '🎾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
                       return (
-                              <span className="text-lg">
+                              <span className="text-base">
                                 {roleEmoji}
                           </span>
                             )
