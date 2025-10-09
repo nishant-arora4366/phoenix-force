@@ -24,7 +24,7 @@ export default function CreateTournamentPage() {
   const [userRole, setUserRole] = useState<string | null>(null)
   const [showDateTimePicker, setShowDateTimePicker] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [selectedTime, setSelectedTime] = useState({ hour: 9, minute: 0 })
+  const [selectedTime, setSelectedTime] = useState({ hour: 7, minute: 0 })
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [formData, setFormData] = useState<TournamentFormData>({
     name: '',
@@ -132,12 +132,33 @@ export default function CreateTournamentPage() {
 
   const confirmDateTime = () => {
     if (selectedDate) {
-      const datetime = new Date(selectedDate)
-      datetime.setHours(selectedTime.hour, selectedTime.minute, 0, 0)
+      // Create datetime in local timezone to avoid UTC conversion issues
+      const year = selectedDate.getFullYear()
+      const month = selectedDate.getMonth()
+      const day = selectedDate.getDate()
+      const hour = selectedTime.hour
+      const minute = selectedTime.minute
+      
+      // Create a Date object with the selected local time
+      const localDateTime = new Date(year, month, day, hour, minute, 0, 0)
+      
+      // Get timezone offset in minutes and convert to hours
+      const timezoneOffset = localDateTime.getTimezoneOffset()
+      const timezoneHours = Math.floor(Math.abs(timezoneOffset) / 60)
+      const timezoneMinutes = Math.abs(timezoneOffset) % 60
+      const timezoneSign = timezoneOffset <= 0 ? '+' : '-'
+      
+      // Format as YYYY-MM-DDTHH:MM:SS with timezone offset
+      const formattedDateTime = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00${timezoneSign}${String(timezoneHours).padStart(2, '0')}:${String(timezoneMinutes).padStart(2, '0')}`
+      
+      // Debug: Log the datetime being stored
+      console.log('Selected time:', `${hour}:${String(minute).padStart(2, '0')}`)
+      console.log('Formatted datetime:', formattedDateTime)
+      console.log('Timezone offset:', timezoneOffset, 'minutes')
       
       setFormData(prev => ({
         ...prev,
-        tournament_datetime: datetime.toISOString().slice(0, 16)
+        tournament_datetime: formattedDateTime
       }))
     }
     setShowDateTimePicker(false)
@@ -208,6 +229,7 @@ export default function CreateTournamentPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': JSON.stringify(user)
         },
         body: JSON.stringify({
           name: formData.name,
@@ -217,7 +239,9 @@ export default function CreateTournamentPage() {
           description: formData.description,
           total_slots: formData.total_slots,
           host_id: user.id,
-          status: 'draft'
+          status: 'draft',
+          venue: formData.venue,
+          google_maps_link: formData.google_maps_link
         })
       })
 
@@ -372,16 +396,12 @@ export default function CreateTournamentPage() {
         {/* Header */}
         <div className="text-left mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-4xl font-bold text-[#DBD0C0] mb-2 sm:mb-4">Create New Tournament</h1>
-          <p className="text-base sm:text-xl text-[#CEA17A] max-w-4xl">
-            Set up your tournament with advanced configuration options and smart recommendations
-          </p>
         </div>
 
         {/* Form */}
         <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
           <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-8 py-4 sm:py-6 border-b border-[#CEA17A]/20">
             <h2 className="text-lg sm:text-2xl font-bold text-[#DBD0C0]">Tournament Configuration</h2>
-            <p className="text-[#CEA17A] mt-1 sm:mt-2 text-sm sm:text-base">Configure your tournament settings below</p>
           </div>
           
           <div className="p-4 sm:p-8">
@@ -399,7 +419,8 @@ export default function CreateTournamentPage() {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-12 border-2 border-[#CEA17A]/30 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 text-[#DBD0C0] text-sm sm:text-base backdrop-blur-sm"
+                      autoComplete="off"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-12 border-2 border-[#CEA17A]/30 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 text-[#DBD0C0] text-sm sm:text-base backdrop-blur-sm autofill:bg-[#19171b] autofill:text-[#DBD0C0]"
                       placeholder="Enter a memorable tournament name"
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-10">
@@ -483,6 +504,7 @@ export default function CreateTournamentPage() {
                   value={formData.description}
                   onChange={handleInputChange}
                   rows={4}
+                  autoComplete="off"
                   className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] resize-none"
                   placeholder="Describe your tournament, rules, prizes, or any special information..."
                 />
@@ -530,6 +552,7 @@ export default function CreateTournamentPage() {
                   name="venue"
                   value={formData.venue}
                   onChange={handleInputChange}
+                  autoComplete="off"
                   className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
                   placeholder="e.g., Community Center, Sports Complex, etc."
                 />
@@ -546,6 +569,7 @@ export default function CreateTournamentPage() {
                   name="google_maps_link"
                   value={formData.google_maps_link}
                   onChange={handleInputChange}
+                  autoComplete="off"
                   className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
                   placeholder="https://maps.google.com/..."
                 />
@@ -881,9 +905,9 @@ export default function CreateTournamentPage() {
                 <label className="block text-sm font-medium text-[#CEA17A] mb-3">Quick Select</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: 'Morning', hour: 9, minute: 0 },
+                    { label: 'Morning', hour: 7, minute: 0 },
                     { label: 'Afternoon', hour: 14, minute: 0 },
-                    { label: 'Evening', hour: 18, minute: 0 },
+                    { label: 'Evening', hour: 17, minute: 0 },
                     { label: 'Night', hour: 20, minute: 0 }
                   ].map((option) => (
                     <button

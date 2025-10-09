@@ -15,6 +15,23 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Fix autofill styling for dark theme inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #19171b inset !important;
+  -webkit-text-fill-color: #DBD0C0 !important;
+  background-color: #19171b !important;
+  color: #DBD0C0 !important;
+}
+
+/* Ensure autofilled inputs maintain dark theme */
+input[data-autocompleted] {
+  background-color: #19171b !important;
+  color: #DBD0C0 !important;
+}
+
 
 /* Custom animations for modern effects */
 @keyframes fade-in {

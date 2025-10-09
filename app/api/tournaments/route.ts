@@ -105,6 +105,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized: You can only create tournaments for yourself' }, { status: 403 })
     }
 
+    // Debug: Log the tournament_date being received
+    console.log('Received tournament_date:', tournament_date)
+    console.log('Type of tournament_date:', typeof tournament_date)
+    
     // Create tournament using service role (bypasses RLS)
     const { data: tournament, error: tournamentError } = await supabaseAdmin
       .from('tournaments')
