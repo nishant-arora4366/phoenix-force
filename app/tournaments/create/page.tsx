@@ -27,6 +27,7 @@ export default function CreateTournamentPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState({ hour: 7, minute: 0 })
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [formData, setFormData] = useState<TournamentFormData>({
     name: '',
     format: '8 Team',
@@ -267,6 +268,7 @@ export default function CreateTournamentPage() {
       const tournament = result.tournament
 
       setMessage('Tournament created successfully!')
+      setShowConfirmDialog(false)
       
       // Redirect to tournament details page
       setTimeout(() => {
@@ -633,26 +635,17 @@ export default function CreateTournamentPage() {
                       Cancel
                     </button>
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={() => setShowConfirmDialog(true)}
                       disabled={loading}
                       className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg sm:rounded-xl hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm sm:text-base"
                     >
-                      {loading ? (
-                        <div className="flex items-center">
-                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Creating Tournament...
-                        </div>
-                      ) : (
-                        <div className="flex items-center">
-                          <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Create Tournament
-                        </div>
-                      )}
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Review and Create
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -661,61 +654,6 @@ export default function CreateTournamentPage() {
           </div>
         </div>
 
-        {/* Tournament Preview */}
-        <div className="mt-8 bg-[#19171b]/50 rounded-2xl p-8 border-2 border-[#CEA17A]/20 shadow-xl">
-          <div className="flex items-center mb-6">
-            <div className="w-10 h-10 bg-gradient-to-r from-[#CEA17A] to-[#DBD0C0] rounded-full flex items-center justify-center mr-4">
-              <svg className="w-6 h-6 text-[#09171F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </div>
-            <h3 className="text-2xl font-bold text-[#DBD0C0]">Tournament Preview</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-[#09171F]/50 rounded-xl p-4 shadow-sm border border-[#CEA17A]/20">
-              <div className="text-sm font-medium text-[#CEA17A] mb-1">Tournament Name</div>
-              <div className="text-lg font-semibold text-[#DBD0C0]">
-                {formData.name || 'Untitled Tournament'}
-              </div>
-            </div>
-            
-            <div className="bg-[#09171F]/50 rounded-xl p-4 shadow-sm border border-[#CEA17A]/20">
-              <div className="text-sm font-medium text-[#CEA17A] mb-1">Format</div>
-              <div className="text-lg font-semibold text-[#DBD0C0]">{formData.format}</div>
-            </div>
-            
-            <div className="bg-[#09171F]/50 rounded-xl p-4 shadow-sm border border-[#CEA17A]/20">
-              <div className="text-sm font-medium text-[#CEA17A] mb-1">Teams</div>
-              <div className="text-lg font-semibold text-[#DBD0C0]">{getTeamCount(formData.format)}</div>
-            </div>
-            
-            <div className="bg-[#09171F]/50 rounded-xl p-4 shadow-sm border border-[#CEA17A]/20">
-              <div className="text-sm font-medium text-[#CEA17A] mb-1">Player Slots</div>
-              <div className="text-lg font-semibold text-[#DBD0C0]">{formData.total_slots}</div>
-            </div>
-            
-            <div className="bg-[#09171F]/50 rounded-xl p-4 shadow-sm border border-[#CEA17A]/20">
-              <div className="text-sm font-medium text-[#CEA17A] mb-1">Date & Time</div>
-              <div className="text-lg font-semibold text-[#DBD0C0]">
-                {formData.tournament_datetime ? new Date(formData.tournament_datetime).toLocaleString() : 'Not set'}
-              </div>
-            </div>
-            
-            <div className="bg-[#09171F]/50 rounded-xl p-4 shadow-sm border border-[#CEA17A]/20">
-              <div className="text-sm font-medium text-[#CEA17A] mb-1">Status</div>
-              <div className="text-lg font-semibold text-green-400">Draft</div>
-            </div>
-          </div>
-          
-          {formData.description && (
-            <div className="mt-6 bg-[#09171F]/50 rounded-xl p-4 shadow-sm border border-[#CEA17A]/20">
-              <div className="text-sm font-medium text-[#CEA17A] mb-2">Description</div>
-              <div className="text-[#DBD0C0]">{formData.description}</div>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Modern Date-Time Picker Modal */}
@@ -980,6 +918,109 @@ export default function CreateTournamentPage() {
                     </button>
                   </>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tournament Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative overflow-hidden bg-[#09171F] rounded-2xl shadow-2xl max-w-2xl w-full mx-4 transform transition-all duration-500 scale-100 border border-[#CEA17A]/30">
+            {/* Luxury Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#09171F]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl"></div>
+            
+            {/* Content */}
+            <div className="relative z-10 p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white">
+                  Confirm Tournament Creation
+                </h3>
+                <button
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="text-[#CEA17A] hover:text-white transition-colors duration-200"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Tournament Details */}
+              <div className="mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-[#19171b]/50 rounded-xl p-4 border border-[#CEA17A]/20">
+                    <div className="text-sm font-medium text-[#CEA17A] mb-1">Tournament Name</div>
+                    <div className="text-lg font-semibold text-[#DBD0C0]">
+                      {formData.name || 'Untitled Tournament'}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-[#19171b]/50 rounded-xl p-4 border border-[#CEA17A]/20">
+                    <div className="text-sm font-medium text-[#CEA17A] mb-1">Format</div>
+                    <div className="text-lg font-semibold text-[#DBD0C0]">{formData.format}</div>
+                  </div>
+                  
+                  <div className="bg-[#19171b]/50 rounded-xl p-4 border border-[#CEA17A]/20">
+                    <div className="text-sm font-medium text-[#CEA17A] mb-1">Teams</div>
+                    <div className="text-lg font-semibold text-[#DBD0C0]">{getTeamCount(formData.format)}</div>
+                  </div>
+                  
+                  <div className="bg-[#19171b]/50 rounded-xl p-4 border border-[#CEA17A]/20">
+                    <div className="text-sm font-medium text-[#CEA17A] mb-1">Player Slots</div>
+                    <div className="text-lg font-semibold text-[#DBD0C0]">{formData.total_slots}</div>
+                  </div>
+                  
+                  <div className="bg-[#19171b]/50 rounded-xl p-4 border border-[#CEA17A]/20">
+                    <div className="text-sm font-medium text-[#CEA17A] mb-1">Date & Time</div>
+                    <div className="text-lg font-semibold text-[#DBD0C0]">
+                      {formData.tournament_datetime ? new Date(formData.tournament_datetime).toLocaleString() : 'Not set'}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-[#19171b]/50 rounded-xl p-4 border border-[#CEA17A]/20">
+                    <div className="text-sm font-medium text-[#CEA17A] mb-1">Status</div>
+                    <div className="text-lg font-semibold text-green-400">Draft</div>
+                  </div>
+                </div>
+                
+                {formData.description && (
+                  <div className="mt-4 bg-[#19171b]/50 rounded-xl p-4 border border-[#CEA17A]/20">
+                    <div className="text-sm font-medium text-[#CEA17A] mb-2">Description</div>
+                    <div className="text-[#DBD0C0]">{formData.description}</div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Action buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="flex-1 px-4 py-2 bg-[#3E4E5A]/20 hover:bg-[#3E4E5A]/30 text-[#CEA17A] hover:text-white border border-[#CEA17A]/30 hover:border-[#CEA17A]/50 rounded-lg font-medium text-sm transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-[#CEA17A]/20 hover:bg-[#CEA17A]/30 text-white rounded-lg font-medium text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Creating...
+                    </div>
+                  ) : (
+                    'Create Tournament'
+                  )}
+                </button>
               </div>
             </div>
           </div>
