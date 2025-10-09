@@ -776,7 +776,7 @@ export default function PlayersPage() {
             <div className="bg-gradient-to-r from-[#CEA17A]/10 to-[#CEA17A]/5 border-b border-[#CEA17A]/20">
               <div className={`grid gap-1 sm:gap-4 p-2 sm:p-4 text-xs font-semibold text-[#CEA17A] uppercase tracking-wide ${
                 (userRole === 'admin' || userRole === 'host') 
-                  ? 'grid-cols-7' 
+                  ? 'grid-cols-8' 
                   : 'grid-cols-8'
               }`}>
                 <div className="col-span-1 sm:col-span-1"></div>
@@ -797,7 +797,7 @@ export default function PlayersPage() {
                       onClick={() => router.push(`/players/${player.id}`)}
                   className={`grid gap-1 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
                     (userRole === 'admin' || userRole === 'host') 
-                      ? 'grid-cols-7' 
+                      ? 'grid-cols-8' 
                       : 'grid-cols-8'
                   }`}
                 >
