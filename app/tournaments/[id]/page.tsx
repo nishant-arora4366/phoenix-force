@@ -2235,11 +2235,16 @@ export default function TournamentDetailsPage() {
 
       {/* Enhanced Player Assignment Modal */}
       {showAssignModal && (
-        <div className="fixed inset-0 bg-[#09171F] flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="bg-[#3E4E5A] rounded-xl shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="relative overflow-hidden bg-[#09171F] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-500 scale-100 border border-[#CEA17A]/30 animate-slide-up">
+            {/* Luxury Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#09171F]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl"></div>
+            {/* Content */}
+            <div className="relative z-10 p-4 sm:p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-[#CEA17A]">Register Players to Tournament</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-white">Register Players to Tournament</h3>
                 <button
                   onClick={() => {
                     setShowAssignModal(false)
