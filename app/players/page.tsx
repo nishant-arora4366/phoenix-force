@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
 import { sessionManager } from '@/src/lib/session'
@@ -55,88 +55,134 @@ interface SkillFilterInputProps {
 function SkillFilterInput({ skillName, skillValues, selectedValues, onSelectionChange }: SkillFilterInputProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
-  
-  const filteredOptions = skillValues.filter(value => 
-    value.toLowerCase().includes(searchValue.toLowerCase()) &&
-    !selectedValues.includes(value)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isDropdownOpen])
+
+  const filteredOptions = skillValues.filter(value =>
+    value.toLowerCase().includes(searchValue.toLowerCase())
   )
-  
-  const addValue = (value: string) => {
-    if (!selectedValues.includes(value)) {
+
+  const toggleValue = (value: string) => {
+    if (selectedValues.includes(value)) {
+      onSelectionChange(selectedValues.filter(v => v !== value))
+    } else {
       onSelectionChange([...selectedValues, value])
     }
-    setSearchValue('')
-    setIsDropdownOpen(false)
   }
-  
+
   const removeValue = (value: string) => {
     onSelectionChange(selectedValues.filter(v => v !== value))
   }
-  
+
   return (
     <div className="space-y-2">
       <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">
         {skillName}
       </label>
-      <div className="relative">
-        {/* Input Field with Selected Values Inside */}
-        <div className="relative">
-          <div className="w-full h-[2.5rem] px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus-within:ring-4 focus-within:ring-[#CEA17A]/20 focus-within:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm shadow-lg flex items-center gap-1 overflow-hidden">
-            {/* Selected Values Container - Scrollable */}
-            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-shrink-0">
-              {selectedValues.map(value => (
-                <span
-                  key={value}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded text-xs whitespace-nowrap flex-shrink-0"
-                >
-                  {value}
-                  <button
-                    onClick={() => removeValue(value)}
-                    className="hover:text-red-400 transition-colors"
+      <div className="relative" ref={dropdownRef}>
+        {/* Dropdown Trigger Button */}
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="w-full h-[2.5rem] px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm shadow-lg flex items-center justify-between text-left"
+        >
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {selectedValues.length === 0 ? (
+              <span className="text-[#CEA17A]/50 text-sm">Select {skillName.toLowerCase()}...</span>
+            ) : (
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1">
+                {selectedValues.slice(0, 2).map(value => (
+                  <span
+                    key={value}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded text-xs whitespace-nowrap flex-shrink-0"
                   >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-            
-            {/* Search Input */}
-            <input
-              type="text"
-              value={searchValue}
-              onChange={(e) => {
-                setSearchValue(e.target.value)
-                setIsDropdownOpen(true)
-              }}
-              onFocus={() => setIsDropdownOpen(true)}
-              onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
-              placeholder={selectedValues.length === 0 ? `Search ${skillName.toLowerCase()}...` : ''}
-              className="flex-1 min-w-[120px] bg-transparent text-[#DBD0C0] text-sm outline-none placeholder-[#CEA17A]/50"
-            />
+                    {value}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeValue(value)
+                      }}
+                      className="hover:text-red-400 transition-colors"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                {selectedValues.length > 2 && (
+                  <span className="text-[#CEA17A] text-xs flex-shrink-0">
+                    +{selectedValues.length - 2} more
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           
           {/* Dropdown Arrow */}
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <svg className="w-4 h-4 text-[#CEA17A]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-          
-          {/* Dropdown Options */}
-          {isDropdownOpen && filteredOptions.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg shadow-xl max-h-40 overflow-y-auto">
-              {filteredOptions.map(value => (
-                <button
-                  key={value}
-                  onClick={() => addValue(value)}
-                  className="w-full px-3 py-2 text-left text-[#DBD0C0] hover:bg-[#CEA17A]/20 transition-colors text-sm"
-                >
-                  {value}
-                </button>
-              ))}
+          <svg 
+            className={`w-4 h-4 text-[#CEA17A]/70 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        {/* Dropdown Options with Checkboxes */}
+        {isDropdownOpen && (
+          <div className="absolute z-10 w-full mt-1 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg shadow-xl max-h-60 overflow-hidden">
+            {/* Search Input */}
+            <div className="p-3 border-b border-[#CEA17A]/20">
+              <input
+                type="text"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder={`Search ${skillName.toLowerCase()}...`}
+                className="w-full px-3 py-2 bg-[#19171b]/80 border border-[#CEA17A]/30 rounded text-[#DBD0C0] text-sm placeholder-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] outline-none"
+                onClick={(e) => e.stopPropagation()}
+              />
             </div>
-          )}
-        </div>
+            
+            {/* Options List */}
+            <div className="max-h-48 overflow-y-auto scrollbar-hide">
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map(value => (
+                  <label
+                    key={value}
+                    className="flex items-center gap-3 px-3 py-2 hover:bg-[#CEA17A]/10 transition-colors cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedValues.includes(value)}
+                      onChange={() => toggleValue(value)}
+                      className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A]/20 focus:ring-2"
+                    />
+                    <span className="text-[#DBD0C0] text-sm flex-1">{value}</span>
+                  </label>
+                ))
+              ) : (
+                <div className="px-3 py-4 text-center text-[#CEA17A]/50 text-sm">
+                  No options found
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         
         {/* Count Badge */}
         {selectedValues.length > 0 && (
