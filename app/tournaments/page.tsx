@@ -42,13 +42,19 @@ const getStatusColor = (status: string) => {
     case 'draft':
       return 'bg-gray-100 text-gray-700'
     case 'registration_open':
-      return 'bg-gray-100 text-gray-700'
+      return 'bg-green-100 text-green-700'
     case 'registration_closed':
-      return 'bg-gray-100 text-gray-700'
+      return 'bg-yellow-100 text-yellow-700'
     case 'auction_started':
-      return 'bg-gray-100 text-gray-700'
+      return 'bg-blue-100 text-blue-700'
     case 'auction_completed':
-      return 'bg-gray-100 text-gray-700'
+      return 'bg-purple-100 text-purple-700'
+    case 'teams_formed':
+      return 'bg-indigo-100 text-indigo-700'
+    case 'completed':
+      return 'bg-green-100 text-green-700'
+    case 'in_progress':
+      return 'bg-orange-100 text-orange-700'
     default:
       return 'bg-gray-100 text-gray-700'
   }
@@ -66,6 +72,12 @@ const getStatusText = (status: string) => {
       return 'Auction Started'
     case 'auction_completed':
       return 'Auction Completed'
+    case 'teams_formed':
+      return 'Teams Formed'
+    case 'completed':
+      return 'Completed'
+    case 'in_progress':
+      return 'In Progress'
     default:
       return status
   }

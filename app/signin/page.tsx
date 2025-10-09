@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import AuthFormExtended from '@/src/components/AuthFormExtended'
-import PlayerProfilePrompt from '@/src/components/PlayerProfilePrompt'
 import { sessionManager } from '@/src/lib/session'
 
-export default function SignIn() {
+function SignInContent() {
   const [user, setUser] = useState<any>(null)
-  const [showPlayerProfilePrompt, setShowPlayerProfilePrompt] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl') || '/'
 
   useEffect(() => {
     // Check if user is already logged in
@@ -36,47 +36,15 @@ export default function SignIn() {
   const handleAuthChange = (user: any) => {
     setUser(user)
     if (user) {
-      // Check for player profile after sign in
-      checkPlayerProfile(user)
+      // Redirect immediately after successful sign in
+      console.log('User signed in successfully, redirecting to:', returnUrl)
+      router.push(returnUrl)
     }
   }
 
-  const checkPlayerProfile = async (userData: any) => {
-    try {
-      const response = await fetch('/api/player-profile', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${JSON.stringify(userData)}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        // Show prompt if user doesn't have a player profile
-        if (!data.success || !data.profile) {
-          setShowPlayerProfilePrompt(true)
-        } else {
-          // Redirect to homepage if user has profile
-          router.push('/')
-        }
-      } else {
-        // If API fails, show prompt
-        setShowPlayerProfilePrompt(true)
-      }
-    } catch (error) {
-      console.error('Error checking player profile:', error)
-      // On error, show prompt to be safe
-      setShowPlayerProfilePrompt(true)
-    }
-  }
 
   return (
     <div>
-      {/* Player Profile Prompt */}
-      {showPlayerProfilePrompt && (
-        <PlayerProfilePrompt onClose={() => setShowPlayerProfilePrompt(false)} />
-      )}
-      
       {/* Sign In Form */}
       <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -103,3 +71,19 @@ export default function SignIn() {
     </div>
   )
 }
+
+export default function SignIn() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
+  )
+}
+

@@ -692,7 +692,7 @@ export default function AdminPanel() {
               You need to be signed in to access the admin panel.
             </p>
             <Link
-              href="/signin"
+              href="/signin?returnUrl=/admin"
               className="inline-block px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
             >
               Sign In

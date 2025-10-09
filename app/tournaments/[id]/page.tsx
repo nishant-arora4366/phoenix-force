@@ -180,7 +180,10 @@ export default function TournamentDetailsPage() {
           }
         }
 
-        // Fetch tournament slots for all authenticated users
+        // Fetch tournament slots for everyone (public information)
+        await fetchSlots()
+
+        // Fetch user-specific data only for authenticated users
         if (sessionUser) {
           const userResponse = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
           const userResult = await userResponse.json()
@@ -188,15 +191,9 @@ export default function TournamentDetailsPage() {
             const isAdmin = userResult.data.role === 'admin'
             const isTournamentHost = sessionUser.id === tournamentData.host_id
             const isViewer = userResult.data.role === 'viewer'
-            // Load slots for all authenticated users
-            if (true) {
-              await fetchSlots()
-              
-              // Check if user is already registered for this tournament
-              await checkUserRegistration()
-              
-              // No waitlist status needed - positions calculated dynamically
-            }
+            
+            // Check if user is already registered for this tournament
+            await checkUserRegistration()
           }
         }
       } catch (error) {
@@ -214,7 +211,7 @@ export default function TournamentDetailsPage() {
 
   // Realtime subscription for tournament slots and notifications
   useEffect(() => {
-    if (!tournamentId || !user) return
+    if (!tournamentId) return
 
     console.log('Setting up realtime subscription for tournament:', tournamentId)
 
@@ -232,7 +229,11 @@ export default function TournamentDetailsPage() {
         (payload: any) => {
           console.log('Realtime INSERT received:', payload)
           fetchSlots(true)
-          checkUserRegistration()
+          // Only check user registration if user is authenticated
+          const currentUser = sessionManager.getUser()
+          if (currentUser) {
+            checkUserRegistration()
+          }
         }
       )
       .on(
@@ -246,7 +247,11 @@ export default function TournamentDetailsPage() {
         (payload: any) => {
           console.log('Realtime UPDATE received:', payload)
           fetchSlots(true)
-          checkUserRegistration()
+          // Only check user registration if user is authenticated
+          const currentUser = sessionManager.getUser()
+          if (currentUser) {
+            checkUserRegistration()
+          }
         }
       )
       .on(
@@ -262,7 +267,11 @@ export default function TournamentDetailsPage() {
           // The fetchSlots() will only return slots for the current tournament anyway
           console.log('DELETE event received, refreshing slots...')
           fetchSlots(true)
-          checkUserRegistration()
+          // Only check user registration if user is authenticated
+          const currentUser = sessionManager.getUser()
+          if (currentUser) {
+            checkUserRegistration()
+          }
         }
       )
       .subscribe((status: any) => {
@@ -270,37 +279,81 @@ export default function TournamentDetailsPage() {
         setIsRealtimeConnected(status === 'SUBSCRIBED')
       })
 
-    // Subscribe to notifications for the current user
-    const notificationsChannel = supabase
-      .channel(`user-notifications-${user.id}`)
+    // Subscribe to tournament status changes
+    const tournamentChannel = supabase
+      .channel(`tournament-${tournamentId}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: 'UPDATE',
           schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
+          table: 'tournaments',
+          filter: `id=eq.${tournamentId}`
         },
         (payload: any) => {
-          console.log('New notification received:', payload)
-          setNotifications(prev => [payload.new, ...prev])
+          console.log('Tournament status updated:', payload)
+          // Update local tournament state with new status
+          setTournament(prev => {
+            if (prev && payload.new) {
+              return { ...prev, ...payload.new }
+            }
+            return prev
+          })
           
-          // Show notification to user
-          if (payload.new.type === 'waitlist_promotion') {
-            setRegistrationMessage(`🎉 You have been promoted from the waitlist to a main slot!`)
-            setTimeout(() => setRegistrationMessage(''), 10000)
+          // Show notification to user about status change
+          if (payload.new && payload.new.status) {
+            const statusText = getStatusText(payload.new.status)
+            setRegistrationMessage(`Tournament status updated to: ${statusText}`)
+            setTimeout(() => setRegistrationMessage(''), 5000)
           }
         }
       )
-      .subscribe()
+      .subscribe((status: any) => {
+        console.log('Tournament subscription status:', status)
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to tournament updates')
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Failed to subscribe to tournament updates - real-time may not be enabled for tournaments table')
+        }
+      })
+
+    // Subscribe to notifications for the current user (only if authenticated)
+    let notificationsChannel = null
+    if (user) {
+      notificationsChannel = supabase
+        .channel(`user-notifications-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload: any) => {
+            console.log('New notification received:', payload)
+            setNotifications(prev => [payload.new, ...prev])
+            
+            // Show notification to user
+            if (payload.new.type === 'waitlist_promotion') {
+              setRegistrationMessage(`🎉 You have been promoted from the waitlist to a main slot!`)
+              setTimeout(() => setRegistrationMessage(''), 10000)
+            }
+          }
+        )
+        .subscribe()
+    }
 
     // Cleanup subscriptions on component unmount
     return () => {
       console.log('Cleaning up realtime subscriptions')
       supabase.removeChannel(slotsChannel)
-      supabase.removeChannel(notificationsChannel)
+      supabase.removeChannel(tournamentChannel)
+      if (notificationsChannel) {
+        supabase.removeChannel(notificationsChannel)
+      }
     }
-  }, [tournamentId, user])
+  }, [tournamentId])
 
   // Load players and skills when modal opens
   useEffect(() => {
@@ -316,6 +369,29 @@ export default function TournamentDetailsPage() {
       filterPlayers()
     }
   }, [searchTerm, hideAssignedPlayers, skillFilterValues, allPlayers])
+
+  // Subscribe to session changes to handle sign-in/sign-out
+  useEffect(() => {
+    const unsubscribe = sessionManager.subscribe((userData) => {
+      console.log('Session changed:', userData)
+      setUser(userData)
+      
+      // If user signed out, clear user-specific data
+      if (!userData) {
+        setUserProfile(null)
+        setUserRegistration(null)
+        setNotifications([])
+        setIsHost(false) // Critical: Clear host status on sign-out
+      } else {
+        // If user signed in, refresh user-specific data
+        if (tournament) {
+          checkUserRegistration()
+        }
+      }
+    })
+
+    return () => unsubscribe()
+  }, [tournament])
 
   // Helper function to format datetime in readable format
   const formatDateTime = (dateString: string) => {
@@ -774,10 +850,16 @@ export default function TournamentDetailsPage() {
     setStatusMessage('')
     
     try {
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+
       const response = await fetch(`/api/tournaments/${tournament.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': JSON.stringify(sessionUser)
         },
         body: JSON.stringify({ status: newStatus })
       })
@@ -831,10 +913,16 @@ export default function TournamentDetailsPage() {
         currentStatus: tournament.status
       })
       
+      const sessionUser = sessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+
       const response = await fetch(`/api/tournaments/${tournament.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': JSON.stringify(sessionUser)
         },
         body: JSON.stringify({ status: selectedNewStatus })
       })
@@ -904,12 +992,15 @@ export default function TournamentDetailsPage() {
       }
       
       const sessionUser = sessionManager.getUser()
-      if (!sessionUser) return
+      
+      // Prepare headers - include authorization if user is authenticated
+      const headers: any = {}
+      if (sessionUser) {
+        headers['Authorization'] = JSON.stringify(sessionUser)
+      }
 
       const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
-        headers: {
-          'Authorization': JSON.stringify(sessionUser),
-        },
+        headers,
       })
       if (slotsResponse.ok) {
         const slotsResult = await slotsResponse.json()
@@ -1058,7 +1149,24 @@ export default function TournamentDetailsPage() {
 
       // If we get here, all retries failed
       console.error('All registration attempts failed')
-      setRegistrationMessage(`Registration failed after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`)
+      
+      // Provide specific error messages based on the error type
+      let errorMessage = 'Registration failed. Please try again.'
+      if (lastError?.message) {
+        if (lastError.message.includes('Registration is not currently open')) {
+          errorMessage = 'Registration is no longer open for this tournament.'
+        } else if (lastError.message.includes('Tournament is full')) {
+          errorMessage = 'Tournament is full. You have been added to the waitlist.'
+        } else if (lastError.message.includes('Already registered')) {
+          errorMessage = 'You are already registered for this tournament.'
+        } else if (lastError.message.includes('User not authenticated')) {
+          errorMessage = 'Please sign in to register for tournaments.'
+        } else {
+          errorMessage = `Registration failed: ${lastError.message}`
+        }
+      }
+      
+      setRegistrationMessage(errorMessage)
     } finally {
       setIsRegistering(false);
       setTimeout(() => setRegistrationMessage(''), 10000); // Clear message after 10 seconds for retry messages
@@ -1253,6 +1361,7 @@ export default function TournamentDetailsPage() {
     )
   }
 
+
   if (error || !tournament) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center py-4 sm:py-8">
@@ -1284,6 +1393,70 @@ export default function TournamentDetailsPage() {
 
         {/* Main Content - Reorganized Layout */}
         <div className="space-y-8">
+          {/* Sign In Card for Unauthenticated Users */}
+          {!user && !isHost && (
+            <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-700/50">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-40">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+                  backgroundSize: '20px 20px'
+                }}></div>
+              </div>
+              
+              {/* Content */}
+              <div className="relative z-10">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
+                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                      Ready to Join?
+                    </h3>
+                    <p className="text-blue-100 text-sm sm:text-base leading-relaxed">
+                      Sign in to register for this tournament and secure your spot in the competition.
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Link
+                  href={`/signin?returnUrl=${encodeURIComponent(`/tournaments/${tournament.id}`)}`}
+                  className="group relative flex-1 inline-flex items-center justify-center px-6 py-4 bg-white text-slate-900 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 hover:bg-blue-50 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                >
+                    <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Sign In to Register</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
+                  </Link>
+                  <Link
+                    href="/tournaments"
+                    className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-slate-800/50 text-white border border-slate-600 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-slate-700/50 hover:border-slate-500 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  >
+                    <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <span>Browse Tournaments</span>
+                  </Link>
+                </div>
+                
+                {/* Additional Info */}
+                <div className="mt-4 pt-4 border-t border-slate-700/50">
+                  <p className="text-slate-300 text-xs sm:text-sm text-center">
+                    New to Phoenix Force? <span className="text-blue-300 font-medium">Create a free account</span> to get started
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Tournament Slots - Now at the top for better focus */}
           {tournament && (
             <div className="space-y-6">
@@ -1307,7 +1480,7 @@ export default function TournamentDetailsPage() {
                     </div>
                     
                     {/* Register Now Button for Players */}
-                    {!isHost && (
+                    {!isHost && user && (
                       <div className="mt-4 sm:mt-0">
                         {userRegistration ? (
                           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
@@ -1348,6 +1521,13 @@ export default function TournamentDetailsPage() {
                               </div>
                             ) : tournament.status === 'registration_open' ? (
                               'Register Now'
+                            ) : tournament.status === 'draft' ? (
+                              <div className="flex items-center">
+                                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Registration Not Open Yet
+                              </div>
                             ) : (
                               <div className="flex items-center">
                                 <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1562,8 +1742,9 @@ export default function TournamentDetailsPage() {
                   </div>
                 </div>
 
+
                 {/* Show message if no slots are available (should not happen with intelligent slots) */}
-                {slots.length === 0 && (
+                {slots.length === 0 && user && (
                   <div className="text-center py-4">
                     <p className="text-gray-600 mb-4">No tournament slots available</p>
                     <button
@@ -1580,7 +1761,7 @@ export default function TournamentDetailsPage() {
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-2">
                       <h3 className="text-xl font-semibold text-gray-900">
-                        {isHost ? `Playing ${tournament.total_slots}` : `Playing ${tournament.total_slots}`}
+                        Playing Squad
                       </h3>
                       {isRealtimeUpdating && (
                         <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -2011,9 +2192,9 @@ export default function TournamentDetailsPage() {
 
               {/* Search and Filter Section */}
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-6">
-                <div className="flex flex-col lg:flex-row gap-4 items-end">
-                  {/* Search */}
-                  <div className="flex-1">
+                <div className="space-y-4">
+                  {/* Search - Full width on mobile */}
+                  <div className="w-full">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Search Players</label>
                     <input
                       type="text"
@@ -2024,27 +2205,15 @@ export default function TournamentDetailsPage() {
                     />
                   </div>
                   
-                  {/* Hide Assigned Toggle */}
-                  <div className="flex items-center space-x-2 h-10">
-                    <input
-                      type="checkbox"
-                      id="hideAssigned"
-                      checked={hideAssignedPlayers}
-                      onChange={(e) => setHideAssignedPlayers(e.target.checked)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="hideAssigned" className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                      Hide Assigned Players
-                    </label>
+                  {/* Add Filter on Skills Button - Full width on mobile */}
+                  <div className="w-full">
+                    <button
+                      onClick={() => setShowSkillConfig(!showSkillConfig)}
+                      className="w-full px-4 py-2.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm font-medium"
+                    >
+                      {showSkillConfig ? 'Clear Skills Filter' : 'Add Filter on Skills'}
+                    </button>
                   </div>
-                  
-                  {/* Add Filter on Skills Button */}
-                  <button
-                    onClick={() => setShowSkillConfig(!showSkillConfig)}
-                    className="px-4 py-2.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm font-medium whitespace-nowrap"
-                  >
-                    {showSkillConfig ? 'Clear Skills Filter' : 'Add Filter on Skills'}
-                  </button>
                 </div>
               </div>
 
@@ -2237,19 +2406,52 @@ export default function TournamentDetailsPage() {
 
               {/* Players List */}
               <div className="mb-6">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                   <h4 className="text-sm font-medium text-gray-700">
                     Available Players ({filteredPlayers.filter(p => !p.isRegistered).length})
                   </h4>
-                  <button
-                    onClick={selectAllPlayers}
-                    className="text-xs text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Select All Available
-                  </button>
+                  
+                  {/* Hide Assigned Players Checkbox */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="hideAssigned"
+                      checked={hideAssignedPlayers}
+                      onChange={(e) => setHideAssignedPlayers(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="hideAssigned" className="text-sm font-medium text-gray-700">
+                      Hide Assigned Players
+                    </label>
+                  </div>
                 </div>
                 
                 <div className="max-h-48 sm:max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                  {/* Table-like Header Row */}
+                  <div className="p-2 sm:p-3 bg-gray-50 border-b border-gray-200">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={filteredPlayers.filter(p => !p.isRegistered).length > 0 && 
+                                filteredPlayers.filter(p => !p.isRegistered).every(p => 
+                                  selectedPlayers.some(selected => selected.id === p.id)
+                                )}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            selectAllPlayers()
+                          } else {
+                            setSelectedPlayers([])
+                          }
+                        }}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-700">
+                          Select All Available Players
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   {isLoadingPlayers ? (
                     <div className="p-4 text-center text-gray-500">
                       <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>

@@ -361,12 +361,12 @@ export default function PlayersPage() {
                   <div className="flex flex-wrap gap-2 mb-4">
                     {player.is_bowler && (
                       <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
-                        🏏 Bowler
+                        ⚾ Bowler
                       </span>
                     )}
                     {player.is_batter && (
                       <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-medium">
-                        ⚾ Batter
+                        🏏 Batter
                       </span>
                     )}
                     {player.is_wicket_keeper && (

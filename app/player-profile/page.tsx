@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { sessionManager } from '@/src/lib/session'
 
 interface PlayerFormData {
@@ -38,8 +38,10 @@ interface PlayerProfile {
   updated_at: string
 }
 
-export default function PlayerProfilePage() {
+function PlayerProfileContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl') || '/'
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [user, setUser] = useState<any>(null)
@@ -204,6 +206,13 @@ export default function PlayerProfilePage() {
       setMessage(playerProfile ? 'Player profile updated successfully!' : 'Player profile created successfully! It will be reviewed by an admin.')
       setIsEditing(false)
       await fetchPlayerProfile()
+      
+      // If this was a new profile creation, redirect to the return URL
+      if (!playerProfile) {
+        setTimeout(() => {
+          router.push(returnUrl)
+        }, 2000) // Give user time to see the success message
+      }
 
     } catch (error: any) {
       setMessage(`Error: ${error.message}`)
@@ -745,5 +754,20 @@ export default function PlayerProfilePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PlayerProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <PlayerProfileContent />
+    </Suspense>
   )
 }

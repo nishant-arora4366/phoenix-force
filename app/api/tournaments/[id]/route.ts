@@ -43,6 +43,52 @@ export async function PUT(
     const body = await request.json()
     const { name, format, selected_teams, tournament_date, description, total_slots, status, venue, google_maps_link } = body
 
+    // SECURITY: Check authentication and authorization
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    }
+
+    let sessionUser
+    try {
+      sessionUser = JSON.parse(authHeader)
+      if (!sessionUser || !sessionUser.id) {
+        return NextResponse.json({ success: false, error: 'Invalid authentication' }, { status: 401 })
+      }
+    } catch (error) {
+      return NextResponse.json({ success: false, error: 'Invalid authentication format' }, { status: 401 })
+    }
+
+    // Get user profile to check role
+    const { data: userProfile, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('id', sessionUser.id)
+      .single()
+
+    if (userError || !userProfile) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
+    }
+
+    // Get tournament to check if user is host
+    const { data: tournamentData, error: tournamentError } = await supabaseAdmin
+      .from('tournaments')
+      .select('host_id')
+      .eq('id', id)
+      .single()
+
+    if (tournamentError || !tournamentData) {
+      return NextResponse.json({ success: false, error: 'Tournament not found' }, { status: 404 })
+    }
+
+    // Check authorization: Only admin or tournament host can update
+    const isAdmin = userProfile.role === 'admin'
+    const isHost = sessionUser.id === tournamentData.host_id
+
+    if (!isAdmin && !isHost) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Only admin or tournament host can update' }, { status: 403 })
+    }
+
     // Handle status-only updates
     if (status && !name && !format && !selected_teams && !tournament_date && !description && !total_slots && !venue && !google_maps_link) {
       const { data: tournament, error } = await supabaseAdmin
@@ -102,6 +148,52 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+
+    // SECURITY: Check authentication and authorization
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
+    }
+
+    let sessionUser
+    try {
+      sessionUser = JSON.parse(authHeader)
+      if (!sessionUser || !sessionUser.id) {
+        return NextResponse.json({ success: false, error: 'Invalid authentication' }, { status: 401 })
+      }
+    } catch (error) {
+      return NextResponse.json({ success: false, error: 'Invalid authentication format' }, { status: 401 })
+    }
+
+    // Get user profile to check role
+    const { data: userProfile, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('id', sessionUser.id)
+      .single()
+
+    if (userError || !userProfile) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
+    }
+
+    // Get tournament to check if user is host
+    const { data: tournamentData, error: tournamentError } = await supabaseAdmin
+      .from('tournaments')
+      .select('host_id')
+      .eq('id', id)
+      .single()
+
+    if (tournamentError || !tournamentData) {
+      return NextResponse.json({ success: false, error: 'Tournament not found' }, { status: 404 })
+    }
+
+    // Check authorization: Only admin or tournament host can delete
+    const isAdmin = userProfile.role === 'admin'
+    const isHost = sessionUser.id === tournamentData.host_id
+
+    if (!isAdmin && !isHost) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Only admin or tournament host can delete' }, { status: 403 })
+    }
 
     // Delete tournament using service role (bypasses RLS)
     const { error } = await supabaseAdmin

@@ -15,22 +15,19 @@ export async function GET(
   try {
     const { id: tournamentId } = await params
     
-    // Get user from Authorization header instead of sessionManager
+    // Get user from Authorization header (optional for viewing slots)
     const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
-    }
+    let sessionUser = null
     
-    // Parse the user from the authorization header
-    let sessionUser
-    try {
-      sessionUser = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
-    
-    if (!sessionUser || !sessionUser.id) {
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
+    if (authHeader) {
+      try {
+        sessionUser = JSON.parse(authHeader)
+        if (!sessionUser || !sessionUser.id) {
+          sessionUser = null
+        }
+      } catch (error) {
+        sessionUser = null
+      }
     }
 
     // Get tournament details
@@ -44,18 +41,21 @@ export async function GET(
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
     }
 
-    // Check if user is host or admin
-    const userResponse = await fetch(`${request.nextUrl.origin}/api/user-profile?userId=${sessionUser.id}`)
-    const userResult = await userResponse.json()
+    // Check if user is host or admin (only if authenticated)
+    let isHost = false
+    let isAdmin = false
     
-    if (!userResult.success) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
+    if (sessionUser) {
+      const userResponse = await fetch(`${request.nextUrl.origin}/api/user-profile?userId=${sessionUser.id}`)
+      const userResult = await userResponse.json()
+      
+      if (userResult.success) {
+        isHost = tournament.host_id === sessionUser.id
+        isAdmin = userResult.data.role === 'admin'
+      }
     }
 
-    const isHost = tournament.host_id === sessionUser.id
-    const isAdmin = userResult.data.role === 'admin'
-
-    // All authenticated users can view tournament slots
+    // All users (authenticated and unauthenticated) can view tournament slots
     // Only hosts and admins can manage slots (checked later in PUT method)
 
     // Get all existing slots from database (dynamically created)
