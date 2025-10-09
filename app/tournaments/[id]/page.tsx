@@ -2368,7 +2368,7 @@ export default function TournamentDetailsPage() {
                       return (
                         <div key={skillId} className="bg-[#09171F]/50 rounded-lg p-3 border border-[#CEA17A]/20 shadow-sm">
                           <div className="flex items-center justify-between mb-2">
-                            <label className="text-xs font-semibold text-gray-800 uppercase tracking-wide">
+                            <label className="text-xs font-semibold text-[#DBD0C0] uppercase tracking-wide">
                               {skill.name}
                             </label>
                             <button
