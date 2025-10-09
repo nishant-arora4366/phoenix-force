@@ -319,7 +319,7 @@ export default function Home() {
         <div className="relative w-full px-4 sm:px-6 lg:px-8 py-8 z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
             {/* Left Side - Content */}
-            <div className="text-left relative z-20">
+            <div className="text-center sm:text-left relative z-20">
               <div className="animate-fade-in-up">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black mb-6 tracking-tight">
                   <span className="text-[#DBD0C0]">ELEVATE YOUR</span>
