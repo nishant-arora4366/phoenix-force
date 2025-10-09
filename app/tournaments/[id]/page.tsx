@@ -2235,7 +2235,7 @@ export default function TournamentDetailsPage() {
 
       {/* Enhanced Player Assignment Modal */}
       {showAssignModal && (
-            <div className="fixed inset-0 bg-[#2b0307]/90 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
               <div className="relative overflow-hidden bg-[#19171b] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-500 scale-100 border border-[#75020f]/30 animate-slide-up">
             {/* Red Palette Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#75020f]/10 via-transparent to-[#51080d]/5 rounded-2xl"></div>
