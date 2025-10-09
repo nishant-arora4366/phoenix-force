@@ -349,14 +349,8 @@ export default function Home() {
             {/* Right Side - Upcoming Tournaments */}
             <div className="relative animate-fade-in-up delay-300 z-20">
               <div className="bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-2xl p-4 sm:p-8 shadow-2xl border border-[#CEA17A]/20 animate-card-glow animate-border-glow">
-            <div className="flex items-center justify-between mb-6 px-2 sm:px-0">
+            <div className="mb-6 px-2 sm:px-0">
               <h3 className="text-lg sm:text-2xl font-bold text-[#DBD0C0]">Featured Tournaments</h3>
-                        <Link
-                href="/tournaments"
-                className="text-[#DBD0C0] hover:text-[#CEA17A] text-sm font-medium transition-colors duration-150"
-              >
-                View All →
-              </Link>
             </div>
                 
                 <div className="flex flex-col gap-3 sm:gap-6 h-[500px]">
