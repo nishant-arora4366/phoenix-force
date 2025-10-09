@@ -776,8 +776,8 @@ export default function PlayersPage() {
             <div className="bg-gradient-to-r from-[#CEA17A]/10 to-[#CEA17A]/5 border-b border-[#CEA17A]/20">
               <div className={`grid gap-2 sm:gap-4 p-2 sm:p-4 text-xs font-semibold text-[#CEA17A] uppercase tracking-wide ${
                 (userRole === 'admin' || userRole === 'host') 
-                  ? 'grid-cols-12' 
-                  : 'grid-cols-10'
+                  ? 'grid-cols-7' 
+                  : 'grid-cols-8'
               }`}>
                 <div className="col-span-1 sm:col-span-1"></div>
                 <div className="col-span-2 sm:col-span-2">Name</div>
@@ -786,7 +786,6 @@ export default function PlayersPage() {
                 {(userRole === 'admin' || userRole === 'host') && (
                   <div className="col-span-2 sm:col-span-1">Price</div>
                 )}
-                <div className="col-span-2 sm:col-span-5">Actions</div>
                     </div>
             </div>
 
@@ -798,8 +797,8 @@ export default function PlayersPage() {
                       onClick={() => router.push(`/players/${player.id}`)}
                   className={`grid gap-2 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
                     (userRole === 'admin' || userRole === 'host') 
-                      ? 'grid-cols-12' 
-                      : 'grid-cols-10'
+                      ? 'grid-cols-7' 
+                      : 'grid-cols-8'
                   }`}
                 >
                   {/* Photo */}
@@ -911,44 +910,8 @@ export default function PlayersPage() {
                     </div>
                   )}
 
-                  {/* Actions - Desktop Only */}
-                  <div className="col-span-2 sm:col-span-5 flex items-center gap-2">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        router.push(`/players/${player.id}`)
-                      }}
-                      className="px-3 py-1.5 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/30 transition-all duration-200 text-xs font-medium"
-                    >
-                      View Details
-                    </button>
-                    {(userRole === 'admin' || userRole === 'host') && (
-                      <>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            router.push(`/players/${player.id}/edit`)
-                          }}
-                          className="px-3 py-1.5 bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 rounded-lg hover:bg-[#3E4E5A]/30 transition-all duration-200 text-xs font-medium"
-                        >
-                          Edit
-                        </button>
-                        {userRole === 'admin' && (
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDelete(player.id, player.display_name)
-                            }}
-                            className="px-3 py-1.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-all duration-200 text-xs font-medium"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </>
-                    )}
                 </div>
-              </div>
-            ))}
+              ))}
             </div>
           </div>
         )}
