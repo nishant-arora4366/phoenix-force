@@ -94,6 +94,9 @@ export default function Navbar() {
 
   // Check if we should show back button (not on home page)
   const shouldShowBackButton = pathname !== '/'
+  
+  // Debug: Log current pathname
+  console.log('Current pathname:', pathname, 'Should show back button:', shouldShowBackButton)
 
   const getDisplayName = () => {
     if (user?.firstname && user?.lastname) {
@@ -204,7 +207,7 @@ export default function Navbar() {
                     <span className="text-sm font-medium">Back</span>
                   </button>
                 ) : (
-                  <div className="w-20 h-12"></div>
+                  <div className="w-20 h-12 bg-red-500/20"></div>
                 )}
               </div>
 
