@@ -2705,14 +2705,19 @@ export default function TournamentDetailsPage() {
                     <button
                       key={status}
                       onClick={() => handleStatusChange(status)}
-                      className="w-full text-left p-3 border border-[#CEA17A]/20 rounded-lg hover:bg-[#3E4E5A] transition-colors bg-[#3E4E5A]"
+                      className="w-full text-left p-3 relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150"
                     >
-                      <div className="flex items-center justify-between">
+                      {/* Luxury Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                      
+                      <div className="relative z-10 flex items-center justify-between">
                         <div>
                           <div className="font-medium text-[#DBD0C0]">
                             {statusDisplayNames[status as keyof typeof statusDisplayNames]}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-[#DBD0C0]">
                             {status === tournament?.status ? 'Current Status' : 
                              statusFlow[tournament?.status as keyof typeof statusFlow]?.includes(status) ? 'Available Transition' : 
                              'Admin Override'}
