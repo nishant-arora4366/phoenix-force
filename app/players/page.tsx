@@ -782,9 +782,9 @@ export default function PlayersPage() {
                 <div className="col-span-1 sm:col-span-1"></div>
                 <div className="col-span-2 sm:col-span-2">Name</div>
                 <div className="col-span-1 sm:col-span-1 text-right">Role</div>
-                <div className="col-span-2 sm:col-span-2 text-right">Community</div>
+                <div className="col-span-3 sm:col-span-2 text-right">Community</div>
                 {(userRole === 'admin' || userRole === 'host') && (
-                  <div className="col-span-2 sm:col-span-1 text-right">Price</div>
+                  <div className="col-span-1 sm:col-span-1 text-right">Price</div>
                 )}
                 {!(userRole === 'admin' || userRole === 'host') && (
                   <div className="col-span-2 sm:col-span-1"></div>
@@ -866,7 +866,7 @@ export default function PlayersPage() {
                   </div>
 
                   {/* Community */}
-                  <div className="col-span-2 sm:col-span-2 flex items-center justify-end">
+                  <div className="col-span-3 sm:col-span-2 flex items-center justify-end">
                     <div className="flex items-center gap-1 max-w-full overflow-hidden">
                       {player.skills?.Community ? (
                         Array.isArray(player.skills.Community) ? (
@@ -906,7 +906,7 @@ export default function PlayersPage() {
 
                   {/* Base Price */}
                   {(userRole === 'admin' || userRole === 'host') && (
-                    <div className="col-span-2 sm:col-span-1 flex items-center justify-end">
+                    <div className="col-span-1 sm:col-span-1 flex items-center justify-end">
                       <div className="text-xs sm:text-base font-semibold text-[#CEA17A]">
                         ₹{player.base_price}
                       </div>
@@ -915,7 +915,7 @@ export default function PlayersPage() {
 
                   {/* Empty space for regular users */}
                   {!(userRole === 'admin' || userRole === 'host') && (
-                    <div className="col-span-2 sm:col-span-1"></div>
+                    <div className="col-span-1 sm:col-span-1"></div>
                   )}
 
                 </div>
