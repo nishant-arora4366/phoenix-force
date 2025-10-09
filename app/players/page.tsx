@@ -91,7 +91,7 @@ function SkillFilterInput({ skillName, skillValues, selectedValues, onSelectionC
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">
         {skillName}
       </label>
@@ -581,7 +581,7 @@ export default function PlayersPage() {
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
             {/* Dynamic Skills Filters */}
             {visibleSkills.length > 0 && (
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full">
                 {visibleSkills.map(skillName => (
                   <SkillFilterInput
                     key={skillName}
