@@ -401,14 +401,15 @@ export default function PlayersPage() {
 
                   {/* Roles */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {player.is_bowler && (
-                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                        ⚾ Bowler
-                      </span>
-                    )}
+                    {player.display_name === 'Test Player 1' && console.log('Test Player 1 roles:', { is_batter: player.is_batter, is_bowler: player.is_bowler, is_wicket_keeper: player.is_wicket_keeper })}
                     {player.is_batter && (
                       <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
                         🏏 Batter
+                      </span>
+                    )}
+                    {player.is_bowler && (
+                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
+                        ⚾ Bowler
                       </span>
                     )}
                     {player.is_wicket_keeper && (
