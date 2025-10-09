@@ -199,10 +199,10 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#19171b] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-700">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto mb-4"></div>
+          <p className="text-[#DBD0C0]">Loading...</p>
         </div>
       </div>
     )
@@ -210,7 +210,7 @@ export default function Home() {
 
 
   return (
-    <div className="min-h-screen bg-[#19171b]">
+    <div className="min-h-screen bg-[#19171b] w-full">
       {/* Player Profile Prompt */}
       {showPlayerProfilePrompt && (
         <PlayerProfilePrompt onClose={() => setShowPlayerProfilePrompt(false)} />
@@ -341,7 +341,7 @@ export default function Home() {
               <div className="bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-2xl p-8 shadow-2xl border border-[#CEA17A]/20 animate-card-glow animate-border-glow">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-[#DBD0C0]">Featured Tournaments</h3>
-              <Link 
+                        <Link
                 href="/tournaments"
                 className="text-[#DBD0C0] hover:text-[#CEA17A] text-sm font-medium transition-colors duration-150"
               >
@@ -445,7 +445,7 @@ export default function Home() {
                             </div>
                           </div>
                         )}
-                      </Link>
+                        </Link>
                     ))
                   ) : (
                     <div className="text-center py-8">
