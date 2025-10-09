@@ -422,40 +422,42 @@ export default function PlayersPage() {
                 )}
 
                 {/* Player Name - Bottom Left with Gradient Background */}
-                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                  <h3 className="text-white font-semibold text-sm mb-1 drop-shadow-lg">
-                    {player.display_name}
-                  </h3>
-                  
-                  {/* Role Icons */}
-                  {player.skills?.Role && (
-                    <div className="flex flex-wrap gap-1">
-                      {Array.isArray(player.skills.Role) ? (
-                        player.skills.Role.map((role, index) => {
-                          const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                          role.toLowerCase().includes('bowler') ? '⚾' : 
-                                          role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
-                          return (
-                            <span key={index} className="text-lg drop-shadow-lg">
-                              {roleEmoji}
-                            </span>
-                          )
-                        })
-                      ) : (
-                        (() => {
-                          const role = player.skills.Role
-                          const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                          role.toLowerCase().includes('bowler') ? '⚾' : 
-                                          role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
-                          return (
-                            <span className="text-lg drop-shadow-lg">
-                              {roleEmoji}
-                            </span>
-                          )
-                        })()
-                      )}
-                    </div>
-                  )}
+                <div className="absolute bottom-0 left-0 right-0">
+                  <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent p-3">
+                    <h3 className="text-white font-semibold text-sm mb-1">
+                      {player.display_name}
+                    </h3>
+                    
+                    {/* Role Icons */}
+                    {player.skills?.Role && (
+                      <div className="flex flex-wrap gap-1">
+                        {Array.isArray(player.skills.Role) ? (
+                          player.skills.Role.map((role, index) => {
+                            const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                            role.toLowerCase().includes('bowler') ? '⚾' : 
+                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                            return (
+                              <span key={index} className="text-lg">
+                                {roleEmoji}
+                              </span>
+                            )
+                          })
+                        ) : (
+                          (() => {
+                            const role = player.skills.Role
+                            const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                            role.toLowerCase().includes('bowler') ? '⚾' : 
+                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                            return (
+                              <span className="text-lg">
+                                {roleEmoji}
+                              </span>
+                            )
+                          })()
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
