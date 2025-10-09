@@ -2308,7 +2308,7 @@ export default function TournamentDetailsPage() {
                   
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
                     {availableSkills.map((skill) => (
-                      <label key={skill.id} className="flex items-center space-x-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                      <label key={skill.id} className="flex items-center space-x-2 p-2 border border-[#CEA17A]/20 rounded hover:bg-[#3E4E5A] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={enabledSkills.includes(skill.id)}
@@ -2339,7 +2339,7 @@ export default function TournamentDetailsPage() {
 
               {/* Active Skills Filter */}
               {enabledSkills.length > 0 && (
-                <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-[#CEA17A]/20 mb-6 shadow-sm">
+                <div className="bg-gradient-to-r from-[#3E4E5A] to-[#09171F] rounded-xl p-4 border border-[#CEA17A]/20 mb-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
@@ -2376,7 +2376,7 @@ export default function TournamentDetailsPage() {
                             <select
                               value={skillFilterValues[skillId]?.[0] || ''}
                               onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
-                              className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs bg-gray-50"
+                              className="w-full px-2 py-1.5 border border-[#CEA17A]/30 rounded-md focus:ring-1 focus:ring-[#CEA17A] focus:border-[#CEA17A] text-xs bg-[#09171F] text-white"
                             >
                               <option value="">All {skill.name}</option>
                               {skill.values?.map((value: any) => (
@@ -2387,11 +2387,11 @@ export default function TournamentDetailsPage() {
                             </select>
                           ) : skill.type === 'multiselect' ? (
                             <div className="space-y-2">
-                              <div className="max-h-24 overflow-y-auto border border-[#CEA17A]/20 rounded-md bg-gray-50">
+                              <div className="max-h-24 overflow-y-auto border border-[#CEA17A]/20 rounded-md bg-[#09171F]">
                                 {skill.values?.map((value: any) => {
                                   const isSelected = skillFilterValues[skillId]?.includes(value.id) || false
                                   return (
-                                    <label key={value.id} className="flex items-center space-x-2 px-2 py-1 hover:bg-gray-100 cursor-pointer">
+                                    <label key={value.id} className="flex items-center space-x-2 px-2 py-1 hover:bg-[#3E4E5A] cursor-pointer text-white">
                                       <input
                                         type="checkbox"
                                         checked={isSelected}
@@ -2426,7 +2426,7 @@ export default function TournamentDetailsPage() {
                                   values[0] = e.target.value
                                   updateSkillFilterValue(skillId, values)
                                 }}
-                                className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs bg-gray-50"
+                                className="w-full px-2 py-1.5 border border-[#CEA17A]/30 rounded-md focus:ring-1 focus:ring-[#CEA17A] focus:border-[#CEA17A] text-xs bg-[#09171F] text-white"
                               />
                               <input
                                 type="number"
@@ -2437,7 +2437,7 @@ export default function TournamentDetailsPage() {
                                   values[1] = e.target.value
                                   updateSkillFilterValue(skillId, values)
                                 }}
-                                className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs bg-gray-50"
+                                className="w-full px-2 py-1.5 border border-[#CEA17A]/30 rounded-md focus:ring-1 focus:ring-[#CEA17A] focus:border-[#CEA17A] text-xs bg-[#09171F] text-white"
                               />
                             </div>
                           ) : (
