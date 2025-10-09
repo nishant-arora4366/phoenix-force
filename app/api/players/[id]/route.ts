@@ -189,13 +189,13 @@ export async function PUT(
     }
 
     // Get the player to check ownership
-    const { data: player, error: playerError } = await supabase
+    const { data: existingPlayer, error: playerError } = await supabase
       .from('players')
       .select('created_by, user_id')
       .eq('id', id)
       .single()
 
-    if (playerError || !player) {
+    if (playerError || !existingPlayer) {
       return NextResponse.json({
         success: false,
         error: 'Player not found'
@@ -210,7 +210,7 @@ export async function PUT(
       // Admin has full access - no additional checks needed
     } else if (user.role === 'host') {
       // Host can only edit players they created
-      if (player.created_by !== userData.id) {
+      if (existingPlayer.created_by !== userData.id) {
         return NextResponse.json({
           success: false,
           error: 'You can only edit players you created'
@@ -218,7 +218,7 @@ export async function PUT(
       }
     } else if (user.role === 'user') {
       // Regular users can only edit their own profile
-      if (player.user_id !== userData.id) {
+      if (existingPlayer.user_id !== userData.id) {
         return NextResponse.json({
           success: false,
           error: 'You can only edit your own profile'
@@ -415,13 +415,13 @@ export async function DELETE(
     }
 
     // Get the player to check ownership
-    const { data: player, error: playerError } = await supabase
+    const { data: playerToDelete, error: playerError } = await supabase
       .from('players')
       .select('created_by, user_id')
       .eq('id', id)
       .single()
 
-    if (playerError || !player) {
+    if (playerError || !playerToDelete) {
       return NextResponse.json({
         success: false,
         error: 'Player not found'
@@ -436,7 +436,7 @@ export async function DELETE(
       // Admin has full access - no additional checks needed
     } else if (user.role === 'host') {
       // Host can only delete players they created
-      if (player.created_by !== userData.id) {
+      if (playerToDelete.created_by !== userData.id) {
         return NextResponse.json({
           success: false,
           error: 'You can only delete players you created'
@@ -444,7 +444,7 @@ export async function DELETE(
       }
     } else if (user.role === 'user') {
       // Regular users can only delete their own profile
-      if (player.user_id !== userData.id) {
+      if (playerToDelete.user_id !== userData.id) {
         return NextResponse.json({
           success: false,
           error: 'You can only delete your own profile'
