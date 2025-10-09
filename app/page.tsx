@@ -96,7 +96,7 @@ export default function Home() {
             return new Date(a.tournament_date).getTime() - new Date(b.tournament_date).getTime()
           })
           
-          setUpcomingTournaments(sortedTournaments.slice(0, 3))
+          setUpcomingTournaments(sortedTournaments.slice(0, 2))
         }
       } catch (error) {
         console.error('Error fetching upcoming tournaments:', error)
