@@ -231,8 +231,8 @@ export default function Home() {
               </p>
             ) : (
               <p className="text-[#DBD0C0] font-semibold text-base">
-                Ready to elevate your cricket journey? 
-                <Link href="/signin" className="ml-2 text-[#CEA17A] hover:text-[#DBD0C0] transition-colors duration-150">Sign in to get started!</Link>
+                <span className="block sm:inline">Ready to elevate your cricket journey?</span>
+                <Link href="/signin" className="block sm:inline sm:ml-2 text-[#CEA17A] hover:text-[#DBD0C0] transition-colors duration-150">Sign in to get started!</Link>
               </p>
             )}
           </div>
