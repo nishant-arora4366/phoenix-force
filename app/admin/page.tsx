@@ -671,10 +671,10 @@ export default function AdminPanel() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#19171b] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-[#CEA17A]">Loading...</p>
         </div>
       </div>
     )
@@ -682,13 +682,13 @@ export default function AdminPanel() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#19171b]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl font-bold text-[#DBD0C0] mb-6">
               Please Sign In
             </h1>
-            <p className="text-xl text-gray-600 mb-8">
+            <p className="text-xl text-[#CEA17A] mb-8">
               You need to be signed in to access the admin panel.
             </p>
             <Link
@@ -705,13 +705,13 @@ export default function AdminPanel() {
 
   if (message === 'Access denied. Admin role required.') {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#19171b]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl font-bold text-[#DBD0C0] mb-6">
               Access Denied
             </h1>
-            <p className="text-xl text-gray-600 mb-8">
+            <p className="text-xl text-[#CEA17A] mb-8">
               You need admin privileges to access this page.
             </p>
             <Link
@@ -729,8 +729,8 @@ export default function AdminPanel() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-        <div className="bg-white rounded-xl shadow-xl p-4 sm:p-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Admin Panel</h1>
+        <div className="bg-[#09171F]/50 rounded-xl shadow-xl p-4 sm:p-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#DBD0C0] mb-6 sm:mb-8">Admin Panel</h1>
 
           {message && (
             <div className={`mb-6 p-4 rounded-lg ${
@@ -743,13 +743,13 @@ export default function AdminPanel() {
           )}
 
           {/* Tab Navigation */}
-          <div className="border-b border-gray-200 mb-6">
+          <div className="border-b border-[#CEA17A]/20 mb-6">
             <nav className="-mb-px flex space-x-8">
               <button
                 onClick={() => setActiveTab('users')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'users'
-                    ? 'border-gray-500 text-gray-600'
+                    ? 'border-gray-500 text-[#CEA17A]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -759,7 +759,7 @@ export default function AdminPanel() {
                 onClick={() => setActiveTab('players')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'players'
-                    ? 'border-gray-500 text-gray-600'
+                    ? 'border-gray-500 text-[#CEA17A]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -769,7 +769,7 @@ export default function AdminPanel() {
                 onClick={() => setActiveTab('skills')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'skills'
-                    ? 'border-gray-500 text-gray-600'
+                    ? 'border-gray-500 text-[#CEA17A]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -783,7 +783,7 @@ export default function AdminPanel() {
             <>
               {/* Search User Section */}
               <div className="mb-6 sm:mb-8">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Update User Role</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-[#DBD0C0] mb-4">Update User Role</h2>
                 <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                   <input
                     type="email"
@@ -802,7 +802,7 @@ export default function AdminPanel() {
 
                 {selectedUser && (
                   <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-semibold text-gray-900 mb-2">User Found:</h3>
+                    <h3 className="font-semibold text-[#DBD0C0] mb-2">User Found:</h3>
                     <p><strong>Name:</strong> {selectedUser.firstname} {selectedUser.lastname}</p>
                     <p><strong>Email:</strong> {selectedUser.email}</p>
                     <p><strong>Current Role:</strong> {selectedUser.role}</p>
@@ -877,10 +877,10 @@ export default function AdminPanel() {
 
               {/* All Users List */}
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">All Users</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-[#DBD0C0] mb-4">All Users</h2>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-[#19171b]">
                       <tr>
                         <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Name
@@ -902,15 +902,15 @@ export default function AdminPanel() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-[#09171F]/50 divide-y divide-gray-200">
                       {users
                         .filter(user => filter === 'all' || user.status === filter)
                         .map((user) => (
                         <tr key={user.id}>
-                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
                             {user.firstname} {user.lastname}
                           </td>
-                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
                             {user.email}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
@@ -975,13 +975,13 @@ export default function AdminPanel() {
           {activeTab === 'players' && (
             <>
               {/* Player Profiles Table - Desktop */}
-              <div className="hidden md:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">Player Profiles</h3>
+              <div className="hidden md:block bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 overflow-hidden">
+                <div className="px-6 py-4 border-b border-[#CEA17A]/20">
+                  <h3 className="text-lg font-medium text-[#DBD0C0]">Player Profiles</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-[#19171b]">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Player Name
@@ -1000,11 +1000,11 @@ export default function AdminPanel() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-[#09171F]/50 divide-y divide-gray-200">
                       {playerProfiles.map((profile) => (
                         <tr key={profile.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-[#DBD0C0]">
                               {profile.display_name}
                             </div>
                             {profile.bio && (
@@ -1013,7 +1013,7 @@ export default function AdminPanel() {
                               </div>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
                             {profile.users ? (
                               <div>
                                 <div className="font-medium">
@@ -1066,14 +1066,14 @@ export default function AdminPanel() {
               {/* Player Profiles - Mobile */}
               <div className="md:hidden space-y-4">
                 {playerProfiles.map((profile) => (
-                  <div key={profile.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div key={profile.id} className="bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900">
+                        <h3 className="text-lg font-medium text-[#DBD0C0]">
                           {profile.display_name}
                         </h3>
                         {profile.users && (
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-[#CEA17A]">
                             {profile.users.firstname} {profile.users.lastname}
                           </p>
                         )}
@@ -1089,7 +1089,7 @@ export default function AdminPanel() {
                     </div>
                     
                     {profile.bio && (
-                      <p className="text-sm text-gray-600 mb-3">{profile.bio}</p>
+                      <p className="text-sm text-[#CEA17A] mb-3">{profile.bio}</p>
                     )}
                     
                     {profile.users && (
@@ -1126,9 +1126,9 @@ export default function AdminPanel() {
           {/* Skills Tab Content */}
           {activeTab === 'skills' && (
             <>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+              <div className="bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Player Skills Configuration</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold text-[#DBD0C0]">Player Skills Configuration</h2>
                   <button
                     onClick={() => setIsAddingSkill(true)}
                     className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -1139,8 +1139,8 @@ export default function AdminPanel() {
                 
                 {/* Add New Skill Form */}
                 {isAddingSkill && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4">Add New Player Skill</h3>
+                  <div className="mb-6 p-4 bg-[#19171b] rounded-lg">
+                    <h3 className="text-base sm:text-lg font-medium text-[#DBD0C0] mb-4">Add New Player Skill</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Skill Name</label>
@@ -1180,7 +1180,7 @@ export default function AdminPanel() {
                             type="checkbox"
                             checked={newSkill.required}
                             onChange={(e) => setNewSkill({ ...newSkill, required: e.target.checked })}
-                            className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
+                            className="rounded border-gray-300 text-[#CEA17A] focus:ring-gray-500"
                           />
                           <span className="ml-2 text-sm text-gray-700">Required</span>
                         </label>
@@ -1189,7 +1189,7 @@ export default function AdminPanel() {
                             type="checkbox"
                             checked={newSkill.isAdminManaged}
                             onChange={(e) => setNewSkill({ ...newSkill, isAdminManaged: e.target.checked })}
-                            className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
+                            className="rounded border-gray-300 text-[#CEA17A] focus:ring-gray-500"
                           />
                           <span className="ml-2 text-sm text-gray-700">Admin Managed</span>
                         </label>
@@ -1198,7 +1198,7 @@ export default function AdminPanel() {
                             type="checkbox"
                             checked={newSkill.viewerCanSee}
                             onChange={(e) => setNewSkill({ ...newSkill, viewerCanSee: e.target.checked })}
-                            className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
+                            className="rounded border-gray-300 text-[#CEA17A] focus:ring-gray-500"
                           />
                           <span className="ml-2 text-sm text-gray-700">Viewer Can See</span>
                         </label>
@@ -1210,7 +1210,7 @@ export default function AdminPanel() {
                           setIsAddingSkill(false)
                           setNewSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
                         }}
-                        className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-[#19171b] transition-colors"
                       >
                         Cancel
                       </button>
@@ -1228,14 +1228,14 @@ export default function AdminPanel() {
                 {/* Skills List */}
                 <div className="space-y-3">
                   {playerSkills.map((skill) => (
-                    <div key={skill.id} className="border border-gray-200 rounded-lg">
+                    <div key={skill.id} className="border border-[#CEA17A]/20 rounded-lg">
                       {/* Skill Header - Always Visible */}
                       <div className="p-4">
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
                           <div className="flex items-center space-x-3 flex-1">
                             <button
                               onClick={() => toggleSkillExpansion(skill.id)}
-                              className="flex items-center space-x-2 text-left hover:bg-gray-50 p-2 rounded transition-colors flex-1"
+                              className="flex items-center space-x-2 text-left hover:bg-[#19171b] p-2 rounded transition-colors flex-1"
                             >
                               <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
                                 {expandedSkills.has(skill.id) ? (
@@ -1249,7 +1249,7 @@ export default function AdminPanel() {
                                 )}
                               </div>
                               <div className="flex-1">
-                                <h3 className="text-base sm:text-lg font-medium text-gray-900">{skill.skill_name}</h3>
+                                <h3 className="text-base sm:text-lg font-medium text-[#DBD0C0]">{skill.skill_name}</h3>
                                 <div className="flex flex-wrap items-center gap-2 mt-1">
                                   <span className="text-xs sm:text-sm text-gray-500">Type: {skill.skill_type}</span>
                                   <span className="text-xs sm:text-sm text-gray-500">Order: {skill.display_order}</span>
@@ -1307,7 +1307,7 @@ export default function AdminPanel() {
                       {/* Edit Form */}
                       {isEditingSkill === skill.id && (
                         <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <h4 className="text-sm font-medium text-gray-900 mb-3">Edit Skill</h4>
+                          <h4 className="text-sm font-medium text-[#DBD0C0] mb-3">Edit Skill</h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1391,7 +1391,7 @@ export default function AdminPanel() {
                                 setIsEditingSkill(null)
                                 setEditingSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
                               }}
-                              className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-[#19171b] transition-colors"
                             >
                               Cancel
                             </button>
@@ -1408,11 +1408,11 @@ export default function AdminPanel() {
                       
                       {/* Collapsible Content */}
                       {expandedSkills.has(skill.id) && (
-                        <div className="border-t border-gray-200 p-4 bg-gray-50">
+                        <div className="border-t border-[#CEA17A]/20 p-4 bg-[#19171b]">
                           {/* Skill Values */}
                           <div className="mb-4">
                             <div className="flex justify-between items-center mb-3">
-                              <h4 className="text-sm font-medium text-gray-900">Skill Values</h4>
+                              <h4 className="text-sm font-medium text-[#DBD0C0]">Skill Values</h4>
                               <button
                                 onClick={() => {
                                   setIsAddingValue(true)
@@ -1426,7 +1426,7 @@ export default function AdminPanel() {
                             
                             {/* Add Value Form */}
                             {isAddingValue && newValue.skillId === skill.id && (
-                              <div className="mb-4 p-3 bg-white rounded border">
+                              <div className="mb-4 p-3 bg-[#09171F]/50 rounded border">
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                   <input
                                     type="text"
@@ -1455,7 +1455,7 @@ export default function AdminPanel() {
                                         setIsAddingValue(false)
                                         setNewValue({ skillId: '', valueName: '', displayOrder: 0 })
                                       }}
-                                      className="px-3 py-2 border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-50 transition-colors"
+                                      className="px-3 py-2 border border-gray-300 text-gray-700 rounded text-sm hover:bg-[#19171b] transition-colors"
                                     >
                                       Cancel
                                     </button>
@@ -1468,9 +1468,9 @@ export default function AdminPanel() {
                             <div className="space-y-2">
                               {skill.values && skill.values.length > 0 ? (
                                 skill.values.map((value) => (
-                                  <div key={value.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                                  <div key={value.id} className="flex items-center justify-between p-2 bg-[#09171F]/50 rounded border">
                                     <div className="flex items-center space-x-3">
-                                      <span className="text-sm text-gray-900">{value.value_name}</span>
+                                      <span className="text-sm text-[#DBD0C0]">{value.value_name}</span>
                                       <span className="text-xs text-gray-500">Order: {value.display_order}</span>
                                     </div>
                                     <div className="flex space-x-2">
@@ -1505,7 +1505,7 @@ export default function AdminPanel() {
                             {/* Edit Value Form */}
                             {isEditingValue && editingValue.skillId === skill.id && (
                               <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                <h5 className="text-sm font-medium text-gray-900 mb-2">Edit Value</h5>
+                                <h5 className="text-sm font-medium text-[#DBD0C0] mb-2">Edit Value</h5>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div>
                                     <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -1538,7 +1538,7 @@ export default function AdminPanel() {
                                       setIsEditingValue(null)
                                       setEditingValue({ skillId: '', valueId: '', valueName: '', displayOrder: 0 })
                                     }}
-                                    className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                                    className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-[#19171b] transition-colors"
                                   >
                                     Cancel
                                   </button>

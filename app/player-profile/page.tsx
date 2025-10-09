@@ -223,10 +223,10 @@ function PlayerProfileContent() {
 
   if (isLoadingUser || isLoadingProfile) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+      <div className="min-h-screen bg-[#19171b] py-8 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-700 text-lg">Loading player profile...</p>
+          <p className="text-[#CEA17A] text-lg">Loading player profile...</p>
         </div>
       </div>
     )
@@ -234,15 +234,15 @@ function PlayerProfileContent() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-[#19171b] py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-8">
             <div className="text-center">
               <div className="text-red-500 text-6xl mb-4">🚫</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">
                 Access Denied
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-[#CEA17A] mb-6">
                 {message || 'Please sign in to access your player profile.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -274,14 +274,14 @@ function PlayerProfileContent() {
           <div className="flex items-center space-x-3 sm:space-x-4">
             <button
               onClick={() => router.push('/')}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-[#CEA17A] hover:text-[#DBD0C0] hover:bg-gray-100 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </button>
             <div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-4xl font-bold text-[#DBD0C0]">
                 {playerProfile ? 'My Player Profile' : 'Create Player Profile'}
               </h1>
             </div>
@@ -346,7 +346,7 @@ function PlayerProfileContent() {
 
         {/* Player Card - Similar to Players Details Page */}
         {!isEditing && playerProfile && (
-          <div className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
+          <div className="group bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
             {/* Player Image Header */}
             <div className="relative h-64 sm:h-80 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
               {playerProfile.profile_pic_url ? (
@@ -383,14 +383,14 @@ function PlayerProfileContent() {
             {/* Player Info */}
             <div className="p-6">
               <div className="mb-4">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 group-hover:text-gray-600 transition-colors mb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 group-hover:text-[#CEA17A] transition-colors mb-2">
                   {playerProfile.display_name}
                 </h1>
               </div>
 
               {/* Bio */}
               {playerProfile.bio && (
-                <p className="text-gray-600 text-sm leading-relaxed mb-4">{playerProfile.bio}</p>
+                <p className="text-[#CEA17A] text-sm leading-relaxed mb-4">{playerProfile.bio}</p>
               )}
 
               {/* Skills and Attributes */}
@@ -406,7 +406,7 @@ function PlayerProfileContent() {
 
               {/* Mobile Number */}
               {playerProfile.mobile_number && (
-                <div className="text-sm text-gray-600 mb-4">
+                <div className="text-sm text-[#CEA17A] mb-4">
                   📱 {playerProfile.mobile_number}
                 </div>
               )}
@@ -426,11 +426,11 @@ function PlayerProfileContent() {
 
         {/* No Profile State */}
         {!isEditing && !playerProfile && (
-          <div className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
+          <div className="group bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 mb-6 sm:mb-8">
             <div className="p-8 text-center">
               <div className="text-6xl mb-4">🏏</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">No Player Profile</h2>
-              <p className="text-gray-600 mb-6">Create your cricket player profile to participate in tournaments</p>
+              <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">No Player Profile</h2>
+              <p className="text-[#CEA17A] mb-6">Create your cricket player profile to participate in tournaments</p>
               <button
                 onClick={() => setIsEditing(true)}
                 className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold"
@@ -443,12 +443,12 @@ function PlayerProfileContent() {
 
         {/* Edit Form */}
         {isEditing && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-6">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl font-bold text-[#DBD0C0] mb-2">
                 {playerProfile ? 'Edit Player Profile' : 'Create Player Profile'}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-[#CEA17A]">
                 {playerProfile 
                   ? 'Update your player information and skills'
                   : 'Fill in your player information to create your profile'
@@ -460,7 +460,7 @@ function PlayerProfileContent() {
               {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label htmlFor="display_name" className="block text-sm font-semibold text-gray-700">
+                  <label htmlFor="display_name" className="block text-sm font-semibold text-[#CEA17A]">
                     Display Name *
                   </label>
                   <input
@@ -470,13 +470,13 @@ function PlayerProfileContent() {
                     value={formData.display_name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                     placeholder="Enter your display name"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="mobile_number" className="block text-sm font-semibold text-gray-700">
+                  <label htmlFor="mobile_number" className="block text-sm font-semibold text-[#CEA17A]">
                     Mobile Number
                   </label>
                   <input
@@ -485,7 +485,7 @@ function PlayerProfileContent() {
                     name="mobile_number"
                     value={formData.mobile_number}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                     placeholder="Enter mobile number (optional)"
                   />
                 </div>
@@ -493,7 +493,7 @@ function PlayerProfileContent() {
 
               {/* Profile Picture */}
               <div className="space-y-2">
-                <label htmlFor="profile_pic_url" className="block text-sm font-semibold text-gray-700">
+                <label htmlFor="profile_pic_url" className="block text-sm font-semibold text-[#CEA17A]">
                   Profile Picture URL
                 </label>
                 <input
@@ -502,14 +502,14 @@ function PlayerProfileContent() {
                   name="profile_pic_url"
                   value={formData.profile_pic_url}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                  className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                   placeholder="Enter profile picture URL (optional)"
                 />
               </div>
 
               {/* Bio */}
               <div className="space-y-2">
-                <label htmlFor="bio" className="block text-sm font-semibold text-gray-700">
+                <label htmlFor="bio" className="block text-sm font-semibold text-[#CEA17A]">
                   Bio
                 </label>
                 <textarea
@@ -518,7 +518,7 @@ function PlayerProfileContent() {
                   value={formData.bio}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50 resize-none"
+                  className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b] resize-none"
                   placeholder="Tell us about yourself (optional)"
                 />
               </div>
@@ -528,14 +528,14 @@ function PlayerProfileContent() {
                 <div className="space-y-4">
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                    <p className="text-gray-600 mt-2">Loading player skills...</p>
+                    <p className="text-[#CEA17A] mt-2">Loading player skills...</p>
                   </div>
                 </div>
               ) : playerSkills.length === 0 ? (
                 <div className="space-y-4">
                   <div className="text-center py-8">
                     <div className="text-gray-500 text-4xl mb-4">⚠️</div>
-                    <p className="text-gray-600">No player skills configured yet.</p>
+                    <p className="text-[#CEA17A]">No player skills configured yet.</p>
                     <p className="text-sm text-gray-500 mt-2">
                       Please contact an admin to configure player skills.
                     </p>
@@ -543,7 +543,7 @@ function PlayerProfileContent() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-sm font-semibold text-[#CEA17A]">
                     Player Skills & Attributes
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -561,13 +561,13 @@ function PlayerProfileContent() {
 
                       return (
                         <div key={skill.id} className="space-y-2">
-                          <label htmlFor={skillKey} className="block text-sm font-medium text-gray-700">
+                          <label htmlFor={skillKey} className="block text-sm font-medium text-[#CEA17A]">
                             {skill.skill_name} {skill.is_required && '*'}
                           </label>
                           
                           {isMultiSelect ? (
                             // Multi-select with checkboxes
-                            <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-xl p-3 bg-gray-50">
+                            <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-[#CEA17A]/20 rounded-xl p-3 bg-[#19171b]">
                               {skill.values && skill.values.map((value) => (
                                 <label key={value.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
                                   <input
@@ -586,7 +586,7 @@ function PlayerProfileContent() {
                                     }}
                                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                                   />
-                                  <span className="text-sm text-gray-700">{value.value_name}</span>
+                                  <span className="text-sm text-[#CEA17A]">{value.value_name}</span>
                                 </label>
                               ))}
                               {Array.isArray(currentValue) && currentValue.length > 0 && (
@@ -607,7 +607,7 @@ function PlayerProfileContent() {
                                 setFormData({ ...formData, skills: newSkills })
                               }}
                               required={skill.is_required}
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                              className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                             >
                               <option value="">Select {skill.skill_name}</option>
                               {skill.values && skill.values.map((value) => (
@@ -671,8 +671,8 @@ function PlayerProfileContent() {
         {!isEditing && playerProfile && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Skills & Attributes */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+            <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-6">
+              <h3 className="text-lg font-bold text-[#DBD0C0] mb-4 flex items-center">
                 <span className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center mr-3 text-sm">
                   ⚡
                 </span>
@@ -682,8 +682,8 @@ function PlayerProfileContent() {
                 <div className="space-y-3">
                   {Object.entries(formData.skills).map(([skillName, skillValue]) => (
                     <div key={skillName} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                      <span className="text-sm font-medium text-gray-600">{skillName}</span>
-                      <span className="text-sm font-bold text-gray-900">
+                      <span className="text-sm font-medium text-[#CEA17A]">{skillName}</span>
+                      <span className="text-sm font-bold text-[#DBD0C0]">
                         {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
                       </span>
                     </div>
@@ -698,8 +698,8 @@ function PlayerProfileContent() {
             </div>
 
             {/* Profile Info */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+            <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-6">
+              <h3 className="text-lg font-bold text-[#DBD0C0] mb-4 flex items-center">
                 <span className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center mr-3 text-sm">
                   📊
                 </span>
@@ -707,7 +707,7 @@ function PlayerProfileContent() {
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-600">Status</span>
+                  <span className="text-sm text-[#CEA17A]">Status</span>
                   <span className={`font-bold text-sm px-2 py-1 rounded-full ${
                     playerProfile.status === 'approved' 
                       ? 'bg-green-100 text-green-800'
@@ -720,20 +720,20 @@ function PlayerProfileContent() {
                 </div>
                 {formData.skills?.['Base Price'] && (
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-600">Base Price</span>
-                    <span className="font-bold text-gray-900">₹{formData.skills['Base Price']}</span>
+                    <span className="text-sm text-[#CEA17A]">Base Price</span>
+                    <span className="font-bold text-[#DBD0C0]">₹{formData.skills['Base Price']}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-600">Created</span>
-                  <span className="font-bold text-gray-900">
+                  <span className="text-sm text-[#CEA17A]">Created</span>
+                  <span className="font-bold text-[#DBD0C0]">
                     {new Date(playerProfile.created_at).toLocaleDateString()}
                   </span>
                 </div>
                 {playerProfile.updated_at && (
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-gray-600">Updated</span>
-                    <span className="font-bold text-gray-900">
+                    <span className="text-sm text-[#CEA17A]">Updated</span>
+                    <span className="font-bold text-[#DBD0C0]">
                       {new Date(playerProfile.updated_at).toLocaleDateString()}
                     </span>
                   </div>
@@ -760,10 +760,10 @@ function PlayerProfileContent() {
 export default function PlayerProfilePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#19171b]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <p className="mt-2 text-[#CEA17A]">Loading...</p>
         </div>
       </div>
     }>

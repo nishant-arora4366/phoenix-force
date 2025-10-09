@@ -225,12 +225,12 @@ export default function TournamentRules() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#19171b]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Tournament Rules</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <h1 className="text-4xl font-bold text-[#DBD0C0] mb-4">Tournament Rules</h1>
+          <p className="text-xl text-[#CEA17A] max-w-3xl mx-auto">
             Comprehensive rules and regulations for different tournament formats. 
             Select a tournament type to view specific rules and guidelines.
           </p>
@@ -238,7 +238,7 @@ export default function TournamentRules() {
 
         {/* Tournament Type Selection */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Select Tournament Type</h2>
+          <h2 className="text-2xl font-semibold text-[#DBD0C0] mb-6">Select Tournament Type</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {tournamentTypes.map((type) => (
               <button
@@ -247,26 +247,26 @@ export default function TournamentRules() {
                 className={`p-4 rounded-lg border-2 text-left transition-all duration-200 ${
                   selectedTournamentType === type.id
                     ? 'border-blue-500 bg-blue-50 shadow-md'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                    : 'border-[#CEA17A]/20 bg-[#09171F]/50 hover:border-gray-300 hover:shadow-sm'
                 }`}
               >
-                <h3 className="font-semibold text-gray-900 mb-2">{type.name}</h3>
-                <p className="text-sm text-gray-600">{type.description}</p>
+                <h3 className="font-semibold text-[#DBD0C0] mb-2">{type.name}</h3>
+                <p className="text-sm text-[#CEA17A]">{type.description}</p>
               </button>
             ))}
           </div>
         </div>
 
         {/* Rules Display */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">
+        <div className="bg-[#09171F]/50 rounded-lg shadow-lg p-8">
+          <h2 className="text-3xl font-bold text-[#DBD0C0] mb-8">
             {rules[selectedTournamentType as keyof typeof rules].title}
           </h2>
           
           <div className="space-y-8">
             {rules[selectedTournamentType as keyof typeof rules].sections.map((section, index) => (
               <div key={index} className="border-l-4 border-blue-500 pl-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">{section.title}</h3>
+                <h3 className="text-xl font-semibold text-[#DBD0C0] mb-4">{section.title}</h3>
                 <ul className="space-y-3">
                   {section.rules.map((rule, ruleIndex) => (
                     <li key={ruleIndex} className="flex items-start">
@@ -284,10 +284,10 @@ export default function TournamentRules() {
 
         {/* Additional Information */}
         <div className="mt-12 bg-blue-50 rounded-lg p-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Important Notes</h3>
+          <h3 className="text-xl font-semibold text-[#DBD0C0] mb-4">Important Notes</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">General Rules</h4>
+              <h4 className="font-medium text-[#DBD0C0] mb-2">General Rules</h4>
               <ul className="text-sm text-gray-700 space-y-1">
                 <li>• All matches follow ICC playing conditions</li>
                 <li>• Fair play and sportsmanship expected</li>
@@ -296,7 +296,7 @@ export default function TournamentRules() {
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">Contact Information</h4>
+              <h4 className="font-medium text-[#DBD0C0] mb-2">Contact Information</h4>
               <ul className="text-sm text-gray-700 space-y-1">
                 <li>• Tournament Director: +91-9876543210</li>
                 <li>• Email: tournaments@phoenixforcecricket.com</li>

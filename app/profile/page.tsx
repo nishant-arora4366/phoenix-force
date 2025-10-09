@@ -173,7 +173,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+      <div className="min-h-screen bg-[#19171b] py-8 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-gray-700 text-lg">Loading profile...</p>
@@ -184,15 +184,15 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-[#19171b] py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-8">
             <div className="text-center">
               <div className="text-red-500 text-6xl mb-4">🚫</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">
                 Access Denied
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-[#CEA17A] mb-6">
                 Please sign in to access your profile.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -217,7 +217,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#19171b] py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -226,27 +226,27 @@ export default function Profile() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">User Profile</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold text-[#DBD0C0] mb-4">User Profile</h1>
+          <p className="text-xl text-[#CEA17A] max-w-2xl mx-auto">
             Manage your account information and settings
           </p>
         </div>
 
         {/* Profile Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-[#09171F]/50 rounded-2xl shadow-2xl overflow-hidden">
           <div className="bg-gray-700 px-8 py-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-white">Profile Information</h2>
               <div className="flex space-x-3">
                 <Link
                   href="/player-profile"
-                  className="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
+                  className="px-4 py-2 bg-[#09171F]/50 bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
                 >
                   Player Profile
                 </Link>
                 <button
                   onClick={() => setIsEditing(!isEditing)}
-                  className="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
+                  className="px-4 py-2 bg-[#09171F]/50 bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
                 >
                   {isEditing ? 'Cancel' : 'Edit Profile'}
                 </button>
@@ -268,7 +268,7 @@ export default function Profile() {
                       id="username"
                       value={profile?.username || ''}
                       onChange={(e) => setProfile(prev => prev ? { ...prev, username: e.target.value } : null)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                       placeholder="Enter username"
                     />
                   </div>
@@ -282,7 +282,7 @@ export default function Profile() {
                       id="email"
                       value={profile?.email || ''}
                       disabled
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-500"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-gray-100 text-gray-500"
                       placeholder="Email cannot be changed"
                     />
                   </div>
@@ -297,7 +297,7 @@ export default function Profile() {
                       value={profile?.firstname || ''}
                       onChange={(e) => setProfile(prev => prev ? { ...prev, firstname: e.target.value } : null)}
                       required
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                       placeholder="Enter first name"
                     />
                   </div>
@@ -311,7 +311,7 @@ export default function Profile() {
                       id="middlename"
                       value={profile?.middlename || ''}
                       onChange={(e) => setProfile(prev => prev ? { ...prev, middlename: e.target.value } : null)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                       placeholder="Enter middle name (optional)"
                     />
                   </div>
@@ -326,7 +326,7 @@ export default function Profile() {
                       value={profile?.lastname || ''}
                       onChange={(e) => setProfile(prev => prev ? { ...prev, lastname: e.target.value } : null)}
                       required
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                       placeholder="Enter last name"
                     />
                   </div>
@@ -340,7 +340,7 @@ export default function Profile() {
                       id="photo"
                       value={profile?.photo || ''}
                       onChange={(e) => setProfile(prev => prev ? { ...prev, photo: e.target.value } : null)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                       placeholder="Enter photo URL (optional)"
                     />
                   </div>
@@ -391,42 +391,42 @@ export default function Profile() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Username
                     </label>
-                    <p className="text-lg text-gray-900">{profile?.username || 'Not set'}</p>
+                    <p className="text-lg text-[#DBD0C0]">{profile?.username || 'Not set'}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Email
                     </label>
-                    <p className="text-lg text-gray-900">{profile?.email}</p>
+                    <p className="text-lg text-[#DBD0C0]">{profile?.email}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       First Name
                     </label>
-                    <p className="text-lg text-gray-900">{profile?.firstname}</p>
+                    <p className="text-lg text-[#DBD0C0]">{profile?.firstname}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Middle Name
                     </label>
-                    <p className="text-lg text-gray-900">{profile?.middlename || 'Not set'}</p>
+                    <p className="text-lg text-[#DBD0C0]">{profile?.middlename || 'Not set'}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Last Name
                     </label>
-                    <p className="text-lg text-gray-900">{profile?.lastname}</p>
+                    <p className="text-lg text-[#DBD0C0]">{profile?.lastname}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Role
                     </label>
-                    <p className="text-lg text-gray-900 capitalize">{profile?.role}</p>
+                    <p className="text-lg text-[#DBD0C0] capitalize">{profile?.role}</p>
                   </div>
                 </div>
 
@@ -449,13 +449,13 @@ export default function Profile() {
         </div>
 
         {/* Password Change Section */}
-        <div className="mt-8 bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="mt-8 bg-[#09171F]/50 rounded-2xl shadow-2xl overflow-hidden">
           <div className="bg-gray-700 px-8 py-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-white">Security</h2>
               <button
                 onClick={() => setIsChangingPassword(!isChangingPassword)}
-                className="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
+                className="px-4 py-2 bg-[#09171F]/50 bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
               >
                 {isChangingPassword ? 'Cancel' : 'Change Password'}
               </button>
@@ -476,7 +476,7 @@ export default function Profile() {
                       value={passwordData.currentPassword}
                       onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
                       required
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                       placeholder="Enter current password"
                     />
                   </div>
@@ -491,7 +491,7 @@ export default function Profile() {
                       value={passwordData.newPassword}
                       onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                       required
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                       placeholder="Enter new password"
                     />
                   </div>
@@ -506,7 +506,7 @@ export default function Profile() {
                       value={passwordData.confirmPassword}
                       onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                       required
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                       placeholder="Confirm new password"
                     />
                   </div>
@@ -551,7 +551,7 @@ export default function Profile() {
             ) : (
               <div className="text-center py-8">
                 <div className="text-gray-500 text-4xl mb-4">🔒</div>
-                <p className="text-gray-600">Click "Change Password" to update your password</p>
+                <p className="text-[#CEA17A]">Click "Change Password" to update your password</p>
               </div>
             )}
           </div>

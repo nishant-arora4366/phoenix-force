@@ -684,7 +684,7 @@ export default function UserManagementPage() {
       case 'host':
         return 'bg-gray-100 text-gray-700'
       case 'viewer':
-        return 'bg-gray-100 text-gray-600'
+        return 'bg-gray-100 text-[#CEA17A]'
       default:
         return 'bg-gray-100 text-gray-800'
     }
@@ -710,10 +710,10 @@ export default function UserManagementPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#19171b] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-900">Loading...</h2>
+          <h2 className="text-xl font-semibold text-[#DBD0C0]">Loading...</h2>
         </div>
       </div>
     )
@@ -721,11 +721,11 @@ export default function UserManagementPage() {
 
   if (userRole !== 'admin') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#19171b] flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">🚫</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-          <p className="text-gray-600 mb-6">You need admin privileges to access this page.</p>
+          <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">Access Denied</h2>
+          <p className="text-[#CEA17A] mb-6">You need admin privileges to access this page.</p>
           <button
             onClick={() => router.push('/')}
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -738,7 +738,7 @@ export default function UserManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+    <div className="min-h-screen bg-[#19171b] py-4 sm:py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -750,7 +750,7 @@ export default function UserManagementPage() {
               </div>
               <button
                 onClick={() => router.push('/')}
-                className="mt-4 sm:mt-0 px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
+                className="mt-4 sm:mt-0 px-4 py-2 bg-[#09171F]/50 bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
               >
                 Back to Dashboard
               </button>
@@ -760,13 +760,13 @@ export default function UserManagementPage() {
 
         {/* Tab Navigation */}
         <div className="mb-6">
-          <div className="border-b border-gray-200">
+          <div className="border-b border-[#CEA17A]/20">
             <nav className="-mb-px flex space-x-8">
               <button
                 onClick={() => setActiveTab('users')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'users'
-                    ? 'border-gray-500 text-gray-600'
+                    ? 'border-gray-500 text-[#CEA17A]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -776,7 +776,7 @@ export default function UserManagementPage() {
                 onClick={() => setActiveTab('players')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'players'
-                    ? 'border-gray-500 text-gray-600'
+                    ? 'border-gray-500 text-[#CEA17A]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -786,7 +786,7 @@ export default function UserManagementPage() {
                 onClick={() => setActiveTab('skills')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'skills'
-                    ? 'border-gray-500 text-gray-600'
+                    ? 'border-gray-500 text-[#CEA17A]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -801,7 +801,7 @@ export default function UserManagementPage() {
           <div className={`mb-6 p-4 rounded-lg ${
             message.includes('Error') 
               ? 'bg-gray-200 text-gray-800 border border-gray-300' 
-              : 'bg-gray-100 text-gray-700 border border-gray-200'
+              : 'bg-gray-100 text-gray-700 border border-[#CEA17A]/20'
           }`}>
             {message}
           </div>
@@ -825,7 +825,7 @@ export default function UserManagementPage() {
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       filter === filterOption.value
                         ? 'bg-gray-700 text-white'
-                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                        : 'bg-[#09171F]/50 text-[#CEA17A] border border-[#CEA17A]/20 hover:bg-[#19171b]'
                     }`}
                   >
                     {filterOption.label}
@@ -835,34 +835,34 @@ export default function UserManagementPage() {
             </div>
 
         {/* Users Table - Desktop */}
-        <div className="hidden md:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="hidden md:block bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                     Player Profile
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                     Created
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[#09171F]/50 divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={user.id} className="hover:bg-[#19171b] transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
@@ -873,7 +873,7 @@ export default function UserManagementPage() {
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-[#DBD0C0]">
                             {user.firstname && user.lastname 
                               ? `${user.firstname} ${user.lastname}`
                               : user.username || user.email
@@ -896,7 +896,7 @@ export default function UserManagementPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {user.player_profile ? (
                         <div className="flex flex-col space-y-1">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-[#DBD0C0]">
                             {user.player_profile.display_name}
                           </span>
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPlayerProfileStatusColor(user.player_profile.status)}`}>
@@ -915,13 +915,13 @@ export default function UserManagementPage() {
                         <>
                           <button
                             onClick={() => updateUserStatus(user.id, 'approved')}
-                            className="text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-xs"
+                            className="text-[#CEA17A] hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-xs"
                           >
                             Approve
                           </button>
                           <button
                             onClick={() => updateUserStatus(user.id, 'rejected')}
-                            className="text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-xs"
+                            className="text-[#CEA17A] hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-xs"
                           >
                             Reject
                           </button>
@@ -940,7 +940,7 @@ export default function UserManagementPage() {
                           </select>
                           <button
                             onClick={() => resetUserPassword(user.id, user.email)}
-                            className="text-xs text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+                            className="text-xs text-[#CEA17A] hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
                           >
                             Reset Password
                           </button>
@@ -973,7 +973,7 @@ export default function UserManagementPage() {
         {/* Mobile Cards */}
         <div className="md:hidden space-y-4">
           {filteredUsers.map((user) => (
-            <div key={user.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div key={user.id} className="bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-10 w-10">
@@ -984,7 +984,7 @@ export default function UserManagementPage() {
                     </div>
                   </div>
                   <div className="ml-3">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-[#DBD0C0]">
                       {user.firstname && user.lastname 
                         ? `${user.firstname} ${user.lastname}`
                         : user.username || user.email
@@ -1002,7 +1002,7 @@ export default function UserManagementPage() {
                   </span>
                   {user.player_profile && (
                     <div className="flex flex-col space-y-1">
-                      <span className="text-xs text-gray-600">
+                      <span className="text-xs text-[#CEA17A]">
                         Player: {user.player_profile.display_name}
                       </span>
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPlayerProfileStatusColor(user.player_profile.status)}`}>
@@ -1028,7 +1028,7 @@ export default function UserManagementPage() {
                     </button>
                     <button
                       onClick={() => updateUserStatus(user.id, 'rejected')}
-                      className="flex-1 bg-gray-500 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-600 transition-colors"
+                      className="flex-1 bg-[#19171b]0 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-600 transition-colors"
                     >
                       Reject
                     </button>
@@ -1089,23 +1089,23 @@ export default function UserManagementPage() {
         {activeTab === 'players' && (
           <>
             {/* Player Profiles Table - Desktop */}
-            <div className="hidden md:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="hidden md:block bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-100">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Player</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">User</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Created</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Player</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">User</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Role</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Created</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-[#09171F]/50 divide-y divide-gray-200">
                     {playerProfiles.map((player) => (
-                      <tr key={player.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={player.id} className="hover:bg-[#19171b] transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
@@ -1113,20 +1113,20 @@ export default function UserManagementPage() {
                                 <img className="h-10 w-10 rounded-full object-cover" src={player.profile_pic_url} alt={player.display_name} />
                               ) : (
                                 <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-gray-600">
+                                  <span className="text-sm font-medium text-[#CEA17A]">
                                     {player.display_name ? player.display_name.charAt(0).toUpperCase() : '?'}
                                   </span>
                                 </div>
                               )}
                             </div>
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{player.display_name}</div>
+                              <div className="text-sm font-medium text-[#DBD0C0]">{player.display_name}</div>
                               <div className="text-sm text-gray-500">{player.bio}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
+                          <div className="text-sm text-[#DBD0C0]">
                             {player.users?.firstname && player.users?.lastname 
                               ? `${player.users.firstname} ${player.users.lastname}`
                               : player.users?.email
@@ -1134,10 +1134,10 @@ export default function UserManagementPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">Player</div>
+                          <div className="text-sm text-[#DBD0C0]">Player</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">-</div>
+                          <div className="text-sm text-[#DBD0C0]">-</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(player.status)}`}>
@@ -1177,19 +1177,19 @@ export default function UserManagementPage() {
             {/* Player Profiles Cards - Mobile */}
             <div className="md:hidden space-y-4">
               {playerProfiles.map((player) => (
-                <div key={player.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div key={player.id} className="bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 p-4">
                   <div className="flex items-center space-x-3 mb-3">
                     {player.profile_pic_url ? (
                       <img className="h-12 w-12 rounded-full object-cover" src={player.profile_pic_url} alt={player.display_name} />
                     ) : (
                       <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-600">
+                        <span className="text-sm font-medium text-[#CEA17A]">
                           {player.display_name ? player.display_name.charAt(0).toUpperCase() : '?'}
                         </span>
                       </div>
                     )}
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{player.display_name}</div>
+                      <div className="text-sm font-medium text-[#DBD0C0]">{player.display_name}</div>
                       <div className="text-sm text-gray-500">
                         {player.users?.firstname && player.users?.lastname 
                           ? `${player.users.firstname} ${player.users.lastname}`
@@ -1202,11 +1202,11 @@ export default function UserManagementPage() {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Role:</span>
-                      <span className="text-sm text-gray-900">Player</span>
+                      <span className="text-sm text-[#DBD0C0]">Player</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Price:</span>
-                      <span className="text-sm text-gray-900">-</span>
+                      <span className="text-sm text-[#DBD0C0]">-</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Status:</span>
@@ -1216,7 +1216,7 @@ export default function UserManagementPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Created:</span>
-                      <span className="text-sm text-gray-900">{new Date(player.created_at).toLocaleDateString()}</span>
+                      <span className="text-sm text-[#DBD0C0]">{new Date(player.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
 
@@ -1254,9 +1254,9 @@ export default function UserManagementPage() {
         {/* Skills Tab Content */}
         {activeTab === 'skills' && (
           <>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+            <div className="bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Player Skills Configuration</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-[#DBD0C0]">Player Skills Configuration</h2>
                 <button 
                   onClick={() => setIsAddingSkill(true)}
                   className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -1267,8 +1267,8 @@ export default function UserManagementPage() {
 
               {/* Add New Skill Form */}
               {isAddingSkill && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4">Add New Player Skill</h3>
+                <div className="mb-6 p-4 bg-[#19171b] rounded-lg">
+                  <h3 className="text-base sm:text-lg font-medium text-[#DBD0C0] mb-4">Add New Player Skill</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1315,7 +1315,7 @@ export default function UserManagementPage() {
                         id="required"
                         checked={newSkill.required}
                         onChange={(e) => setNewSkill(prev => ({ ...prev, required: e.target.checked }))}
-                        className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-[#CEA17A] focus:ring-gray-500 border-gray-300 rounded"
                       />
                       <label htmlFor="required" className="ml-2 text-sm text-gray-700">
                         Required field
@@ -1327,7 +1327,7 @@ export default function UserManagementPage() {
                         id="isAdminManaged"
                         checked={newSkill.isAdminManaged}
                         onChange={(e) => setNewSkill(prev => ({ ...prev, isAdminManaged: e.target.checked }))}
-                        className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-[#CEA17A] focus:ring-gray-500 border-gray-300 rounded"
                       />
                       <label htmlFor="isAdminManaged" className="ml-2 text-sm text-gray-700">
                         Admin managed (only admins/hosts can edit)
@@ -1339,7 +1339,7 @@ export default function UserManagementPage() {
                         id="viewerCanSee"
                         checked={newSkill.viewerCanSee}
                         onChange={(e) => setNewSkill(prev => ({ ...prev, viewerCanSee: e.target.checked }))}
-                        className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-[#CEA17A] focus:ring-gray-500 border-gray-300 rounded"
                       />
                       <label htmlFor="viewerCanSee" className="ml-2 text-sm text-gray-700">
                         Viewer can see this skill
@@ -1352,7 +1352,7 @@ export default function UserManagementPage() {
                         setIsAddingSkill(false)
                         setNewSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
                       }}
-                      className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-[#19171b] transition-colors"
                     >
                       Cancel
                     </button>
@@ -1370,14 +1370,14 @@ export default function UserManagementPage() {
               {/* Skills List */}
               <div className="space-y-3">
                 {playerSkills.map((skill) => (
-                  <div key={skill.id} className="border border-gray-200 rounded-lg">
+                  <div key={skill.id} className="border border-[#CEA17A]/20 rounded-lg">
                     {/* Skill Header - Always Visible */}
                     <div className="p-4">
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
                         <div className="flex items-center space-x-3 flex-1">
                           <button
                             onClick={() => toggleSkillExpansion(skill.id)}
-                            className="flex items-center space-x-2 text-left hover:bg-gray-50 p-2 rounded transition-colors flex-1"
+                            className="flex items-center space-x-2 text-left hover:bg-[#19171b] p-2 rounded transition-colors flex-1"
                           >
                             <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
                               {expandedSkills.has(skill.id) ? (
@@ -1391,7 +1391,7 @@ export default function UserManagementPage() {
                               )}
                             </div>
                             <div className="flex-1">
-                              <h3 className="text-base sm:text-lg font-medium text-gray-900">{skill.skill_name}</h3>
+                              <h3 className="text-base sm:text-lg font-medium text-[#DBD0C0]">{skill.skill_name}</h3>
                               <div className="flex flex-wrap items-center gap-2 mt-1">
                                 <span className="text-xs sm:text-sm text-gray-500">Type: {skill.skill_type}</span>
                                 <span className="text-xs sm:text-sm text-gray-500">Order: {skill.display_order}</span>
@@ -1448,7 +1448,7 @@ export default function UserManagementPage() {
 
                     {/* Collapsible Content */}
                     {expandedSkills.has(skill.id) && (
-                      <div className="border-t border-gray-200 p-4 bg-gray-50">
+                      <div className="border-t border-[#CEA17A]/20 p-4 bg-[#19171b]">
                         {/* Skill Values */}
                         <div className="mt-3">
                       <div className="flex justify-between items-center mb-2">
@@ -1467,11 +1467,11 @@ export default function UserManagementPage() {
                       {skill.values && skill.values.length > 0 && (
                         <div className="space-y-2">
                           {skill.values.map((value) => (
-                            <div key={value.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                            <div key={value.id} className="flex items-center justify-between bg-[#19171b] p-2 rounded">
                               <span className={`px-2 py-1 text-xs rounded-full ${
                                 value.is_active 
                                   ? 'bg-green-100 text-green-800' 
-                                  : 'bg-gray-100 text-gray-600'
+                                  : 'bg-gray-100 text-[#CEA17A]'
                               }`}>
                                 {value.value_name}
                               </span>
@@ -1505,7 +1505,7 @@ export default function UserManagementPage() {
                       {/* Add Value Form */}
                       {isAddingValue && newValue.skillId === skill.id && (
                         <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                          <h5 className="text-sm font-medium text-gray-900 mb-2">Add New Value</h5>
+                          <h5 className="text-sm font-medium text-[#DBD0C0] mb-2">Add New Value</h5>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -1538,7 +1538,7 @@ export default function UserManagementPage() {
                                 setIsAddingValue(false)
                                 setNewValue({ skillId: '', valueName: '', displayOrder: 0 })
                               }}
-                              className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                              className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-[#19171b] transition-colors"
                             >
                               Cancel
                             </button>
@@ -1556,7 +1556,7 @@ export default function UserManagementPage() {
                       {/* Edit Value Form */}
                       {isEditingValue && editingValue.skillId === skill.id && (
                         <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <h5 className="text-sm font-medium text-gray-900 mb-2">Edit Value</h5>
+                          <h5 className="text-sm font-medium text-[#DBD0C0] mb-2">Edit Value</h5>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -1589,7 +1589,7 @@ export default function UserManagementPage() {
                                 setIsEditingValue(null)
                                 setEditingValue({ skillId: '', valueId: '', valueName: '', displayOrder: 0 })
                               }}
-                              className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                              className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-[#19171b] transition-colors"
                             >
                               Cancel
                             </button>
@@ -1610,7 +1610,7 @@ export default function UserManagementPage() {
                     {/* Edit Form */}
                     {isEditingSkill === skill.id && (
                       <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 className="text-sm font-medium text-gray-900 mb-3">Edit Skill</h4>
+                        <h4 className="text-sm font-medium text-[#DBD0C0] mb-3">Edit Skill</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1694,7 +1694,7 @@ export default function UserManagementPage() {
                               setIsEditingSkill(null)
                               setEditingSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
                             }}
-                            className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-[#19171b] transition-colors"
                           >
                             Cancel
                           </button>

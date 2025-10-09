@@ -181,15 +181,15 @@ export default function CreatePlayerPage() {
   // Show loading state while checking authentication
   if (isLoadingUser) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-[#19171b] py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold text-[#DBD0C0] mb-2">
                 Checking Access...
               </h2>
-              <p className="text-gray-600">
+              <p className="text-[#CEA17A]">
                 Verifying your permissions to create players
               </p>
             </div>
@@ -202,15 +202,15 @@ export default function CreatePlayerPage() {
   // Show access denied if user is not authenticated or doesn't have permission
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-[#19171b] py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-8">
             <div className="text-center">
               <div className="text-red-500 text-6xl mb-4">🚫</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">
                 Access Denied
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-[#CEA17A] mb-6">
                 {message || 'You need to be a host or admin to create players.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -235,7 +235,7 @@ export default function CreatePlayerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#19171b] py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -244,14 +244,14 @@ export default function CreatePlayerPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Add New Player</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold text-[#DBD0C0] mb-4">Add New Player</h1>
+          <p className="text-xl text-[#CEA17A] max-w-2xl mx-auto">
             Create a new player profile with detailed information and ratings
           </p>
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-[#09171F]/50 rounded-2xl shadow-2xl overflow-hidden">
           <div className="bg-gray-700 px-8 py-6">
             <h2 className="text-2xl font-bold text-white">Player Information</h2>
             <p className="text-gray-200 mt-2">Fill in the player details below</p>
@@ -262,7 +262,7 @@ export default function CreatePlayerPage() {
               {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label htmlFor="display_name" className="block text-sm font-semibold text-gray-700">
+                  <label htmlFor="display_name" className="block text-sm font-semibold text-[#CEA17A]">
                     Display Name *
                   </label>
                   <input
@@ -272,13 +272,13 @@ export default function CreatePlayerPage() {
                     value={formData.display_name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                     placeholder="Enter player's display name"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="mobile_number" className="block text-sm font-semibold text-gray-700">
+                  <label htmlFor="mobile_number" className="block text-sm font-semibold text-[#CEA17A]">
                     Mobile Number
                   </label>
                   <input
@@ -287,7 +287,7 @@ export default function CreatePlayerPage() {
                     name="mobile_number"
                     value={formData.mobile_number}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                     placeholder="Enter mobile number (optional)"
                   />
                 </div>
@@ -295,7 +295,7 @@ export default function CreatePlayerPage() {
 
               {/* Profile Picture */}
               <div className="space-y-2">
-                <label htmlFor="profile_pic_url" className="block text-sm font-semibold text-gray-700">
+                <label htmlFor="profile_pic_url" className="block text-sm font-semibold text-[#CEA17A]">
                   Profile Picture URL
                 </label>
                 <input
@@ -304,14 +304,14 @@ export default function CreatePlayerPage() {
                   name="profile_pic_url"
                   value={formData.profile_pic_url}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                  className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                   placeholder="Enter profile picture URL (optional)"
                 />
               </div>
 
               {/* Bio */}
               <div className="space-y-2">
-                <label htmlFor="bio" className="block text-sm font-semibold text-gray-700">
+                <label htmlFor="bio" className="block text-sm font-semibold text-[#CEA17A]">
                   Bio
                 </label>
                 <textarea
@@ -320,7 +320,7 @@ export default function CreatePlayerPage() {
                   value={formData.bio}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50 resize-none"
+                  className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b] resize-none"
                   placeholder="Enter player bio (optional)"
                 />
               </div>
@@ -330,14 +330,14 @@ export default function CreatePlayerPage() {
                 <div className="space-y-4">
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                    <p className="text-gray-600 mt-2">Loading player skills...</p>
+                    <p className="text-[#CEA17A] mt-2">Loading player skills...</p>
                   </div>
                 </div>
               ) : playerSkills.length === 0 ? (
                 <div className="space-y-4">
                   <div className="text-center py-8">
                     <div className="text-gray-500 text-4xl mb-4">⚠️</div>
-                    <p className="text-gray-600">No player skills configured yet.</p>
+                    <p className="text-[#CEA17A]">No player skills configured yet.</p>
                     <p className="text-sm text-gray-500 mt-2">
                       Please configure player skills in the admin panel first.
                     </p>
@@ -345,7 +345,7 @@ export default function CreatePlayerPage() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-sm font-semibold text-[#CEA17A]">
                     Player Skills & Attributes
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -362,13 +362,13 @@ export default function CreatePlayerPage() {
 
                       return (
                         <div key={skill.id} className="space-y-2">
-                          <label htmlFor={skillKey} className="block text-sm font-medium text-gray-700">
+                          <label htmlFor={skillKey} className="block text-sm font-medium text-[#CEA17A]">
                             {skill.skill_name} {skill.is_required && '*'}
                           </label>
                           
                           {isMultiSelect ? (
                             // Multi-select with checkboxes
-                            <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-gray-200 rounded-xl p-3 bg-gray-50">
+                            <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-[#CEA17A]/20 rounded-xl p-3 bg-[#19171b]">
                               {skill.values && skill.values.map((value) => (
                                 <label key={value.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
                                   <input
@@ -387,7 +387,7 @@ export default function CreatePlayerPage() {
                                     }}
                                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                                   />
-                                  <span className="text-sm text-gray-700">{value.value_name}</span>
+                                  <span className="text-sm text-[#CEA17A]">{value.value_name}</span>
                                 </label>
                               ))}
                               {Array.isArray(currentValue) && currentValue.length > 0 && (
@@ -408,7 +408,7 @@ export default function CreatePlayerPage() {
                                 setFormData({ ...formData, skills: newSkills })
                               }}
                               required={skill.is_required}
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-gray-50"
+                              className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200 bg-[#19171b]"
                             >
                               <option value="">Select {skill.skill_name}</option>
                               {skill.values && skill.values.map((value) => (
@@ -452,17 +452,17 @@ export default function CreatePlayerPage() {
               )}
 
               {/* Submit Section */}
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-[#CEA17A]/20">
                 <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
                   <div className="text-center sm:text-left">
-                    <h3 className="text-lg font-semibold text-gray-900">Ready to Add Player?</h3>
-                    <p className="text-sm text-gray-600">Review the information and create the player profile</p>
+                    <h3 className="text-lg font-semibold text-[#DBD0C0]">Ready to Add Player?</h3>
+                    <p className="text-sm text-[#CEA17A]">Review the information and create the player profile</p>
                   </div>
                   <div className="flex space-x-3">
                     <button
                       type="button"
                       onClick={() => router.back()}
-                      className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200"
+                      className="px-6 py-3 text-[#CEA17A] hover:text-gray-800 font-medium transition-colors duration-200"
                     >
                       Cancel
                     </button>
