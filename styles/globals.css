@@ -15,6 +15,7 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+
 /* Custom animations for modern effects */
 @keyframes fade-in {
   from {
