@@ -12,8 +12,8 @@ export default function PlayerProfilePrompt({ onClose, returnUrl = '/' }: Player
   const router = useRouter()
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="relative bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-[#CEA17A]/20">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="relative bg-gradient-to-br from-[#0a0a0a]/80 via-[#1a0000]/80 to-[#2a0000]/80 backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-[#CEA17A]/20">
         
         {/* Content */}
         <div className="relative z-10 p-6 sm:p-8">
