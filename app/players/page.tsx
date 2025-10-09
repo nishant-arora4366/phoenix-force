@@ -380,6 +380,18 @@ export default function PlayersPage() {
                   </svg>
                 </button>
               </div>
+
+              {/* Clear Filters */}
+              <button
+                onClick={() => {
+                  setSearchTerm('')
+                  setSkillFilters({})
+                }}
+                className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
+                title="Clear all filters"
+              >
+                Clear Filters
+              </button>
             </div>
           </div>
         </div>
