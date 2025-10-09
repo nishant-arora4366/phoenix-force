@@ -92,11 +92,8 @@ export default function Navbar() {
     router.push(backPath)
   }
 
-  // Check if we should show back button (not on home page)
-  const shouldShowBackButton = pathname !== '/'
-  
-  // Debug: Log current pathname
-  console.log('Current pathname:', pathname, 'Should show back button:', shouldShowBackButton)
+  // Back button should always be visible (not conditional)
+  const shouldShowBackButton = true
 
   const getDisplayName = () => {
     if (user?.firstname && user?.lastname) {
@@ -194,21 +191,17 @@ export default function Navbar() {
             
             {/* Left Side - Brand (Desktop) / Hamburger (Mobile) */}
             <div className="flex items-center space-x-4">
-              {/* Back Button Container - Always reserves space on desktop */}
+              {/* Back Button - Desktop Only, Always Visible */}
               <div className="hidden sm:block">
-                {shouldShowBackButton ? (
-                  <button
-                    onClick={handleBackNavigation}
-                    className="flex items-center space-x-2 p-3 rounded-lg text-[#DBD0C0] hover:text-[#75020f] hover:bg-[#75020f]/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#75020f] transition-all duration-300"
-                  >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    <span className="text-sm font-medium">Back</span>
-                  </button>
-                ) : (
-                  <div className="w-20 h-12 bg-red-500/20"></div>
-                )}
+                <button
+                  onClick={handleBackNavigation}
+                  className="flex items-center space-x-2 p-3 rounded-lg text-[#DBD0C0] hover:text-[#75020f] hover:bg-[#75020f]/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#75020f] transition-all duration-300"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  <span className="text-sm font-medium">Back</span>
+                </button>
               </div>
 
               {/* Hamburger Menu Container - Always reserves space on mobile */}
@@ -375,17 +368,15 @@ export default function Navbar() {
         />
       )}
 
-      {/* Floating Back Button - Mobile Only, Show on all pages except home */}
-      {shouldShowBackButton && (
-        <button
-          onClick={handleBackNavigation}
-          className="fixed bottom-6 left-6 sm:hidden z-40 w-14 h-14 bg-[#75020f] hover:bg-[#75020f]/90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
-        >
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-        </button>
-      )}
+      {/* Floating Back Button - Mobile Only, Always Visible with Glass Effect */}
+      <button
+        onClick={handleBackNavigation}
+        className="fixed bottom-6 left-6 sm:hidden z-40 w-14 h-14 bg-white/10 backdrop-blur-md hover:bg-white/15 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center border border-white/20 hover:border-white/40"
+      >
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
     </>
   )
 }
