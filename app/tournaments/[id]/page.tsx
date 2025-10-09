@@ -2816,7 +2816,7 @@ export default function TournamentDetailsPage() {
                 <button
                   onClick={confirmStatusChange}
                   disabled={isUpdatingStatus}
-                  className="flex-1 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-green-500/15 text-green-300 border border-green-500/25 shadow-lg shadow-green-500/10 backdrop-blur-sm rounded-lg hover:bg-green-500/25 hover:border-green-500/40 transition-all duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUpdatingStatus ? 'Updating...' : 'Confirm Change'}
                 </button>
