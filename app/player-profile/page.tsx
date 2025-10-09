@@ -370,81 +370,153 @@ function PlayerProfileContent() {
           </div>
         )}
 
-        {/* Player Card - Similar to Players Details Page */}
+        {/* Player Profile Details Card */}
         {!isEditing && playerProfile && (
-          <div className="group bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150 mb-6 sm:mb-8">
-            {/* Player Image Header */}
-            <div className="relative h-64 sm:h-80 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-              {playerProfile.profile_pic_url ? (
-                <img
-                  src={playerProfile.profile_pic_url}
-                  alt={playerProfile.display_name}
-                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center">
-                  <div className="text-8xl text-gray-400">🏏</div>
-                </div>
-              )}
-              
-              {/* Price Badge */}
-              {formData.skills?.['Base Price'] && (
-                <div className="absolute top-4 right-4 bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-                  ₹{formData.skills['Base Price']}
-                </div>
-              )}
-              
-              {/* Status Badge */}
-              <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-medium shadow-lg ${
-                playerProfile.status === 'approved' 
-                  ? 'bg-green-600 text-white'
-                  : playerProfile.status === 'pending'
-                  ? 'bg-yellow-600 text-white'
-                  : 'bg-red-600 text-white'
-              }`}>
-                {playerProfile.status.charAt(0).toUpperCase() + playerProfile.status.slice(1)}
-              </div>
+          <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150 mb-6 sm:mb-8">
+            <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-8 py-4 sm:py-6 border-b border-[#CEA17A]/20">
+              <h2 className="text-lg sm:text-2xl font-bold text-[#DBD0C0]">Player Profile Information</h2>
             </div>
-
-            {/* Player Info */}
-            <div className="p-4 sm:p-6">
-              <div className="mb-4">
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors mb-2">
-                  {playerProfile.display_name}
-                </h1>
-              </div>
-
-              {/* Bio */}
-              {playerProfile.bio && (
-                <p className="text-[#CEA17A] text-sm leading-relaxed mb-4">{playerProfile.bio}</p>
-              )}
-
-              {/* Skills and Attributes */}
-              {Object.keys(formData.skills).length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {Object.entries(formData.skills).map(([skillName, skillValue]) => (
-                    <span key={skillName} className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-3 py-1 rounded-full font-medium">
-                      {skillName}: {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                    </span>
-                  ))}
+            
+            <div className="p-4 sm:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                {/* Player Photo - Square on the side */}
+                <div className="lg:col-span-1">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-[#CEA17A]">
+                      Profile Picture
+                    </label>
+                    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden border-2 border-[#CEA17A]/20">
+                      {playerProfile.profile_pic_url ? (
+                        <img
+                          src={playerProfile.profile_pic_url}
+                          alt={playerProfile.display_name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center">
+                          <div className="text-6xl text-[#CEA17A]/60">🏏</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
 
-              {/* Mobile Number */}
-              {playerProfile.mobile_number && (
-                <div className="text-sm text-[#CEA17A] mb-4">
-                  📱 {playerProfile.mobile_number}
+                {/* Player Details - Label-Value Format */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-[#CEA17A]">
+                        Display Name
+                      </label>
+                      <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] font-medium">
+                        {playerProfile.display_name}
+                      </div>
+                    </div>
+
+                    {playerProfile.mobile_number && (
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-[#CEA17A]">
+                          Mobile Number
+                        </label>
+                        <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]">
+                          {playerProfile.mobile_number}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Profile Status */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-[#CEA17A]">
+                      Profile Status
+                    </label>
+                    <div className={`px-4 py-3 border-2 rounded-xl backdrop-blur-sm font-medium ${
+                      playerProfile.status === 'approved' 
+                        ? 'border-[#CEA17A]/30 bg-[#CEA17A]/20 text-[#CEA17A]'
+                        : playerProfile.status === 'pending'
+                        ? 'border-[#CEA17A]/30 bg-[#CEA17A]/20 text-[#CEA17A]'
+                        : 'border-[#75020f]/30 bg-[#75020f]/20 text-[#75020f]'
+                    }`}>
+                      <div className="flex items-center">
+                        <div className={`w-5 h-5 mr-3 ${
+                          playerProfile.status === 'approved' ? 'text-[#CEA17A]' : 
+                          playerProfile.status === 'pending' ? 'text-[#CEA17A]' : 'text-[#75020f]'
+                        }`}>
+                          {playerProfile.status === 'approved' ? (
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          ) : playerProfile.status === 'pending' ? (
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-semibold">
+                            {playerProfile.status.charAt(0).toUpperCase() + playerProfile.status.slice(1)}
+                          </div>
+                          <div className="text-sm mt-1">
+                            {playerProfile.status === 'approved' 
+                              ? 'Your profile is approved and visible to all users.'
+                              : playerProfile.status === 'pending'
+                              ? 'Your profile is under review by an admin.'
+                              : 'Your profile was rejected. Please update and resubmit.'
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bio */}
+                  {playerProfile.bio && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-[#CEA17A]">
+                        Bio
+                      </label>
+                      <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] leading-relaxed">
+                        {playerProfile.bio}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Player Skills & Attributes */}
+                  {Object.keys(formData.skills).length > 0 && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-[#CEA17A]">
+                        Skills & Attributes
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Object.entries(formData.skills).map(([skillName, skillValue]) => (
+                          <div key={skillName} className="space-y-1">
+                            <label className="block text-xs font-medium text-[#CEA17A]/80">
+                              {skillName}
+                            </label>
+                            <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
+                              {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#CEA17A]/20">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium text-sm sm:text-base"
+                    >
+                      Edit Profile
+                    </button>
+                  </div>
                 </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-[#CEA17A]/20">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium text-sm sm:text-base"
-                >
-                  Edit Profile
-                </button>
               </div>
             </div>
           </div>
@@ -711,85 +783,61 @@ function PlayerProfileContent() {
           </div>
         )}
 
-        {/* Additional Information - Similar to Players Details Page */}
+        {/* Quick Stats Card */}
         {!isEditing && playerProfile && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Skills & Attributes */}
-            <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
-              <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
-                <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
-                  <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
-                    ⚡
-                  </span>
-                  Skills & Attributes
-                </h3>
-              </div>
-              <div className="p-4 sm:p-6">
-                {Object.keys(formData.skills).length > 0 ? (
-                  <div className="space-y-3">
-                    {Object.entries(formData.skills).map(([skillName, skillValue]) => (
-                      <div key={skillName} className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20 last:border-b-0">
-                        <span className="text-sm font-medium text-[#CEA17A]">{skillName}</span>
-                        <span className="text-sm font-bold text-[#DBD0C0]">
-                          {Array.isArray(skillValue) ? skillValue.join(', ') : skillValue}
-                        </span>
-                      </div>
-                    ))}
+          <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
+            <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
+              <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
+                <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
+                  📊
+                </span>
+                Quick Stats
+              </h3>
+            </div>
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-[#CEA17A]/80">
+                    Status
+                  </label>
+                  <div className={`px-3 py-2 border rounded-lg backdrop-blur-sm text-sm font-medium ${
+                    playerProfile.status === 'approved' 
+                      ? 'border-[#CEA17A]/20 bg-[#CEA17A]/20 text-[#CEA17A]'
+                      : playerProfile.status === 'pending'
+                      ? 'border-[#CEA17A]/20 bg-[#CEA17A]/20 text-[#CEA17A]'
+                      : 'border-[#75020f]/20 bg-[#75020f]/20 text-[#75020f]'
+                  }`}>
+                    {playerProfile.status.charAt(0).toUpperCase() + playerProfile.status.slice(1)}
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="text-[#CEA17A]/50 text-4xl mb-3">⚡</div>
-                    <p className="text-[#CEA17A]/70 text-sm">No skills and attributes configured yet</p>
+                </div>
+                {formData.skills?.['Base Price'] && (
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-[#CEA17A]/80">
+                      Base Price
+                    </label>
+                    <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm font-medium">
+                      ₹{formData.skills['Base Price']}
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Profile Info */}
-            <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
-              <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
-                <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
-                  <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
-                    📊
-                  </span>
-                  Profile Info
-                </h3>
-              </div>
-              <div className="p-4 sm:p-6">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
-                    <span className="text-sm text-[#CEA17A]">Status</span>
-                    <span className={`font-bold text-sm px-2 py-1 rounded-full ${
-                      playerProfile.status === 'approved' 
-                        ? 'bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
-                        : playerProfile.status === 'pending'
-                        ? 'bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
-                        : 'bg-[#75020f]/20 text-[#75020f] border border-[#75020f]/30'
-                    }`}>
-                      {playerProfile.status.charAt(0).toUpperCase() + playerProfile.status.slice(1)}
-                    </span>
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-[#CEA17A]/80">
+                    Created
+                  </label>
+                  <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
+                    {new Date(playerProfile.created_at).toLocaleDateString()}
                   </div>
-                  {formData.skills?.['Base Price'] && (
-                    <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
-                      <span className="text-sm text-[#CEA17A]">Base Price</span>
-                      <span className="font-bold text-[#DBD0C0]">₹{formData.skills['Base Price']}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center py-2 border-b border-[#CEA17A]/20">
-                    <span className="text-sm text-[#CEA17A]">Created</span>
-                    <span className="font-bold text-[#DBD0C0]">
-                      {new Date(playerProfile.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {playerProfile.updated_at && (
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-sm text-[#CEA17A]">Updated</span>
-                      <span className="font-bold text-[#DBD0C0]">
-                        {new Date(playerProfile.updated_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
                 </div>
+                {playerProfile.updated_at && (
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-[#CEA17A]/80">
+                      Updated
+                    </label>
+                    <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
+                      {new Date(playerProfile.updated_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
