@@ -316,8 +316,8 @@ export default function Home() {
         <div className="absolute top-1/4 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-[#75020f] to-transparent animate-pulse" style={{animationDelay: '0.5s'}}></div>
         <div className="absolute bottom-1/4 right-1/4 w-1/2 h-px bg-gradient-to-l from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '1.5s'}}></div>
         
-        <div className="relative w-full px-4 sm:px-6 lg:px-8 py-8 z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
+        <div className="relative w-full px-2 sm:px-6 lg:px-8 py-8 z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[80vh]">
             {/* Left Side - Content */}
             <div className="text-center sm:text-left relative z-20">
               <div className="animate-fade-in-up">
@@ -348,7 +348,7 @@ export default function Home() {
             
             {/* Right Side - Upcoming Tournaments */}
             <div className="relative animate-fade-in-up delay-300 z-20">
-              <div className="bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-2xl p-8 shadow-2xl border border-[#CEA17A]/20 animate-card-glow animate-border-glow">
+              <div className="bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-2xl p-4 sm:p-8 shadow-2xl border border-[#CEA17A]/20 animate-card-glow animate-border-glow">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-[#DBD0C0]">Featured Tournaments</h3>
                         <Link
@@ -359,7 +359,7 @@ export default function Home() {
               </Link>
             </div>
                 
-                <div className="flex flex-col gap-6 h-[500px]">
+                <div className="flex flex-col gap-3 sm:gap-6 h-[500px]">
                   {tournamentsLoading ? (
                     // Loading skeleton
                     Array.from({ length: 2 }).map((_, index) => (
@@ -370,7 +370,7 @@ export default function Home() {
                     ))
                   ) : upcomingTournaments.length > 0 ? (
                     upcomingTournaments.map((tournament) => (
-                      <Link key={tournament.id} href={`/tournaments/${tournament.id}`} className="block bg-[#19171b]/50 rounded-lg p-6 hover:bg-[#19171b]/70 transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow cursor-pointer flex-1 flex flex-col">
+                      <Link key={tournament.id} href={`/tournaments/${tournament.id}`} className="block bg-[#19171b]/50 rounded-lg p-4 sm:p-6 hover:bg-[#19171b]/70 transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow cursor-pointer flex-1 flex flex-col">
                         <div className="flex items-start justify-between mb-4">
                           <h4 className="text-[#DBD0C0] font-semibold text-base leading-tight">{tournament.name}</h4>
                           <span className={`w-32 px-3 py-1.5 rounded-lg text-xs font-medium backdrop-blur-sm border text-center ${
