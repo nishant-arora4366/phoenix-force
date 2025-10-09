@@ -1639,7 +1639,7 @@ export default function TournamentDetailsPage() {
                   {/* Stats Grid */}
                   {slotsStats && (
                     <div className="mt-6 pt-6 border-t border-[#CEA17A]/20">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {/* Total Slots Card */}
                         <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
                           {/* Luxury Gradient Overlay */}
@@ -1656,8 +1656,8 @@ export default function TournamentDetailsPage() {
                               </div>
                             </div>
                             <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-[#CEA17A]" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                              <svg className="w-5 h-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                               </svg>
                             </div>
                           </div>
@@ -1679,8 +1679,8 @@ export default function TournamentDetailsPage() {
                               </div>
                             </div>
                             <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-[#CEA17A]" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              <svg className="w-5 h-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
                           </div>
@@ -1702,8 +1702,8 @@ export default function TournamentDetailsPage() {
                               </div>
                             </div>
                             <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-[#CEA17A]" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                              <svg className="w-5 h-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
                           </div>
@@ -1725,8 +1725,8 @@ export default function TournamentDetailsPage() {
                               </div>
                             </div>
                             <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-[#CEA17A]" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              <svg className="w-5 h-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
                           </div>
