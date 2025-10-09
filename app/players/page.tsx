@@ -466,7 +466,7 @@ export default function PlayersPage() {
         </div>
 
         {/* Search and Sort Row */}
-        <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-4">
+        <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-4 relative z-20">
           <div className="flex flex-col sm:flex-row gap-4 items-center">
             {/* Search Bar */}
             <div className="flex-1">
@@ -558,7 +558,7 @@ export default function PlayersPage() {
 
         {/* Filter Bar Row */}
         {showFilterBar && (
-          <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-8">
+          <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-8 relative z-20">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
             {/* Dynamic Skills Filters */}
             {visibleSkills.length > 0 && (
@@ -609,7 +609,7 @@ export default function PlayersPage() {
               <div 
                 key={player.id} 
                 onClick={() => router.push(`/players/${player.id}`)}
-                className="group relative aspect-square overflow-hidden bg-gradient-to-br from-[#3E4E5A] to-[#09171F] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 cursor-pointer z-0"
+                className="group relative aspect-square overflow-hidden bg-gradient-to-br from-[#3E4E5A] to-[#09171F] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-300 cursor-pointer z-[-1]"
                 style={{ minHeight: '200px' }}
               >
                 {/* Player Image Background */}
