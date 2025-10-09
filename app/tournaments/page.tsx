@@ -15,8 +15,13 @@ interface Tournament {
   host_id: string
   status: string
   total_slots: number
+  venue?: string
+  google_maps_link?: string
   created_at: string
   updated_at: string
+  filled_slots?: number
+  waitlist_count?: number
+  available_slots?: number
 }
 
 interface User {
@@ -34,7 +39,36 @@ const fetcher = async (url: string) => {
     throw new Error('Failed to fetch tournaments')
   }
   const result = await response.json()
-  return result.tournaments || []
+  const tournaments = result.tournaments || []
+  
+  // Define status priority: Open first, then Opening Soon, then Closed
+  const getStatusPriority = (status: string) => {
+    switch (status) {
+      case 'registration_open': return 1 // Open - highest priority
+      case 'draft': return 2 // Opening Soon
+      case 'registration_closed': return 3
+      case 'auction_started': return 4
+      case 'auction_completed': return 5
+      case 'teams_formed': return 6
+      case 'completed': return 7 // Closed
+      case 'in_progress': return 8 // Closed
+      default: return 9
+    }
+  }
+
+  // Sort tournaments by status priority first, then by date
+  return tournaments.sort((a: any, b: any) => {
+    const statusPriorityA = getStatusPriority(a.status)
+    const statusPriorityB = getStatusPriority(b.status)
+    
+    // If status priorities are different, sort by status
+    if (statusPriorityA !== statusPriorityB) {
+      return statusPriorityA - statusPriorityB
+    }
+    
+    // If same status, sort by date (earliest first)
+    return new Date(a.tournament_date).getTime() - new Date(b.tournament_date).getTime()
+  })
 }
 
 const getStatusColor = (status: string) => {
@@ -268,9 +302,9 @@ export default function TournamentsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
-              <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+              <div className="p-2 sm:p-3 bg-[#CEA17A]/10 rounded-lg">
                 <svg className="h-4 w-4 sm:h-6 sm:w-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
               <div className="ml-4">
@@ -282,8 +316,8 @@ export default function TournamentsPage() {
 
           <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
-              <div className="p-2 sm:p-3 bg-green-100 rounded-lg">
-                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-2 sm:p-3 bg-green-500/10 rounded-lg">
+                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
@@ -298,9 +332,9 @@ export default function TournamentsPage() {
 
           <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
-              <div className="p-2 sm:p-3 bg-yellow-100 rounded-lg">
-                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div className="p-2 sm:p-3 bg-yellow-500/10 rounded-lg">
+                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </div>
               <div className="ml-4">
@@ -314,9 +348,9 @@ export default function TournamentsPage() {
 
           <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
-              <div className="p-2 sm:p-3 bg-purple-100 rounded-lg">
-                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg">
+                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                 </svg>
               </div>
               <div className="ml-4">
@@ -337,8 +371,8 @@ export default function TournamentsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tournaments?.map((tournament) => (
-              <div key={tournament.id} className="bg-[#19171b]/50 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow">
-                <div className="p-6">
+              <div key={tournament.id} className="bg-[#19171b]/50 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow flex flex-col h-full">
+                <div className="p-6 flex flex-col h-full">
                   {/* Tournament Header */}
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-semibold text-[#DBD0C0] line-clamp-2">
@@ -363,7 +397,7 @@ export default function TournamentsPage() {
                   </div>
 
                   {/* Tournament Details */}
-                  <div className="space-y-3 mb-6">
+                  <div className="space-y-3 flex-grow">
                     <div className="flex justify-between items-center">
                       <span className="text-[#CEA17A]">Format:</span>
                       <span className="font-semibold text-[#DBD0C0]">{tournament.format}</span>
@@ -374,26 +408,94 @@ export default function TournamentsPage() {
                       <span className="font-semibold text-[#DBD0C0]">{tournament.selected_teams}</span>
                     </div>
                     
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#CEA17A]">Total Slots:</span>
-                      <span className="font-semibold text-[#DBD0C0]">{tournament.total_slots}</span>
+                    {/* Enhanced Slot Information with Progress Bars */}
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#CEA17A]">Total Slots:</span>
+                        <span className="font-semibold text-[#DBD0C0]">{tournament.total_slots}</span>
+                      </div>
+                      
+                      {/* Main Slots Progress Bar */}
+                      <div>
+                        <div className="flex justify-between text-xs text-[#DBD0C0] mb-1">
+                          <span>Slots filled</span>
+                          <span>{Math.round(((tournament.filled_slots || 0) / (tournament.total_slots || 1)) * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-[#19171b] rounded-full h-1.5">
+                          <div 
+                            className="bg-gradient-to-r from-[#CEA17A] to-[#3E4E5A] h-1.5 rounded-full transition-all duration-300"
+                            style={{ width: `${((tournament.filled_slots || 0) / (tournament.total_slots || 1)) * 100}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-[#CEA17A] mt-1">
+                          <span>{tournament.filled_slots || 0} filled</span>
+                          <span>{tournament.available_slots || tournament.total_slots} available</span>
+                        </div>
+                      </div>
+                      
+                      {/* Waitlist Progress Bar */}
+                      {(tournament.waitlist_count || 0) > 0 && (
+                        <div>
+                          <div className="flex justify-between text-xs text-[#DBD0C0] mb-1">
+                            <span>Waitlist</span>
+                            <span>{tournament.waitlist_count} players</span>
+                          </div>
+                          <div className="w-full bg-[#19171b] rounded-full h-1.5">
+                            <div 
+                              className="bg-gradient-to-r from-[#CEA17A] to-[#DBD0C0] h-1.5 rounded-full transition-all duration-300"
+                              style={{ width: `${Math.min(((tournament.waitlist_count || 0) / 10) * 100, 100)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-[#CEA17A]">Date:</span>
+                      <span className="text-[#CEA17A]">Date & Time:</span>
                       <span className="font-semibold text-[#DBD0C0]">
                         {new Date(tournament.tournament_date).toLocaleDateString('en-US', { 
                           year: 'numeric', 
                           month: 'short', 
                           day: 'numeric' 
+                        })} at {new Date(tournament.tournament_date).toLocaleTimeString('en-US', { 
+                          hour: 'numeric', 
+                          minute: '2-digit',
+                          hour12: true 
                         })}
                       </span>
                     </div>
 
+                    {/* Venue Information */}
+                    {tournament.venue && (
+                      <div className="space-y-1">
+                        <span className="text-[#CEA17A] text-sm">Venue:</span>
+                        <p className="text-sm text-[#DBD0C0] font-medium">{tournament.venue}</p>
+                      </div>
+                    )}
+
+                    {/* Google Maps Link */}
+                    {tournament.google_maps_link && (
+                      <div className="space-y-1">
+                        <a 
+                          href={tournament.google_maps_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          View on Google Maps
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Description */}
                     {tournament.description && (
-                      <div className="mt-3">
+                      <div className="space-y-1">
                         <span className="text-[#CEA17A] text-sm">Description:</span>
-                        <p className="text-sm text-gray-700 mt-1 line-clamp-2">{tournament.description}</p>
+                        <p className="text-sm text-[#DBD0C0] line-clamp-2">{tournament.description}</p>
                       </div>
                     )}
 
@@ -409,8 +511,8 @@ export default function TournamentsPage() {
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-col space-y-2">
+                  {/* Action Buttons - Bottom Aligned */}
+                  <div className="flex flex-col space-y-2 mt-6">
                     <Link
                       href={`/tournaments/${tournament.id}`}
                       className="w-full px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium text-center"
