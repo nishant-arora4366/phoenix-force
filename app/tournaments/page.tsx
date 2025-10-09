@@ -194,8 +194,55 @@ export default function TournamentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#19171b]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Hero Section Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+      <div className="absolute inset-0" 
+           style={{
+             background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+           }}></div>
+      {/* Enhanced Background Patterns */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(117,2,15,0.1)_1px,transparent_0)] bg-[length:20px_20px] opacity-30"></div>
+      <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,rgba(117,2,15,0.05)_60deg,transparent_120deg)] opacity-60"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(117,2,15,0.02)_50%,transparent_75%)] bg-[length:40px_40px] opacity-20"></div>
+      
+      {/* Sharp Geometric Patterns */}
+      <div className="absolute inset-0 bg-[linear-gradient(30deg,transparent_40%,rgba(206,161,122,0.03)_50%,transparent_60%)] bg-[length:60px_60px] opacity-25"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(117,2,15,0.04)_0%,transparent_70%)] opacity-30"></div>
+      <div className="absolute inset-0 bg-[conic-gradient(from_45deg_at_25%_25%,transparent_0deg,rgba(206,161,122,0.02)_90deg,transparent_180deg)] opacity-20"></div>
+      
+      {/* Animated Grid Lines */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#CEA17A] to-transparent animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-0 left-0 w-px h-full bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '1.5s'}}></div>
+      </div>
+      
+      {/* Background Glowing Orbs - Behind Content */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#75020f]/3 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-[#51080d]/4 rounded-full blur-2xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-[#2b0307]/5 rounded-full blur-xl animate-pulse" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-[#CEA17A]/2 rounded-full blur-lg animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-1/2 left-1/2 w-56 h-56 bg-[#75020f]/3 rounded-full blur-md animate-pulse" style={{animationDelay: '3s'}}></div>
+      </div>
+      
+      {/* Sharp Geometric Elements - Behind Content */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-4 h-4 bg-[#CEA17A]/6 rotate-45 animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-6 h-6 bg-[#75020f]/8 rotate-12 animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-32 left-1/4 w-3 h-3 bg-[#51080d]/7 rotate-45 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/3 right-1/4 w-5 h-5 bg-[#2b0307]/9 rotate-12 animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        <div className="absolute bottom-20 right-10 w-4 h-4 bg-[#CEA17A]/5 rotate-45 animate-pulse" style={{animationDelay: '3s'}}></div>
+        <div className="absolute top-2/3 left-1/5 w-3 h-3 bg-[#75020f]/6 rotate-12 animate-pulse" style={{animationDelay: '1.5s'}}></div>
+        <div className="absolute bottom-1/3 right-1/5 w-5 h-5 bg-[#51080d]/8 rotate-45 animate-pulse" style={{animationDelay: '2.5s'}}></div>
+        <div className="absolute top-1/4 right-1/3 w-4 h-4 bg-[#2b0307]/7 rotate-12 animate-pulse" style={{animationDelay: '0.8s'}}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-6 h-6 bg-[#CEA17A]/4 rotate-45 animate-pulse" style={{animationDelay: '3.5s'}}></div>
+        <div className="absolute top-3/4 left-1/2 w-3 h-3 bg-[#75020f]/5 rotate-12 animate-pulse" style={{animationDelay: '1.2s'}}></div>
+      </div>
+      
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
           <div>
@@ -207,7 +254,7 @@ export default function TournamentsPage() {
           {isHost && (
             <Link
               href="/tournaments/create"
-              className="inline-flex items-center px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
+              className="inline-flex items-center px-6 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium"
             >
               <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -218,8 +265,8 @@ export default function TournamentsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-[#09171F]/50 rounded-lg shadow-lg p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
               <div className="p-3 bg-gray-100 rounded-lg">
                 <svg className="h-6 w-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -233,7 +280,7 @@ export default function TournamentsPage() {
             </div>
           </div>
 
-          <div className="bg-[#09171F]/50 rounded-lg shadow-lg p-6">
+          <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
               <div className="p-3 bg-green-100 rounded-lg">
                 <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -249,7 +296,7 @@ export default function TournamentsPage() {
             </div>
           </div>
 
-          <div className="bg-[#09171F]/50 rounded-lg shadow-lg p-6">
+          <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
               <div className="p-3 bg-yellow-100 rounded-lg">
                 <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -265,7 +312,7 @@ export default function TournamentsPage() {
             </div>
           </div>
 
-          <div className="bg-[#09171F]/50 rounded-lg shadow-lg p-6">
+          <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
               <div className="p-3 bg-purple-100 rounded-lg">
                 <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -290,15 +337,28 @@ export default function TournamentsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tournaments?.map((tournament) => (
-              <div key={tournament.id} className="bg-[#09171F]/50 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-[#CEA17A]/20">
+              <div key={tournament.id} className="bg-[#19171b]/50 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow">
                 <div className="p-6">
                   {/* Tournament Header */}
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-semibold text-[#DBD0C0] line-clamp-2">
                       {tournament.name}
                     </h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(tournament.status)}`}>
-                      {getStatusText(tournament.status)}
+                    <span className={`w-32 px-3 py-1.5 rounded-lg text-xs font-medium backdrop-blur-sm border text-center ${
+                      tournament.status === 'registration_open' 
+                        ? 'bg-green-500/15 text-green-300 border-green-500/25 shadow-lg shadow-green-500/10'
+                        : tournament.status === 'completed'
+                        ? 'bg-red-500/15 text-red-300 border-red-500/25 shadow-lg shadow-red-500/10'
+                        : tournament.status === 'in_progress'
+                        ? 'bg-red-500/15 text-red-300 border-red-500/25 shadow-lg shadow-red-500/10'
+                        : tournament.status === 'draft'
+                        ? 'bg-yellow-500/15 text-yellow-300 border-yellow-500/25 shadow-lg shadow-yellow-500/10'
+                        : 'bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
+                    }`}>
+                      {tournament.status === 'registration_open' ? 'Open' : 
+                       tournament.status === 'completed' ? 'Closed' :
+                       tournament.status === 'in_progress' ? 'Closed' : 
+                       tournament.status === 'draft' ? 'Opening Soon' : getStatusText(tournament.status)}
                     </span>
                   </div>
 
@@ -345,7 +405,7 @@ export default function TournamentsPage() {
                   <div className="flex flex-col space-y-2">
                     <Link
                       href={`/tournaments/${tournament.id}`}
-                      className="w-full px-4 py-2 bg-gray-700 text-white text-center rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                      className="w-full px-4 py-2 bg-blue-500/15 text-blue-300 border border-blue-500/25 shadow-lg shadow-blue-500/10 backdrop-blur-sm rounded-lg hover:bg-blue-500/25 hover:border-blue-500/40 transition-all duration-150 font-medium text-center"
                     >
                       View Details
                     </Link>
@@ -354,13 +414,13 @@ export default function TournamentsPage() {
                       <div className="flex space-x-2">
                         <Link
                           href={`/tournaments/${tournament.id}/edit`}
-                          className="flex-1 px-3 py-2 bg-gray-700 text-white text-center rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                          className="flex-1 px-3 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 text-sm font-medium text-center"
                         >
                           Edit
                         </Link>
                         <button
                           onClick={() => confirmDelete(tournament.id)}
-                          className="flex-1 px-3 py-2 bg-red-600 text-white text-center rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                          className="flex-1 px-3 py-2 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-sm font-medium text-center"
                         >
                           Delete
                         </button>
