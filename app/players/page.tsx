@@ -789,12 +789,12 @@ export default function PlayersPage() {
                 {!(userRole === 'admin' || userRole === 'host') && (
                   <div className="col-span-2 sm:col-span-1"></div>
                 )}
-                    </div>
-            </div>
+                      </div>
+                      </div>
 
             {/* Table Body */}
             <div className="divide-y divide-[#CEA17A]/10">
-              {filteredPlayers?.map((player) => (
+            {filteredPlayers?.map((player) => (
                 <div 
                   key={player.id} 
                       onClick={() => router.push(`/players/${player.id}`)}
@@ -823,14 +823,14 @@ export default function PlayersPage() {
                   <div className="col-span-3 sm:col-span-2 flex items-center min-w-0">
                     <div className="min-w-0 flex-1">
                       <div className="text-xs sm:text-base font-medium text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors truncate">
-                        {player.display_name}
+                          {player.display_name}
                       </div>
-                      {player.stage_name && (
+                        {player.stage_name && (
                         <div className="text-xs text-[#CEA17A]/70 italic truncate">"{player.stage_name}"</div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-
+                    
                   {/* Role */}
                   <div className="col-span-1 sm:col-span-1 flex items-center">
                     <div className="flex gap-0.5">
@@ -841,7 +841,7 @@ export default function PlayersPage() {
                                             role.toLowerCase().includes('bowler') ? '🎾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
                             return (
-                              <span key={index} className="text-xs sm:text-base" title={role}>
+                              <span key={index} className="inline-flex items-center justify-center h-5 w-5 text-xs sm:text-base" title={role}>
                                 {roleEmoji}
                               </span>
                             )
@@ -853,7 +853,7 @@ export default function PlayersPage() {
                                             role.toLowerCase().includes('bowler') ? '🎾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
                             return (
-                              <span className="text-xs sm:text-base" title={role}>
+                              <span className="inline-flex items-center justify-center h-5 w-5 text-xs sm:text-base" title={role}>
                                 {roleEmoji}
                               </span>
                             )
@@ -863,7 +863,7 @@ export default function PlayersPage() {
                         <span className="text-[#CEA17A]/50 text-xs">-</span>
                       )}
                     </div>
-                  </div>
+                    </div>
 
                   {/* Community */}
                   <div className="col-span-2 sm:col-span-2 flex items-center">
@@ -872,7 +872,7 @@ export default function PlayersPage() {
                         Array.isArray(player.skills.Community) ? (
                           player.skills.Community.length > 1 ? (
                             <div className="flex items-center gap-1">
-                              <span className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
+                              <span className="inline-flex items-center h-5 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
                                 {player.skills.Community[0]}
                             </span>
                             <button 
@@ -882,19 +882,19 @@ export default function PlayersPage() {
                                   const communities = Array.isArray(player.skills?.Community) ? player.skills.Community : [player.skills?.Community]
                                   alert(`Communities: ${communities.join(', ')}`)
                                 }}
-                                className="text-[#CEA17A] text-xs hover:text-[#CEA17A]/80 transition-colors"
+                                className="inline-flex items-center h-5 text-[#CEA17A] text-xs hover:text-[#CEA17A]/80 transition-colors"
                                 title={`View all communities: ${Array.isArray(player.skills?.Community) ? player.skills.Community.join(', ') : player.skills?.Community}`}
                               >
                                 +{player.skills.Community.length - 1}
                             </button>
                           </div>
                         ) : (
-                            <span className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
+                            <span className="inline-flex items-center h-5 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
                               {player.skills.Community[0]}
                             </span>
                           )
                         ) : (
-                          <span className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
+                          <span className="inline-flex items-center h-5 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
                             {player.skills.Community}
                           </span>
                         )
@@ -909,8 +909,8 @@ export default function PlayersPage() {
                     <div className="col-span-1 sm:col-span-1 flex items-center justify-end">
                       <div className="text-xs sm:text-base font-semibold text-[#CEA17A]">
                         ₹{player.base_price}
-                      </div>
-                    </div>
+                  </div>
+                </div>
                   )}
 
                   {/* Empty space for regular users */}
@@ -918,8 +918,8 @@ export default function PlayersPage() {
                     <div className="col-span-1 sm:col-span-1"></div>
                   )}
 
-                </div>
-              ))}
+              </div>
+            ))}
             </div>
           </div>
         )}
