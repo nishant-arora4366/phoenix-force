@@ -204,6 +204,7 @@ export default function PlayersPage() {
   const [showFilterSettings, setShowFilterSettings] = useState(false)
   const [showFilterBar, setShowFilterBar] = useState(true)
   const [sortBy, setSortBy] = useState('name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [user, setUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
@@ -319,18 +320,31 @@ export default function PlayersPage() {
     
     return matchesSearch && matchesAllSkills
   })?.sort((a, b) => {
+    let comparison = 0
+    
     switch (sortBy) {
       case 'name':
-        return a.display_name.localeCompare(b.display_name)
+        comparison = a.display_name.localeCompare(b.display_name)
+        break
+      case 'base_price':
+        const aPrice = a.skills?.['Base Price'] ? parseInt(a.skills['Base Price'] as string) || 0 : 0
+        const bPrice = b.skills?.['Base Price'] ? parseInt(b.skills['Base Price'] as string) || 0 : 0
+        comparison = aPrice - bPrice
+        break
       case 'price':
-        return b.base_price - a.base_price
+        comparison = a.base_price - b.base_price
+        break
       case 'batting':
-        return (b.batting_rating || 0) - (a.batting_rating || 0)
+        comparison = (a.batting_rating || 0) - (b.batting_rating || 0)
+        break
       case 'bowling':
-        return (b.bowling_rating || 0) - (a.bowling_rating || 0)
+        comparison = (a.bowling_rating || 0) - (b.bowling_rating || 0)
+        break
       default:
         return 0
     }
+    
+    return sortDirection === 'desc' ? -comparison : comparison
   })
 
 
@@ -467,110 +481,137 @@ export default function PlayersPage() {
 
         {/* Search and Sort Row */}
         <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-4 relative z-20">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
             {/* Search Bar */}
-            <div className="w-full">
-                <div className="relative">
+            <div className="flex-1 w-full sm:w-auto">
+              <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-[#CEA17A]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search players by name..."
-                  className="w-full pl-12 pr-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] placeholder-[#CEA17A]/50"
-                  />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
                 </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search players by name..."
+                  className="w-full pl-12 pr-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] placeholder-[#CEA17A]/50"
+                />
               </div>
+            </div>
 
             {/* Sort Controls */}
-            <div className="flex flex-col gap-4">
-            {/* Sort and View Controls */}
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full">
-              {/* Sort */}
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">Sort by:</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                    className="flex-1 sm:w-auto px-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] shadow-lg"
-                >
-                  <option value="name">Name</option>
-                  <option value="price">Price</option>
-                  <option value="batting">Batting Rating</option>
-                  <option value="bowling">Bowling Rating</option>
-                </select>
-              </div>
-
-                {/* View Toggle - Desktop Only */}
-                <div className="hidden sm:flex items-center gap-2">
-                  <span className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">View:</span>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">Sort:</label>
+              
+              {/* Sort Direction Icons */}
+              <div className="flex flex-col">
                 <button
-                  onClick={() => setViewMode('grid')}
-                    className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
-                      viewMode === 'grid'
-                        ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
-                        : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
-                    }`}
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  onClick={() => setSortDirection('asc')}
+                  className={`p-1 rounded transition-all duration-200 ${
+                    sortDirection === 'asc' 
+                      ? 'bg-[#CEA17A] text-[#09171F]' 
+                      : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20'
+                  }`}
+                  title="Sort Ascending"
+                >
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
                 <button
-                  onClick={() => setViewMode('list')}
-                    className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
-                      viewMode === 'list'
-                        ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
-                        : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
-                    }`}
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                  onClick={() => setSortDirection('desc')}
+                  className={`p-1 rounded transition-all duration-200 ${
+                    sortDirection === 'desc' 
+                      ? 'bg-[#CEA17A] text-[#09171F]' 
+                      : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20'
+                  }`}
+                  title="Sort Descending"
+                >
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
               </div>
-              </div>
+              
+              {/* Sort Field Input */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-sm"
+              >
+                <option value="name">Name</option>
+                <option value="base_price">Base Price</option>
+                <option value="price">Price</option>
+                <option value="batting">Batting Rating</option>
+                <option value="bowling">Bowling Rating</option>
+              </select>
+            </div>
 
-              {/* Second Row: Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                {/* Clear Filters */}
-                <button
-                  onClick={() => {
-                    setSearchTerm('')
-                    setSkillFilters({})
-                  }}
-                  className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
-                  title="Clear all filters"
-                >
-                  Clear Filters
-                </button>
+            {/* View Toggle - Desktop Only */}
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">View:</span>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
+                  viewMode === 'grid'
+                    ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
+                    : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
+                  viewMode === 'list'
+                    ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
+                    : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
 
-                {/* Toggle Filter Bar */}
-                <button
-                  onClick={() => setShowFilterBar(!showFilterBar)}
-                  className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
-                  title={showFilterBar ? "Hide filter bar" : "Show filter bar"}
-                >
-                  {showFilterBar ? 'Hide Filters' : 'Show Filters'}
-                </button>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Clear Filters */}
+              <button
+                onClick={() => {
+                  setSearchTerm('')
+                  setSkillFilters({})
+                }}
+                className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
+                title="Clear all filters"
+              >
+                Clear Filters
+              </button>
 
-                {/* Filter Settings */}
-                <button
-                  onClick={() => setShowFilterSettings(true)}
-                  className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
-                  title="Filter Settings"
-                >
-                  <svg className="w-4 h-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Settings
-                </button>
-              </div>
+              {/* Toggle Filter Bar */}
+              <button
+                onClick={() => setShowFilterBar(!showFilterBar)}
+                className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
+                title={showFilterBar ? "Hide filter bar" : "Show filter bar"}
+              >
+                {showFilterBar ? 'Hide Filters' : 'Show Filters'}
+              </button>
+
+              {/* Filter Settings */}
+              <button
+                onClick={() => setShowFilterSettings(true)}
+                className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
+                title="Filter Settings"
+              >
+                <svg className="w-4 h-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+              </button>
             </div>
           </div>
         </div>
