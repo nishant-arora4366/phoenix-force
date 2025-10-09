@@ -254,7 +254,7 @@ export default function TournamentsPage() {
           {isHost && (
             <Link
               href="/tournaments/create"
-              className="inline-flex items-center px-6 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium"
             >
               <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -268,13 +268,13 @@ export default function TournamentsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
-              <div className="p-3 bg-gray-100 rounded-lg">
-                <svg className="h-6 w-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-[#CEA17A]">Total Tournaments</p>
+                <p className="text-sm font-medium text-[#CEA17A]">Total</p>
                 <p className="text-2xl font-bold text-[#DBD0C0]">{tournaments?.length || 0}</p>
               </div>
             </div>
@@ -282,8 +282,8 @@ export default function TournamentsPage() {
 
           <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-2 sm:p-3 bg-green-100 rounded-lg">
+                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
@@ -298,8 +298,8 @@ export default function TournamentsPage() {
 
           <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-2 sm:p-3 bg-yellow-100 rounded-lg">
+                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -314,8 +314,8 @@ export default function TournamentsPage() {
 
           <div className="bg-[#19171b]/50 rounded-lg shadow-lg p-6 border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-2 sm:p-3 bg-purple-100 rounded-lg">
+                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -382,7 +382,11 @@ export default function TournamentsPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-[#CEA17A]">Date:</span>
                       <span className="font-semibold text-[#DBD0C0]">
-                        {new Date(tournament.tournament_date).toLocaleDateString()}
+                        {new Date(tournament.tournament_date).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
                       </span>
                     </div>
 
@@ -396,7 +400,11 @@ export default function TournamentsPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-[#CEA17A]">Created:</span>
                       <span className="font-semibold text-[#DBD0C0]">
-                        {new Date(tournament.created_at).toLocaleDateString()}
+                        {new Date(tournament.created_at).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
                       </span>
                     </div>
                   </div>
@@ -405,7 +413,7 @@ export default function TournamentsPage() {
                   <div className="flex flex-col space-y-2">
                     <Link
                       href={`/tournaments/${tournament.id}`}
-                      className="w-full px-4 py-2 bg-blue-500/15 text-blue-300 border border-blue-500/25 shadow-lg shadow-blue-500/10 backdrop-blur-sm rounded-lg hover:bg-blue-500/25 hover:border-blue-500/40 transition-all duration-150 font-medium text-center"
+                      className="w-full px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium text-center"
                     >
                       View Details
                     </Link>
