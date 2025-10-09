@@ -2265,17 +2265,17 @@ export default function TournamentDetailsPage() {
               </div>
 
               {/* Search and Filter Section */}
-              <div className="bg-gray-50 rounded-lg p-4 border border-[#CEA17A]/20 mb-6">
+              <div className="bg-[#3E4E5A] rounded-lg p-4 border border-[#CEA17A]/20 mb-6">
                 <div className="space-y-4">
                   {/* Search - Full width on mobile */}
                   <div className="w-full">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Search Players</label>
+                    <label className="block text-sm font-medium text-[#CEA17A] mb-2">Search Players</label>
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Type player name to search..."
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2.5 bg-[#09171F] border border-[#CEA17A]/30 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-[#CEA17A] focus:border-[#CEA17A]"
                     />
                   </div>
                   
@@ -2283,7 +2283,7 @@ export default function TournamentDetailsPage() {
                   <div className="w-full">
                     <button
                       onClick={() => setShowSkillConfig(!showSkillConfig)}
-                      className="w-full px-4 py-2.5 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm font-medium"
+                      className="w-full px-4 py-2.5 bg-[#CEA17A] text-[#09171F] rounded-lg hover:bg-[#CEA17A]/80 transition-colors text-sm font-medium"
                     >
                       {showSkillConfig ? 'Clear Skills Filter' : 'Add Filter on Skills'}
                     </button>
@@ -2481,7 +2481,7 @@ export default function TournamentDetailsPage() {
               {/* Players List */}
               <div className="mb-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                  <h4 className="text-sm font-medium text-gray-700">
+                  <h4 className="text-sm font-medium text-[#CEA17A]">
                     Available Players ({filteredPlayers.filter(p => !p.isRegistered).length})
                   </h4>
                   
@@ -2520,7 +2520,7 @@ export default function TournamentDetailsPage() {
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-700">
+                        <div className="text-sm font-medium text-white">
                           Select All Available Players
                         </div>
                       </div>
@@ -2589,11 +2589,11 @@ export default function TournamentDetailsPage() {
 
               {/* Status Selection */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-[#CEA17A] mb-3">
                   Assignment Status
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <label className="flex items-center p-3 border border-[#CEA17A]/20 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <label className="flex items-center p-3 bg-[#3E4E5A] border border-[#CEA17A]/20 rounded-lg hover:bg-[#3E4E5A]/80 cursor-pointer">
                     <input
                       type="radio"
                       value="pending"
@@ -2602,11 +2602,11 @@ export default function TournamentDetailsPage() {
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <div className="ml-3">
-                      <div className="text-sm font-medium text-gray-700">Pending</div>
-                      <div className="text-xs text-gray-500">Player needs approval</div>
+                      <div className="text-sm font-medium text-white">Pending</div>
+                      <div className="text-xs text-[#CEA17A]">Player needs approval</div>
                     </div>
                   </label>
-                  <label className="flex items-center p-3 border border-[#CEA17A]/20 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <label className="flex items-center p-3 bg-[#3E4E5A] border border-[#CEA17A]/20 rounded-lg hover:bg-[#3E4E5A]/80 cursor-pointer">
                     <input
                       type="radio"
                       value="confirmed"
@@ -2615,8 +2615,8 @@ export default function TournamentDetailsPage() {
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <div className="ml-3">
-                      <div className="text-sm font-medium text-gray-700">Payment Verified</div>
-                      <div className="text-xs text-gray-500">Player payment is verified</div>
+                      <div className="text-sm font-medium text-white">Payment Verified</div>
+                      <div className="text-xs text-[#CEA17A]">Player payment is verified</div>
                     </div>
                   </label>
                 </div>
