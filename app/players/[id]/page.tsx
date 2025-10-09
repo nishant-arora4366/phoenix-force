@@ -238,27 +238,16 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
               {/* Player Details - Label-Value Format */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {player.mobile_number && (
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-[#CEA17A]">
-                      Display Name
+                      Mobile Number
                     </label>
-                    <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] font-medium">
-                      {player.display_name}
+                    <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]">
+                      {player.mobile_number}
                     </div>
                   </div>
-
-                  {player.mobile_number && (
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-[#CEA17A]">
-                        Mobile Number
-                      </label>
-                      <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]">
-                        {player.mobile_number}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
 
                 {/* Bio */}
                 {player.bio && (
