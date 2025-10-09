@@ -48,16 +48,13 @@ const fetcher = async (url: string) => {
 export default function PlayersPage() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterGroup, setFilterGroup] = useState('')
+  const [filterCommunity, setFilterCommunity] = useState('')
   const [filterRole, setFilterRole] = useState('')
   const [sortBy, setSortBy] = useState('name')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [user, setUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
-  const [showSkillsFilter, setShowSkillsFilter] = useState(false)
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([])
-  const [availableSkills, setAvailableSkills] = useState<string[]>([])
 
   const { data: players, error, isLoading, mutate } = useSWR<Player[]>('/api/players-public', fetcher)
 
@@ -99,27 +96,14 @@ export default function PlayersPage() {
     return () => unsubscribe()
   }, [])
 
-  // Populate available skills from players data
-  useEffect(() => {
-    if (players) {
-      const skillsSet = new Set<string>()
-      players.forEach(player => {
-        if (player.skills) {
-          Object.keys(player.skills).forEach(skill => {
-            if (!['Role', 'Base Price', 'Batting Rating', 'Bowling Rating', 'Wicket Keeping Rating'].includes(skill)) {
-              skillsSet.add(skill)
-            }
-          })
-        }
-      })
-      setAvailableSkills(Array.from(skillsSet))
-    }
-  }, [players])
 
   const filteredPlayers = players?.filter(player => {
     const matchesSearch = player.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          player.stage_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesGroup = !filterGroup || player.group_name === filterGroup
+    const matchesCommunity = !filterCommunity || 
+      (player.skills?.Community && 
+        (Array.isArray(player.skills.Community) ? player.skills.Community.includes(filterCommunity) : 
+         player.skills.Community === filterCommunity))
     const matchesRole = !filterRole || 
       (filterRole === 'bowler' && player.skills?.Role && 
         (Array.isArray(player.skills.Role) ? player.skills.Role.some(role => role.toLowerCase().includes('bowler')) : 
@@ -131,16 +115,7 @@ export default function PlayersPage() {
         (Array.isArray(player.skills.Role) ? player.skills.Role.some(role => role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk')) : 
          player.skills.Role.toLowerCase().includes('wicket') || player.skills.Role.toLowerCase().includes('wk')))
     
-    const matchesSkills = selectedSkills.length === 0 || 
-      selectedSkills.some(skill => {
-        if (player.skills && player.skills[skill]) {
-          const skillValue = player.skills[skill]
-          return Array.isArray(skillValue) ? skillValue.length > 0 : skillValue
-        }
-        return false
-      })
-    
-    return matchesSearch && matchesGroup && matchesRole && matchesSkills
+    return matchesSearch && matchesCommunity && matchesRole
   })?.sort((a, b) => {
     switch (sortBy) {
       case 'name':
@@ -156,7 +131,14 @@ export default function PlayersPage() {
     }
   })
 
-  const uniqueGroups = Array.from(new Set(players?.map(p => p.group_name).filter(Boolean)))
+  const uniqueCommunities = Array.from(new Set(
+    players?.flatMap(player => {
+      if (player.skills?.Community) {
+        return Array.isArray(player.skills.Community) ? player.skills.Community : [player.skills.Community]
+      }
+      return []
+    }).filter(Boolean)
+  )) || []
 
   const handleDelete = async (playerId: string, playerName: string) => {
     if (!confirm(`Are you sure you want to delete ${playerName}? This action cannot be undone.`)) {
@@ -312,16 +294,16 @@ export default function PlayersPage() {
                 </div>
               </div>
 
-              {/* Group Filter */}
+              {/* Community Filter */}
               <div className="sm:w-48">
                 <select
-                  value={filterGroup}
-                  onChange={(e) => setFilterGroup(e.target.value)}
+                  value={filterCommunity}
+                  onChange={(e) => setFilterCommunity(e.target.value)}
                   className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
                 >
-                  <option value="">All Groups</option>
-                  {uniqueGroups.map(group => (
-                    <option key={group} value={group}>{group}</option>
+                  <option value="">All Communities</option>
+                  {uniqueCommunities.map(community => (
+                    <option key={community} value={community}>{community}</option>
                   ))}
                 </select>
               </div>
@@ -340,15 +322,6 @@ export default function PlayersPage() {
                 </select>
               </div>
 
-              {/* Configure Skills Button */}
-              <div className="sm:w-48">
-                <button
-                  onClick={() => setShowSkillsFilter(true)}
-                  className="w-full px-4 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium"
-                >
-                  Configure Skills {selectedSkills.length > 0 && `(${selectedSkills.length})`}
-                </button>
-              </div>
             </div>
 
             {/* Sort and View Controls */}
@@ -718,9 +691,8 @@ export default function PlayersPage() {
               <button 
                 onClick={() => {
                   setSearchTerm('')
-                  setFilterGroup('')
+                  setFilterCommunity('')
                   setFilterRole('')
-                  setSelectedSkills([])
                 }}
                 className="bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium px-6 py-2"
               >
@@ -730,66 +702,6 @@ export default function PlayersPage() {
           </div>
         )}
 
-        {/* Skills Filter Modal */}
-        {showSkillsFilter && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <div className="bg-[#09171F] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-[#CEA17A]/30">
-              {/* Modal Header */}
-              <div className="p-6 border-b border-[#CEA17A]/20">
-                <h2 className="text-xl font-semibold text-white mb-2">Configure Skills Filter</h2>
-                <p className="text-[#CEA17A] text-sm">Select skills to filter players</p>
-              </div>
-
-              {/* Skills Selection */}
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-3">
-                  {availableSkills.map(skill => (
-                    <label key={skill} className="flex items-center space-x-3 p-3 rounded-lg border border-[#CEA17A]/20 hover:bg-[#CEA17A]/10 transition-colors cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedSkills.includes(skill)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedSkills([...selectedSkills, skill])
-                          } else {
-                            setSelectedSkills(selectedSkills.filter(s => s !== skill))
-                          }
-                        }}
-                        className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A]/20"
-                      />
-                      <span className="text-[#DBD0C0] text-sm">{skill}</span>
-                    </label>
-                  ))}
-                </div>
-
-                {availableSkills.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-[#CEA17A]">No additional skills found in player data</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Modal Footer */}
-              <div className="p-6 border-t border-[#CEA17A]/20 flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setSelectedSkills([])
-                    setShowSkillsFilter(false)
-                  }}
-                  className="px-4 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-lg hover:bg-[#3E4E5A]/25 transition-colors"
-                >
-                  Clear All
-                </button>
-                <button
-                  onClick={() => setShowSkillsFilter(false)}
-                  className="px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded-lg hover:bg-[#CEA17A]/25 transition-colors"
-                >
-                  Apply Filters
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
