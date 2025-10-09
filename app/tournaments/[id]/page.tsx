@@ -1638,19 +1638,24 @@ export default function TournamentDetailsPage() {
 
                   {/* Stats Grid */}
                   {slotsStats && (
-                    <div className="mt-6 pt-6 border-t border-gray-100">
+                    <div className="mt-6 pt-6 border-t border-[#CEA17A]/20">
                       <div className="grid grid-cols-2 gap-4">
                         {/* Total Slots Card */}
-                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                          <div className="flex items-center justify-between">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
+                          {/* Luxury Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                          
+                          <div className="relative z-10 flex items-center justify-between">
                             <div>
                               <div className="text-2xl font-bold text-[#DBD0C0]">{slotsStats.total_slots}</div>
-                              <div className="text-sm font-medium text-gray-700">Total Slots</div>
-                              <div className="text-xs text-green-600">
+                              <div className="text-sm font-medium text-[#CEA17A]">Total Slots</div>
+                              <div className="text-xs text-green-400">
                                 {slotsStats.total_slots - slotsStats.filled_main_slots} available
                               </div>
                             </div>
-                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                            <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
                               <svg className="w-5 h-5 text-[#CEA17A]" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                               </svg>
@@ -1659,17 +1664,22 @@ export default function TournamentDetailsPage() {
                         </div>
 
                         {/* Filled Card */}
-                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                          <div className="flex items-center justify-between">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
+                          {/* Luxury Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                          
+                          <div className="relative z-10 flex items-center justify-between">
                             <div>
-                              <div className="text-2xl font-bold text-blue-900">{slotsStats.filled_main_slots}</div>
-                              <div className="text-sm font-medium text-blue-700">Filled</div>
-                              <div className="text-xs text-blue-600">
+                              <div className="text-2xl font-bold text-[#DBD0C0]">{slotsStats.filled_main_slots}</div>
+                              <div className="text-sm font-medium text-[#CEA17A]">Filled</div>
+                              <div className="text-xs text-blue-400">
                                 {slotsStats.total_slots > 0 ? Math.round((slotsStats.filled_main_slots / slotsStats.total_slots) * 100) : 0}% filled
                               </div>
                             </div>
-                            <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
+                              <svg className="w-5 h-5 text-[#CEA17A]" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
@@ -1677,17 +1687,22 @@ export default function TournamentDetailsPage() {
                         </div>
 
                         {/* Waitlist Card */}
-                        <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
-                          <div className="flex items-center justify-between">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
+                          {/* Luxury Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                          
+                          <div className="relative z-10 flex items-center justify-between">
                             <div>
-                              <div className="text-2xl font-bold text-orange-900">{slotsStats.filled_waitlist_slots}</div>
-                              <div className="text-sm font-medium text-orange-700">Waitlist</div>
-                              <div className="text-xs text-orange-600">
+                              <div className="text-2xl font-bold text-[#DBD0C0]">{slotsStats.filled_waitlist_slots}</div>
+                              <div className="text-sm font-medium text-[#CEA17A]">Waitlist</div>
+                              <div className="text-xs text-orange-400">
                                 {slotsStats.filled_waitlist_slots}
                               </div>
                             </div>
-                            <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                            <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
+                              <svg className="w-5 h-5 text-[#CEA17A]" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                               </svg>
                             </div>
@@ -1695,17 +1710,22 @@ export default function TournamentDetailsPage() {
                         </div>
 
                         {/* Pending Approval Card */}
-                        <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-100">
-                          <div className="flex items-center justify-between">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
+                          {/* Luxury Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                          
+                          <div className="relative z-10 flex items-center justify-between">
                             <div>
-                              <div className="text-2xl font-bold text-yellow-900">{slotsStats.pending_approvals}</div>
-                              <div className="text-sm font-medium text-yellow-700">Pending Approval</div>
-                              <div className="text-xs text-yellow-600">
+                              <div className="text-2xl font-bold text-[#DBD0C0]">{slotsStats.pending_approvals}</div>
+                              <div className="text-sm font-medium text-[#CEA17A]">Pending Approval</div>
+                              <div className="text-xs text-yellow-400">
                                 Awaiting Payment Confirmation
                               </div>
                             </div>
-                            <div className="w-10 h-10 bg-yellow-200 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                            <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
+                              <svg className="w-5 h-5 text-[#CEA17A]" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                               </svg>
                             </div>
