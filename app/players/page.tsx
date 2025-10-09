@@ -475,21 +475,21 @@ export default function PlayersPage() {
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
             {/* Search Bar */}
             <div className="flex-1 w-full sm:w-auto">
-              <div className="relative">
+                <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-[#CEA17A]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search players by name..."
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search players by name..."
                   className="w-full pl-12 pr-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] placeholder-[#CEA17A]/50"
-                />
+                  />
+                </div>
               </div>
-            </div>
 
             {/* Sort Controls */}
             <div className="flex items-center gap-2">
@@ -521,24 +521,24 @@ export default function PlayersPage() {
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
-              </div>
-              
-              {/* Sort Field Input */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-sm"
-              >
-                <option value="name">Name</option>
-                <option value="base_price">Base Price</option>
-              </select>
             </div>
+
+              {/* Sort Field Input */}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-sm"
+                >
+                  <option value="name">Name</option>
+                <option value="base_price">Base Price</option>
+                </select>
+              </div>
 
             {/* View Toggle - Desktop Only */}
             <div className="hidden sm:flex items-center gap-2">
               <span className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">View:</span>
-              <button
-                onClick={() => setViewMode('grid')}
+                <button
+                  onClick={() => setViewMode('grid')}
                 className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
                   viewMode === 'grid'
                     ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
@@ -547,10 +547,10 @@ export default function PlayersPage() {
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
                 className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
                   viewMode === 'list'
                     ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
@@ -559,9 +559,9 @@ export default function PlayersPage() {
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
+                  </svg>
+                </button>
+              </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -747,7 +747,7 @@ export default function PlayersPage() {
                       return (
                               <span key={index} className="text-sm sm:text-base">
                                 {roleEmoji}
-                        </span>
+                      </span>
                             )
                           })
                         ) : (
@@ -759,18 +759,18 @@ export default function PlayersPage() {
                       return (
                               <span className="text-sm sm:text-base">
                                 {roleEmoji}
-                          </span>
+                        </span>
                             )
                           })()
                       )}
-                    </div>
-                  )}
                       </div>
-                </div>
-              </div>
+                    )}
+                          </div>
+                        </div>
+                      </div>
             ))}
-          </div>
-        ) : (
+                        </div>
+                      ) : (
           <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl border border-[#CEA17A]/20 shadow-xl overflow-hidden">
             {/* Table Header */}
             <div className="bg-gradient-to-r from-[#CEA17A]/10 to-[#CEA17A]/5 border-b border-[#CEA17A]/20">
@@ -780,14 +780,14 @@ export default function PlayersPage() {
                   : 'grid-cols-10'
               }`}>
                 <div className="col-span-1 sm:col-span-1"></div>
-                <div className="col-span-4 sm:col-span-2">Name</div>
+                <div className="col-span-3 sm:col-span-2">Name</div>
                 <div className="col-span-2 sm:col-span-1">Role</div>
-                <div className="col-span-3 sm:col-span-2">Community</div>
+                <div className="col-span-2 sm:col-span-2">Community</div>
                 {(userRole === 'admin' || userRole === 'host') && (
                   <div className="col-span-2 sm:col-span-1">Price</div>
                 )}
                 <div className="hidden sm:col-span-5">Actions</div>
-              </div>
+                    </div>
             </div>
 
             {/* Table Body */}
@@ -795,7 +795,7 @@ export default function PlayersPage() {
               {filteredPlayers?.map((player) => (
                 <div 
                   key={player.id} 
-                  onClick={() => router.push(`/players/${player.id}`)}
+                      onClick={() => router.push(`/players/${player.id}`)}
                   className={`grid gap-1 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
                     (userRole === 'admin' || userRole === 'host') 
                       ? 'grid-cols-12' 
@@ -818,7 +818,7 @@ export default function PlayersPage() {
                   </div>
 
                   {/* Name */}
-                  <div className="col-span-4 sm:col-span-2 flex items-center">
+                  <div className="col-span-3 sm:col-span-2 flex items-center">
                     <div>
                       <div className="text-xs sm:text-base font-medium text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors truncate">
                         {player.display_name}
@@ -864,7 +864,7 @@ export default function PlayersPage() {
                   </div>
 
                   {/* Community */}
-                  <div className="col-span-3 sm:col-span-2 flex items-center">
+                  <div className="col-span-2 sm:col-span-2 flex items-center">
                     <div className="flex items-center gap-1 max-w-full overflow-hidden">
                       {player.skills?.Community ? (
                         Array.isArray(player.skills.Community) ? (
@@ -872,8 +872,8 @@ export default function PlayersPage() {
                             <div className="flex items-center gap-1">
                               <span className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
                                 {player.skills.Community[0]}
-                              </span>
-                              <button 
+                            </span>
+                            <button 
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   // Show all communities in a tooltip or modal
@@ -884,9 +884,9 @@ export default function PlayersPage() {
                                 title={`View all communities: ${Array.isArray(player.skills?.Community) ? player.skills.Community.join(', ') : player.skills?.Community}`}
                               >
                                 +{player.skills.Community.length - 1}
-                              </button>
-                            </div>
-                          ) : (
+                            </button>
+                          </div>
+                        ) : (
                             <span className="inline-block bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-1.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[60px] sm:max-w-[80px]">
                               {player.skills.Community[0]}
                             </span>
@@ -898,8 +898,8 @@ export default function PlayersPage() {
                         )
                       ) : (
                         <span className="text-[#CEA17A]/50 text-xs">-</span>
-                      )}
-                    </div>
+                        )}
+                      </div>
                   </div>
 
                   {/* Base Price */}
@@ -913,7 +913,7 @@ export default function PlayersPage() {
 
                   {/* Actions - Desktop Only */}
                   <div className="hidden sm:col-span-5 flex items-center gap-2">
-                    <button
+                    <button 
                       onClick={(e) => {
                         e.stopPropagation()
                         router.push(`/players/${player.id}`)
@@ -924,7 +924,7 @@ export default function PlayersPage() {
                     </button>
                     {(userRole === 'admin' || userRole === 'host') && (
                       <>
-                        <button
+                        <button 
                           onClick={(e) => {
                             e.stopPropagation()
                             router.push(`/players/${player.id}/edit`)
@@ -934,7 +934,7 @@ export default function PlayersPage() {
                           Edit
                         </button>
                         {userRole === 'admin' && (
-                          <button
+                          <button 
                             onClick={(e) => {
                               e.stopPropagation()
                               handleDelete(player.id, player.display_name)
@@ -946,9 +946,9 @@ export default function PlayersPage() {
                         )}
                       </>
                     )}
-                  </div>
                 </div>
-              ))}
+              </div>
+            ))}
             </div>
           </div>
         )}
