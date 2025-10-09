@@ -2236,10 +2236,10 @@ export default function TournamentDetailsPage() {
       {/* Enhanced Player Assignment Modal */}
       {showAssignModal && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
-              <div className="relative overflow-hidden bg-[#09171F] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-500 scale-100 border border-[#CEA17A]/30 animate-slide-up">
+              <div className="relative overflow-hidden bg-[#19171b] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-500 scale-100 border border-[#CEA17A]/30 animate-slide-up">
             {/* Dark Blue Palette Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#3E4E5A]/5 rounded-2xl"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#09171F]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl"></div>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl"></div>
             {/* Content */}
             <div className="relative z-10 p-4 sm:p-6">
