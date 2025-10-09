@@ -2784,7 +2784,7 @@ export default function TournamentDetailsPage() {
                     : 'Are you sure you want to change the tournament status?'
                   }
                 </p>
-                <div className="bg-[#51080d] rounded-lg p-3">
+                <div className="bg-[#3E4E5A] rounded-lg p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-[#DBD0C0]">From:</span>
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(tournament?.status || '')}`}>
@@ -2816,7 +2816,7 @@ export default function TournamentDetailsPage() {
                 <button
                   onClick={confirmStatusChange}
                   disabled={isUpdatingStatus}
-                  className="flex-1 px-4 py-2 bg-[#CEA17A] text-[#09171F] rounded-lg hover:bg-[#CEA17A]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUpdatingStatus ? 'Updating...' : 'Confirm Change'}
                 </button>
