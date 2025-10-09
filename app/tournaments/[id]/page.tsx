@@ -1726,7 +1726,7 @@ export default function TournamentDetailsPage() {
                             </div>
                             <div className="w-10 h-10 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
                               <svg className="w-5 h-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
                           </div>
