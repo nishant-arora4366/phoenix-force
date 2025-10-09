@@ -576,14 +576,14 @@ export default function PlayersPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               {/* Clear Filters */}
               <button
                 onClick={() => {
                   setSearchTerm('')
                   setSkillFilters({})
                 }}
-                className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
+                className="w-full sm:w-auto px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
                 title="Clear all filters"
               >
                 Clear Filters
@@ -592,7 +592,7 @@ export default function PlayersPage() {
               {/* Toggle Filter Bar */}
               <button
                 onClick={() => setShowFilterBar(!showFilterBar)}
-                className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
+                className="w-full sm:w-auto px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
                 title={showFilterBar ? "Hide filter bar" : "Show filter bar"}
               >
                 {showFilterBar ? 'Hide Filters' : 'Show Filters'}
@@ -601,7 +601,7 @@ export default function PlayersPage() {
               {/* Filter Settings */}
               <button
                 onClick={() => setShowFilterSettings(true)}
-                className="px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
+                className="w-full sm:w-auto px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium flex items-center justify-center sm:justify-start"
                 title="Filter Settings"
               >
                 <svg className="w-4 h-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
