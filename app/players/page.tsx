@@ -331,15 +331,6 @@ export default function PlayersPage() {
         const bPrice = b.skills?.['Base Price'] ? parseInt(b.skills['Base Price'] as string) || 0 : 0
         comparison = aPrice - bPrice
         break
-      case 'price':
-        comparison = a.base_price - b.base_price
-        break
-      case 'batting':
-        comparison = (a.batting_rating || 0) - (b.batting_rating || 0)
-        break
-      case 'bowling':
-        comparison = (a.bowling_rating || 0) - (b.bowling_rating || 0)
-        break
       default:
         return 0
     }
@@ -540,9 +531,6 @@ export default function PlayersPage() {
               >
                 <option value="name">Name</option>
                 <option value="base_price">Base Price</option>
-                <option value="price">Price</option>
-                <option value="batting">Batting Rating</option>
-                <option value="bowling">Bowling Rating</option>
               </select>
             </div>
 
