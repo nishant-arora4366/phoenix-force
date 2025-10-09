@@ -23,6 +23,7 @@ export default function CreateTournamentPage() {
   const [isLoadingUser, setIsLoadingUser] = useState(true)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [showDateTimePicker, setShowDateTimePicker] = useState(false)
+  const [dateTimeStep, setDateTimeStep] = useState<'date' | 'time'>('date')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState({ hour: 7, minute: 0 })
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -108,6 +109,7 @@ export default function CreateTournamentPage() {
 
   // Date-time picker functions
   const openDateTimePicker = () => {
+    setDateTimeStep('date')
     // Parse current datetime if it exists
     if (formData.tournament_datetime) {
       const date = new Date(formData.tournament_datetime)
@@ -120,6 +122,16 @@ export default function CreateTournamentPage() {
       setCurrentMonth(today) // Set calendar to show current month
     }
     setShowDateTimePicker(true)
+  }
+
+  const handleDateNext = () => {
+    if (selectedDate) {
+      setDateTimeStep('time')
+    }
+  }
+
+  const handleTimeBack = () => {
+    setDateTimeStep('date')
   }
 
   const handleDateSelect = (date: Date) => {
@@ -162,6 +174,7 @@ export default function CreateTournamentPage() {
       }))
     }
     setShowDateTimePicker(false)
+    setDateTimeStep('date')
   }
 
   const formatDateTime = (datetimeString: string) => {
@@ -719,10 +732,13 @@ export default function CreateTournamentPage() {
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-white">
-                  Select Date & Time
+                  {dateTimeStep === 'date' ? 'Select Date' : 'Select Time'}
                 </h3>
                 <button
-                  onClick={() => setShowDateTimePicker(false)}
+                  onClick={() => {
+                    setShowDateTimePicker(false)
+                    setDateTimeStep('date')
+                  }}
                   className="text-[#CEA17A] hover:text-white transition-colors duration-200"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -732,6 +748,7 @@ export default function CreateTournamentPage() {
               </div>
               
               {/* Date Selection - Calendar View */}
+              {dateTimeStep === 'date' && (
               <div className="mb-6">
                 <label className="block text-sm font-medium text-[#CEA17A] mb-3">Select Date</label>
                 
@@ -861,80 +878,108 @@ export default function CreateTournamentPage() {
                   </div>
                 </div>
               </div>
+              )}
               
               {/* Time Selection */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-[#CEA17A] mb-3">Select Time</label>
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Hour Selection */}
-                  <div>
-                    <label className="block text-xs text-[#CEA17A]/70 mb-2">Hour</label>
-                    <select
-                      value={selectedTime.hour}
-                      onChange={(e) => handleTimeSelect(Number(e.target.value), selectedTime.minute)}
-                      className="w-full px-3 py-2 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
-                    >
-                      {Array.from({ length: 24 }, (_, i) => (
-                        <option key={i} value={i}>
-                          {i.toString().padStart(2, '0')}
-                        </option>
-                      ))}
-                    </select>
+              {dateTimeStep === 'time' && (
+                <>
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-[#CEA17A] mb-3">Select Time</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Hour Selection */}
+                      <div>
+                        <label className="block text-xs text-[#CEA17A]/70 mb-2">Hour</label>
+                        <select
+                          value={selectedTime.hour}
+                          onChange={(e) => handleTimeSelect(Number(e.target.value), selectedTime.minute)}
+                          className="w-full px-3 py-2 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
+                        >
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <option key={i} value={i}>
+                              {i.toString().padStart(2, '0')}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* Minute Selection */}
+                      <div>
+                        <label className="block text-xs text-[#CEA17A]/70 mb-2">Minute</label>
+                        <select
+                          value={selectedTime.minute}
+                          onChange={(e) => handleTimeSelect(selectedTime.hour, Number(e.target.value))}
+                          className="w-full px-3 py-2 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
+                        >
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <option key={i} value={i}>
+                              {i.toString().padStart(2, '0')}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   </div>
                   
-                  {/* Minute Selection */}
-                  <div>
-                    <label className="block text-xs text-[#CEA17A]/70 mb-2">Minute</label>
-                    <select
-                      value={selectedTime.minute}
-                      onChange={(e) => handleTimeSelect(selectedTime.hour, Number(e.target.value))}
-                      className="w-full px-3 py-2 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
-                    >
-                      {Array.from({ length: 60 }, (_, i) => (
-                        <option key={i} value={i}>
-                          {i.toString().padStart(2, '0')}
-                        </option>
+                  {/* Quick Time Options */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-[#CEA17A] mb-3">Quick Select</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { label: 'Morning', hour: 7, minute: 0 },
+                        { label: 'Afternoon', hour: 14, minute: 0 },
+                        { label: 'Evening', hour: 17, minute: 0 },
+                        { label: 'Night', hour: 20, minute: 0 }
+                      ].map((option) => (
+                        <button
+                          key={option.label}
+                          onClick={() => handleTimeSelect(option.hour, option.minute)}
+                          className="px-3 py-2 bg-[#3E4E5A]/20 hover:bg-[#3E4E5A]/30 text-[#CEA17A] hover:text-white border border-[#CEA17A]/30 hover:border-[#CEA17A]/50 rounded-lg text-sm font-medium transition-all duration-200"
+                        >
+                          {option.label}
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
-                </div>
-              </div>
-              
-              {/* Quick Time Options */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-[#CEA17A] mb-3">Quick Select</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: 'Morning', hour: 7, minute: 0 },
-                    { label: 'Afternoon', hour: 14, minute: 0 },
-                    { label: 'Evening', hour: 17, minute: 0 },
-                    { label: 'Night', hour: 20, minute: 0 }
-                  ].map((option) => (
-                    <button
-                      key={option.label}
-                      onClick={() => handleTimeSelect(option.hour, option.minute)}
-                      className="px-3 py-2 bg-[#3E4E5A]/20 hover:bg-[#3E4E5A]/30 text-[#CEA17A] hover:text-white border border-[#CEA17A]/30 hover:border-[#CEA17A]/50 rounded-lg text-sm font-medium transition-all duration-200"
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                </>
+              )}
               
               {/* Action buttons */}
               <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDateTimePicker(false)}
-                  className="flex-1 px-4 py-2 bg-[#3E4E5A]/20 hover:bg-[#3E4E5A]/30 text-[#CEA17A] hover:text-white border border-[#CEA17A]/30 hover:border-[#CEA17A]/50 rounded-lg font-medium text-sm transition-all duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDateTime}
-                  className="flex-1 px-4 py-2 bg-[#CEA17A]/20 hover:bg-[#CEA17A]/30 text-white rounded-lg font-medium text-sm transition-all duration-200"
-                >
-                  Confirm
-                </button>
+                {dateTimeStep === 'date' ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowDateTimePicker(false)
+                        setDateTimeStep('date')
+                      }}
+                      className="flex-1 px-4 py-2 bg-[#3E4E5A]/20 hover:bg-[#3E4E5A]/30 text-[#CEA17A] hover:text-white border border-[#CEA17A]/30 hover:border-[#CEA17A]/50 rounded-lg font-medium text-sm transition-all duration-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDateNext}
+                      disabled={!selectedDate}
+                      className="flex-1 px-4 py-2 bg-[#CEA17A]/20 hover:bg-[#CEA17A]/30 text-white rounded-lg font-medium text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleTimeBack}
+                      className="flex-1 px-4 py-2 bg-[#3E4E5A]/20 hover:bg-[#3E4E5A]/30 text-[#CEA17A] hover:text-white border border-[#CEA17A]/30 hover:border-[#CEA17A]/50 rounded-lg font-medium text-sm transition-all duration-200"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={confirmDateTime}
+                      className="flex-1 px-4 py-2 bg-[#CEA17A]/20 hover:bg-[#CEA17A]/30 text-white rounded-lg font-medium text-sm transition-all duration-200"
+                    >
+                      Confirm
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
