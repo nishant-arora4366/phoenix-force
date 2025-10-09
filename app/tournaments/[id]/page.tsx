@@ -2010,7 +2010,7 @@ export default function TournamentDetailsPage() {
                                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-400">
                                       {slotNumber}
                                     </div>
-                                    <div className="text-sm">Available slot</div>
+                                    <div className="text-sm text-green-400">Available slot</div>
                                   </div>
                                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                                     Empty
@@ -2026,7 +2026,7 @@ export default function TournamentDetailsPage() {
                                   </div>
                                 </div>
                                 <div className="col-span-4">
-                                  <div className="text-sm">Available slot</div>
+                                  <div className="text-sm text-green-400">Available slot</div>
                                 </div>
                                 <div className="col-span-2">
                                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
