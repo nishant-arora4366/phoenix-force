@@ -774,17 +774,17 @@ export default function PlayersPage() {
           <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl border border-[#CEA17A]/20 shadow-xl overflow-hidden">
             {/* Table Header */}
             <div className="bg-gradient-to-r from-[#CEA17A]/10 to-[#CEA17A]/5 border-b border-[#CEA17A]/20">
-              <div className={`grid gap-1 sm:gap-4 p-2 sm:p-4 text-xs font-semibold text-[#CEA17A] uppercase tracking-wide ${
+              <div className={`grid gap-2 sm:gap-4 p-2 sm:p-4 text-xs font-semibold text-[#CEA17A] uppercase tracking-wide ${
                 (userRole === 'admin' || userRole === 'host') 
                   ? 'grid-cols-12' 
                   : 'grid-cols-10'
               }`}>
                 <div className="col-span-1 sm:col-span-1"></div>
-                <div className="col-span-3 sm:col-span-2">Name</div>
+                <div className="col-span-2 sm:col-span-2">Name</div>
                 <div className="col-span-2 sm:col-span-1">Role</div>
                 <div className="col-span-3 sm:col-span-2">Community</div>
                 {(userRole === 'admin' || userRole === 'host') && (
-                  <div className="col-span-1 sm:col-span-1">Price</div>
+                  <div className="col-span-2 sm:col-span-1">Price</div>
                 )}
                 <div className="hidden sm:col-span-5">Actions</div>
                     </div>
@@ -796,7 +796,7 @@ export default function PlayersPage() {
                 <div 
                   key={player.id} 
                       onClick={() => router.push(`/players/${player.id}`)}
-                  className={`grid gap-1 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
+                  className={`grid gap-2 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
                     (userRole === 'admin' || userRole === 'host') 
                       ? 'grid-cols-12' 
                       : 'grid-cols-10'
@@ -818,8 +818,8 @@ export default function PlayersPage() {
                   </div>
 
                   {/* Name */}
-                  <div className="col-span-3 sm:col-span-2 flex items-center">
-                    <div>
+                  <div className="col-span-2 sm:col-span-2 flex items-center min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="text-xs sm:text-base font-medium text-[#DBD0C0] group-hover:text-[#CEA17A] transition-colors truncate">
                         {player.display_name}
                       </div>
@@ -904,7 +904,7 @@ export default function PlayersPage() {
 
                   {/* Base Price */}
                   {(userRole === 'admin' || userRole === 'host') && (
-                    <div className="col-span-1 sm:col-span-1 flex items-center">
+                    <div className="col-span-2 sm:col-span-1 flex items-center">
                       <div className="text-xs sm:text-base font-semibold text-[#CEA17A]">
                         ₹{player.base_price}
                       </div>
