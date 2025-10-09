@@ -2265,7 +2265,13 @@ export default function TournamentDetailsPage() {
               </div>
 
               {/* Search and Filter Section */}
-              <div className="bg-[#3E4E5A] rounded-lg p-4 border border-[#CEA17A]/20 mb-6">
+              <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 mb-6">
+                {/* Luxury Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                
+                <div className="relative z-10">
                 <div className="space-y-4">
                   {/* Search - Full width on mobile */}
                   <div className="w-full">
@@ -2288,6 +2294,7 @@ export default function TournamentDetailsPage() {
                       {showSkillConfig ? 'Clear Skills Filter' : 'Add Filter on Skills'}
                     </button>
                   </div>
+                </div>
                 </div>
               </div>
 
@@ -2329,7 +2336,7 @@ export default function TournamentDetailsPage() {
                     </button>
                     <button
                       onClick={() => setEnabledSkills(availableSkills.map(s => s.id))}
-                      className="px-2 py-1 text-xs text-blue-600 hover:text-blue-800"
+                      className="px-2 py-1 text-xs text-[#DBD0C0] hover:text-[#CEA17A]"
                     >
                       Select All
                     </button>
@@ -2557,7 +2564,10 @@ export default function TournamentDetailsPage() {
                                 type="checkbox"
                                 checked={isSelected}
                                 disabled={isRegistered}
-                                onChange={() => !isRegistered && togglePlayerSelection(player)}
+                                onChange={(e) => {
+                                  e.stopPropagation()
+                                  if (!isRegistered) togglePlayerSelection(player)
+                                }}
                                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                               />
                               <div className="flex-1">
