@@ -2283,7 +2283,7 @@ export default function TournamentDetailsPage() {
                   <div className="w-full">
                     <button
                       onClick={() => setShowSkillConfig(!showSkillConfig)}
-                      className="w-full px-4 py-2.5 bg-[#CEA17A] text-[#09171F] rounded-lg hover:bg-[#CEA17A]/80 transition-colors text-sm font-medium"
+                      className="w-full px-4 py-2.5 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 text-sm font-medium"
                     >
                       {showSkillConfig ? 'Clear Skills Filter' : 'Add Filter on Skills'}
                     </button>
@@ -2458,19 +2458,24 @@ export default function TournamentDetailsPage() {
 
               {/* Selection Summary */}
               {selectedPlayers.length > 0 && (
-                <div className="mb-4 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between">
+                <div className="mb-4 relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
+                  {/* Luxury Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                  
+                  <div className="relative z-10 flex items-center justify-between">
                     <div>
-                      <div className="text-sm font-medium text-[#09171F]">
+                      <div className="text-sm font-medium text-[#DBD0C0]">
                         {selectedPlayers.length} player(s) selected
                       </div>
-                      <div className="text-xs text-[#09171F]">
+                      <div className="text-xs text-[#DBD0C0]">
                         {selectedPlayers.map(p => p.display_name).join(', ')}
                       </div>
                     </div>
                     <button
                       onClick={clearAllSelections}
-                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                      className="text-xs bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded px-2 py-1 hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 font-medium"
                     >
                       Clear All
                     </button>
@@ -2648,18 +2653,18 @@ export default function TournamentDetailsPage() {
                     })
                     setMultipleSkillFilters([])
                   }}
-                  className="w-full sm:flex-1 px-4 py-2 border border-[#CEA17A]/30 text-[#DBD0C0] rounded-lg hover:bg-[#3E4E5A] transition-colors text-sm font-medium bg-[#09171F]"
+                  className="w-full sm:flex-1 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 text-sm font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={assignPlayers}
                   disabled={selectedPlayers.length === 0 || isAssigning}
-                  className="w-full sm:flex-1 px-4 py-2 bg-[#CEA17A] text-[#09171F] rounded-lg hover:bg-[#CEA17A]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                  className="w-full sm:flex-1 px-4 py-2 bg-green-500/15 text-green-300 border border-green-500/25 shadow-lg shadow-green-500/10 backdrop-blur-sm rounded-lg hover:bg-green-500/25 hover:border-green-500/40 transition-all duration-150 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isAssigning ? (
                     <div className="flex items-center justify-center">
-                      <div className="w-4 h-4 border-2 border-[#09171F] border-t-transparent rounded-full animate-spin mr-2"></div>
+                      <div className="w-4 h-4 border-2 border-green-300 border-t-transparent rounded-full animate-spin mr-2"></div>
                       Registering...
                     </div>
                   ) : (
