@@ -1768,7 +1768,7 @@ export default function TournamentDetailsPage() {
                             <button
                               onClick={openStatusModal}
                               disabled={isUpdatingStatus}
-                              className="w-full sm:flex-1 px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                              className="w-full sm:flex-1 px-3 py-1.5 bg-green-500/15 text-green-300 border border-green-500/25 shadow-lg shadow-green-500/10 backdrop-blur-sm rounded-lg hover:bg-green-500/25 hover:border-green-500/40 transition-all duration-150 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                             >
                               {isUpdatingStatus ? 'Updating...' : 'Manage Status'}
                             </button>
@@ -1783,12 +1783,12 @@ export default function TournamentDetailsPage() {
                                   key={status}
                                   onClick={() => handleStatusChange(status)}
                                   disabled={isUpdatingStatus}
-                                  className={`w-full sm:flex-1 px-3 py-1.5 text-[#DBD0C0] rounded-lg transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
+                                  className={`w-full sm:flex-1 px-3 py-1.5 rounded-lg transition-all duration-150 text-xs font-medium backdrop-blur-sm border disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
                                     isForward 
-                                      ? 'bg-green-600 hover:bg-green-700' 
+                                      ? 'bg-green-500/15 text-green-300 border-green-500/25 shadow-lg shadow-green-500/10 hover:bg-green-500/25 hover:border-green-500/40' 
                                       : isBackward 
-                                        ? 'bg-orange-600 hover:bg-orange-700'
-                                        : 'bg-gray-600 hover:bg-gray-700'
+                                        ? 'bg-orange-500/15 text-orange-300 border-orange-500/25 shadow-lg shadow-orange-500/10 hover:bg-orange-500/25 hover:border-orange-500/40'
+                                        : 'bg-gray-500/15 text-gray-300 border-gray-500/25 shadow-lg shadow-gray-500/10 hover:bg-gray-500/25 hover:border-gray-500/40'
                                   }`}
                                 >
                                   {isUpdatingStatus ? 'Updating...' : 
