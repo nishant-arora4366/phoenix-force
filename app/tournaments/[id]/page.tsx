@@ -1850,7 +1850,7 @@ export default function TournamentDetailsPage() {
                         : 'border-[#CEA17A]/20'
                     }`}>
                       {/* Header - Hidden on mobile, shown on desktop */}
-                      <div className="hidden md:block bg-[#51080d] px-6 py-4 border-b border-[#75020f]/20">
+                      <div className="hidden md:block bg-[#3E4E5A] px-6 py-4 border-b border-[#CEA17A]/20">
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#DBD0C0]">
                           <div className="col-span-1">#</div>
                           <div className="col-span-4">Player Name</div>
@@ -2069,7 +2069,7 @@ export default function TournamentDetailsPage() {
                         : 'border-[#CEA17A]/20'
                     }`}>
                       {/* Header - Hidden on mobile, shown on desktop */}
-                      <div className="hidden md:block bg-[#51080d] px-6 py-4 border-b border-[#75020f]/20">
+                      <div className="hidden md:block bg-[#3E4E5A] px-6 py-4 border-b border-[#CEA17A]/20">
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#DBD0C0]">
                           <div className="col-span-1">#</div>
                           <div className="col-span-4">Player Name</div>
@@ -2236,11 +2236,11 @@ export default function TournamentDetailsPage() {
       {/* Enhanced Player Assignment Modal */}
       {showAssignModal && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
-              <div className="relative overflow-hidden bg-[#19171b] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-500 scale-100 border border-[#75020f]/30 animate-slide-up">
-            {/* Red Palette Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#75020f]/10 via-transparent to-[#51080d]/5 rounded-2xl"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-2xl"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#75020f]/8 to-transparent rounded-2xl"></div>
+              <div className="relative overflow-hidden bg-[#09171F] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-500 scale-100 border border-[#CEA17A]/30 animate-slide-up">
+            {/* Dark Blue Palette Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#3E4E5A]/5 rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#09171F]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl"></div>
             {/* Content */}
             <div className="relative z-10 p-4 sm:p-6">
               <div className="flex items-center justify-between mb-6">
@@ -2265,7 +2265,7 @@ export default function TournamentDetailsPage() {
               </div>
 
               {/* Search and Filter Section */}
-              <div className="bg-[#51080d] rounded-lg p-4 border border-[#75020f]/20 mb-6">
+              <div className="bg-[#3E4E5A] rounded-lg p-4 border border-[#CEA17A]/20 mb-6">
                 <div className="space-y-4">
                   {/* Search - Full width on mobile */}
                   <div className="w-full">
@@ -2275,7 +2275,7 @@ export default function TournamentDetailsPage() {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Type player name to search..."
-                      className="w-full px-3 py-2.5 bg-[#2b0307] border border-[#75020f]/30 rounded-lg text-[#DBD0C0] placeholder-gray-400 focus:ring-2 focus:ring-[#75020f] focus:border-[#75020f]"
+                      className="w-full px-3 py-2.5 bg-[#09171F] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] placeholder-gray-400 focus:ring-2 focus:ring-[#CEA17A] focus:border-[#CEA17A]"
                     />
                   </div>
                   
@@ -2283,7 +2283,7 @@ export default function TournamentDetailsPage() {
                   <div className="w-full">
                     <button
                       onClick={() => setShowSkillConfig(!showSkillConfig)}
-                      className="w-full px-4 py-2.5 bg-[#75020f] text-[#DBD0C0] rounded-lg hover:bg-[#51080d] transition-colors text-sm font-medium"
+                      className="w-full px-4 py-2.5 bg-[#CEA17A] text-[#09171F] rounded-lg hover:bg-[#CEA17A]/80 transition-colors text-sm font-medium"
                     >
                       {showSkillConfig ? 'Clear Skills Filter' : 'Add Filter on Skills'}
                     </button>
@@ -2308,7 +2308,7 @@ export default function TournamentDetailsPage() {
                   
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
                     {availableSkills.map((skill) => (
-                      <label key={skill.id} className="flex items-center space-x-2 p-2 border border-[#75020f]/20 rounded hover:bg-[#51080d] cursor-pointer text-[#DBD0C0]">
+                      <label key={skill.id} className="flex items-center space-x-2 p-2 border border-[#CEA17A]/20 rounded hover:bg-[#3E4E5A] cursor-pointer text-[#DBD0C0]">
                         <input
                           type="checkbox"
                           checked={enabledSkills.includes(skill.id)}
@@ -2339,15 +2339,15 @@ export default function TournamentDetailsPage() {
 
               {/* Active Skills Filter */}
               {enabledSkills.length > 0 && (
-                <div className="bg-gradient-to-r from-[#51080d] to-[#2b0307] rounded-xl p-4 border border-[#75020f]/20 mb-6 shadow-sm">
+                <div className="bg-gradient-to-r from-[#3E4E5A] to-[#09171F] rounded-xl p-4 border border-[#CEA17A]/20 mb-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-[#51080d]0 rounded-full"></div>
+                      <div className="w-2 h-2 bg-[#CEA17A] rounded-full"></div>
                       <h4 className="text-sm font-semibold text-[#DBD0C0]">Active Filters</h4>
                     </div>
                     <button
                       onClick={clearAllSkillFilters}
-                      className="text-xs text-[#DBD0C0] hover:text-[#75020f] font-medium"
+                      className="text-xs text-[#DBD0C0] hover:text-[#CEA17A] font-medium"
                     >
                       Clear All
                     </button>
@@ -2376,7 +2376,7 @@ export default function TournamentDetailsPage() {
                             <select
                               value={skillFilterValues[skillId]?.[0] || ''}
                               onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
-                              className="w-full px-2 py-1.5 border border-[#75020f]/30 rounded-md focus:ring-1 focus:ring-[#75020f] focus:border-[#75020f] text-xs bg-[#2b0307] text-[#DBD0C0]"
+                              className="w-full px-2 py-1.5 border border-[#CEA17A]/30 rounded-md focus:ring-1 focus:ring-[#CEA17A] focus:border-[#CEA17A] text-xs bg-[#09171F] text-[#DBD0C0]"
                             >
                               <option value="">All {skill.name}</option>
                               {skill.values?.map((value: any) => (
@@ -2387,11 +2387,11 @@ export default function TournamentDetailsPage() {
                             </select>
                           ) : skill.type === 'multiselect' ? (
                             <div className="space-y-2">
-                              <div className="max-h-24 overflow-y-auto border border-[#75020f]/20 rounded-md bg-[#2b0307]">
+                              <div className="max-h-24 overflow-y-auto border border-[#CEA17A]/20 rounded-md bg-[#09171F]">
                                 {skill.values?.map((value: any) => {
                                   const isSelected = skillFilterValues[skillId]?.includes(value.id) || false
                                   return (
-                                    <label key={value.id} className="flex items-center space-x-2 px-2 py-1 hover:bg-[#51080d] cursor-pointer text-[#DBD0C0]">
+                                    <label key={value.id} className="flex items-center space-x-2 px-2 py-1 hover:bg-[#3E4E5A] cursor-pointer text-[#DBD0C0]">
                                       <input
                                         type="checkbox"
                                         checked={isSelected}
@@ -2426,7 +2426,7 @@ export default function TournamentDetailsPage() {
                                   values[0] = e.target.value
                                   updateSkillFilterValue(skillId, values)
                                 }}
-                                className="w-full px-2 py-1.5 border border-[#75020f]/30 rounded-md focus:ring-1 focus:ring-[#75020f] focus:border-[#75020f] text-xs bg-[#2b0307] text-[#DBD0C0]"
+                                className="w-full px-2 py-1.5 border border-[#CEA17A]/30 rounded-md focus:ring-1 focus:ring-[#CEA17A] focus:border-[#CEA17A] text-xs bg-[#09171F] text-[#DBD0C0]"
                               />
                               <input
                                 type="number"
@@ -2437,7 +2437,7 @@ export default function TournamentDetailsPage() {
                                   values[1] = e.target.value
                                   updateSkillFilterValue(skillId, values)
                                 }}
-                                className="w-full px-2 py-1.5 border border-[#75020f]/30 rounded-md focus:ring-1 focus:ring-[#75020f] focus:border-[#75020f] text-xs bg-[#2b0307] text-[#DBD0C0]"
+                                className="w-full px-2 py-1.5 border border-[#CEA17A]/30 rounded-md focus:ring-1 focus:ring-[#CEA17A] focus:border-[#CEA17A] text-xs bg-[#09171F] text-[#DBD0C0]"
                               />
                             </div>
                           ) : (
@@ -2502,7 +2502,7 @@ export default function TournamentDetailsPage() {
                 
                 <div className="max-h-48 sm:max-h-64 overflow-y-auto border border-[#CEA17A]/20 rounded-lg">
                   {/* Table-like Header Row */}
-                  <div className="p-2 sm:p-3 bg-[#51080d] border-b border-[#75020f]/20">
+                  <div className="p-2 sm:p-3 bg-[#3E4E5A] border-b border-[#CEA17A]/20">
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <input
                         type="checkbox"
@@ -2542,8 +2542,8 @@ export default function TournamentDetailsPage() {
                             key={player.id}
                             className={`p-2 sm:p-3 transition-colors ${
                               isRegistered 
-                                ? 'bg-[#2b0307] opacity-60 cursor-not-allowed' 
-                                : 'hover:bg-[#51080d] cursor-pointer'
+                                ? 'bg-[#09171F] opacity-60 cursor-not-allowed' 
+                                : 'hover:bg-[#3E4E5A] cursor-pointer'
                             }`}
                             onClick={() => !isRegistered && togglePlayerSelection(player)}
                           >
@@ -2559,7 +2559,7 @@ export default function TournamentDetailsPage() {
                                 <div className="font-medium text-[#DBD0C0]">
                                   <div className="truncate">{player.display_name}</div>
                                   {isRegistered && (
-                                    <span className="inline-block mt-1 text-xs bg-[#75020f] text-[#DBD0C0] px-2 py-1 rounded-full">
+                                    <span className="inline-block mt-1 text-xs bg-[#CEA17A] text-[#09171F] px-2 py-1 rounded-full">
                                       Already Registered
                                     </span>
                                   )}
@@ -2593,7 +2593,7 @@ export default function TournamentDetailsPage() {
                   Assignment Status
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <label className="flex items-center p-3 bg-[#51080d] border border-[#75020f]/20 rounded-lg hover:bg-[#2b0307] cursor-pointer">
+                  <label className="flex items-center p-3 bg-[#3E4E5A] border border-[#CEA17A]/20 rounded-lg hover:bg-[#09171F] cursor-pointer">
                     <input
                       type="radio"
                       value="pending"
@@ -2606,7 +2606,7 @@ export default function TournamentDetailsPage() {
                       <div className="text-xs text-[#DBD0C0]">Player needs approval</div>
                     </div>
                   </label>
-                  <label className="flex items-center p-3 bg-[#51080d] border border-[#75020f]/20 rounded-lg hover:bg-[#2b0307] cursor-pointer">
+                  <label className="flex items-center p-3 bg-[#3E4E5A] border border-[#CEA17A]/20 rounded-lg hover:bg-[#09171F] cursor-pointer">
                     <input
                       type="radio"
                       value="confirmed"
@@ -2643,18 +2643,18 @@ export default function TournamentDetailsPage() {
                     })
                     setMultipleSkillFilters([])
                   }}
-                  className="w-full sm:flex-1 px-4 py-2 border border-[#75020f]/30 text-[#DBD0C0] rounded-lg hover:bg-[#51080d] transition-colors text-sm font-medium bg-[#2b0307]"
+                  className="w-full sm:flex-1 px-4 py-2 border border-[#CEA17A]/30 text-[#DBD0C0] rounded-lg hover:bg-[#3E4E5A] transition-colors text-sm font-medium bg-[#09171F]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={assignPlayers}
                   disabled={selectedPlayers.length === 0 || isAssigning}
-                  className="w-full sm:flex-1 px-4 py-2 bg-[#75020f] text-[#DBD0C0] rounded-lg hover:bg-[#51080d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                  className="w-full sm:flex-1 px-4 py-2 bg-[#CEA17A] text-[#09171F] rounded-lg hover:bg-[#CEA17A]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                 >
                   {isAssigning ? (
                     <div className="flex items-center justify-center">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      <div className="w-4 h-4 border-2 border-[#09171F] border-t-transparent rounded-full animate-spin mr-2"></div>
                       Registering...
                     </div>
                   ) : (
