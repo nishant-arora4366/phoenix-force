@@ -48,8 +48,8 @@ const fetcher = async (url: string) => {
 export default function PlayersPage() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterCommunity, setFilterCommunity] = useState<string[]>([])
-  const [filterRole, setFilterRole] = useState<string[]>([])
+  const [skillFilters, setSkillFilters] = useState<Record<string, string[]>>({})
+  const [availableSkills, setAvailableSkills] = useState<Record<string, string[]>>({})
   const [sortBy, setSortBy] = useState('name')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [user, setUser] = useState<any>(null)
@@ -96,36 +96,71 @@ export default function PlayersPage() {
     return () => unsubscribe()
   }, [])
 
+  // Populate available skills from players data
+  useEffect(() => {
+    if (players) {
+      const skillsMap: Record<string, Set<string>> = {}
+      
+      players.forEach(player => {
+        if (player.skills) {
+          Object.entries(player.skills).forEach(([skillName, skillValue]) => {
+            if (!skillsMap[skillName]) {
+              skillsMap[skillName] = new Set()
+            }
+            
+            if (Array.isArray(skillValue)) {
+              skillValue.forEach(value => {
+                if (value && value.toString().trim()) {
+                  skillsMap[skillName].add(value.toString())
+                }
+              })
+            } else if (skillValue && skillValue.toString().trim()) {
+              skillsMap[skillName].add(skillValue.toString())
+            }
+          })
+        }
+      })
+      
+      // Convert sets to arrays and sort
+      const skillsWithValues: Record<string, string[]> = {}
+      Object.entries(skillsMap).forEach(([skillName, values]) => {
+        if (values.size > 0) {
+          skillsWithValues[skillName] = Array.from(values).sort()
+        }
+      })
+      
+      setAvailableSkills(skillsWithValues)
+    }
+  }, [players])
+
 
   const filteredPlayers = players?.filter(player => {
     const matchesSearch = player.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          player.stage_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCommunity = filterCommunity.length === 0 || 
-      (player.skills?.Community && 
-        (Array.isArray(player.skills.Community) ? 
-          filterCommunity.some(community => player.skills?.Community?.includes(community)) :
-          filterCommunity.includes(player.skills.Community)))
     
-    const matchesRole = filterRole.length === 0 || 
-      (player.skills?.Role && 
-        (Array.isArray(player.skills.Role) ? 
-          filterRole.some(roleFilter => 
-            (player.skills?.Role as string[]).some((role: string) => {
-              if (roleFilter === 'bowler') return role.toLowerCase().includes('bowler')
-              if (roleFilter === 'batter') return role.toLowerCase().includes('batter')
-              if (roleFilter === 'wicket_keeper') return role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk')
-              return false
-            })
-          ) :
-          filterRole.some(roleFilter => {
-            const role = player.skills?.Role as string
-            if (roleFilter === 'bowler') return role?.toLowerCase().includes('bowler')
-            if (roleFilter === 'batter') return role?.toLowerCase().includes('batter')
-            if (roleFilter === 'wicket_keeper') return role?.toLowerCase().includes('wicket') || role?.toLowerCase().includes('wk')
-            return false
-          })))
+    // Check all skill filters
+    const matchesAllSkills = Object.entries(skillFilters).every(([skillName, selectedValues]) => {
+      if (selectedValues.length === 0) return true // No filter applied
+      
+      const playerSkillValue = player.skills?.[skillName]
+      if (!playerSkillValue) return false
+      
+      if (Array.isArray(playerSkillValue)) {
+        return selectedValues.some(selectedValue => 
+          playerSkillValue.some(playerValue => 
+            playerValue.toString().toLowerCase().includes(selectedValue.toLowerCase()) ||
+            selectedValue.toLowerCase().includes(playerValue.toString().toLowerCase())
+          )
+        )
+      } else {
+        return selectedValues.some(selectedValue => 
+          playerSkillValue.toString().toLowerCase().includes(selectedValue.toLowerCase()) ||
+          selectedValue.toLowerCase().includes(playerSkillValue.toString().toLowerCase())
+        )
+      }
+    })
     
-    return matchesSearch && matchesCommunity && matchesRole
+    return matchesSearch && matchesAllSkills
   })?.sort((a, b) => {
     switch (sortBy) {
       case 'name':
@@ -141,14 +176,6 @@ export default function PlayersPage() {
     }
   })
 
-  const uniqueCommunities = Array.from(new Set(
-    players?.flatMap(player => {
-      if (player.skills?.Community) {
-        return Array.isArray(player.skills.Community) ? player.skills.Community : [player.skills.Community]
-      }
-      return []
-    }).filter(Boolean)
-  )) || []
 
   const handleDelete = async (playerId: string, playerName: string) => {
     if (!confirm(`Are you sure you want to delete ${playerName}? This action cannot be undone.`)) {
@@ -281,121 +308,107 @@ export default function PlayersPage() {
           </div>
         </div>
 
-        {/* Filters & Controls */}
-        <div className="bg-[#09171F]/50 rounded-xl shadow-sm border border-[#CEA17A]/20 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              {/* Search */}
-              <div className="flex-1">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-[#CEA17A]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+        {/* Modern Dynamic Filters */}
+        <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-8">
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-[#CEA17A]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search players by name..."
+                className="w-full pl-12 pr-4 py-4 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-lg placeholder-[#CEA17A]/50"
+              />
+            </div>
+          </div>
+
+          {/* Dynamic Skills Filters */}
+          {Object.keys(availableSkills).length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              {Object.entries(availableSkills).map(([skillName, skillValues]) => (
+                <div key={skillName} className="space-y-2">
+                  <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">
+                    {skillName}
+                  </label>
+                  <div className="relative">
+                    <select
+                      multiple
+                      value={skillFilters[skillName] || []}
+                      onChange={(e) => {
+                        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value)
+                        setSkillFilters(prev => ({
+                          ...prev,
+                          [skillName]: selectedOptions
+                        }))
+                      }}
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/30 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] min-h-[3rem] shadow-lg"
+                      size={Math.min(skillValues.length, 6)}
+                    >
+                      {skillValues.map(value => (
+                        <option key={value} value={value}>{value}</option>
+                      ))}
+                    </select>
+                    {(skillFilters[skillName]?.length || 0) > 0 && (
+                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-lg">
+                        {skillFilters[skillName]?.length || 0}
+                      </div>
+                    )}
                   </div>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search players by name..."
-                    className="w-full pl-10 pr-4 py-3 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
-                  />
                 </div>
-              </div>
+              ))}
+            </div>
+          )}
 
-              {/* Community Filter */}
-              <div className="sm:w-48">
-                <div className="relative">
-                  <select
-                    multiple
-                    value={filterCommunity}
-                    onChange={(e) => {
-                      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value)
-                      setFilterCommunity(selectedOptions)
-                    }}
-                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] min-h-[3rem]"
-                    size={Math.min(uniqueCommunities.length + 1, 6)}
-                  >
-                    {uniqueCommunities.map(community => (
-                      <option key={community} value={community}>{community}</option>
-                    ))}
-                  </select>
-                  {filterCommunity.length > 0 && (
-                    <div className="absolute -top-2 -right-2 bg-[#CEA17A] text-[#09171F] text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                      {filterCommunity.length}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Role Filter */}
-              <div className="sm:w-48">
-                <div className="relative">
-                  <select
-                    multiple
-                    value={filterRole}
-                    onChange={(e) => {
-                      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value)
-                      setFilterRole(selectedOptions)
-                    }}
-                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] min-h-[3rem]"
-                    size={4}
-                  >
-                    <option value="bowler">Bowler</option>
-                    <option value="batter">Batter</option>
-                    <option value="wicket_keeper">Wicket Keeper</option>
-                  </select>
-                  {filterRole.length > 0 && (
-                    <div className="absolute -top-2 -right-2 bg-[#CEA17A] text-[#09171F] text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                      {filterRole.length}
-                    </div>
-                  )}
-                </div>
-              </div>
-
+          {/* Sort and View Controls */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {/* Sort */}
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">Sort by:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-2 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] shadow-lg"
+              >
+                <option value="name">Name</option>
+                <option value="price">Price</option>
+                <option value="batting">Batting Rating</option>
+                <option value="bowling">Bowling Rating</option>
+              </select>
             </div>
 
-            {/* Sort and View Controls */}
-            <div className="flex items-center gap-4">
-              {/* Sort */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-[#CEA17A]">Sort by:</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 border-2 border-[#CEA17A]/20 rounded-lg focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
-                >
-                  <option value="name">Name</option>
-                  <option value="price">Price</option>
-                  <option value="batting">Batting Rating</option>
-                  <option value="bowling">Bowling Rating</option>
-                </select>
-              </div>
-
-              {/* View Mode Toggle */}
-              <div className="flex items-center bg-[#19171b]/50 rounded-lg p-1 border border-[#CEA17A]/20">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'grid' ? 'bg-[#CEA17A]/20 text-[#CEA17A] shadow-sm' : 'text-[#CEA17A]/60 hover:text-[#CEA17A]'
-                  }`}
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'list' ? 'bg-[#CEA17A]/20 text-[#CEA17A] shadow-sm' : 'text-[#CEA17A]/60 hover:text-[#CEA17A]'
-                  }`}
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                </button>
-              </div>
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide mr-2">View:</span>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
+                  viewMode === 'grid'
+                    ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
+                    : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
+                  viewMode === 'list'
+                    ? 'bg-gradient-to-r from-[#CEA17A] to-[#CEA17A]/80 text-[#09171F] shadow-[#CEA17A]/30'
+                    : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -723,8 +736,7 @@ export default function PlayersPage() {
               <button 
                 onClick={() => {
                   setSearchTerm('')
-                  setFilterCommunity([])
-                  setFilterRole([])
+                  setSkillFilters({})
                 }}
                 className="bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium px-6 py-2"
               >
