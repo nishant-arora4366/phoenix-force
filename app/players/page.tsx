@@ -782,9 +782,9 @@ export default function PlayersPage() {
                 <div className="col-span-1 sm:col-span-1"></div>
                 <div className="col-span-3 sm:col-span-2">Name</div>
                 <div className="col-span-2 sm:col-span-1">Role</div>
-                <div className="col-span-2 sm:col-span-2">Community</div>
+                <div className="col-span-3 sm:col-span-2">Community</div>
                 {(userRole === 'admin' || userRole === 'host') && (
-                  <div className="col-span-2 sm:col-span-1">Price</div>
+                  <div className="col-span-1 sm:col-span-1">Price</div>
                 )}
                 <div className="hidden sm:col-span-5">Actions</div>
                     </div>
@@ -864,7 +864,7 @@ export default function PlayersPage() {
                   </div>
 
                   {/* Community */}
-                  <div className="col-span-2 sm:col-span-2 flex items-center">
+                  <div className="col-span-3 sm:col-span-2 flex items-center">
                     <div className="flex items-center gap-1 max-w-full overflow-hidden">
                       {player.skills?.Community ? (
                         Array.isArray(player.skills.Community) ? (
@@ -904,7 +904,7 @@ export default function PlayersPage() {
 
                   {/* Base Price */}
                   {(userRole === 'admin' || userRole === 'host') && (
-                    <div className="col-span-2 sm:col-span-1 flex items-center">
+                    <div className="col-span-1 sm:col-span-1 flex items-center">
                       <div className="text-xs sm:text-base font-semibold text-[#CEA17A]">
                         ₹{player.base_price}
                       </div>
