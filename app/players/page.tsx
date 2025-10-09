@@ -385,8 +385,6 @@ export default function PlayersPage() {
                   </div>
                 )}
                 
-                {/* Dark Overlay for Text Readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
                 
                 {/* Action Buttons - Top Right */}
                 {(userRole === 'admin' || userRole === 'host') && (
@@ -423,8 +421,8 @@ export default function PlayersPage() {
                   </div>
                 )}
 
-                {/* Player Name - Bottom Left */}
-                <div className="absolute bottom-3 left-3">
+                {/* Player Name - Bottom Left with Gradient Background */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                   <h3 className="text-white font-semibold text-sm mb-1 drop-shadow-lg">
                     {player.display_name}
                   </h3>
