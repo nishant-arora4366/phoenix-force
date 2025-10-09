@@ -328,7 +328,7 @@ export default function Home() {
                   <br />
                   <span className="text-[#DBD0C0]">WITH US</span>
             </h1>
-                <p className="text-xl text-[#DBD0C0] mb-8 leading-relaxed max-w-2xl text-justify">
+                <p className="text-xl text-[#DBD0C0] mb-8 leading-relaxed max-w-2xl text-justify px-4 sm:px-0">
                   Join <span className="text-[#CEA17A] font-bold animate-text-glow">Phoenix Force</span>, where passionate cricket enthusiasts come together to create unforgettable experiences. 
                   From competitive tournaments to skill development, we provide the ultimate platform for players, hosts, and fans alike.
                 </p>
