@@ -359,20 +359,20 @@ export default function Home() {
               </Link>
             </div>
                 
-                <div className="space-y-4 h-[400px] overflow-y-auto">
+                <div className="flex flex-col gap-6 h-[500px]">
                   {tournamentsLoading ? (
                     // Loading skeleton
-                    Array.from({ length: 3 }).map((_, index) => (
-                      <div key={index} className="bg-[#303D49]/50 rounded-lg p-4 animate-pulse">
+                    Array.from({ length: 2 }).map((_, index) => (
+                      <div key={index} className="bg-[#303D49]/50 rounded-lg p-6 animate-pulse flex-1">
                         <div className="h-4 bg-[#5D020A]/20 rounded mb-2"></div>
                         <div className="h-3 bg-[#5D020A]/10 rounded w-2/3"></div>
                       </div>
                     ))
                   ) : upcomingTournaments.length > 0 ? (
                     upcomingTournaments.map((tournament) => (
-                      <Link key={tournament.id} href={`/tournaments/${tournament.id}`} className="block bg-[#19171b]/50 rounded-lg p-4 hover:bg-[#19171b]/70 transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow cursor-pointer">
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="text-[#DBD0C0] font-semibold text-sm leading-tight">{tournament.name}</h4>
+                      <Link key={tournament.id} href={`/tournaments/${tournament.id}`} className="block bg-[#19171b]/50 rounded-lg p-6 hover:bg-[#19171b]/70 transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow cursor-pointer flex-1 flex flex-col">
+                        <div className="flex items-start justify-between mb-4">
+                          <h4 className="text-[#DBD0C0] font-semibold text-base leading-tight">{tournament.name}</h4>
                           <span className={`w-32 px-3 py-1.5 rounded-lg text-xs font-medium backdrop-blur-sm border text-center ${
                             tournament.status === 'registration_open' 
                               ? 'bg-green-500/15 text-green-300 border-green-500/25 shadow-lg shadow-green-500/10'
@@ -388,7 +388,7 @@ export default function Home() {
                           </span>
                         </div>
                         
-                        <div className="space-y-1 text-xs text-[#DBD0C0]">
+                        <div className="space-y-2 text-sm text-[#DBD0C0] flex-grow">
                           <div className="flex items-center">
                             <svg className="w-3 h-3 mr-2 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -430,35 +430,35 @@ export default function Home() {
                           </div>
                         )}
                         
-                        {/* Progress bar */}
-                        <div className="mt-3">
+                        {/* Progress bar section - at bottom */}
+                        <div className="mt-4">
                           <div className="flex justify-between text-xs text-[#DBD0C0] mb-1">
                             <span>Slots filled</span>
                             <span>{Math.round(((tournament.filled_slots || 0) / (tournament.total_slots || 1)) * 100)}%</span>
                           </div>
-                          <div className="w-full bg-[#19171b] rounded-full h-1.5">
+                          <div className="w-full bg-[#19171b] rounded-full h-2">
                             <div 
-                              className="bg-gradient-to-r from-[#CEA17A] to-[#3E4E5A] h-1.5 rounded-full transition-all duration-300"
+                              className="bg-gradient-to-r from-[#CEA17A] to-[#3E4E5A] h-2 rounded-full transition-all duration-300"
                               style={{ width: `${((tournament.filled_slots || 0) / (tournament.total_slots || 1)) * 100}%` }}
                             ></div>
                           </div>
+                          
+                          {/* Waitlist progress bar */}
+                          {(tournament.waitlist_count || 0) > 0 && (
+                            <div className="mt-3">
+                              <div className="flex justify-between text-xs text-[#DBD0C0] mb-1">
+                                <span>Waitlist</span>
+                                <span>{tournament.waitlist_count} players</span>
+                              </div>
+                              <div className="w-full bg-[#19171b] rounded-full h-2">
+                                <div 
+                                  className="bg-gradient-to-r from-[#CEA17A] to-[#DBD0C0] h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${Math.min(((tournament.waitlist_count || 0) / 10) * 100, 100)}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        
-                        {/* Waitlist progress bar */}
-                        {(tournament.waitlist_count || 0) > 0 && (
-                          <div className="mt-2">
-                            <div className="flex justify-between text-xs text-[#DBD0C0] mb-1">
-                              <span>Waitlist</span>
-                              <span>{tournament.waitlist_count} players</span>
-                            </div>
-                            <div className="w-full bg-[#19171b] rounded-full h-1.5">
-                              <div 
-                                className="bg-gradient-to-r from-[#CEA17A] to-[#DBD0C0] h-1.5 rounded-full transition-all duration-300"
-                                style={{ width: `${Math.min(((tournament.waitlist_count || 0) / 10) * 100, 100)}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        )}
                         </Link>
                     ))
                   ) : (
