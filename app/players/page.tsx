@@ -405,10 +405,10 @@ export default function PlayersPage() {
                     {player.display_name}
                   </h3>
 
-                  {/* Roles */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {/* Roles from skills object */}
-                    {player.skills?.Role && (
+                  {/* Role */}
+                  {player.skills?.Role && (
+                    <div className="mb-3">
+                      <div className="text-xs text-[#CEA17A]/70 font-medium mb-1">Role</div>
                       <div className="flex flex-wrap gap-1">
                         {Array.isArray(player.skills.Role) ? (
                           player.skills.Role.map((role, index) => {
@@ -416,8 +416,8 @@ export default function PlayersPage() {
                                             role.toLowerCase().includes('bowler') ? '⚾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
                             return (
-                              <span key={index} className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                                {roleEmoji} {role}
+                              <span key={index} className="text-lg">
+                                {roleEmoji}
                               </span>
                             )
                           })
@@ -428,36 +428,35 @@ export default function PlayersPage() {
                                             role.toLowerCase().includes('bowler') ? '⚾' : 
                                             role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
                             return (
-                              <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                                {roleEmoji} {role}
+                              <span className="text-lg">
+                                {roleEmoji}
                               </span>
                             )
                           })()
                         )}
                       </div>
-                    )}
-                    {/* Community and Other Skills */}
-                    {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
-                      // Skip if it's already displayed as a role above or is empty
-                      if (['Role', 'Base Price', 'Batting Rating', 'Bowling Rating', 'Wicket Keeping Rating'].includes(skillName) || !skillValue) return null;
-                      
-                      return (
-                        <div key={skillName} className="flex flex-wrap gap-1">
-                          {Array.isArray(skillValue) ? (
-                            skillValue.map((value, index) => (
-                              <span key={index} className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                                {value}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                              {skillValue}
+                    </div>
+                  )}
+
+                  {/* Community */}
+                  {player.skills?.Community && (
+                    <div className="mb-3">
+                      <div className="text-xs text-[#CEA17A]/70 font-medium mb-1">Community</div>
+                      <div className="flex flex-wrap gap-1">
+                        {Array.isArray(player.skills.Community) ? (
+                          player.skills.Community.map((community, index) => (
+                            <span key={index} className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
+                              {community}
                             </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                          ))
+                        ) : (
+                          <span className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
+                            {player.skills.Community}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
 
 
@@ -587,9 +586,10 @@ export default function PlayersPage() {
                       )}
                     </div>
 
-                    {/* Roles */}
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {player.skills?.Role && (
+                    {/* Role */}
+                    {player.skills?.Role && (
+                      <div className="mb-3">
+                        <div className="text-xs text-[#CEA17A]/70 font-medium mb-1">Role</div>
                         <div className="flex flex-wrap gap-1">
                           {Array.isArray(player.skills.Role) ? (
                             player.skills.Role.map((role, index) => {
@@ -597,8 +597,8 @@ export default function PlayersPage() {
                                               role.toLowerCase().includes('bowler') ? '⚾' : 
                                               role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
                               return (
-                                <span key={index} className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">
-                                  {roleEmoji} {role}
+                                <span key={index} className="text-lg">
+                                  {roleEmoji}
                                 </span>
                               )
                             })
@@ -609,15 +609,35 @@ export default function PlayersPage() {
                                               role.toLowerCase().includes('bowler') ? '⚾' : 
                                               role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
                               return (
-                                <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">
-                                  {roleEmoji} {role}
+                                <span className="text-lg">
+                                  {roleEmoji}
                                 </span>
                               )
                             })()
                           )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+
+                    {/* Community */}
+                    {player.skills?.Community && (
+                      <div className="mb-3">
+                        <div className="text-xs text-[#CEA17A]/70 font-medium mb-1">Community</div>
+                        <div className="flex flex-wrap gap-1">
+                          {Array.isArray(player.skills.Community) ? (
+                            player.skills.Community.map((community, index) => (
+                              <span key={index} className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">
+                                {community}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="bg-[#3E4E5A]/20 text-[#DBD0C0] border border-[#3E4E5A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">
+                              {player.skills.Community}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Bio */}
                     {player.bio && (
