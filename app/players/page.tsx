@@ -774,7 +774,7 @@ export default function PlayersPage() {
           <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl border border-[#CEA17A]/20 shadow-xl overflow-hidden">
             {/* Table Header */}
             <div className="bg-gradient-to-r from-[#CEA17A]/10 to-[#CEA17A]/5 border-b border-[#CEA17A]/20">
-              <div className={`grid gap-1 sm:gap-4 p-2 sm:p-4 text-xs font-semibold text-[#CEA17A] uppercase tracking-wide ${
+              <div className={`grid gap-2 sm:gap-4 p-2 sm:p-4 text-xs font-semibold text-[#CEA17A] uppercase tracking-wide ${
                 (userRole === 'admin' || userRole === 'host') 
                   ? 'grid-cols-8' 
                   : 'grid-cols-8'
@@ -798,7 +798,7 @@ export default function PlayersPage() {
                 <div 
                   key={player.id} 
                       onClick={() => router.push(`/players/${player.id}`)}
-                  className={`grid gap-1 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
+                  className={`grid gap-2 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
                     (userRole === 'admin' || userRole === 'host') 
                       ? 'grid-cols-8' 
                       : 'grid-cols-8'
