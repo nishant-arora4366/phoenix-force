@@ -101,9 +101,15 @@ export default function PlayersPage() {
                          player.stage_name?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesGroup = !filterGroup || player.group_name === filterGroup
     const matchesRole = !filterRole || 
-      (filterRole === 'bowler' && player.is_bowler) ||
-      (filterRole === 'batter' && player.is_batter) ||
-      (filterRole === 'wicket_keeper' && player.is_wicket_keeper)
+      (filterRole === 'bowler' && player.skills?.Role && 
+        (Array.isArray(player.skills.Role) ? player.skills.Role.some(role => role.toLowerCase().includes('bowler')) : 
+         player.skills.Role.toLowerCase().includes('bowler'))) ||
+      (filterRole === 'batter' && player.skills?.Role && 
+        (Array.isArray(player.skills.Role) ? player.skills.Role.some(role => role.toLowerCase().includes('batter')) : 
+         player.skills.Role.toLowerCase().includes('batter'))) ||
+      (filterRole === 'wicket_keeper' && player.skills?.Role && 
+        (Array.isArray(player.skills.Role) ? player.skills.Role.some(role => role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk')) : 
+         player.skills.Role.toLowerCase().includes('wicket') || player.skills.Role.toLowerCase().includes('wk')))
     
     return matchesSearch && matchesGroup && matchesRole
   })?.sort((a, b) => {
@@ -401,21 +407,34 @@ export default function PlayersPage() {
 
                   {/* Roles */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {player.display_name === 'Test Player 1' && console.log('Test Player 1 roles:', { is_batter: player.is_batter, is_bowler: player.is_bowler, is_wicket_keeper: player.is_wicket_keeper })}
-                    {player.is_batter && (
-                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                        🏏 Batter
-                      </span>
-                    )}
-                    {player.is_bowler && (
-                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                        ⚾ Bowler
-                      </span>
-                    )}
-                    {player.is_wicket_keeper && (
-                      <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
-                        🧤 WK
-                      </span>
+                    {/* Roles from skills object */}
+                    {player.skills?.Role && (
+                      <div className="flex flex-wrap gap-1">
+                        {Array.isArray(player.skills.Role) ? (
+                          player.skills.Role.map((role, index) => {
+                            const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                            role.toLowerCase().includes('bowler') ? '⚾' : 
+                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                            return (
+                              <span key={index} className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
+                                {roleEmoji} {role}
+                              </span>
+                            )
+                          })
+                        ) : (
+                          (() => {
+                            const role = player.skills.Role
+                            const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                            role.toLowerCase().includes('bowler') ? '⚾' : 
+                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                            return (
+                              <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
+                                {roleEmoji} {role}
+                              </span>
+                            )
+                          })()
+                        )}
+                      </div>
                     )}
                     {/* Community and Other Skills */}
                     {player.skills && Object.entries(player.skills).map(([skillName, skillValue]) => {
@@ -570,14 +589,33 @@ export default function PlayersPage() {
 
                     {/* Roles */}
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {player.is_bowler && (
-                        <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">Bowler</span>
-                      )}
-                      {player.is_batter && (
-                        <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">Batter</span>
-                      )}
-                      {player.is_wicket_keeper && (
-                        <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">WK</span>
+                      {player.skills?.Role && (
+                        <div className="flex flex-wrap gap-1">
+                          {Array.isArray(player.skills.Role) ? (
+                            player.skills.Role.map((role, index) => {
+                              const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                              role.toLowerCase().includes('bowler') ? '⚾' : 
+                                              role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                              return (
+                                <span key={index} className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">
+                                  {roleEmoji} {role}
+                                </span>
+                              )
+                            })
+                          ) : (
+                            (() => {
+                              const role = player.skills.Role
+                              const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
+                                              role.toLowerCase().includes('bowler') ? '⚾' : 
+                                              role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🏏'
+                              return (
+                                <span className="bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 text-xs px-2 py-1 rounded backdrop-blur-sm">
+                                  {roleEmoji} {role}
+                                </span>
+                              )
+                            })()
+                          )}
+                        </div>
                       )}
                     </div>
 
