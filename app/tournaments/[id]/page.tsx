@@ -131,6 +131,7 @@ export default function TournamentDetailsPage() {
   const [enabledSkills, setEnabledSkills] = useState<string[]>([])
   const [skillFilterValues, setSkillFilterValues] = useState<{[key: string]: string[]}>({})
   const [showSkillConfig, setShowSkillConfig] = useState(false)
+  const [mobileStep, setMobileStep] = useState(1) // 1: Filter selection, 2: Player selection
 
   // Initialize Supabase client for realtime (singleton to avoid multiple instances)
   const supabase = getSupabaseClient()
@@ -702,6 +703,7 @@ export default function TournamentDetailsPage() {
         setSelectedSkill('')
         setSelectedSkillValue('')
         setAssignStatus('pending')
+        setMobileStep(1)
         
         // Show success message
         const playerNames = selectedPlayers.map(p => p.display_name).join(', ')
@@ -2236,7 +2238,7 @@ export default function TournamentDetailsPage() {
       {/* Enhanced Player Assignment Modal */}
       {showAssignModal && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
-              <div className="relative overflow-hidden bg-[#19171b] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-500 scale-100 border border-[#CEA17A]/30 animate-slide-up">
+              <div className="relative overflow-hidden bg-[#19171b] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-500 scale-100 border border-[#CEA17A]/30 animate-slide-up">
             {/* Dark Blue Palette Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#3E4E5A]/5 rounded-2xl"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl"></div>
@@ -2255,6 +2257,7 @@ export default function TournamentDetailsPage() {
                     setSelectedSkill('')
                     setSelectedSkillValue('')
                     setAssignStatus('pending')
+                    setMobileStep(1)
                   }}
                   className="text-gray-400 hover:text-[#DBD0C0] transition-colors"
                 >
@@ -2264,7 +2267,104 @@ export default function TournamentDetailsPage() {
                 </button>
               </div>
 
-              {/* Search and Filter Section */}
+              {/* Mobile Step Navigation */}
+              <div className="md:hidden mb-6">
+                <div className="flex items-center justify-center space-x-4">
+                  <div className={`flex items-center space-x-2 ${mobileStep >= 1 ? 'text-[#CEA17A]' : 'text-gray-500'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      mobileStep >= 1 ? 'bg-[#CEA17A] text-[#09171F]' : 'bg-gray-600 text-gray-300'
+                    }`}>
+                      1
+                    </div>
+                    <span className="text-sm">Filters</span>
+                  </div>
+                  <div className={`w-8 h-0.5 ${mobileStep >= 2 ? 'bg-[#CEA17A]' : 'bg-gray-600'}`}></div>
+                  <div className={`flex items-center space-x-2 ${mobileStep >= 2 ? 'text-[#CEA17A]' : 'text-gray-500'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      mobileStep >= 2 ? 'bg-[#CEA17A] text-[#09171F]' : 'bg-gray-600 text-gray-300'
+                    }`}>
+                      2
+                    </div>
+                    <span className="text-sm">Players</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile Step 1: Filter Selection */}
+              {mobileStep === 1 && (
+                <div className="md:hidden">
+                  <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 mb-6">
+                    {/* Luxury Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+                    
+                    <div className="relative z-10">
+                      <h4 className="text-lg font-semibold text-[#DBD0C0] mb-4">Configure Filters</h4>
+                      
+                      {/* Assignment Status Selection */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-2">Assignment Status</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => setAssignStatus('pending')}
+                            className={`p-3 rounded-lg border transition-all ${
+                              assignStatus === 'pending'
+                                ? 'bg-[#CEA17A]/20 border-[#CEA17A]/40 text-[#CEA17A]'
+                                : 'bg-[#09171F] border-[#CEA17A]/20 text-[#DBD0C0] hover:bg-[#3E4E5A]'
+                            }`}
+                          >
+                            <div className="text-sm font-medium">Pending</div>
+                            <div className="text-xs opacity-75">Needs approval</div>
+                          </button>
+                          <button
+                            onClick={() => setAssignStatus('confirmed')}
+                            className={`p-3 rounded-lg border transition-all ${
+                              assignStatus === 'confirmed'
+                                ? 'bg-[#CEA17A]/20 border-[#CEA17A]/40 text-[#CEA17A]'
+                                : 'bg-[#09171F] border-[#CEA17A]/20 text-[#DBD0C0] hover:bg-[#3E4E5A]'
+                            }`}
+                          >
+                            <div className="text-sm font-medium">Payment Verified</div>
+                            <div className="text-xs opacity-75">Payment confirmed</div>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Skills Filter Toggle */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-2">Skills Filter</label>
+                        <button
+                          onClick={() => setShowSkillConfig(!showSkillConfig)}
+                          className={`w-full p-3 rounded-lg border transition-all ${
+                            showSkillConfig
+                              ? 'bg-[#CEA17A]/20 border-[#CEA17A]/40 text-[#CEA17A]'
+                              : 'bg-[#09171F] border-[#CEA17A]/20 text-[#DBD0C0] hover:bg-[#3E4E5A]'
+                          }`}
+                        >
+                          <div className="text-sm font-medium">
+                            {showSkillConfig ? 'Skills Filter Enabled' : 'Enable Skills Filter'}
+                          </div>
+                          <div className="text-xs opacity-75">
+                            {showSkillConfig ? 'Click to disable' : 'Filter players by skills'}
+                          </div>
+                        </button>
+                      </div>
+
+                      {/* Continue Button */}
+                      <button
+                        onClick={() => setMobileStep(2)}
+                        className="w-full px-4 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium"
+                      >
+                        Continue to Player Selection
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Desktop and Mobile Step 2: Search and Filter Section */}
+              <div className={`${mobileStep === 2 ? 'block' : 'hidden md:block'}`}>
               <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 mb-6">
                 {/* Luxury Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
@@ -2463,6 +2563,22 @@ export default function TournamentDetailsPage() {
                 </div>
               )}
 
+              {/* Mobile Back Button for Step 2 */}
+              {mobileStep === 2 && (
+                <div className="md:hidden mb-4">
+                  <button
+                    onClick={() => setMobileStep(1)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-[#09171F] text-[#DBD0C0] border border-[#CEA17A]/30 rounded-lg hover:bg-[#3E4E5A] transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Back to Filters</span>
+                  </button>
+                </div>
+              )}
+              </div>
+
               {/* Selection Summary */}
               {selectedPlayers.length > 0 && (
                 <div className="mb-4 relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
@@ -2492,7 +2608,57 @@ export default function TournamentDetailsPage() {
 
               {/* Players List */}
               <div className="mb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                {/* Mobile Step 2: Inline Filters */}
+                {mobileStep === 2 && (
+                  <div className="md:hidden mb-4 space-y-3">
+                    {/* Search and Assignment Status Row */}
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search players..."
+                        className="flex-1 px-3 py-2 bg-[#09171F] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] placeholder-gray-400 focus:ring-2 focus:ring-[#CEA17A] focus:border-[#CEA17A] text-sm"
+                      />
+                      <select
+                        value={assignStatus}
+                        onChange={(e) => setAssignStatus(e.target.value as 'pending' | 'confirmed')}
+                        className="px-3 py-2 bg-[#09171F] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] focus:ring-2 focus:ring-[#CEA17A] focus:border-[#CEA17A] text-sm"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Payment Verified</option>
+                      </select>
+                    </div>
+                    
+                    {/* Skills Filter Toggle Row */}
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => setShowSkillConfig(!showSkillConfig)}
+                        className={`px-3 py-2 rounded-lg border text-sm transition-all ${
+                          showSkillConfig
+                            ? 'bg-[#CEA17A]/20 border-[#CEA17A]/40 text-[#CEA17A]'
+                            : 'bg-[#09171F] border-[#CEA17A]/20 text-[#DBD0C0] hover:bg-[#3E4E5A]'
+                        }`}
+                      >
+                        {showSkillConfig ? 'Skills Filter On' : 'Add Skills Filter'}
+                      </button>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={hideAssignedPlayers}
+                          onChange={(e) => setHideAssignedPlayers(e.target.checked)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label className="text-sm text-[#DBD0C0]">
+                          Hide Assigned
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Desktop Header */}
+                <div className="hidden md:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                   <h4 className="text-sm font-medium text-[#DBD0C0]">
                     Available Players ({filteredPlayers.filter(p => !p.isRegistered).length})
                   </h4>
@@ -2511,6 +2677,15 @@ export default function TournamentDetailsPage() {
                     </label>
                   </div>
                 </div>
+
+                {/* Mobile Header (Step 2 only) */}
+                {mobileStep === 2 && (
+                  <div className="md:hidden mb-3">
+                    <h4 className="text-sm font-medium text-[#DBD0C0]">
+                      Available Players ({filteredPlayers.filter(p => !p.isRegistered).length})
+                    </h4>
+                  </div>
+                )}
                 
                 <div className="max-h-48 sm:max-h-64 overflow-y-auto relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
                   {/* Luxury Gradient Overlay */}
@@ -2683,6 +2858,7 @@ export default function TournamentDetailsPage() {
                       hideAssigned: false
                     })
                     setMultipleSkillFilters([])
+                    setMobileStep(1)
                   }}
                   className="w-full sm:flex-1 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 text-sm font-medium"
                 >
