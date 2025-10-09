@@ -502,33 +502,31 @@ export default function PlayersPage() {
 
             {/* Sort Controls */}
             <div className="flex items-center gap-2">
-              <label className="text-sm font-semibold text-[#CEA17A] uppercase tracking-wide">Sort:</label>
-              
-              {/* Sort Direction Icons */}
-              <div className="flex flex-col">
+              {/* Sort Direction Icons - Side by Side */}
+              <div className="flex">
                 <button
                   onClick={() => setSortDirection('asc')}
-                  className={`p-1 rounded transition-all duration-200 ${
+                  className={`px-2 py-2 border-2 border-[#CEA17A]/30 rounded-l-lg transition-all duration-200 ${
                     sortDirection === 'asc' 
-                      ? 'bg-[#CEA17A] text-[#09171F]' 
+                      ? 'bg-[#CEA17A] text-[#09171F] border-[#CEA17A]' 
                       : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20'
                   }`}
                   title="Sort Ascending"
                 >
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
                 <button
                   onClick={() => setSortDirection('desc')}
-                  className={`p-1 rounded transition-all duration-200 ${
+                  className={`px-2 py-2 border-2 border-[#CEA17A]/30 rounded-r-lg border-l-0 transition-all duration-200 ${
                     sortDirection === 'desc' 
-                      ? 'bg-[#CEA17A] text-[#09171F]' 
+                      ? 'bg-[#CEA17A] text-[#09171F] border-[#CEA17A]' 
                       : 'bg-[#19171b]/60 text-[#DBD0C0] hover:bg-[#CEA17A]/20'
                   }`}
                   title="Sort Descending"
                 >
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
