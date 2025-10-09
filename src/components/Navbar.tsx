@@ -358,12 +358,12 @@ export default function Navbar() {
       {/* Floating Back Button - Desktop: Below Navbar, Mobile: Bottom Left */}
       <button
         onClick={handleBackNavigation}
-        className="fixed z-40 w-12 h-12 bg-white/10 backdrop-blur-md hover:bg-white/15 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center border border-white/20 hover:border-white/40
+        className="fixed z-40 w-14 h-14 bg-[#75020f]/80 backdrop-blur-md hover:bg-[#75020f] text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center border-2 border-[#75020f] hover:border-white/50 hover:scale-105
                    top-24 left-6 hidden sm:flex
                    bottom-6 left-6 sm:hidden"
       >
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
       </button>
     </>
