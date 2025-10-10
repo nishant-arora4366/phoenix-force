@@ -134,17 +134,19 @@ async function postHandler(request: NextRequest, user: AuthenticatedUser) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // Users should be able to create their player profile regardless of approval status
+    // The player profile itself will have a status that requires admin approval
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
       .eq('id', user.id)
       .single()
 
-    if (userError || !userData || userData.status !== 'approved') {
+    if (userError || !userData) {
       return NextResponse.json({ 
         success: false, 
-        error: 'User not approved for creating player profile' 
-      }, { status: 403 })
+        error: 'User not found' 
+      }, { status: 404 })
     }
 
     const body = await request.json()
@@ -212,16 +214,31 @@ async function postHandler(request: NextRequest, user: AuthenticatedUser) {
 
     // Handle skill assignments if provided
     if (skills && Object.keys(skills).length > 0) {
-      // Get all player skills to map skill names to IDs
+      // Get all player skills to map skill names to IDs and check admin-managed status
       const { data: playerSkills } = await supabase
         .from('player_skills')
-        .select('id, skill_name')
+        .select('id, skill_name, is_admin_managed')
 
       const skillIdMap: { [key: string]: string } = {}
+      const adminManagedSkills: { [key: string]: boolean } = {}
       playerSkills?.forEach(skill => {
         // Use the exact skill name as the key (matching frontend)
         skillIdMap[skill.skill_name] = skill.id
+        adminManagedSkills[skill.skill_name] = skill.is_admin_managed || false
       })
+
+      // Check if user is trying to set admin-managed skills during creation
+      const userRole = user.role || 'viewer'
+      if (userRole !== 'admin' && userRole !== 'host') {
+        for (const skillKey of Object.keys(skills)) {
+          if (adminManagedSkills[skillKey]) {
+            return NextResponse.json({
+              success: false,
+              error: `You are not authorized to set the '${skillKey}' skill during profile creation. This skill is managed by administrators.`
+            }, { status: 403 })
+          }
+        }
+      }
 
       // Create skill assignments
       for (const [skillKey, skillValue] of Object.entries(skills)) {
@@ -313,17 +330,19 @@ async function putHandler(
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // Users should be able to update their player profile regardless of approval status
+    // The player profile itself will have a status that requires admin approval
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
       .eq('id', user.id)
       .single()
 
-    if (userError || !userData || userData.status !== 'approved') {
+    if (userError || !userData) {
       return NextResponse.json({ 
         success: false, 
-        error: 'User not approved' 
-      }, { status: 403 })
+        error: 'User not found' 
+      }, { status: 404 })
     }
 
     const body = await request.json()
@@ -397,16 +416,66 @@ async function putHandler(
         .delete()
         .eq('player_id', id)
 
-      // Get all player skills to map skill names to IDs
+      // Get all player skills to map skill names to IDs and check admin-managed status
       const { data: playerSkills } = await supabase
         .from('player_skills')
-        .select('id, skill_name')
+        .select('id, skill_name, is_admin_managed')
 
       const skillIdMap: { [key: string]: string } = {}
+      const adminManagedSkills: { [key: string]: boolean } = {}
       playerSkills?.forEach(skill => {
         // Use the exact skill name as the key (matching frontend)
         skillIdMap[skill.skill_name] = skill.id
+        adminManagedSkills[skill.skill_name] = skill.is_admin_managed || false
       })
+
+      // Check if user is trying to modify admin-managed skills
+      const userRole = user.role || 'viewer'
+      if (userRole !== 'admin' && userRole !== 'host') {
+        // Get current skill assignments to compare with new values
+        const { data: currentAssignments } = await supabase
+          .from('player_skill_assignments')
+          .select(`
+            skill_id,
+            value_array,
+            player_skills!inner(skill_name)
+          `)
+          .eq('player_id', id)
+
+        // Create a map of current skill values
+        const currentSkills: { [key: string]: any } = {}
+        currentAssignments?.forEach(assignment => {
+          const skillName = (assignment.player_skills as any).skill_name
+          currentSkills[skillName] = assignment.value_array
+        })
+
+        // Check if any admin-managed skills are being changed
+        for (const skillKey of Object.keys(skills)) {
+          if (adminManagedSkills[skillKey]) {
+            const currentValue = currentSkills[skillKey]
+            const newValue = skills[skillKey]
+            
+            // Normalize values for comparison
+            const normalizeValue = (value: any) => {
+              if (!value) return ''
+              if (Array.isArray(value)) {
+                return value.filter(v => v).sort().join(',')
+              }
+              return String(value).trim()
+            }
+            
+            const currentValueStr = normalizeValue(currentValue)
+            const newValueStr = normalizeValue(newValue)
+            
+            if (currentValueStr !== newValueStr) {
+              return NextResponse.json({
+                success: false,
+                error: `You are not authorized to modify the '${skillKey}' skill. This skill is managed by administrators.`
+              }, { status: 403 })
+            }
+          }
+        }
+      }
 
       // Create new skill assignments
       for (const [skillKey, skillValue] of Object.entries(skills)) {
@@ -487,7 +556,187 @@ async function putHandler(
   }
 }
 
+// PATCH handler for partial updates
+async function patchHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    
+    const { id, ...updateData } = await request.json()
+    
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        error: 'Player ID is required'
+      }, { status: 400 })
+    }
+
+    // Verify the player belongs to the user (unless admin/host)
+    const userRole = user.role || 'viewer'
+    if (userRole !== 'admin' && userRole !== 'host') {
+      const { data: player, error: playerError } = await supabase
+        .from('players')
+        .select('user_id')
+        .eq('id', id)
+        .single()
+
+      if (playerError || !player) {
+        return NextResponse.json({
+          success: false,
+          error: 'Player not found'
+        }, { status: 404 })
+      }
+
+      if (player.user_id !== user.id) {
+        return NextResponse.json({
+          success: false,
+          error: 'You can only update your own player profile'
+        }, { status: 403 })
+      }
+    }
+
+    // Build update object with only provided fields
+    const updateFields: any = {}
+    
+    // Handle basic profile fields
+    if (updateData.display_name !== undefined) updateFields.display_name = updateData.display_name
+    if (updateData.mobile_number !== undefined) updateFields.mobile_number = updateData.mobile_number
+    if (updateData.profile_pic_url !== undefined) updateFields.profile_pic_url = updateData.profile_pic_url
+    if (updateData.bio !== undefined) updateFields.bio = updateData.bio
+
+    // Update basic fields if any
+    if (Object.keys(updateFields).length > 0) {
+      const { data: updatedPlayer, error: updateError } = await supabase
+        .from('players')
+        .update(updateFields)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (updateError) {
+        console.error('Database error:', updateError)
+        return NextResponse.json({
+          success: false,
+          error: updateError.message,
+          details: updateError
+        }, { status: 500 })
+      }
+    }
+
+    // Handle skill updates if provided
+    if (updateData.skills && Object.keys(updateData.skills).length > 0) {
+      // Get all player skills to check admin-managed status
+      const { data: playerSkills } = await supabase
+        .from('player_skills')
+        .select('id, skill_name, is_admin_managed')
+
+      const adminManagedSkills: { [key: string]: boolean } = {}
+      const skillIdMap: { [key: string]: string } = {}
+      playerSkills?.forEach(skill => {
+        skillIdMap[skill.skill_name] = skill.id
+        adminManagedSkills[skill.skill_name] = skill.is_admin_managed || false
+      })
+
+      // Check if user is trying to modify admin-managed skills
+      if (userRole !== 'admin' && userRole !== 'host') {
+        for (const skillKey of Object.keys(updateData.skills)) {
+          if (adminManagedSkills[skillKey]) {
+            return NextResponse.json({
+              success: false,
+              error: `You are not authorized to modify the '${skillKey}' skill. This skill is managed by administrators.`
+            }, { status: 403 })
+          }
+        }
+      }
+
+      // Delete existing skill assignments for the skills being updated
+      const skillIdsToUpdate = Object.keys(updateData.skills)
+        .filter(skillName => skillIdMap[skillName])
+        .map(skillName => skillIdMap[skillName])
+
+      if (skillIdsToUpdate.length > 0) {
+        await supabase
+          .from('player_skill_assignments')
+          .delete()
+          .eq('player_id', id)
+          .in('skill_id', skillIdsToUpdate)
+      }
+
+      // Create new skill assignments for updated skills
+      for (const [skillKey, skillValue] of Object.entries(updateData.skills)) {
+        if (skillValue && skillIdMap[skillKey]) {
+          const skillId = skillIdMap[skillKey]
+          
+          if (Array.isArray(skillValue)) {
+            // Multi-select skill
+            if (skillValue.length > 0) {
+              const { data: skillValues } = await supabase
+                .from('player_skill_values')
+                .select('id')
+                .in('value_name', skillValue)
+                .eq('skill_id', skillId)
+
+              if (skillValues && skillValues.length > 0) {
+                const skillValueIds = skillValues.map(sv => sv.id)
+                
+                await supabase
+                  .from('player_skill_assignments')
+                  .insert({
+                    player_id: id,
+                    skill_id: skillId,
+                    skill_value_ids: skillValueIds,
+                    value_array: skillValue
+                  })
+              }
+            }
+          } else {
+            // Single-select skill
+            if (skillValue) {
+              const { data: skillValueData } = await supabase
+                .from('player_skill_values')
+                .select('id')
+                .eq('value_name', skillValue)
+                .eq('skill_id', skillId)
+                .single()
+
+              if (skillValueData) {
+                await supabase
+                  .from('player_skill_assignments')
+                  .insert({
+                    player_id: id,
+                    skill_id: skillId,
+                    skill_value_id: skillValueData.id,
+                    value_array: [skillValue]
+                  })
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Player profile updated successfully'
+    })
+    
+  } catch (error) {
+    console.error('API error:', error)
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to update player profile',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
+  }
+}
+
 // Export the handlers with analytics
 export const GET = withAnalytics(withAuth(getHandler, ['viewer', 'host', 'admin']))
 export const POST = withAnalytics(withAuth(postHandler, ['viewer', 'host', 'admin']))
 export const PUT = withAnalytics(withAuth(putHandler, ['viewer', 'host', 'admin']))
+export const PATCH = withAnalytics(withAuth(patchHandler, ['viewer', 'host', 'admin']))

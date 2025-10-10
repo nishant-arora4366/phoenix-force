@@ -88,7 +88,11 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     const fetchPlayerSkills = async () => {
       try {
-        const response = await fetch('/api/player-skills')
+        const response = await fetch('/api/player-skills', {
+          headers: {
+            'Authorization': `Bearer ${secureSessionManager.getToken()}`
+          }
+        })
         const result = await response.json()
 
         if (result.success) {
@@ -201,7 +205,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(currentUser)
+          'Authorization': `Bearer ${secureSessionManager.getToken()}`
         },
         body: JSON.stringify(formData),
       })

@@ -38,16 +38,18 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
       return null
     }
 
-    // Verify user still exists and is active in database
+    // Verify user still exists in database
+    // Note: We don't check status here - users should be able to view their own data
+    // regardless of approval status. Status checks should be done at the route level
+    // for actions that require approval (e.g., tournament registration)
     const { data: user, error } = await supabase
       .from('users')
       .select('id, email, role, status, username, firstname, lastname')
       .eq('id', decoded.userId)
-      .eq('status', 'approved')
       .single()
 
     if (error || !user) {
-      console.error('User not found or inactive:', error)
+      console.error('User not found:', error)
       return null
     }
 

@@ -45,21 +45,42 @@ export default function Profile() {
         const token = secureSessionManager.getToken()
         
         if (token) {
-          // Fetch user profile from users table with JWT authentication
-          const response = await fetch('/api/user-profile', {
-            headers: {
-              'Authorization': `Bearer ${token}`
+          try {
+            // Fetch user profile from users table with JWT authentication
+            const response = await fetch('/api/user-profile', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            })
+            
+            if (!response.ok) {
+              // Token might be expired or invalid - clear session and redirect
+              if (response.status === 401) {
+                console.error('Authentication failed - session expired')
+                secureSessionManager.clearSession()
+                router.push('/signin?returnUrl=/profile&message=Session expired, please sign in again')
+                return
+              }
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`)
             }
-          })
-          const result = await response.json()
-          
-          if (result.success) {
-            setProfile(result.data)
-          } else {
-            console.error('Failed to fetch profile:', result.error)
+            
+            const result = await response.json()
+            
+            if (result.success) {
+              setProfile(result.data)
+            } else {
+              console.error('Failed to fetch profile:', result.error)
+            }
+          } catch (error) {
+            console.error('Error fetching profile:', error)
+            // If there's a network error or other issue, still show the page
           }
         } else {
           console.error('No authentication token found')
+          // Clear invalid session and redirect
+          secureSessionManager.clearSession()
+          router.push('/signin?returnUrl=/profile&message=Please sign in to continue')
+          return
         }
       }
       
@@ -73,21 +94,29 @@ export default function Profile() {
       setUser(sessionUser)
       
       if (sessionUser) {
-        // Fetch user profile when user changes
-        fetch('/api/user-profile', {
-            headers: {
-              'Authorization': `Bearer ${secureSessionManager.getToken()}`
-            }
-          })
-          .then(response => response.json())
-          .then(result => {
-            if (result.success) {
-              setProfile(result.data)
-            }
-          })
-          .catch(error => {
-            console.error('Error fetching user profile:', error)
-          })
+        const token = secureSessionManager.getToken()
+        if (token) {
+          // Fetch user profile when user changes
+          fetch('/api/user-profile', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`)
+              }
+              return response.json()
+            })
+            .then(result => {
+              if (result.success) {
+                setProfile(result.data)
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching user profile:', error)
+            })
+        }
       } else {
         setProfile(null)
       }

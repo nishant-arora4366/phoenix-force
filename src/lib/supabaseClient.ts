@@ -33,7 +33,6 @@ export const setSupabaseAuth = (token: string | null) => {
   
   // Force disconnect all channels to clear old auth
   const channels = client.realtime.channels
-  console.log('[SUPABASE] Disconnecting', channels.length, 'realtime channels to clear auth')
   
   // Remove all existing channels
   channels.forEach((channel: any) => {
@@ -48,7 +47,6 @@ export const setSupabaseAuth = (token: string | null) => {
   
   // Reconnect with anon key (no custom JWT)
   // The client will automatically reconnect when channels subscribe
-  console.log('[SUPABASE] Cleared realtime auth, will reconnect with anon key')
 }
 
 // Lazy initialization to prevent multiple instances

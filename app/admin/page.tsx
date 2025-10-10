@@ -125,6 +125,49 @@ export default function AdminPanel() {
   // Real-time analytics
   const { data: realtimeData, isLoading: realtimeLoading, isConnected } = useRealtimeAnalytics()
 
+  // User CRUD state
+  const [isCreatingUser, setIsCreatingUser] = useState(false)
+  const [isEditingUser, setIsEditingUser] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [newUser, setNewUser] = useState({
+    email: '',
+    firstname: '',
+    lastname: '',
+    username: '',
+    role: 'viewer',
+    status: 'pending'
+  })
+  const [isLinkingPlayer, setIsLinkingPlayer] = useState(false)
+  const [linkingUserId, setLinkingUserId] = useState<string | null>(null)
+  const [linkingPlayerId, setLinkingPlayerId] = useState<string | null>(null)
+  const [isLinkingUser, setIsLinkingUser] = useState(false)
+  const [linkingPlayerIdForUser, setLinkingPlayerIdForUser] = useState<string | null>(null)
+  const [linkingUserIdForPlayer, setLinkingUserIdForPlayer] = useState<string | null>(null)
+  const [playerSearchTerm, setPlayerSearchTerm] = useState('')
+  const [userSearchTerm, setUserSearchTerm] = useState('')
+  const [userLinkPage, setUserLinkPage] = useState(1)
+  const [playerLinkPage, setPlayerLinkPage] = useState(1)
+  const usersPerPage = 10
+  const playersPerPage = 10
+  // Pagination for main tables
+  const [userTablePage, setUserTablePage] = useState(1)
+  const [playerTablePage, setPlayerTablePage] = useState(1)
+  const usersPerTablePage = 10
+  const playersPerTablePage = 10
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [allPlayers, setAllPlayers] = useState<any[]>([]) // For linking dropdown
+  
+  // Base Price modal states
+  const [showBasePriceModal, setShowBasePriceModal] = useState(false)
+  const [playerToApprove, setPlayerToApprove] = useState<string | null>(null)
+  const [availableBasePrices, setAvailableBasePrices] = useState<string[]>([])
+  const [selectedBasePrice, setSelectedBasePrice] = useState('')
+  const [isLoadingBasePrices, setIsLoadingBasePrices] = useState(false)
+
+
   useEffect(() => {
     const getUser = async () => {
       // Skip error messages during sign-out
@@ -141,6 +184,7 @@ export default function AdminPanel() {
         if (currentUser.role === 'admin') {
           // Load all users for admin panel
           await loadUsers()
+          await loadAllPlayers() // Load all players for linking dropdowns
         } else {
           setMessage('Access denied. Admin role required.')
         }
@@ -459,7 +503,348 @@ export default function AdminPanel() {
     }
   }
 
-  const updatePlayerProfileStatus = async (playerId: string, status: string) => {
+  const createUser = async () => {
+    try {
+      const sessionUser = secureSessionManager.getUser()
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newUser)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create user')
+      }
+
+      const { success, user: createdUser } = await response.json()
+      
+      if (success) {
+        await loadUsers() // Reload users list
+        setSuccessMessage(`User ${newUser.email} created successfully!`)
+        setShowSuccessMessage(true)
+        setIsCreatingUser(false)
+        // Reset form
+        setNewUser({
+          email: '',
+          firstname: '',
+          lastname: '',
+          username: '',
+          role: 'viewer',
+          status: 'pending'
+        })
+        setTimeout(() => setShowSuccessMessage(false), 3000)
+      }
+    } catch (error: any) {
+      setMessage(`Error: ${error.message}`)
+      setTimeout(() => setMessage(''), 3000)
+    }
+  }
+
+  const updateUser = async () => {
+    try {
+      if (!editingUser) return
+
+      const sessionUser = secureSessionManager.getUser()
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId: editingUser.id,
+          role: editingUser.role,
+          status: editingUser.status,
+          firstname: editingUser.firstname,
+          lastname: editingUser.lastname,
+          username: editingUser.username
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update user')
+      }
+
+      const { success } = await response.json()
+      
+      if (success) {
+        await loadUsers() // Reload users list
+        setSuccessMessage('User updated successfully!')
+        setShowSuccessMessage(true)
+        setIsEditingUser(false)
+        setEditingUser(null)
+        setTimeout(() => setShowSuccessMessage(false), 3000)
+      }
+    } catch (error: any) {
+      setMessage(`Error: ${error.message}`)
+      setTimeout(() => setMessage(''), 3000)
+    }
+  }
+
+  const deleteUser = async (userId: string) => {
+    try {
+      const sessionUser = secureSessionManager.getUser()
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch(`/api/admin/users?userId=${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete user')
+      }
+
+      const { success } = await response.json()
+      
+      if (success) {
+        await loadUsers() // Reload users list
+        setSuccessMessage('User deleted successfully!')
+        setShowSuccessMessage(true)
+        setShowDeleteConfirm(false)
+        setDeletingUserId(null)
+        setTimeout(() => setShowSuccessMessage(false), 3000)
+      }
+    } catch (error: any) {
+      setMessage(`Error: ${error.message}`)
+      setTimeout(() => setMessage(''), 3000)
+    }
+  }
+
+  const linkPlayerToUser = async (userId: string, playerId: string) => {
+    try {
+      const sessionUser = secureSessionManager.getUser()
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId, playerId, action: 'link' })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to link player to user')
+      }
+
+      const { success } = await response.json()
+      
+      if (success) {
+        await loadUsers() // Reload users list
+        await fetchPlayerProfiles() // Reload player profiles list
+        setSuccessMessage('Player linked to user successfully!')
+        setShowSuccessMessage(true)
+        setIsLinkingPlayer(false)
+        setLinkingUserId(null)
+        setLinkingPlayerId(null)
+        setTimeout(() => setShowSuccessMessage(false), 3000)
+      }
+    } catch (error: any) {
+      setMessage(`Error: ${error.message}`)
+      setTimeout(() => setMessage(''), 3000)
+    }
+  }
+
+  const unlinkPlayerFromUser = async (userId: string) => {
+    try {
+      const sessionUser = secureSessionManager.getUser()
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId, action: 'unlink' })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to unlink player from user')
+      }
+
+      const { success } = await response.json()
+      
+      if (success) {
+        await loadUsers() // Reload users list
+        await fetchPlayerProfiles() // Reload player profiles list
+        setSuccessMessage('Player unlinked from user successfully!')
+        setShowSuccessMessage(true)
+        setTimeout(() => setShowSuccessMessage(false), 3000)
+      }
+    } catch (error: any) {
+      setMessage(`Error: ${error.message}`)
+      setTimeout(() => setMessage(''), 3000)
+    }
+  }
+
+  const linkUserToPlayer = async (playerId: string, userId: string) => {
+    try {
+      const sessionUser = secureSessionManager.getUser()
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch('/api/admin/player-profiles', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ playerId, userId, action: 'link' })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to link user to player')
+      }
+
+      const { success } = await response.json()
+      
+      if (success) {
+        await loadUsers() // Reload users list
+        await fetchPlayerProfiles() // Reload player profiles list
+        setSuccessMessage('User linked to player successfully!')
+        setShowSuccessMessage(true)
+        setTimeout(() => setShowSuccessMessage(false), 3000)
+      }
+    } catch (error: any) {
+      setMessage(`Error: ${error.message}`)
+      setTimeout(() => setMessage(''), 3000)
+    }
+  }
+
+  const unlinkUserFromPlayer = async (playerId: string) => {
+    try {
+      const sessionUser = secureSessionManager.getUser()
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+
+      const response = await fetch('/api/admin/player-profiles', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ playerId, action: 'unlink' })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to unlink user from player')
+      }
+
+      const { success } = await response.json()
+      
+      if (success) {
+        await loadUsers() // Reload users list
+        await fetchPlayerProfiles() // Reload player profiles list
+        setSuccessMessage('User unlinked from player successfully!')
+        setShowSuccessMessage(true)
+        setTimeout(() => setShowSuccessMessage(false), 3000)
+      }
+    } catch (error: any) {
+      setMessage(`Error: ${error.message}`)
+      setTimeout(() => setMessage(''), 3000)
+    }
+  }
+
+  const loadAllPlayers = async () => {
+    try {
+      const sessionUser = secureSessionManager.getUser()
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        return
+      }
+
+      const response = await fetch('/api/players-public', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success && result.data) {
+          setAllPlayers(result.data)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading players:', error)
+    }
+  }
+
+  // Function to fetch available Base Price values
+  const fetchBasePriceValues = async () => {
+    setIsLoadingBasePrices(true)
+    try {
+      const token = secureSessionManager.getToken()
+      const response = await fetch('/api/player-skills', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success && result.skills) {
+          const basePriceSkill = result.skills.find((skill: any) => skill.skill_name === 'Base Price')
+          if (basePriceSkill && basePriceSkill.values) {
+            const basePrices = basePriceSkill.values.map((value: any) => value.value_name)
+            setAvailableBasePrices(basePrices)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching base price values:', error)
+    } finally {
+      setIsLoadingBasePrices(false)
+    }
+  }
+
+  const performStatusUpdate = async (playerId: string, status: string, basePrice?: string) => {
     try {
       const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
@@ -472,16 +857,23 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
       
-      const response = await fetch('/api/admin/player-profiles', {
+      const requestBody: any = {
+        playerId,
+        status
+      }
+
+      // If approving and base price is provided, include it
+      if (status === 'approved' && basePrice) {
+        requestBody.basePrice = basePrice
+      }
+      
+      const response = await fetch(`/api/admin/player-profiles?userId=${sessionUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          playerId,
-          status
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (!response.ok) {
@@ -504,6 +896,37 @@ export default function AdminPanel() {
       }
     } catch (error: any) {
       setMessage(`Error: ${error.message}`)
+    }
+  }
+
+  const handleApproveWithBasePrice = async () => {
+    if (!playerToApprove || !selectedBasePrice) {
+      setMessage('Please select a base price')
+      return
+    }
+
+    await performStatusUpdate(playerToApprove, 'approved', selectedBasePrice)
+    setShowBasePriceModal(false)
+    setPlayerToApprove(null)
+    setSelectedBasePrice('')
+  }
+
+  const updatePlayerProfileStatus = async (playerId: string, status: string) => {
+    if (status === 'approved') {
+      // Show Base Price modal for approval
+      setPlayerToApprove(playerId)
+      setSelectedBasePrice('')
+      
+      // Fetch base price values first
+      await fetchBasePriceValues()
+      
+      // Use setTimeout to ensure state updates are processed
+      setTimeout(() => {
+        setShowBasePriceModal(true)
+      }, 100)
+    } else {
+      // Direct rejection without Base Price
+      await performStatusUpdate(playerId, status)
     }
   }
 
@@ -810,11 +1233,17 @@ export default function AdminPanel() {
       const startDateStr = startDate.toISOString().split('T')[0]
       const endDateStr = now.toISOString().split('T')[0]
 
+      // Get authentication token
+      const token = secureSessionManager.getToken()
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      }
+
       // Fetch all analytics data in parallel
       const [usageResponse, usersResponse, patternsResponse] = await Promise.all([
-        fetch(`/api/analytics/usage?startDate=${startDateStr}&endDate=${endDateStr}`),
-        fetch(`/api/analytics/users?startDate=${startDateStr}&endDate=${endDateStr}`),
-        fetch(`/api/analytics/patterns?startDate=${startDateStr}&endDate=${endDateStr}`)
+        fetch(`/api/analytics/usage?startDate=${startDateStr}&endDate=${endDateStr}`, { headers }),
+        fetch(`/api/analytics/users?startDate=${startDateStr}&endDate=${endDateStr}`, { headers }),
+        fetch(`/api/analytics/patterns?startDate=${startDateStr}&endDate=${endDateStr}`, { headers })
       ])
 
       const [usageData, usersData, patternsData] = await Promise.all([
@@ -1072,7 +1501,10 @@ export default function AdminPanel() {
               <div className="mb-6">
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setFilter('all')}
+                    onClick={() => {
+                      setFilter('all')
+                      setUserTablePage(1)
+                    }}
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       filter === 'all'
                         ? 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
@@ -1082,7 +1514,10 @@ export default function AdminPanel() {
                     All Users
                   </button>
                   <button
-                    onClick={() => setFilter('pending')}
+                    onClick={() => {
+                      setFilter('pending')
+                      setUserTablePage(1)
+                    }}
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       filter === 'pending'
                         ? 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
@@ -1092,7 +1527,10 @@ export default function AdminPanel() {
                     Pending
                   </button>
                   <button
-                    onClick={() => setFilter('approved')}
+                    onClick={() => {
+                      setFilter('approved')
+                      setUserTablePage(1)
+                    }}
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       filter === 'approved'
                         ? 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
@@ -1102,7 +1540,10 @@ export default function AdminPanel() {
                     Approved
                   </button>
                   <button
-                    onClick={() => setFilter('rejected')}
+                    onClick={() => {
+                      setFilter('rejected')
+                      setUserTablePage(1)
+                    }}
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       filter === 'rejected'
                         ? 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40'
@@ -1116,7 +1557,15 @@ export default function AdminPanel() {
 
               {/* All Users List */}
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-[#DBD0C0] mb-4">All Users</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg sm:text-xl font-semibold text-[#DBD0C0]">All Users</h2>
+                  <button
+                    onClick={() => setIsCreatingUser(true)}
+                    className="px-4 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
+                  >
+                    ➕ Create User
+                  </button>
+                </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-[#CEA17A]/20">
                   <thead className="bg-[#3E4E5A]/15">
@@ -1134,6 +1583,9 @@ export default function AdminPanel() {
                         Status
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
+                        Player Profile
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                         Actions
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
@@ -1142,9 +1594,14 @@ export default function AdminPanel() {
                     </tr>
                   </thead>
                   <tbody className="bg-[#09171F]/50 divide-y divide-[#CEA17A]/20">
-                      {users
-                        .filter(user => filter === 'all' || user.status === filter)
-                        .map((user) => (
+                      {(() => {
+                        const filteredUsers = users.filter(user => filter === 'all' || user.status === filter)
+                        const totalPages = Math.ceil(filteredUsers.length / usersPerTablePage)
+                        const startIndex = (userTablePage - 1) * usersPerTablePage
+                        const endIndex = startIndex + usersPerTablePage
+                        const paginatedUsers = filteredUsers.slice(startIndex, endIndex)
+                        
+                        return paginatedUsers.map((user) => (
                         <tr key={user.id} className="hover:bg-[#3E4E5A]/10 transition-colors">
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
                             {user.firstname} {user.lastname}
@@ -1174,6 +1631,31 @@ export default function AdminPanel() {
                               {user.status}
                             </span>
                           </td>
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                            {user.player_profile ? (
+                              <div className="flex items-center space-x-2">
+                                <span>{user.player_profile.display_name}</span>
+                                <button
+                                  onClick={() => unlinkPlayerFromUser(user.id)}
+                                  className="text-[#75020f] hover:text-[#75020f]/80"
+                                  title="Unlink Player"
+                                >
+                                  🔗❌
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setLinkingUserId(user.id)
+                                  setIsLinkingPlayer(true)
+                                  setPlayerSearchTerm('')
+                                }}
+                                className="text-[#CEA17A] hover:text-[#CEA17A]/80 text-xs underline"
+                              >
+                                Link Player
+                              </button>
+                            )}
+                          </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                             {user.status === 'pending' && (
                               <>
@@ -1195,18 +1677,415 @@ export default function AdminPanel() {
                               onClick={() => resetUserPassword(user.id, user.email)}
                               className="text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded text-xs hover:bg-[#3E4E5A]/25 transition-colors"
                             >
-                              Reset Password
+                              Reset Pass
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingUser(user)
+                                setIsEditingUser(true)
+                              }}
+                              className="text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded text-xs hover:bg-[#3E4E5A]/25 transition-colors"
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                setDeletingUserId(user.id)
+                                setShowDeleteConfirm(true)
+                              }}
+                              className="text-[#75020f] hover:text-[#75020f]/80 bg-[#75020f]/15 border border-[#75020f]/25 px-2 py-1 rounded text-xs hover:bg-[#75020f]/25 transition-colors"
+                            >
+                              🗑️ Delete
                             </button>
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-[#CEA17A]">
                             {new Date(user.created_at).toLocaleDateString()}
                           </td>
                         </tr>
-                      ))}
+                        ))
+                      })()}
                     </tbody>
                   </table>
                 </div>
+                
+                {/* User Table Pagination */}
+                {(() => {
+                  const filteredUsers = users.filter(user => filter === 'all' || user.status === filter)
+                  const totalPages = Math.ceil(filteredUsers.length / usersPerTablePage)
+                  
+                  if (totalPages <= 1) return null
+                  
+                  return (
+                    <div className="mt-4 flex items-center justify-between px-2">
+                      <div className="text-sm text-[#CEA17A]/60">
+                        Showing {((userTablePage - 1) * usersPerTablePage) + 1} to {Math.min(userTablePage * usersPerTablePage, filteredUsers.length)} of {filteredUsers.length} users
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setUserTablePage(prev => Math.max(1, prev - 1))}
+                          disabled={userTablePage === 1}
+                          className="px-4 py-2 text-sm bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          ← Previous
+                        </button>
+                        <div className="flex items-center px-4 py-2 text-sm text-[#DBD0C0] bg-[#3E4E5A]/15 border border-[#CEA17A]/25 rounded">
+                          Page {userTablePage} of {totalPages}
+                        </div>
+                        <button
+                          onClick={() => setUserTablePage(prev => Math.min(totalPages, prev + 1))}
+                          disabled={userTablePage === totalPages}
+                          className="px-4 py-2 text-sm bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
+
+              {/* Create User Modal */}
+              {isCreatingUser && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                    <h3 className="text-xl font-semibold text-[#CEA17A] mb-4">Create New User</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Email *</label>
+                        <input
+                          type="email"
+                          value={newUser.email}
+                          onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                          placeholder="user@example.com"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-[#DBD0C0] mb-1">First Name</label>
+                          <input
+                            type="text"
+                            value={newUser.firstname}
+                            onChange={(e) => setNewUser({...newUser, firstname: e.target.value})}
+                            className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Last Name</label>
+                          <input
+                            type="text"
+                            value={newUser.lastname}
+                            onChange={(e) => setNewUser({...newUser, lastname: e.target.value})}
+                            className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Username</label>
+                        <input
+                          type="text"
+                          value={newUser.username}
+                          onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Role</label>
+                        <select
+                          value={newUser.role}
+                          onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                        >
+                          <option value="viewer">Viewer</option>
+                          <option value="host">Host</option>
+                          <option value="captain">Captain</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Status</label>
+                        <select
+                          value={newUser.status}
+                          onChange={(e) => setNewUser({...newUser, status: e.target.value})}
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="approved">Approved</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 mt-6">
+                      <button
+                        onClick={() => setIsCreatingUser(false)}
+                        className="px-4 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg hover:bg-[#3E4E5A]/25"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={createUser}
+                        disabled={!newUser.email}
+                        className="px-4 py-2 bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40 rounded-lg hover:bg-[#CEA17A]/35 disabled:opacity-50"
+                      >
+                        Create User
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Edit User Modal */}
+              {isEditingUser && editingUser && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                    <h3 className="text-xl font-semibold text-[#CEA17A] mb-4">Edit User</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={editingUser.email}
+                          disabled
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/10 text-[#DBD0C0]/60 border border-[#CEA17A]/15 rounded-lg"
+                        />
+                        <p className="text-xs text-[#CEA17A]/60 mt-1">Email cannot be changed</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-[#DBD0C0] mb-1">First Name</label>
+                          <input
+                            type="text"
+                            value={editingUser.firstname || ''}
+                            onChange={(e) => setEditingUser({...editingUser, firstname: e.target.value})}
+                            className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Last Name</label>
+                          <input
+                            type="text"
+                            value={editingUser.lastname || ''}
+                            onChange={(e) => setEditingUser({...editingUser, lastname: e.target.value})}
+                            className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Username</label>
+                        <input
+                          type="text"
+                          value={editingUser.username || ''}
+                          onChange={(e) => setEditingUser({...editingUser, username: e.target.value})}
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Role</label>
+                        <select
+                          value={editingUser.role}
+                          onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                        >
+                          <option value="viewer">Viewer</option>
+                          <option value="host">Host</option>
+                          <option value="captain">Captain</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Status</label>
+                        <select
+                          value={editingUser.status}
+                          onChange={(e) => setEditingUser({...editingUser, status: e.target.value})}
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="approved">Approved</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 mt-6">
+                      <button
+                        onClick={() => {
+                          setIsEditingUser(false)
+                          setEditingUser(null)
+                        }}
+                        className="px-4 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg hover:bg-[#3E4E5A]/25"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={updateUser}
+                        className="px-4 py-2 bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40 rounded-lg hover:bg-[#CEA17A]/35"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Link Player Modal */}
+              {isLinkingPlayer && linkingUserId && (() => {
+                const filteredPlayers = allPlayers
+                  .filter(p => !p.user_id || p.user_id === linkingUserId)
+                  .filter(p => p.display_name.toLowerCase().includes(playerSearchTerm.toLowerCase()))
+                  .sort((a, b) => a.display_name.localeCompare(b.display_name))
+                
+                const totalPages = Math.ceil(filteredPlayers.length / playersPerPage)
+                const startIndex = (playerLinkPage - 1) * playersPerPage
+                const endIndex = startIndex + playersPerPage
+                const paginatedPlayers = filteredPlayers.slice(startIndex, endIndex)
+                
+                return (
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                      <h3 className="text-xl font-semibold text-[#CEA17A] mb-4">Link Player to User</h3>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Search Player</label>
+                          <input
+                            type="text"
+                            value={playerSearchTerm}
+                            onChange={(e) => {
+                              setPlayerSearchTerm(e.target.value)
+                              setPlayerLinkPage(1)
+                            }}
+                            placeholder="Search by player name..."
+                            className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 placeholder-[#CEA17A]/40"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Select Player</label>
+                          <div className="space-y-2 max-h-[300px] overflow-y-auto bg-[#3E4E5A]/15 border border-[#CEA17A]/25 rounded-lg p-2">
+                            {paginatedPlayers.length > 0 ? (
+                              paginatedPlayers.map(player => (
+                                <div
+                                  key={player.id}
+                                  onClick={() => setLinkingPlayerId(player.id)}
+                                  className={`p-3 rounded-lg cursor-pointer transition-all ${
+                                    linkingPlayerId === player.id
+                                      ? 'bg-[#CEA17A]/25 border border-[#CEA17A]/40'
+                                      : 'bg-[#09171F]/50 border border-[#CEA17A]/15 hover:bg-[#3E4E5A]/25'
+                                  }`}
+                                >
+                                  <div className="text-sm font-medium text-[#DBD0C0]">{player.display_name}</div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center text-[#CEA17A]/60 py-4">No players available</div>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center justify-between mt-2">
+                            <p className="text-xs text-[#CEA17A]/60">
+                              {filteredPlayers.length} player(s) • Page {playerLinkPage} of {totalPages || 1}
+                            </p>
+                            {totalPages > 1 && (
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => setPlayerLinkPage(prev => Math.max(1, prev - 1))}
+                                  disabled={playerLinkPage === 1}
+                                  className="px-3 py-1 text-xs bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  ← Prev
+                                </button>
+                                <button
+                                  onClick={() => setPlayerLinkPage(prev => Math.min(totalPages, prev + 1))}
+                                  disabled={playerLinkPage === totalPages}
+                                  className="px-3 py-1 text-xs bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Next →
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end space-x-3 mt-6">
+                        <button
+                          onClick={() => {
+                            setIsLinkingPlayer(false)
+                            setLinkingUserId(null)
+                            setLinkingPlayerId(null)
+                            setPlayerSearchTerm('')
+                            setPlayerLinkPage(1)
+                          }}
+                          className="px-4 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg hover:bg-[#3E4E5A]/25"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => linkingPlayerId && linkPlayerToUser(linkingUserId, linkingPlayerId)}
+                          disabled={!linkingPlayerId}
+                          className="px-4 py-2 bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40 rounded-lg hover:bg-[#CEA17A]/35 disabled:opacity-50"
+                        >
+                          Link Player
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Delete Confirmation Modal */}
+              {showDeleteConfirm && deletingUserId && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#75020f]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                    <h3 className="text-xl font-semibold text-[#75020f] mb-4">⚠️ Confirm Deletion</h3>
+                    <p className="text-[#DBD0C0] mb-6">
+                      Are you sure you want to delete this user? This action cannot be undone.
+                    </p>
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        onClick={() => {
+                          setShowDeleteConfirm(false)
+                          setDeletingUserId(null)
+                        }}
+                        className="px-4 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg hover:bg-[#3E4E5A]/25"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => deleteUser(deletingUserId)}
+                        className="px-4 py-2 bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40 rounded-lg hover:bg-[#75020f]/35"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Success Message Modal */}
+              {showSuccessMessage && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                    <div className="text-center">
+                      <div className="text-4xl mb-3">✅</div>
+                      <h3 className="text-xl font-semibold text-[#CEA17A] mb-2">Success!</h3>
+                      <p className="text-[#DBD0C0]">{successMessage}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </>
           )}
 
@@ -1240,7 +2119,13 @@ export default function AdminPanel() {
                       </tr>
                     </thead>
                     <tbody className="bg-[#09171F]/50 divide-y divide-[#CEA17A]/20">
-                      {playerProfiles.map((profile) => (
+                      {(() => {
+                        const totalPages = Math.ceil(playerProfiles.length / playersPerTablePage)
+                        const startIndex = (playerTablePage - 1) * playersPerTablePage
+                        const endIndex = startIndex + playersPerTablePage
+                        const paginatedPlayers = playerProfiles.slice(startIndex, endIndex)
+                        
+                        return paginatedPlayers.map((profile) => (
                         <tr key={profile.id} className="hover:bg-[#3E4E5A]/10 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-[#DBD0C0]">
@@ -1254,14 +2139,31 @@ export default function AdminPanel() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
                             {profile.users ? (
-                              <div>
-                                <div className="font-medium">
-                                  {profile.users.firstname} {profile.users.lastname}
+                              <div className="flex items-center space-x-2">
+                                <div>
+                                  <div className="font-medium">
+                                    {profile.users.firstname} {profile.users.lastname}
+                                  </div>
+                                  <div className="text-[#CEA17A]">{profile.users.email}</div>
                                 </div>
-                                <div className="text-[#CEA17A]">{profile.users.email}</div>
+                                <button
+                                  onClick={() => unlinkUserFromPlayer(profile.id)}
+                                  className="text-[#75020f] hover:text-[#75020f]/80 text-xs"
+                                  title="Unlink User"
+                                >
+                                  🔗❌
+                                </button>
                               </div>
                             ) : (
-                              <span className="text-[#CEA17A]/60">No user data</span>
+                              <button
+                                onClick={() => {
+                                  setLinkingPlayerIdForUser(profile.id)
+                                  setIsLinkingUser(true)
+                                }}
+                                className="text-[#CEA17A] hover:text-[#CEA17A]/80 text-xs underline"
+                              >
+                                Link User
+                              </button>
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -1296,15 +2198,56 @@ export default function AdminPanel() {
                             )}
                           </td>
                         </tr>
-                      ))}
+                        ))
+                      })()}
                     </tbody>
                   </table>
                 </div>
+                
+                {/* Player Table Pagination - Desktop */}
+                {(() => {
+                  const totalPages = Math.ceil(playerProfiles.length / playersPerTablePage)
+                  
+                  if (totalPages <= 1) return null
+                  
+                  return (
+                    <div className="px-6 py-4 flex items-center justify-between border-t border-[#CEA17A]/20">
+                      <div className="text-sm text-[#CEA17A]/60">
+                        Showing {((playerTablePage - 1) * playersPerTablePage) + 1} to {Math.min(playerTablePage * playersPerTablePage, playerProfiles.length)} of {playerProfiles.length} players
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setPlayerTablePage(prev => Math.max(1, prev - 1))}
+                          disabled={playerTablePage === 1}
+                          className="px-4 py-2 text-sm bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          ← Previous
+                        </button>
+                        <div className="flex items-center px-4 py-2 text-sm text-[#DBD0C0] bg-[#3E4E5A]/15 border border-[#CEA17A]/25 rounded">
+                          Page {playerTablePage} of {totalPages}
+                        </div>
+                        <button
+                          onClick={() => setPlayerTablePage(prev => Math.min(totalPages, prev + 1))}
+                          disabled={playerTablePage === totalPages}
+                          className="px-4 py-2 text-sm bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* Player Profiles - Mobile */}
               <div className="md:hidden space-y-4">
-                {playerProfiles.map((profile) => (
+                {(() => {
+                  const totalPages = Math.ceil(playerProfiles.length / playersPerTablePage)
+                  const startIndex = (playerTablePage - 1) * playersPerTablePage
+                  const endIndex = startIndex + playersPerTablePage
+                  const paginatedPlayers = playerProfiles.slice(startIndex, endIndex)
+                  
+                  return paginatedPlayers.map((profile) => (
                   <div key={profile.id} className="bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div>
@@ -1357,8 +2300,161 @@ export default function AdminPanel() {
                       )}
                     </div>
                   </div>
-                ))}
+                  ))
+                })()}
+                
+                {/* Player Table Pagination - Mobile */}
+                {(() => {
+                  const totalPages = Math.ceil(playerProfiles.length / playersPerTablePage)
+                  
+                  if (totalPages <= 1) return null
+                  
+                  return (
+                    <div className="mt-4 flex flex-col space-y-2">
+                      <div className="text-sm text-center text-[#CEA17A]/60">
+                        Showing {((playerTablePage - 1) * playersPerTablePage) + 1} to {Math.min(playerTablePage * playersPerTablePage, playerProfiles.length)} of {playerProfiles.length} players
+                      </div>
+                      <div className="flex justify-center space-x-2">
+                        <button
+                          onClick={() => setPlayerTablePage(prev => Math.max(1, prev - 1))}
+                          disabled={playerTablePage === 1}
+                          className="px-4 py-2 text-sm bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          ← Prev
+                        </button>
+                        <div className="flex items-center px-4 py-2 text-sm text-[#DBD0C0] bg-[#3E4E5A]/15 border border-[#CEA17A]/25 rounded">
+                          {playerTablePage} / {totalPages}
+                        </div>
+                        <button
+                          onClick={() => setPlayerTablePage(prev => Math.min(totalPages, prev + 1))}
+                          disabled={playerTablePage === totalPages}
+                          className="px-4 py-2 text-sm bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
+
+              {/* Link User to Player Modal */}
+              {isLinkingUser && linkingPlayerIdForUser && (() => {
+                const filteredUsers = users
+                  .filter(u => !u.player_profile || u.player_profile.id === linkingPlayerIdForUser)
+                  .filter(u => {
+                    const searchLower = userSearchTerm.toLowerCase()
+                    const fullName = `${u.firstname || ''} ${u.lastname || ''}`.toLowerCase()
+                    const email = (u.email || '').toLowerCase()
+                    return fullName.includes(searchLower) || email.includes(searchLower)
+                  })
+                  .sort((a, b) => {
+                    const nameA = `${a.firstname || ''} ${a.lastname || ''}`.trim()
+                    const nameB = `${b.firstname || ''} ${b.lastname || ''}`.trim()
+                    return nameA.localeCompare(nameB)
+                  })
+                
+                const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
+                const startIndex = (userLinkPage - 1) * usersPerPage
+                const endIndex = startIndex + usersPerPage
+                const paginatedUsers = filteredUsers.slice(startIndex, endIndex)
+                
+                return (
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                      <h3 className="text-xl font-semibold text-[#CEA17A] mb-4">Link User to Player</h3>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Search User</label>
+                          <input
+                            type="text"
+                            value={userSearchTerm}
+                            onChange={(e) => {
+                              setUserSearchTerm(e.target.value)
+                              setUserLinkPage(1)
+                            }}
+                            placeholder="Search by name or email..."
+                            className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 placeholder-[#CEA17A]/40"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Select User</label>
+                          <div className="space-y-2 max-h-[300px] overflow-y-auto bg-[#3E4E5A]/15 border border-[#CEA17A]/25 rounded-lg p-2">
+                            {paginatedUsers.length > 0 ? (
+                              paginatedUsers.map(user => (
+                                <div
+                                  key={user.id}
+                                  onClick={() => setLinkingUserIdForPlayer(user.id)}
+                                  className={`p-3 rounded-lg cursor-pointer transition-all ${
+                                    linkingUserIdForPlayer === user.id
+                                      ? 'bg-[#CEA17A]/25 border border-[#CEA17A]/40'
+                                      : 'bg-[#09171F]/50 border border-[#CEA17A]/15 hover:bg-[#3E4E5A]/25'
+                                  }`}
+                                >
+                                  <div className="text-sm font-medium text-[#DBD0C0]">
+                                    {user.firstname} {user.lastname}
+                                  </div>
+                                  <div className="text-xs text-[#CEA17A]/60 mt-1">{user.email}</div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center text-[#CEA17A]/60 py-4">No users available</div>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center justify-between mt-2">
+                            <p className="text-xs text-[#CEA17A]/60">
+                              {filteredUsers.length} user(s) • Page {userLinkPage} of {totalPages || 1}
+                            </p>
+                            {totalPages > 1 && (
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => setUserLinkPage(prev => Math.max(1, prev - 1))}
+                                  disabled={userLinkPage === 1}
+                                  className="px-3 py-1 text-xs bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  ← Prev
+                                </button>
+                                <button
+                                  onClick={() => setUserLinkPage(prev => Math.min(totalPages, prev + 1))}
+                                  disabled={userLinkPage === totalPages}
+                                  className="px-3 py-1 text-xs bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Next →
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end space-x-3 mt-6">
+                        <button
+                          onClick={() => {
+                            setIsLinkingUser(false)
+                            setLinkingPlayerIdForUser(null)
+                            setLinkingUserIdForPlayer(null)
+                            setUserSearchTerm('')
+                            setUserLinkPage(1)
+                          }}
+                          className="px-4 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg hover:bg-[#3E4E5A]/25"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => linkingUserIdForPlayer && linkUserToPlayer(linkingPlayerIdForUser, linkingUserIdForPlayer)}
+                          disabled={!linkingUserIdForPlayer}
+                          className="px-4 py-2 bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40 rounded-lg hover:bg-[#CEA17A]/35 disabled:opacity-50"
+                        >
+                          Link User
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
             </>
           )}
 
@@ -2248,6 +3344,65 @@ export default function AdminPanel() {
             </>
           )}
           </div>
+
+          {/* Base Price Modal - Moved outside tab conditionals */}
+          {showBasePriceModal && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+              <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                <h3 className="text-xl font-semibold text-[#CEA17A] mb-4">💰 Set Base Price</h3>
+                <p className="text-[#DBD0C0] mb-4">
+                  Please select a base price for this player before approving their profile.
+                </p>
+                
+                {isLoadingBasePrices ? (
+                  <div className="text-center py-4">
+                    <div className="text-[#CEA17A]">Loading base price options...</div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#CEA17A] mb-2">
+                        Base Price *
+                      </label>
+                      <select
+                        value={selectedBasePrice}
+                        onChange={(e) => setSelectedBasePrice(e.target.value)}
+                        className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]"
+                        required
+                      >
+                        <option value="">Select Base Price</option>
+                        {availableBasePrices.map((price) => (
+                          <option key={price} value={price}>
+                            ₹{price}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        onClick={() => {
+                          setShowBasePriceModal(false)
+                          setPlayerToApprove(null)
+                          setSelectedBasePrice('')
+                        }}
+                        className="px-4 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg hover:bg-[#3E4E5A]/25"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleApproveWithBasePrice}
+                        disabled={!selectedBasePrice}
+                        className="px-4 py-2 bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40 rounded-lg hover:bg-[#CEA17A]/35 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Approve Player
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

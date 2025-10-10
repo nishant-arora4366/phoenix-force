@@ -45,7 +45,21 @@ async function putHandler(
   try {
     const { id } = await params
     const body = await request.json()
-    const { name, format, selected_teams, tournament_date, description, total_slots, status, venue, google_maps_link } = body
+    const { 
+      name, 
+      format, 
+      selected_teams, 
+      tournament_date, 
+      description, 
+      total_slots, 
+      status, 
+      venue, 
+      google_maps_link,
+      community_restrictions,
+      base_price_restrictions,
+      min_base_price,
+      max_base_price
+    } = body
 
     // SECURITY: User is already authenticated via withAuth middleware
     // The 'user' parameter contains the verified user from JWT
@@ -114,6 +128,10 @@ async function putHandler(
         total_slots,
         venue,
         google_maps_link,
+        community_restrictions: community_restrictions || null,
+        base_price_restrictions: base_price_restrictions || null,
+        min_base_price: min_base_price || null,
+        max_base_price: max_base_price || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

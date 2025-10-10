@@ -29,10 +29,13 @@ const fetcher = async (url: string) => {
   // Get current user for role-based skill filtering
   const currentUser = secureSessionManager.getUser()
   
+  const token = secureSessionManager.getToken()
+  const headers: any = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
   const response = await fetch(url, {
-    headers: {
-      'Authorization': JSON.stringify(currentUser || { role: 'viewer' })
-    }
+    headers
   })
   
   if (!response.ok) {
@@ -220,12 +223,22 @@ export default function PlayersPage() {
   const [sortBy, setSortBy] = useState('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [showCreatedByMe, setShowCreatedByMe] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
+  
+  // Delete confirmation modal state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [playerToDelete, setPlayerToDelete] = useState<{ id: string, name: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  
+  // Success/Error message modal state
+  const [showMessageModal, setShowMessageModal] = useState(false)
+  const [messageModal, setMessageModal] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
-  const { data: players, error, isLoading, mutate } = useSWR<Player[]>('/api/players-public', fetcher)
+  const { data: players, error, isLoading, mutate} = useSWR<Player[]>('/api/players-public', fetcher)
 
   // Get user info for permissions
   useEffect(() => {
@@ -338,7 +351,10 @@ export default function PlayersPage() {
       }
     })
     
-    return matchesSearch && matchesAllSkills
+    // Check "Created by me" filter
+    const matchesCreatedByMe = !showCreatedByMe || player.created_by === currentUser?.id
+    
+    return matchesSearch && matchesAllSkills && matchesCreatedByMe
   })?.sort((a, b) => {
     let comparison = 0
     
@@ -359,21 +375,25 @@ export default function PlayersPage() {
   })
 
 
-  const handleDelete = async (playerId: string, playerName: string) => {
-    if (!confirm(`Are you sure you want to delete ${playerName}? This action cannot be undone.`)) {
-      return
-    }
+  const handleDelete = (playerId: string, playerName: string) => {
+    setPlayerToDelete({ id: playerId, name: playerName })
+    setShowDeleteConfirm(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!playerToDelete) return
+
+    setIsDeleting(true)
     try {
       const currentUser = secureSessionManager.getUser()
       if (!currentUser) {
         throw new Error('User not authenticated')
       }
       
-      const response = await fetch(`/api/players/${playerId}`, {
+      const response = await fetch(`/api/players/${playerToDelete.id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': JSON.stringify(currentUser)
+          'Authorization': `Bearer ${secureSessionManager.getToken()}`
         }
       })
 
@@ -383,11 +403,27 @@ export default function PlayersPage() {
         throw new Error(result.error || 'Failed to delete player')
       }
 
+      // Close confirmation modal
+      setShowDeleteConfirm(false)
+      setPlayerToDelete(null)
+      
+      // Show success message
+      setMessageModal({ type: 'success', message: `${playerToDelete.name} deleted successfully!` })
+      setShowMessageModal(true)
+      
       // Refresh the players list
       mutate()
     } catch (error: any) {
       console.error('Error deleting player:', error)
-      alert(`Error: ${error.message}`)
+      
+      // Close confirmation modal
+      setShowDeleteConfirm(false)
+      
+      // Show error message
+      setMessageModal({ type: 'error', message: error.message || 'Failed to delete player' })
+      setShowMessageModal(true)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -583,6 +619,22 @@ export default function PlayersPage() {
                 </button>
               </div>
 
+            {/* "Created by me" filter - Only for hosts and admins */}
+            {(userRole === 'host' || userRole === 'admin') && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl">
+                <input
+                  type="checkbox"
+                  id="createdByMe"
+                  checked={showCreatedByMe}
+                  onChange={(e) => setShowCreatedByMe(e.target.checked)}
+                  className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                />
+                <label htmlFor="createdByMe" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
+                  Created by me
+                </label>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               {/* Clear Filters */}
@@ -590,6 +642,7 @@ export default function PlayersPage() {
                 onClick={() => {
                   setSearchTerm('')
                   setSkillFilters({})
+                  setShowCreatedByMe(false)
                 }}
                 className="w-full sm:w-auto px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
                 title="Clear all filters"
@@ -720,6 +773,7 @@ export default function PlayersPage() {
                   // 1. Admin has all access
                   // 2. Host can only edit/delete players they created
                   // 3. Regular users can only edit their own profile
+                  
                   const canEdit = userRole === 'admin' || 
                     (userRole === 'host' && player.created_by === currentUser?.id) ||
                     (userRole === 'user' && player.user_id === currentUser?.id)
@@ -1057,6 +1111,83 @@ export default function PlayersPage() {
                   className="px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded-lg hover:bg-[#CEA17A]/25 transition-colors"
                 >
                   Reset to Default
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && playerToDelete && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-[#09171F]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-500/30 p-8 max-w-md w-full">
+              <div className="text-center">
+                <div className="text-red-400 text-6xl mb-4">⚠️</div>
+                <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">
+                  Delete Player
+                </h2>
+                <p className="text-[#CEA17A] mb-6">
+                  Are you sure you want to delete <span className="font-semibold text-white">{playerToDelete.name}</span>? This action cannot be undone.
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false)
+                      setPlayerToDelete(null)
+                    }}
+                    disabled={isDeleting}
+                    className="px-6 py-3 bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#3E4E5A]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    disabled={isDeleting}
+                    className="px-6 py-3 bg-red-500/20 text-red-300 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-300"></div>
+                        Deleting...
+                      </>
+                    ) : (
+                      'Delete'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Success/Error Message Modal */}
+        {showMessageModal && messageModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className={`bg-[#09171F]/95 backdrop-blur-md rounded-2xl shadow-2xl border ${
+              messageModal.type === 'success' ? 'border-green-500/30' : 'border-red-500/30'
+            } p-8 max-w-md w-full`}>
+              <div className="text-center">
+                <div className={`text-6xl mb-4 ${messageModal.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                  {messageModal.type === 'success' ? '✓' : '✕'}
+                </div>
+                <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">
+                  {messageModal.type === 'success' ? 'Success!' : 'Error'}
+                </h2>
+                <p className="text-[#CEA17A] mb-6">
+                  {messageModal.message}
+                </p>
+                <button
+                  onClick={() => {
+                    setShowMessageModal(false)
+                    setMessageModal(null)
+                  }}
+                  className={`px-6 py-3 ${
+                    messageModal.type === 'success' 
+                      ? 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30' 
+                      : 'bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30'
+                  } border rounded-lg transition-colors`}
+                >
+                  OK
                 </button>
               </div>
             </div>

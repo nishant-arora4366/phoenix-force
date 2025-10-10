@@ -63,7 +63,22 @@ async function postHandler(
 ) {
   try {
     const body = await request.json()
-    const { name, format, selected_teams, tournament_date, description, total_slots, host_id, status, venue, google_maps_link } = body
+    const { 
+      name, 
+      format, 
+      selected_teams, 
+      tournament_date, 
+      description, 
+      total_slots, 
+      host_id, 
+      status, 
+      venue, 
+      google_maps_link,
+      community_restrictions,
+      base_price_restrictions,
+      min_base_price,
+      max_base_price
+    } = body
 
     // SECURITY: User is already authenticated via withAuth middleware
     const sessionUser = user
@@ -107,7 +122,11 @@ async function postHandler(
         host_id,
         status: status || 'draft',
         venue,
-        google_maps_link
+        google_maps_link,
+        community_restrictions: community_restrictions || null,
+        base_price_restrictions: base_price_restrictions || null,
+        min_base_price: min_base_price || null,
+        max_base_price: max_base_price || null
       })
       .select()
       .single()

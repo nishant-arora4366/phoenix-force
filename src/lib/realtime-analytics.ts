@@ -103,14 +103,11 @@ class RealtimeAnalyticsManager {
           table: 'api_usage_analytics'
         },
         (payload) => {
-          console.log('New API call detected:', payload)
           // Refresh data when new analytics entries are added
           this.fetchAnalyticsData()
         }
       )
-      .subscribe((status) => {
-        console.log('Analytics subscription status:', status)
-      })
+      .subscribe()
   }
 
   /**

@@ -121,6 +121,8 @@ async function getHandler(request: NextRequest) {
         batting_rating: skills['Batting Rating'] || null,
         wicket_keeping_rating: skills['Wicket Keeping Rating'] || null,
         created_at: player.created_at,
+        user_id: player.user_id, // For permission checks
+        created_by: player.created_by, // For host permission checks
         // Include all skills for detailed view
         skills: skills
       }

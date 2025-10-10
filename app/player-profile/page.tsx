@@ -13,12 +13,21 @@ interface PlayerFormData {
   skills: { [key: string]: string | string[] }
 }
 
+interface FormErrors {
+  mobile_number?: string
+  profile_pic_url?: string
+  bio?: string
+  [key: string]: string | undefined
+}
+
 interface PlayerSkill {
   id: string
   skill_name: string
   skill_type: string
   is_required: boolean
   display_order: number
+  is_admin_managed?: boolean
+  viewer_can_see?: boolean
   values: Array<{
     id: string
     value_name: string
@@ -36,6 +45,7 @@ interface PlayerProfile {
   user_id: string
   created_at: string
   updated_at: string
+  skills?: { [key: string]: any }
 }
 
 function PlayerProfileContent() {
@@ -45,6 +55,7 @@ function PlayerProfileContent() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [user, setUser] = useState<any>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
   const [playerProfile, setPlayerProfile] = useState<PlayerProfile | null>(null)
@@ -59,6 +70,67 @@ function PlayerProfileContent() {
     mobile_number: '',
     skills: {}
   })
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
+
+  // Validation functions
+  const validateIndianMobileNumber = (mobile: string): boolean => {
+    // Indian mobile number: 10 digits, starting with 6, 7, 8, or 9
+    const indianMobileRegex = /^[6-9]\d{9}$/
+    return indianMobileRegex.test(mobile)
+  }
+
+  const validateFieldLength = (value: string, maxLength: number): boolean => {
+    return value.length <= maxLength
+  }
+
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {}
+    let isValid = true
+
+    // Validate mobile number
+    if (!formData.mobile_number.trim()) {
+      errors.mobile_number = 'Mobile number is required'
+      isValid = false
+    } else if (!validateIndianMobileNumber(formData.mobile_number)) {
+      errors.mobile_number = 'Please enter a valid Indian mobile number (10 digits starting with 6-9)'
+      isValid = false
+    }
+
+    // Validate profile URL length
+    if (formData.profile_pic_url && !validateFieldLength(formData.profile_pic_url, 4096)) {
+      errors.profile_pic_url = 'Profile URL must be 4096 characters or less'
+      isValid = false
+    }
+
+    // Validate bio length
+    if (formData.bio && !validateFieldLength(formData.bio, 4096)) {
+      errors.bio = 'Bio must be 4096 characters or less'
+      isValid = false
+    }
+
+    // Validate required skills (Community and Role are always mandatory)
+    const communitySkill = playerSkills.find(skill => skill.skill_name === 'Community')
+    const roleSkill = playerSkills.find(skill => skill.skill_name === 'Role')
+    
+    if (communitySkill) {
+      const communityValue = formData.skills['Community']
+      if (!communityValue || (Array.isArray(communityValue) && communityValue.length === 0)) {
+        errors['Community'] = 'Community is required'
+        isValid = false
+      }
+    }
+
+    if (roleSkill) {
+      const roleValue = formData.skills['Role']
+      if (!roleValue || (Array.isArray(roleValue) && roleValue.length === 0)) {
+        errors['Role'] = 'Role is required'
+        isValid = false
+      }
+    }
+
+    setFormErrors(errors)
+    return isValid
+  }
 
   // Check if user is authenticated
   useEffect(() => {
@@ -68,6 +140,21 @@ function PlayerProfileContent() {
         if (currentUser) {
           setUser(currentUser)
           setUserRole(currentUser.role || null)
+          
+          // Fetch user profile data (includes firstname, lastname)
+          const token = secureSessionManager.getToken()
+          if (token) {
+            const userProfileResponse = await fetch('/api/user-profile', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            })
+            const userProfileResult = await userProfileResponse.json()
+            if (userProfileResult.success && userProfileResult.data) {
+              setUserProfile(userProfileResult.data)
+            }
+          }
+          
           await fetchPlayerProfile()
         } else {
           setMessage('Please sign in to access your player profile')
@@ -141,6 +228,13 @@ function PlayerProfileContent() {
     fetchPlayerSkills()
   }, [userRole])
 
+  // Refetch player profile when userProfile is loaded
+  useEffect(() => {
+    if (userProfile) {
+      fetchPlayerProfile()
+    }
+  }, [userProfile])
+
   const fetchPlayerProfile = async () => {
     try {
       
@@ -159,12 +253,17 @@ function PlayerProfileContent() {
       const result = await response.json()
       
       if (result.success) {
+        // Generate display name from user profile (firstname + lastname)
+        const displayName = userProfile 
+          ? `${userProfile.firstname || ''} ${userProfile.lastname || ''}`.trim()
+          : '';
+        
         if (result.profile) {
           // User has a player profile
           setPlayerProfile(result.profile)
           setFormData({
             id: result.profile.id, // Include player ID for updates
-            display_name: result.profile.display_name || '',
+            display_name: displayName || result.profile.display_name || '',
             bio: result.profile.bio || '',
             profile_pic_url: result.profile.profile_pic_url || '',
             mobile_number: result.profile.mobile_number || '',
@@ -174,7 +273,7 @@ function PlayerProfileContent() {
           // User doesn't have a player profile yet
           setPlayerProfile(null)
           setFormData({
-            display_name: '',
+            display_name: displayName,
             bio: '',
             profile_pic_url: '',
             mobile_number: '',
@@ -199,12 +298,27 @@ function PlayerProfileContent() {
       ...prev,
       [name]: value
     }))
+
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
+
+    // Validate form before submission
+    if (!validateForm()) {
+      setLoading(false)
+      setMessage('Please fix the validation errors before submitting')
+      return
+    }
 
     try {
       if (!user) {
@@ -218,19 +332,94 @@ function PlayerProfileContent() {
         throw new Error('User not authenticated')
       }
 
-      const response = await fetch('/api/player-profile', {
-        method: playerProfile ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData),
-      })
+      if (playerProfile) {
+        // For updates, use PATCH and only send changed fields
+        const changedFields: any = { id: playerProfile.id }
+        
+        // Check which basic fields have changed
+        if (formData.display_name !== playerProfile.display_name) {
+          changedFields.display_name = formData.display_name
+        }
+        if (formData.mobile_number !== playerProfile.mobile_number) {
+          changedFields.mobile_number = formData.mobile_number
+        }
+        if (formData.profile_pic_url !== playerProfile.profile_pic_url) {
+          changedFields.profile_pic_url = formData.profile_pic_url
+        }
+        if (formData.bio !== playerProfile.bio) {
+          changedFields.bio = formData.bio
+        }
 
-      const result = await response.json()
+        // Check which skills have changed
+        const changedSkills: any = {}
+        Object.keys(formData.skills).forEach(skillName => {
+          const currentValue = playerProfile.skills?.[skillName]
+          const newValue = formData.skills[skillName]
+          
+          // Skip admin-managed skills for regular users
+          const skill = playerSkills.find(s => s.skill_name === skillName)
+          if (skill?.is_admin_managed && userRole !== 'admin' && userRole !== 'host') {
+            return
+          }
+          
+          // Compare values (handle arrays and strings)
+          const currentValueStr = Array.isArray(currentValue) ? currentValue.sort().join(',') : (currentValue || '')
+          const newValueStr = Array.isArray(newValue) ? newValue.sort().join(',') : (newValue || '')
+          
+          if (currentValueStr !== newValueStr) {
+            changedSkills[skillName] = newValue
+          }
+        })
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to save player profile')
+        if (Object.keys(changedSkills).length > 0) {
+          changedFields.skills = changedSkills
+        }
+
+        // Only make API call if there are actual changes
+        if (Object.keys(changedFields).length > 1) { // More than just the ID
+          const response = await fetch('/api/player-profile', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(changedFields),
+          })
+
+          const result = await response.json()
+
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to update player profile')
+          }
+        }
+      } else {
+        // For creation, use POST with all data (filtered for admin-managed skills)
+        const filteredSkills = { ...formData.skills }
+        if (userRole !== 'admin' && userRole !== 'host') {
+          playerSkills.forEach(skill => {
+            if (skill.is_admin_managed) {
+              delete filteredSkills[skill.skill_name]
+            }
+          })
+        }
+
+        const response = await fetch('/api/player-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            ...formData,
+            skills: filteredSkills
+          }),
+        })
+
+        const result = await response.json()
+
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to create player profile')
+        }
       }
 
       setMessage(playerProfile ? 'Player profile updated successfully!' : 'Player profile created successfully! It will be reviewed by an admin.')
@@ -393,7 +582,7 @@ function PlayerProfileContent() {
                   {playerProfile.mobile_number && (
                     <div className="space-y-2">
                       <label className="block text-sm font-semibold text-[#CEA17A]">
-                        Mobile Number
+                        CricHeroes Mobile Number
                       </label>
                       <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]">
                         {playerProfile.mobile_number}
@@ -529,7 +718,7 @@ function PlayerProfileContent() {
           <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
             <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-8 py-4 sm:py-6 border-b border-[#CEA17A]/20">
               <h2 className="text-lg sm:text-2xl font-bold text-[#DBD0C0]">
-                {playerProfile ? 'Edit Player Profile' : 'Create Player Profile'}
+                {playerProfile ? 'Edit Profile' : 'Profile Details'}
               </h2>
               <p className="text-[#CEA17A] text-sm sm:text-base mt-1">
                 {playerProfile 
@@ -553,16 +742,19 @@ function PlayerProfileContent() {
                       id="display_name"
                       name="display_name"
                       value={formData.display_name}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
-                      placeholder="Enter your display name"
+                      disabled
+                      readOnly
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/30 backdrop-blur-sm text-[#CEA17A]/70 cursor-not-allowed"
+                      placeholder="Auto-filled from user profile"
                     />
+                    <p className="text-xs text-[#CEA17A]/60">
+                      Display name is automatically generated from your first and last name
+                    </p>
                   </div>
 
                   <div className="space-y-2">
                     <label htmlFor="mobile_number" className="block text-sm font-semibold text-[#CEA17A]">
-                      Mobile Number
+                      CricHeroes Mobile Number <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
@@ -570,9 +762,19 @@ function PlayerProfileContent() {
                       name="mobile_number"
                       value={formData.mobile_number}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
-                      placeholder="Enter mobile number (optional)"
+                      required
+                      maxLength={10}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] ${
+                        formErrors.mobile_number ? 'border-red-500' : 'border-[#CEA17A]/20'
+                      }`}
+                      placeholder="Enter your CricHeroes Mobile Number (10 digits)"
                     />
+                    {formErrors.mobile_number && (
+                      <p className="text-red-500 text-sm">{formErrors.mobile_number}</p>
+                    )}
+                    <p className="text-xs text-[#CEA17A]/60">
+                      Indian mobile number: 10 digits starting with 6, 7, 8, or 9
+                    </p>
                   </div>
                 </div>
 
@@ -587,9 +789,18 @@ function PlayerProfileContent() {
                     name="profile_pic_url"
                     value={formData.profile_pic_url}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
+                    maxLength={4096}
+                    className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] ${
+                      formErrors.profile_pic_url ? 'border-red-500' : 'border-[#CEA17A]/20'
+                    }`}
                     placeholder="Enter profile picture URL (optional)"
                   />
+                  {formErrors.profile_pic_url && (
+                    <p className="text-red-500 text-sm">{formErrors.profile_pic_url}</p>
+                  )}
+                  <p className="text-xs text-[#CEA17A]/60">
+                    {formData.profile_pic_url.length}/4096 characters
+                  </p>
                 </div>
 
                 {/* Bio */}
@@ -603,9 +814,18 @@ function PlayerProfileContent() {
                     value={formData.bio}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] resize-none"
+                    maxLength={4096}
+                    className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] resize-none ${
+                      formErrors.bio ? 'border-red-500' : 'border-[#CEA17A]/20'
+                    }`}
                     placeholder="Tell us about yourself (optional)"
                   />
+                  {formErrors.bio && (
+                    <p className="text-red-500 text-sm">{formErrors.bio}</p>
+                  )}
+                  <p className="text-xs text-[#CEA17A]/60">
+                    {formData.bio.length}/4096 characters
+                  </p>
                 </div>
 
                 {/* Dynamic Player Skills */}
@@ -641,66 +861,108 @@ function PlayerProfileContent() {
                       const skillKey = skill.skill_name
                       const isMultiSelect = skill.skill_type === 'multiselect'
                       const currentValue = formData.skills[skillKey] || (isMultiSelect ? [] : '')
-                      
-                      console.log('Rendering skill:', skill.skill_name, 'Current value:', currentValue, 'Form data skills:', formData.skills)
+
+                      // Check if this skill should be read-only for regular users
+                      const isReadOnly = skill.is_admin_managed && (userRole !== 'admin' && userRole !== 'host')
 
                       return (
                         <div key={skill.id} className="space-y-2">
                           <label htmlFor={skillKey} className="block text-sm font-medium text-[#CEA17A]">
-                            {skill.skill_name} {skill.is_required && '*'}
+                            {skill.skill_name} {(skill.is_required || skill.skill_name === 'Community' || skill.skill_name === 'Role') && <span className="text-red-500">*</span>}
+                            {isReadOnly && <span className="text-xs text-[#CEA17A]/60 ml-2">(Admin Managed)</span>}
                           </label>
                           
                           {isMultiSelect ? (
                             // Multi-select with checkboxes
-                            <div className="space-y-2 max-h-32 overflow-y-auto border-2 border-[#CEA17A]/20 rounded-xl p-3 bg-[#19171b]/50 backdrop-blur-sm">
-                              {skill.values && skill.values.map((value) => (
-                                <label key={value.id} className="flex items-center space-x-2 cursor-pointer hover:bg-[#CEA17A]/10 p-1 rounded transition-colors duration-200">
-                                  <input
-                                    type="checkbox"
-                                    checked={Array.isArray(currentValue) && currentValue.includes(value.value_name)}
-                                    onChange={(e) => {
-                                      const newSkills = { ...formData.skills }
-                                      const currentArray = Array.isArray(currentValue) ? currentValue : []
-                                      
-                                      if (e.target.checked) {
-                                        newSkills[skillKey] = [...currentArray, value.value_name]
-                                      } else {
-                                        newSkills[skillKey] = currentArray.filter(v => v !== value.value_name)
-                                      }
-                                      setFormData({ ...formData, skills: newSkills })
-                                    }}
-                                    className="h-4 w-4 text-[#CEA17A] focus:ring-[#CEA17A]/20 border-[#CEA17A]/30 rounded bg-[#19171b]/50"
-                                  />
-                                  <span className="text-sm text-[#CEA17A]">{value.value_name}</span>
-                                </label>
-                              ))}
-                              {Array.isArray(currentValue) && currentValue.length > 0 && (
-                                <div className="text-xs text-[#CEA17A]/70 mt-2">
-                                  Selected: {currentValue.join(', ')}
-                                </div>
+                            <div className="space-y-2">
+                              <div className={`max-h-32 overflow-y-auto border-2 rounded-xl p-3 bg-[#19171b]/50 backdrop-blur-sm ${
+                                formErrors[skillKey] ? 'border-red-500' : 'border-[#CEA17A]/20'
+                              } ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                                {skill.values && skill.values.map((value) => (
+                                  <label key={value.id} className={`flex items-center space-x-2 p-1 rounded transition-colors duration-200 ${
+                                    isReadOnly ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-[#CEA17A]/10'
+                                  }`}>
+                                    <input
+                                      type="checkbox"
+                                      checked={Array.isArray(currentValue) && currentValue.includes(value.value_name)}
+                                      disabled={isReadOnly}
+                                      onChange={(e) => {
+                                        if (isReadOnly) return
+                                        
+                                        const newSkills = { ...formData.skills }
+                                        const currentArray = Array.isArray(currentValue) ? currentValue : []
+                                        
+                                        if (e.target.checked) {
+                                          newSkills[skillKey] = [...currentArray, value.value_name]
+                                        } else {
+                                          newSkills[skillKey] = currentArray.filter(v => v !== value.value_name)
+                                        }
+                                        setFormData({ ...formData, skills: newSkills })
+                                        
+                                        // Clear error when user makes a selection
+                                        if (formErrors[skillKey]) {
+                                          setFormErrors(prev => ({
+                                            ...prev,
+                                            [skillKey]: undefined
+                                          }))
+                                        }
+                                      }}
+                                      className={`h-4 w-4 text-[#CEA17A] focus:ring-[#CEA17A]/20 border-[#CEA17A]/30 rounded bg-[#19171b]/50 ${
+                                        isReadOnly ? 'cursor-not-allowed' : ''
+                                      }`}
+                                    />
+                                    <span className="text-sm text-[#CEA17A]">{value.value_name}</span>
+                                  </label>
+                                ))}
+                                {Array.isArray(currentValue) && currentValue.length > 0 && (
+                                  <div className="text-xs text-[#CEA17A]/70 mt-2">
+                                    Selected: {currentValue.join(', ')}
+                                  </div>
+                                )}
+                              </div>
+                              {formErrors[skillKey] && (
+                                <p className="text-red-500 text-sm">{formErrors[skillKey]}</p>
                               )}
                             </div>
                           ) : (
                             // Single select dropdown
-                            <select
-                              id={skillKey}
-                              name={skillKey}
-                              value={currentValue}
-                              onChange={(e) => {
-                                const newSkills = { ...formData.skills }
-                                newSkills[skillKey] = e.target.value
-                                setFormData({ ...formData, skills: newSkills })
-                              }}
-                              required={skill.is_required}
-                              className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
-                            >
-                              <option value="">Select {skill.skill_name}</option>
-                              {skill.values && skill.values.map((value) => (
-                                <option key={value.id} value={value.value_name}>
-                                  {value.value_name}
-                                </option>
-                              ))}
-                            </select>
+                            <div className="space-y-2">
+                              <select
+                                id={skillKey}
+                                name={skillKey}
+                                value={currentValue}
+                                disabled={isReadOnly}
+                                onChange={(e) => {
+                                  if (isReadOnly) return
+                                  
+                                  const newSkills = { ...formData.skills }
+                                  newSkills[skillKey] = e.target.value
+                                  setFormData({ ...formData, skills: newSkills })
+                                  
+                                  // Clear error when user makes a selection
+                                  if (formErrors[skillKey]) {
+                                    setFormErrors(prev => ({
+                                      ...prev,
+                                      [skillKey]: undefined
+                                    }))
+                                  }
+                                }}
+                                required={skill.is_required || skill.skill_name === 'Community' || skill.skill_name === 'Role'}
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] ${
+                                  formErrors[skillKey] ? 'border-red-500' : 'border-[#CEA17A]/20'
+                                } ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
+                              >
+                                <option value="">Select {skill.skill_name}</option>
+                                {skill.values && skill.values.map((value) => (
+                                  <option key={value.id} value={value.value_name}>
+                                    {value.value_name}
+                                  </option>
+                                ))}
+                              </select>
+                              {formErrors[skillKey] && (
+                                <p className="text-red-500 text-sm">{formErrors[skillKey]}</p>
+                              )}
+                            </div>
                           )}
                         </div>
                       )

@@ -17,6 +17,10 @@ interface Tournament {
   total_slots: number
   venue?: string
   google_maps_link?: string
+  community_restrictions?: string[]
+  base_price_restrictions?: string[]
+  min_base_price?: number
+  max_base_price?: number
   created_at: string
   updated_at: string
 }
@@ -29,6 +33,10 @@ interface TournamentFormData {
   total_slots: number
   venue: string
   google_maps_link: string
+  community_restrictions: string[]
+  base_price_restrictions: string[]
+  min_base_price: number | null
+  max_base_price: number | null
 }
 
 export default function EditTournamentPage() {
@@ -56,8 +64,51 @@ export default function EditTournamentPage() {
     description: '',
     total_slots: 88,
     venue: '',
-    google_maps_link: ''
+    google_maps_link: '',
+    community_restrictions: [],
+    base_price_restrictions: [],
+    min_base_price: null,
+    max_base_price: null
   })
+
+  // Restriction options state
+  const [availableCommunities, setAvailableCommunities] = useState<string[]>([])
+  const [availableBasePrices, setAvailableBasePrices] = useState<string[]>([])
+  const [isLoadingRestrictions, setIsLoadingRestrictions] = useState(false)
+
+  // Function to fetch restriction options
+  const fetchRestrictionOptions = async () => {
+    setIsLoadingRestrictions(true)
+    try {
+      const token = secureSessionManager.getToken()
+      const response = await fetch('/api/player-skills', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success && result.skills) {
+          // Find Community and Base Price skills
+          const communitySkill = result.skills.find((skill: any) => skill.skill_name === 'Community')
+          const basePriceSkill = result.skills.find((skill: any) => skill.skill_name === 'Base Price')
+          
+          if (communitySkill) {
+            setAvailableCommunities(communitySkill.values.map((value: any) => value.value_name))
+          }
+          
+          if (basePriceSkill) {
+            setAvailableBasePrices(basePriceSkill.values.map((value: any) => value.value_name))
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching restriction options:', error)
+    } finally {
+      setIsLoadingRestrictions(false)
+    }
+  }
 
   // Get team count based on format
   const getTeamCount = (format: string): number => {
@@ -280,8 +331,15 @@ export default function EditTournamentPage() {
           description: tournamentData.description || '',
           total_slots: tournamentData.total_slots || 88,
           venue: tournamentData.venue || '',
-          google_maps_link: tournamentData.google_maps_link || ''
+          google_maps_link: tournamentData.google_maps_link || '',
+          community_restrictions: tournamentData.community_restrictions || [],
+          base_price_restrictions: tournamentData.base_price_restrictions || [],
+          min_base_price: tournamentData.min_base_price || null,
+          max_base_price: tournamentData.max_base_price || null
         })
+        
+        // Fetch restriction options
+        fetchRestrictionOptions()
       } catch (error) {
         console.error('Error fetching tournament:', error)
         setError('Error loading tournament')
@@ -316,7 +374,11 @@ export default function EditTournamentPage() {
           description: formData.description,
           total_slots: formData.total_slots,
           venue: formData.venue,
-          google_maps_link: formData.google_maps_link
+          google_maps_link: formData.google_maps_link,
+          community_restrictions: formData.community_restrictions,
+          base_price_restrictions: formData.base_price_restrictions,
+          min_base_price: formData.min_base_price,
+          max_base_price: formData.max_base_price
         })
       })
 
@@ -326,10 +388,8 @@ export default function EditTournamentPage() {
         setMessage('Tournament updated successfully!')
         setShowConfirmDialog(false)
         
-        // Redirect to tournament details page
-        setTimeout(() => {
+        // Redirect to tournament details page immediately
         router.push(`/tournaments/${tournamentId}`)
-        }, 2000)
       } else {
         // Handle different error types
         if (response.status === 401 || response.status === 403) {
@@ -337,11 +397,11 @@ export default function EditTournamentPage() {
         } else {
           setError(result.error || 'Failed to update tournament')
         }
+        setIsSaving(false)
       }
     } catch (error) {
       console.error('Error updating tournament:', error)
       setError('Error updating tournament')
-    } finally {
       setIsSaving(false)
     }
   }
@@ -422,6 +482,23 @@ export default function EditTournamentPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* Full-screen loading overlay */}
+      {isSaving && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-[#09171F]/90 backdrop-blur-md rounded-2xl shadow-2xl border border-[#CEA17A]/30 p-12 max-w-md mx-4">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#CEA17A] mx-auto mb-6"></div>
+              <h2 className="text-2xl font-bold text-[#DBD0C0] mb-3">
+                Updating Tournament...
+              </h2>
+              <p className="text-[#CEA17A]/80">
+                Please wait while we save your changes
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Hero Section Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
       <div className="absolute inset-0" 
@@ -666,6 +743,147 @@ export default function EditTournamentPage() {
                 <p className="text-xs text-[#CEA17A]/70">
                 Optional: Share a Google Maps link to help players find the venue location
               </p>
+            </div>
+
+            {/* Tournament Restrictions */}
+            <div className="space-y-6">
+              <div className="border-t border-[#CEA17A]/20 pt-6">
+                <h3 className="text-lg font-semibold text-[#DBD0C0] mb-4">Tournament Restrictions</h3>
+                <p className="text-sm text-[#CEA17A] mb-6">
+                  Set restrictions to control who can register for this tournament
+                </p>
+                
+                {/* Community Restrictions */}
+                <div className="space-y-3 mb-6">
+                  <label className="block text-sm font-semibold text-[#CEA17A]">
+                    Community Restrictions
+                  </label>
+                  <p className="text-xs text-[#CEA17A]/70 mb-3">
+                    Select communities that can register for this tournament
+                  </p>
+                  {isLoadingRestrictions ? (
+                    <div className="flex items-center text-[#CEA17A]">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#CEA17A] mr-2"></div>
+                      Loading communities...
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {availableCommunities.map((community) => (
+                        <label key={community} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.community_restrictions.includes(community)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  community_restrictions: [...prev.community_restrictions, community]
+                                }))
+                              } else {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  community_restrictions: prev.community_restrictions.filter(c => c !== community)
+                                }))
+                              }
+                            }}
+                            className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A]/20 focus:ring-2"
+                          />
+                          <span className="text-sm text-[#DBD0C0]">{community}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Base Price Restrictions */}
+                <div className="space-y-3 mb-6">
+                  <label className="block text-sm font-semibold text-[#CEA17A]">
+                    Base Price Restrictions
+                  </label>
+                  <p className="text-xs text-[#CEA17A]/70 mb-3">
+                    Select base price categories that can register for this tournament
+                  </p>
+                  {isLoadingRestrictions ? (
+                    <div className="flex items-center text-[#CEA17A]">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#CEA17A] mr-2"></div>
+                      Loading base prices...
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {availableBasePrices.map((basePrice) => (
+                        <label key={basePrice} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.base_price_restrictions.includes(basePrice)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  base_price_restrictions: [...prev.base_price_restrictions, basePrice]
+                                }))
+                              } else {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  base_price_restrictions: prev.base_price_restrictions.filter(bp => bp !== basePrice)
+                                }))
+                              }
+                            }}
+                            className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A]/20 focus:ring-2"
+                          />
+                          <span className="text-sm text-[#DBD0C0]">{basePrice}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Base Price Range */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="min_base_price" className="block text-sm font-semibold text-[#CEA17A]">
+                      Minimum Base Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      id="min_base_price"
+                      name="min_base_price"
+                      value={formData.min_base_price || ''}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        min_base_price: e.target.value ? Number(e.target.value) : null
+                      }))}
+                      min="0"
+                      step="100"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
+                      placeholder="e.g., 1000"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="max_base_price" className="block text-sm font-semibold text-[#CEA17A]">
+                      Maximum Base Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      id="max_base_price"
+                      name="max_base_price"
+                      value={formData.max_base_price || ''}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        max_base_price: e.target.value ? Number(e.target.value) : null
+                      }))}
+                      min="0"
+                      step="100"
+                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
+                      placeholder="e.g., 10000"
+                    />
+                  </div>
+                </div>
+                
+                <p className="text-xs text-[#CEA17A]/70 mt-3">
+                  Leave restrictions empty to allow all players to register
+                </p>
+              </div>
             </div>
 
               {/* Message */}

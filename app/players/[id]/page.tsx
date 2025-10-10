@@ -26,6 +26,14 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
   const [userRole, setUserRole] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [shouldRedirect, setShouldRedirect] = useState(false)
+  
+  // Delete confirmation modal state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  
+  // Success/Error message modal state
+  const [showMessageModal, setShowMessageModal] = useState(false)
+  const [messageModal, setMessageModal] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,10 +49,13 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         }
 
         // Fetch player data with user role for skill filtering
+        const token = secureSessionManager.getToken()
+        const headers: any = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
         const response = await fetch(`/api/players/${id}`, {
-          headers: {
-            'Authorization': JSON.stringify(currentUser || { role: 'viewer' })
-          }
+          headers
         })
         const result = await response.json()
 
@@ -89,11 +100,14 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
   }, [params])
 
 
-  const handleDelete = async () => {
-    if (!player || !confirm('Are you sure you want to delete this player? This action cannot be undone.')) {
-      return
-    }
+  const handleDelete = () => {
+    setShowDeleteConfirm(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!player) return
+
+    setIsDeleting(true)
     try {
       const currentUser = secureSessionManager.getUser()
       if (!currentUser) {
@@ -103,7 +117,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
       const response = await fetch(`/api/players/${player.id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': JSON.stringify(currentUser)
+          'Authorization': `Bearer ${secureSessionManager.getToken()}`
         }
       })
 
@@ -113,11 +127,28 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         throw new Error(result.error || 'Failed to delete player')
       }
 
-      // Redirect to players list
-      router.push('/players')
+      // Close confirmation modal
+      setShowDeleteConfirm(false)
+      
+      // Show success message
+      setMessageModal({ type: 'success', message: `${player.display_name} deleted successfully!` })
+      setShowMessageModal(true)
+      
+      // Redirect to players list after a short delay
+      setTimeout(() => {
+        router.push('/players')
+      }, 1500)
     } catch (error: any) {
       console.error('Error deleting player:', error)
-      alert(`Error: ${error.message}`)
+      
+      // Close confirmation modal
+      setShowDeleteConfirm(false)
+      
+      // Show error message
+      setMessageModal({ type: 'error', message: error.message || 'Failed to delete player' })
+      setShowMessageModal(true)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -402,6 +433,80 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
             ← Back to Players
           </button>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && player && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-[#09171F]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-500/30 p-8 max-w-md w-full">
+              <div className="text-center">
+                <div className="text-red-400 text-6xl mb-4">⚠️</div>
+                <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">
+                  Delete Player
+                </h2>
+                <p className="text-[#CEA17A] mb-6">
+                  Are you sure you want to delete <span className="font-semibold text-white">{player.display_name}</span>? This action cannot be undone.
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
+                    className="px-6 py-3 bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#3E4E5A]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    disabled={isDeleting}
+                    className="px-6 py-3 bg-red-500/20 text-red-300 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-300"></div>
+                        Deleting...
+                      </>
+                    ) : (
+                      'Delete'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Success/Error Message Modal */}
+        {showMessageModal && messageModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className={`bg-[#09171F]/95 backdrop-blur-md rounded-2xl shadow-2xl border ${
+              messageModal.type === 'success' ? 'border-green-500/30' : 'border-red-500/30'
+            } p-8 max-w-md w-full`}>
+              <div className="text-center">
+                <div className={`text-6xl mb-4 ${messageModal.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                  {messageModal.type === 'success' ? '✓' : '✕'}
+                </div>
+                <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">
+                  {messageModal.type === 'success' ? 'Success!' : 'Error'}
+                </h2>
+                <p className="text-[#CEA17A] mb-6">
+                  {messageModal.message}
+                </p>
+                <button
+                  onClick={() => {
+                    setShowMessageModal(false)
+                    setMessageModal(null)
+                  }}
+                  className={`px-6 py-3 ${
+                    messageModal.type === 'success' 
+                      ? 'bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30' 
+                      : 'bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30'
+                  } border rounded-lg transition-colors`}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

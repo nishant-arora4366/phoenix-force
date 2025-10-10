@@ -78,7 +78,6 @@ async function getHandlerPublic(
         )
       `)
       .eq('tournament_id', tournamentId)
-      .order('requested_at')
 
     if (allSlotsError) {
       console.error('Error fetching all slots:', allSlotsError)
@@ -90,12 +89,21 @@ async function getHandlerPublic(
     const totalSlots = tournament.total_slots
     
     // Simple FCFS system - calculate positions based on requested_at timestamp
-    const allSlotsWithPlayers = allSlotsData?.filter(slot => slot.player_id) || []
+    const allSlotsWithPlayers = allSlotsData?.filter(slot => slot.player_id && slot.requested_at) || []
     
-    // Sort all slots by requested_at (FCFS)
-    const sortedSlots = allSlotsWithPlayers.sort((a, b) => 
-      new Date(a.requested_at).getTime() - new Date(b.requested_at).getTime()
-    )
+    // Sort all slots by requested_at (FCFS) - earliest first
+    // Use slot ID as secondary sort key for stable ordering when timestamps are identical
+    const sortedSlots = allSlotsWithPlayers.sort((a, b) => {
+      const timeA = new Date(a.requested_at).getTime()
+      const timeB = new Date(b.requested_at).getTime()
+      
+      // If timestamps are identical, sort by slot ID for consistent ordering
+      if (timeA === timeB) {
+        return a.id.localeCompare(b.id)
+      }
+      
+      return timeA - timeB
+    })
     
     // Assign positions dynamically based on FCFS order
     const slotsWithPositions = sortedSlots.map((slot, index) => {

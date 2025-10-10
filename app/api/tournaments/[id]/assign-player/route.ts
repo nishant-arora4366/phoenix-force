@@ -109,13 +109,19 @@ async function POSTHandler(
     const isMainSlot = currentSlotCount < tournament.total_slots
 
     // Prepare slots data for insertion
-    const slotsData = players.map((player, index) => ({
-      tournament_id: tournamentId,
-      player_id: player.id,
-      status: status,
-      requested_at: new Date().toISOString(),
-      confirmed_at: status === 'confirmed' ? new Date().toISOString() : null
-    }))
+    // Add 1 second offset for each player to ensure unique timestamps for proper FCFS ordering
+    const baseTimestamp = Date.now()
+    const slotsData = players.map((player, index) => {
+      // Add index seconds (in milliseconds) to ensure each player has a unique timestamp
+      const timestamp = new Date(baseTimestamp + (index * 1000)).toISOString()
+      return {
+        tournament_id: tournamentId,
+        player_id: player.id,
+        status: status,
+        requested_at: timestamp,
+        confirmed_at: status === 'confirmed' ? timestamp : null
+      }
+    })
 
     // Insert the new slots
     const { data: newSlots, error: insertError } = await supabaseAdmin

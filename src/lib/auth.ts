@@ -96,14 +96,11 @@ export class AuthService {
 
       // Verify password
       if (!user.password_hash) {
-        console.error('No password hash found for user:', user.email)
         return { success: false, error: 'Invalid email or password' }
       }
 
-      console.log('Attempting password verification for:', user.email)
       const isValidPassword = await this.verifyPassword(password, user.password_hash)
       if (!isValidPassword) {
-        console.error('Password verification failed for:', user.email)
         return { success: false, error: 'Invalid email or password' }
       }
 

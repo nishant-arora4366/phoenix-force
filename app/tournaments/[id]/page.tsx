@@ -18,6 +18,10 @@ interface Tournament {
   total_slots: number
   venue?: string
   google_maps_link?: string
+  community_restrictions?: string[]
+  base_price_restrictions?: string[]
+  min_base_price?: number
+  max_base_price?: number
   created_at: string
   updated_at: string
 }
@@ -91,6 +95,11 @@ export default function TournamentDetailsPage() {
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
   const [waitlistStatus, setWaitlistStatus] = useState<any>(null)
+  const [hasPlayerProfile, setHasPlayerProfile] = useState(false)
+  const [isUserApproved, setIsUserApproved] = useState(false)
+  const [userStatus, setUserStatus] = useState<string>('')
+  const [showRegistrationError, setShowRegistrationError] = useState(false)
+  const [registrationErrorMessage, setRegistrationErrorMessage] = useState('')
   
   // Player assignment modal state
   const [showAssignModal, setShowAssignModal] = useState(false)
@@ -183,35 +192,12 @@ export default function TournamentDetailsPage() {
         const tournamentData = result.tournament
         setTournament(tournamentData)
 
-        // Fetch host information
-        const hostResponse = await fetch(`/api/user-profile?userId=${tournamentData.host_id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        // Fetch host information (public - no auth required)
+        const hostResponse = await fetch(`/api/user-profile?userId=${tournamentData.host_id}`)
         if (hostResponse.ok) {
           const hostResult = await hostResponse.json()
           if (hostResult.success) {
             setHostInfo(hostResult.data)
-          }
-        }
-
-        if (sessionUser) {
-          // Fetch user profile
-          const response = await fetch('/api/user-profile', {
-            headers: {
-              'Authorization': `Bearer ${secureSessionManager.getToken()}`
-            }
-          })
-          const result = await response.json()
-          if (result.success) {
-            setUserProfile(result.data)
-            // Check if user is admin or the tournament host (with host/admin role)
-            const isAdmin = result.data.role === 'admin'
-            const isTournamentHost = sessionUser.id === tournamentData.host_id
-            const isHostRole = result.data.role === 'host'
-            // Only allow host actions if user is admin, or if they're the host AND have host role
-            setIsHost(isAdmin || (isTournamentHost && isHostRole))
           }
         }
 
@@ -220,19 +206,50 @@ export default function TournamentDetailsPage() {
 
         // Fetch user-specific data only for authenticated users
         if (sessionUser) {
-          const userResponse = await fetch('/api/user-profile', {
-            headers: {
-              'Authorization': `Bearer ${secureSessionManager.getToken()}`
+          try {
+            // Fetch user profile (includes player_id if linked)
+            const token = secureSessionManager.getToken()
+            if (!token) {
+              console.warn('No authentication token available')
+              return
             }
-          })
-          const userResult = await userResponse.json()
-          if (userResult.success) {
-            const isAdmin = userResult.data.role === 'admin'
-            const isTournamentHost = sessionUser.id === tournamentData.host_id
-            const isViewer = userResult.data.role === 'viewer'
+
+            const userProfileResponse = await fetch('/api/user-profile', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            })
             
-            // Check if user is already registered for this tournament
-            await checkUserRegistration()
+            if (!userProfileResponse.ok) {
+              console.error('Failed to fetch user profile:', userProfileResponse.status)
+              return
+            }
+
+            const userProfileResult = await userProfileResponse.json()
+            if (userProfileResult.success && userProfileResult.data) {
+              setUserProfile(userProfileResult.data)
+              
+              // Check user status and approval - capitalize first letter for display
+              const status = userProfileResult.data.status || 'pending'
+              setUserStatus(status.charAt(0).toUpperCase() + status.slice(1))
+              setIsUserApproved(userProfileResult.data.status === 'approved')
+              
+              // Check if user has player profile from the player_id field
+              setHasPlayerProfile(!!userProfileResult.data.player_id)
+              
+              // Check if user is admin or the tournament host (with host/admin role)
+              const isAdmin = userProfileResult.data.role === 'admin'
+              const isTournamentHost = sessionUser.id === tournamentData.host_id
+              const isHostRole = userProfileResult.data.role === 'host'
+              // Only allow host actions if user is admin, or if they're the host AND have host role
+              setIsHost(isAdmin || (isTournamentHost && isHostRole))
+              
+              // Check if user is already registered for this tournament
+              await checkUserRegistration()
+            }
+          } catch (error) {
+            console.error('Error fetching user profile:', error)
+            // Continue anyway - slots should still be visible
           }
         }
       } catch (error) {
@@ -1212,7 +1229,8 @@ export default function TournamentDetailsPage() {
   const registerForTournament = async () => {
     // Check if registrations are open
     if (!tournament || tournament.status !== 'registration_open') {
-      setRegistrationMessage('Registration is not currently open for this tournament.')
+      setRegistrationErrorMessage('Registration is not currently open for this tournament.')
+      setShowRegistrationError(true)
       return
     }
 
@@ -1246,11 +1264,13 @@ export default function TournamentDetailsPage() {
           
           if (!result.success) {
             if (result.error.includes('Player profile not found')) {
-              setRegistrationMessage('Please create a player profile first before registering for tournaments.')
+              setRegistrationErrorMessage('Please create a player profile first before registering for tournaments.')
+              setShowRegistrationError(true)
               return
             } else if (result.error.includes('Slot number already taken') || result.error.includes('already registered')) {
               // These are not retryable errors - but check if user is actually registered
-              setRegistrationMessage(result.error)
+              setRegistrationErrorMessage(result.error)
+              setShowRegistrationError(true)
               await new Promise(resolve => setTimeout(resolve, 500))
               await Promise.all([
                 fetchSlots(), // Manually fetch slots (fallback since realtime may timeout)
@@ -1318,7 +1338,8 @@ export default function TournamentDetailsPage() {
         }
       }
       
-      setRegistrationMessage(errorMessage)
+      setRegistrationErrorMessage(errorMessage)
+      setShowRegistrationError(true)
     } finally {
       setIsRegistering(false);
       setTimeout(() => setRegistrationMessage(''), 10000); // Clear message after 10 seconds for retry messages
@@ -1716,38 +1737,126 @@ export default function TournamentDetailsPage() {
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={registerForTournament}
-                            disabled={isRegistering || tournament.status !== 'registration_open'}
-                            className={`px-6 py-2.5 rounded-lg transition-all duration-200 font-medium shadow-lg text-sm ${
-                              tournament.status === 'registration_open' 
-                                ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30 shadow-green-500/20 hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-500/40 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm' 
-                                : 'bg-[#CEA17A]/10 text-[#CEA17A]/50 border border-[#CEA17A]/20 cursor-not-allowed'
-                            }`}
-                          >
-                            {isRegistering ? (
-                              <div className="flex items-center">
-                                <div className="w-4 h-4 border-2 border-green-300 border-t-transparent rounded-full animate-spin mr-2"></div>
-                                Registering...
-                              </div>
-                            ) : tournament.status === 'registration_open' ? (
-                              'Register Now'
-                            ) : tournament.status === 'draft' ? (
-                              <div className="flex items-center">
-                                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Registration Not Open Yet
-                              </div>
-                            ) : (
-                              <div className="flex items-center">
-                                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                Registration Closed
+                          <div className="w-full">
+                            <button
+                              onClick={registerForTournament}
+                              disabled={isRegistering || tournament.status !== 'registration_open' || !isUserApproved || !hasPlayerProfile}
+                              className={`w-full px-6 py-2.5 rounded-lg transition-all duration-200 font-medium shadow-lg text-sm ${
+                                tournament.status === 'registration_open' && isUserApproved && hasPlayerProfile
+                                  ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30 shadow-green-500/20 hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-500/40 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm' 
+                                  : 'bg-[#CEA17A]/10 text-[#CEA17A]/50 border border-[#CEA17A]/20 cursor-not-allowed'
+                              }`}
+                            >
+                              {isRegistering ? (
+                                <div className="flex items-center justify-center">
+                                  <div className="w-4 h-4 border-2 border-green-300 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                  Registering...
+                                </div>
+                              ) : tournament.status === 'registration_open' && isUserApproved && hasPlayerProfile ? (
+                                'Register Now'
+                              ) : tournament.status === 'draft' ? (
+                                <div className="flex items-center justify-center">
+                                  <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  Registration Not Open Yet
+                                </div>
+                              ) : tournament.status !== 'registration_open' ? (
+                                <div className="flex items-center justify-center">
+                                  <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                  </svg>
+                                  Registration Closed
+                                </div>
+                              ) : (
+                                'Register Now'
+                              )}
+                            </button>
+                            
+                            {/* Warning Messages */}
+                            {tournament.status === 'registration_open' && (!isUserApproved || !hasPlayerProfile) && (
+                              <div className="mt-3 bg-[#09171F]/80 border border-yellow-500/20 rounded-lg p-4">
+                                <div className="flex items-start mb-3">
+                                  <svg className="w-5 h-5 text-yellow-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                  </svg>
+                                  <div className="flex-1">
+                                    <h4 className="text-sm font-semibold text-yellow-300 mb-2">Registration Requirements</h4>
+                                    <p className="text-xs text-[#DBD0C0]/70 mb-3">
+                                      You need to meet the following requirements before registering:
+                                    </p>
+                                    
+                                    <div className="space-y-2">
+                                      {/* Account Approval */}
+                                      <div className={`flex items-start p-2 rounded ${!isUserApproved ? 'bg-yellow-500/10 border border-yellow-500/20' : 'bg-green-500/10 border border-green-500/20'}`}>
+                                        <div className="mr-2 mt-0.5">
+                                          {isUserApproved ? (
+                                            <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                          ) : (
+                                            <svg className="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                          )}
+                                        </div>
+                                        <div className="flex-1">
+                                          <p className={`text-xs font-medium ${isUserApproved ? 'text-green-300' : 'text-yellow-300'}`}>
+                                            Account Approval
+                                          </p>
+                                          <p className={`text-xs ${isUserApproved ? 'text-green-400/80' : 'text-yellow-400/80'} mt-0.5`}>
+                                            {isUserApproved ? (
+                                              'Your account is approved ✓'
+                                            ) : (
+                                              <>Status: <span className="font-semibold">{userStatus}</span> - Awaiting admin approval</>
+                                            )}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Player Profile */}
+                                      <div className={`flex items-start p-2 rounded ${!hasPlayerProfile ? 'bg-orange-500/10 border border-orange-500/20' : 'bg-green-500/10 border border-green-500/20'}`}>
+                                        <div className="mr-2 mt-0.5">
+                                          {hasPlayerProfile ? (
+                                            <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                          ) : (
+                                            <svg className="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                          )}
+                                        </div>
+                                        <div className="flex-1">
+                                          <p className={`text-xs font-medium ${hasPlayerProfile ? 'text-green-300' : 'text-orange-300'}`}>
+                                            Player Profile
+                                          </p>
+                                          <p className={`text-xs ${hasPlayerProfile ? 'text-green-400/80' : 'text-orange-400/80'} mt-0.5`}>
+                                            {hasPlayerProfile ? (
+                                              'Profile created ✓'
+                                            ) : (
+                                              'Create a player profile to register'
+                                            )}
+                                          </p>
+                                          {!hasPlayerProfile && (
+                                            <Link
+                                              href="/player-profile"
+                                              className="inline-flex items-center mt-1.5 text-xs font-medium text-orange-300 hover:text-orange-200 transition-colors"
+                                            >
+                                              <span>Create Profile</span>
+                                              <svg className="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                              </svg>
+                                            </Link>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             )}
-                          </button>
+                          </div>
                         )}
                       </div>
                     )}
@@ -1807,6 +1916,78 @@ export default function TournamentDetailsPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Tournament Restrictions */}
+                  {((tournament.community_restrictions && tournament.community_restrictions.length > 0) || 
+                    (tournament.base_price_restrictions && tournament.base_price_restrictions.length > 0) || 
+                    tournament.min_base_price || 
+                    tournament.max_base_price) && (
+                    <div className="mt-6 pt-6 border-t border-[#CEA17A]/20">
+                      <h4 className="text-lg font-semibold text-[#DBD0C0] mb-4 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Registration Restrictions
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {tournament.community_restrictions && tournament.community_restrictions.length > 0 && (
+                          <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/20">
+                            <div className="text-sm font-medium text-[#CEA17A] mb-2">Allowed Communities</div>
+                            <div className="flex flex-wrap gap-2">
+                              {tournament.community_restrictions.map((community, index) => (
+                                <span key={index} className="px-3 py-1 bg-[#CEA17A]/20 text-[#CEA17A] rounded-full text-sm">
+                                  {community}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {tournament.base_price_restrictions && tournament.base_price_restrictions.length > 0 && (
+                          <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/20">
+                            <div className="text-sm font-medium text-[#CEA17A] mb-2">Allowed Base Prices</div>
+                            <div className="flex flex-wrap gap-2">
+                              {tournament.base_price_restrictions
+                                .sort((a, b) => {
+                                  // Extract numeric values for sorting
+                                  const numA = parseFloat(a.replace(/[^\d.]/g, '')) || 0
+                                  const numB = parseFloat(b.replace(/[^\d.]/g, '')) || 0
+                                  return numA - numB
+                                })
+                                .map((basePrice, index) => (
+                                <span key={index} className="px-3 py-1 bg-[#CEA17A]/20 text-[#CEA17A] rounded-full text-sm">
+                                  ₹{basePrice}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {(tournament.min_base_price || tournament.max_base_price) && (
+                          <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/20">
+                            <div className="text-sm font-medium text-[#CEA17A] mb-2">Base Price Range</div>
+                            <div className="text-[#DBD0C0]">
+                              {tournament.min_base_price && tournament.max_base_price ? (
+                                <span>₹{tournament.min_base_price} - ₹{tournament.max_base_price}</span>
+                              ) : tournament.min_base_price ? (
+                                <span>Minimum: ₹{tournament.min_base_price}</span>
+                              ) : (
+                                <span>Maximum: ₹{tournament.max_base_price}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-3 p-3 bg-[#CEA17A]/10 rounded-lg border border-[#CEA17A]/20">
+                        <p className="text-sm text-[#CEA17A]/80">
+                          <svg className="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Only players matching these criteria can register for this tournament.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Stats Grid */}
                   {slotsStats && (
@@ -3082,6 +3263,45 @@ export default function TournamentDetailsPage() {
                 }`}
               >
                 {confirmAction.confirmText || 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Registration Error Modal */}
+      {showRegistrationError && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-red-500/30 rounded-xl shadow-2xl p-8 max-w-md w-full animate-fade-in">
+            {/* Error Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 bg-red-500/15 rounded-full flex items-center justify-center border-2 border-red-500/40">
+                <svg className="w-10 h-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            
+            {/* Error Message */}
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-red-400 mb-3">
+                Registration Failed
+              </h3>
+              <p className="text-[#DBD0C0] text-base">
+                {registrationErrorMessage}
+              </p>
+            </div>
+
+            {/* Close Button */}
+            <div className="mt-6">
+              <button
+                onClick={() => {
+                  setShowRegistrationError(false)
+                  setRegistrationErrorMessage('')
+                }}
+                className="w-full px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
+              >
+                Close
               </button>
             </div>
           </div>

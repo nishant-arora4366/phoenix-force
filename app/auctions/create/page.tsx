@@ -157,43 +157,8 @@ export default function CreateAuctionPage() {
     )
   }
 
+  // Show unauthorized message if user doesn't have host or admin access
   if (user.role !== 'host' && user.role !== 'admin') {
-    return (
-      <div className="min-h-screen relative overflow-hidden">
-        {/* Hero Section Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
-        <div className="absolute inset-0" 
-             style={{
-               background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
-             }}></div>
-        
-        {/* Content */}
-        <div className="relative z-10 py-8">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-[#DBD0C0] mb-6">
-                  Access Denied
-                </h1>
-                <p className="text-xl text-[#CEA17A] mb-8">
-                  You need host or admin privileges to create auctions.
-                </p>
-                <button
-                  onClick={() => window.location.href = '/auctions'}
-                  className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
-                >
-                  Return to Auctions
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Show unauthorized message if user doesn't have access
-  if (user && user.role !== 'host' && user.role !== 'admin') {
     return (
       <div className="min-h-screen relative overflow-hidden">
         {/* Hero Section Background */}

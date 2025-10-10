@@ -67,13 +67,13 @@ async function getHandler(
         }, { status: 500 })
       }
 
-      // Get all FILLED slots for this tournament, sorted by requested_at
+      // Get all FILLED slots for this tournament
       const { data: allSlots, error: allSlotsError } = await supabase
         .from('tournament_slots')
         .select('id, requested_at, status, player_id')
         .eq('tournament_id', tournamentId)
         .not('player_id', 'is', null) // Only get slots with players
-        .order('requested_at')
+        .not('requested_at', 'is', null) // Only get slots with requested_at timestamp
 
       if (allSlotsError) {
         console.error('Error fetching all slots:', allSlotsError)
@@ -84,9 +84,18 @@ async function getHandler(
       }
 
       // Find position based on requested_at timestamp (FCFS)
-      const sortedSlots = allSlots?.sort((a, b) => 
-        new Date(a.requested_at).getTime() - new Date(b.requested_at).getTime()
-      ) || []
+      // Use slot ID as secondary sort key for stable ordering when timestamps are identical
+      const sortedSlots = allSlots?.sort((a, b) => {
+        const timeA = new Date(a.requested_at).getTime()
+        const timeB = new Date(b.requested_at).getTime()
+        
+        // If timestamps are identical, sort by slot ID for consistent ordering
+        if (timeA === timeB) {
+          return a.id.localeCompare(b.id)
+        }
+        
+        return timeA - timeB
+      }) || []
       
       const userSlotIndex = sortedSlots.findIndex(slot => slot.id === registration.id)
       const position = userSlotIndex >= 0 ? userSlotIndex + 1 : null

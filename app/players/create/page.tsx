@@ -91,7 +91,11 @@ export default function CreatePlayerPage() {
   useEffect(() => {
     const fetchPlayerSkills = async () => {
       try {
-        const response = await fetch('/api/player-skills')
+        const response = await fetch('/api/player-skills', {
+          headers: {
+            'Authorization': `Bearer ${secureSessionManager.getToken()}`
+          }
+        })
         const result = await response.json()
         
         console.log('Player skills API response:', result)
@@ -131,7 +135,7 @@ export default function CreatePlayerPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(currentUser)
+          'Authorization': `Bearer ${secureSessionManager.getToken()}`
         },
         body: JSON.stringify(formData),
       })

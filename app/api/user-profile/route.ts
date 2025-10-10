@@ -8,18 +8,23 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-async function getUserProfile(request: NextRequest, user: AuthenticatedUser) {
+// Public handler - allows fetching any user profile by userId (no auth required)
+async function getUserProfilePublic(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
 
-    // If no userId provided, return current user's profile
-    const targetUserId = userId || user.id
+    if (!userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'userId is required'
+      }, { status: 400 })
+    }
 
     const { data: profileUser, error } = await supabaseAdmin
       .from('users')
       .select('id, email, username, firstname, middlename, lastname, photo, role, status, created_at, updated_at')
-      .eq('id', targetUserId)
+      .eq('id', userId)
       .single()
 
     if (error) {
@@ -42,8 +47,58 @@ async function getUserProfile(request: NextRequest, user: AuthenticatedUser) {
   }
 }
 
-// Export the authenticated handler
-const getHandler = withAuth(getUserProfile)
+// Authenticated handler - fetches current user's own profile (auth required)
+async function getUserProfile(request: NextRequest, user: AuthenticatedUser) {
+  try {
+    const { data: profileUser, error } = await supabaseAdmin
+      .from('users')
+      .select('id, email, username, firstname, middlename, lastname, photo, role, status, created_at, updated_at')
+      .eq('id', user.id)
+      .single()
+
+    if (error) {
+      return NextResponse.json({
+        success: false,
+        error: error.message
+      }, { status: 500 })
+    }
+
+    // Check if user has a linked player profile
+    const { data: playerProfile } = await supabaseAdmin
+      .from('players')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...profileUser,
+        player_id: playerProfile?.id || null
+      }
+    })
+
+  } catch (error: any) {
+    return NextResponse.json({
+      success: false,
+      error: error.message
+    }, { status: 500 })
+  }
+}
+
+// Wrapper to handle both authenticated and public requests
+async function getHandler(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  const userId = searchParams.get('userId')
+
+  // If userId is provided, use public handler (no auth required)
+  if (userId) {
+    return getUserProfilePublic(request)
+  }
+
+  // Otherwise, require authentication and return current user's profile
+  return withAuth(getUserProfile)(request)
+}
 
 async function updateUserProfile(request: NextRequest, user: AuthenticatedUser) {
   try {

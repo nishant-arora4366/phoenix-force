@@ -346,7 +346,7 @@ export default function Home() {
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                       <span className="relative z-10">Sign In</span>
                     </Link>
-                    <Link href="/signin?returnUrl=/signin" className="px-6 py-3 border-2 border-[#CEA17A]/50 hover:border-[#CEA17A]/70 text-[#CEA17A] hover:text-[#CEA17A] font-bold rounded-lg transition-all duration-150 backdrop-blur-sm text-center">
+                    <Link href="/signup" className="px-6 py-3 border-2 border-[#CEA17A]/50 hover:border-[#CEA17A]/70 text-[#CEA17A] hover:text-[#CEA17A] font-bold rounded-lg transition-all duration-150 backdrop-blur-sm text-center">
                       Sign Up
                     </Link>
                   </div>

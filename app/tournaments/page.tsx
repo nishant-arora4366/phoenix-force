@@ -17,6 +17,10 @@ interface Tournament {
   total_slots: number
   venue?: string
   google_maps_link?: string
+  community_restrictions?: string[]
+  base_price_restrictions?: string[]
+  min_base_price?: number
+  max_base_price?: number
   created_at: string
   updated_at: string
   filled_slots?: number
@@ -31,6 +35,10 @@ interface User {
   firstname?: string
   lastname?: string
   role: string
+}
+
+interface PlayerSkills {
+  [key: string]: string | string[]
 }
 
 const fetcher = async (url: string) => {
@@ -124,8 +132,159 @@ export default function TournamentsPage() {
   const [isUserLoading, setIsUserLoading] = useState(true)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [tournamentToDelete, setTournamentToDelete] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showMessageModal, setShowMessageModal] = useState(false)
+  const [messageModal, setMessageModal] = useState({ type: '', message: '' })
+  const [loadingTournamentId, setLoadingTournamentId] = useState<string | null>(null)
+  
+  // Filter states
+  const [activeFilter, setActiveFilter] = useState<'all' | 'open' | 'restricted' | 'eligible'>('all')
+  const [playerSkills, setPlayerSkills] = useState<PlayerSkills>({})
+  const [isLoadingSkills, setIsLoadingSkills] = useState(false)
 
   const { data: tournaments, error, isLoading: tournamentsLoading, mutate } = useSWR<Tournament[]>('/api/tournaments', fetcher)
+
+  // Function to fetch player skills for eligibility checking
+  const fetchPlayerSkills = async (userToCheck?: any) => {
+    const currentUser = userToCheck || user
+    if (!currentUser) {
+      console.log('🔍 No user found, skipping player skills fetch')
+      return
+    }
+    
+    console.log('🔍 Fetching player skills for user:', currentUser.id)
+    setIsLoadingSkills(true)
+    try {
+      const token = secureSessionManager.getToken()
+      const response = await fetch('/api/player-profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      console.log('🔍 Player profile response status:', response.status)
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('🔍 Player profile result:', result)
+        
+        if (result.success && result.skills) {
+          console.log('🔍 Setting player skills:', result.skills)
+          setPlayerSkills(result.skills)
+        } else {
+          console.log('🔍 No skills found in result')
+        }
+      } else {
+        console.log('🔍 Failed to fetch player profile:', response.status, response.statusText)
+      }
+    } catch (error) {
+      console.error('Error fetching player skills:', error)
+    } finally {
+      setIsLoadingSkills(false)
+    }
+  }
+
+  // Function to check if user is eligible for a tournament
+  const isUserEligibleForTournament = (tournament: Tournament): boolean => {
+    console.log('🔍 Checking eligibility for tournament:', tournament.name)
+    console.log('   Player skills:', playerSkills)
+    
+    // If tournament has no restrictions, everyone is eligible
+    if (!hasRestrictions(tournament)) {
+      console.log('   ✅ Tournament has no restrictions - eligible for everyone')
+      return true
+    }
+    
+    // If user has no player skills, they can't be eligible for restricted tournaments
+    if (!playerSkills || Object.keys(playerSkills).length === 0) {
+      console.log('   ❌ No player skills found - not eligible for restricted tournaments')
+      return false
+    }
+    
+    // Check community restrictions
+    if (tournament.community_restrictions && tournament.community_restrictions.length > 0) {
+      const userCommunities = playerSkills['Community'] as string[] || []
+      console.log('   Community restrictions:', tournament.community_restrictions)
+      console.log('   User communities:', userCommunities)
+      
+      const hasMatchingCommunity = tournament.community_restrictions.some(restriction => 
+        userCommunities.includes(restriction)
+      )
+      console.log('   Has matching community:', hasMatchingCommunity)
+      if (!hasMatchingCommunity) {
+        console.log('   ❌ No matching community found')
+        return false
+      }
+    }
+    
+    // Check base price restrictions
+    if (tournament.base_price_restrictions && tournament.base_price_restrictions.length > 0) {
+      const userBasePrice = playerSkills['Base Price'] as string || ''
+      console.log('   Base price restrictions:', tournament.base_price_restrictions)
+      console.log('   User base price:', userBasePrice)
+      
+      const hasMatchingBasePrice = tournament.base_price_restrictions.includes(userBasePrice)
+      console.log('   Has matching base price:', hasMatchingBasePrice)
+      if (!hasMatchingBasePrice) {
+        console.log('   ❌ No matching base price found')
+        return false
+      }
+    }
+    
+    // Check base price range
+    if (tournament.min_base_price !== null && tournament.min_base_price !== undefined) {
+      const userBasePrice = playerSkills['Base Price'] as string || ''
+      const userBasePriceValue = parseFloat(userBasePrice.replace(/[^\d.]/g, '')) || 0
+      console.log('   Min base price:', tournament.min_base_price)
+      console.log('   User base price value:', userBasePriceValue)
+      
+      if (userBasePriceValue < tournament.min_base_price) {
+        console.log('   ❌ User base price below minimum')
+        return false
+      }
+    }
+    
+    if (tournament.max_base_price !== null && tournament.max_base_price !== undefined) {
+      const userBasePrice = playerSkills['Base Price'] as string || ''
+      const userBasePriceValue = parseFloat(userBasePrice.replace(/[^\d.]/g, '')) || 0
+      console.log('   Max base price:', tournament.max_base_price)
+      console.log('   User base price value:', userBasePriceValue)
+      
+      if (userBasePriceValue > tournament.max_base_price) {
+        console.log('   ❌ User base price above maximum')
+        return false
+      }
+    }
+    
+    console.log('   ✅ Tournament is eligible')
+    return true
+  }
+
+  // Function to check if tournament has restrictions
+  const hasRestrictions = (tournament: Tournament): boolean => {
+    return (
+      (tournament.community_restrictions && tournament.community_restrictions.length > 0) ||
+      (tournament.base_price_restrictions && tournament.base_price_restrictions.length > 0) ||
+      (tournament.min_base_price !== null && tournament.min_base_price !== undefined) ||
+      (tournament.max_base_price !== null && tournament.max_base_price !== undefined)
+    )
+  }
+
+  // Filter tournaments based on active filter
+  const getFilteredTournaments = (): Tournament[] => {
+    if (!tournaments) return []
+    
+    switch (activeFilter) {
+      case 'open':
+        return tournaments.filter(tournament => !hasRestrictions(tournament))
+      case 'restricted':
+        return tournaments.filter(tournament => hasRestrictions(tournament))
+      case 'eligible':
+        return tournaments.filter(tournament => isUserEligibleForTournament(tournament))
+      default:
+        return tournaments
+    }
+  }
 
   // Check user authentication and role
   useEffect(() => {
@@ -133,6 +292,7 @@ export default function TournamentsPage() {
       try {
         // Get user from session manager
         const sessionUser = secureSessionManager.getUser()
+        console.log('🔍 Session user found:', sessionUser)
         setUser(sessionUser)
         
         if (sessionUser) {
@@ -152,7 +312,12 @@ export default function TournamentsPage() {
           if (result.success) {
             setUserProfile(result.data)
             setIsHost(result.data.role === 'host' || result.data.role === 'admin')
+            // Fetch player skills for eligibility checking
+            console.log('🔍 About to call fetchPlayerSkills from checkUser')
+            fetchPlayerSkills(sessionUser)
           }
+        } else {
+          console.log('🔍 No session user found')
         }
       } catch (error) {
         console.error('Error checking user:', error)
@@ -179,6 +344,8 @@ export default function TournamentsPage() {
             if (result.success) {
               setUserProfile(result.data)
               setIsHost(result.data.role === 'host' || result.data.role === 'admin')
+              // Fetch player skills for eligibility checking
+              fetchPlayerSkills(sessionUser)
             }
           })
           .catch(error => {
@@ -196,28 +363,66 @@ export default function TournamentsPage() {
   }, [])
 
   const handleDeleteTournament = async (tournamentId: string) => {
+    setIsDeleting(true)
     try {
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        setMessageModal({ type: 'error', message: 'Authentication required to delete tournament' })
+        setShowMessageModal(true)
+        return
+      }
+
       const response = await fetch(`/api/tournaments/${tournamentId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
       
       if (response.ok) {
+        setMessageModal({ type: 'success', message: 'Tournament deleted successfully!' })
+        setShowMessageModal(true)
         mutate() // Refresh the tournaments list
         setShowDeleteModal(false)
         setTournamentToDelete(null)
+        
+        // Auto-close success message after 2 seconds
+        setTimeout(() => {
+          setShowMessageModal(false)
+        }, 2000)
       } else {
         const error = await response.json()
-        alert(`Error deleting tournament: ${error.message}`)
+        setMessageModal({ type: 'error', message: `Error deleting tournament: ${error.message || error.error || 'Unknown error'}` })
+        setShowMessageModal(true)
       }
     } catch (error) {
       console.error('Error deleting tournament:', error)
-      alert('Error deleting tournament')
+      setMessageModal({ type: 'error', message: 'Error deleting tournament. Please try again.' })
+      setShowMessageModal(true)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   const confirmDelete = (tournamentId: string) => {
     setTournamentToDelete(tournamentId)
     setShowDeleteModal(true)
+  }
+
+  const handleViewDetails = (tournamentId: string) => {
+    setLoadingTournamentId(tournamentId)
+    // The Link will handle navigation, we'll clear the loading state after a short delay
+    setTimeout(() => {
+      setLoadingTournamentId(null)
+    }, 1000)
+  }
+
+  const handleEdit = (tournamentId: string) => {
+    setLoadingTournamentId(tournamentId)
+    // The Link will handle navigation, we'll clear the loading state after a short delay
+    setTimeout(() => {
+      setLoadingTournamentId(null)
+    }, 1000)
   }
 
   if (isUserLoading) {
@@ -313,6 +518,71 @@ export default function TournamentsPage() {
           )}
         </div>
 
+        {/* Filter Buttons */}
+        <div className="mb-8">
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setActiveFilter('all')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${
+                activeFilter === 'all'
+                  ? 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40 shadow-lg shadow-[#CEA17A]/10'
+                  : 'bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 hover:bg-[#CEA17A]/15 hover:border-[#CEA17A]/30'
+              }`}
+            >
+              All Tournaments
+            </button>
+            <button
+              onClick={() => setActiveFilter('open')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${
+                activeFilter === 'open'
+                  ? 'bg-green-500/25 text-green-300 border border-green-500/40 shadow-lg shadow-green-500/10'
+                  : 'bg-[#19171b]/50 text-[#DBD0C0] border border-green-500/20 hover:bg-green-500/15 hover:border-green-500/30'
+              }`}
+            >
+              Open Access
+            </button>
+            <button
+              onClick={() => setActiveFilter('restricted')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${
+                activeFilter === 'restricted'
+                  ? 'bg-yellow-500/25 text-yellow-300 border border-yellow-500/40 shadow-lg shadow-yellow-500/10'
+                  : 'bg-[#19171b]/50 text-[#DBD0C0] border border-yellow-500/20 hover:bg-yellow-500/15 hover:border-yellow-500/30'
+              }`}
+            >
+              Restricted Access
+            </button>
+            {user && (
+              <button
+                onClick={() => setActiveFilter('eligible')}
+                disabled={isLoadingSkills}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${
+                  activeFilter === 'eligible'
+                    ? 'bg-blue-500/25 text-blue-300 border border-blue-500/40 shadow-lg shadow-blue-500/10'
+                    : 'bg-[#19171b]/50 text-[#DBD0C0] border border-blue-500/20 hover:bg-blue-500/15 hover:border-blue-500/30'
+                } ${isLoadingSkills ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isLoadingSkills ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-300 mr-2 inline-block"></div>
+                    Loading...
+                  </>
+                ) : (
+                  'Eligible for Me'
+                )}
+              </button>
+            )}
+          </div>
+          
+          {/* Filter Description */}
+          <div className="mt-3 text-sm text-[#CEA17A]">
+            {activeFilter === 'all' && 'Showing all tournaments'}
+            {activeFilter === 'open' && 'Showing tournaments with no restrictions - anyone can register'}
+            {activeFilter === 'restricted' && 'Showing tournaments with community, base price, or other restrictions'}
+            {activeFilter === 'eligible' && user && 'Showing tournaments where you meet all requirements'}
+            {activeFilter === 'eligible' && !user && 'Please sign in to see eligible tournaments'}
+          </div>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-6 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
@@ -405,8 +675,20 @@ export default function TournamentsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tournaments?.map((tournament) => (
-              <div key={tournament.id} className="bg-[#19171b]/50 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow flex flex-col h-full">
+            {getFilteredTournaments().map((tournament) => (
+              <div key={tournament.id} className={`bg-[#19171b]/50 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow flex flex-col h-full relative ${
+                loadingTournamentId === tournament.id ? 'opacity-75 pointer-events-none' : ''
+              }`}>
+                {/* Loading Overlay */}
+                {loadingTournamentId === tournament.id && (
+                  <div className="absolute inset-0 bg-[#19171b]/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#CEA17A] mx-auto mb-2"></div>
+                      <p className="text-[#CEA17A] text-sm font-medium">Loading...</p>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="p-6 flex flex-col h-full">
                   {/* Tournament Header */}
                   <div className="flex justify-between items-start mb-4">
@@ -430,6 +712,18 @@ export default function TournamentsPage() {
                        tournament.status === 'draft' ? 'Opening Soon' : getStatusText(tournament.status)}
                     </span>
                   </div>
+
+                  {/* Restriction Indicator */}
+                  {hasRestrictions(tournament) && (
+                    <div className="mb-4">
+                      <div className="flex items-center text-xs text-yellow-300 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2">
+                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="font-medium">Restricted Access</span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Tournament Details */}
                   <div className="space-y-3 flex-grow">
@@ -550,18 +844,42 @@ export default function TournamentsPage() {
                   <div className="flex flex-col space-y-2 mt-6">
                     <Link
                       href={`/tournaments/${tournament.id}`}
-                      className="w-full px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium text-center"
+                      onClick={() => handleViewDetails(tournament.id)}
+                      className={`w-full px-4 py-2 border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg transition-all duration-150 font-medium text-center flex items-center justify-center ${
+                        loadingTournamentId === tournament.id
+                          ? 'bg-[#CEA17A]/25 text-[#CEA17A]/70 cursor-wait'
+                          : 'bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40'
+                      }`}
                     >
-                      View Details
+                      {loadingTournamentId === tournament.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#CEA17A] mr-2"></div>
+                          Loading...
+                        </>
+                      ) : (
+                        'View Details'
+                      )}
                     </Link>
                     
                     {isHost && (tournament.host_id === user?.id || userProfile?.role === 'admin') && (
                       <div className="flex space-x-2">
                         <Link
                           href={`/tournaments/${tournament.id}/edit`}
-                          className="flex-1 px-3 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 text-sm font-medium text-center"
+                          onClick={() => handleEdit(tournament.id)}
+                          className={`flex-1 px-3 py-2 border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg transition-all duration-150 text-sm font-medium text-center flex items-center justify-center ${
+                            loadingTournamentId === tournament.id
+                              ? 'bg-[#CEA17A]/25 text-[#CEA17A]/70 cursor-wait'
+                              : 'bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40'
+                          }`}
                         >
-                          Edit
+                          {loadingTournamentId === tournament.id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#CEA17A] mr-1"></div>
+                              Loading...
+                            </>
+                          ) : (
+                            'Edit'
+                          )}
                         </Link>
                         <button
                           onClick={() => confirmDelete(tournament.id)}
@@ -579,14 +897,20 @@ export default function TournamentsPage() {
         )}
 
         {/* Empty State */}
-        {!tournamentsLoading && tournaments?.length === 0 && (
+        {!tournamentsLoading && getFilteredTournaments().length === 0 && (
           <div className="text-center py-16">
             <div className="text-gray-400 text-6xl mb-4">🏆</div>
             <h3 className="text-2xl font-semibold text-[#DBD0C0] mb-2">
-              No tournaments found
+              {activeFilter === 'all' && 'No tournaments found'}
+              {activeFilter === 'open' && 'No open tournaments found'}
+              {activeFilter === 'restricted' && 'No restricted tournaments found'}
+              {activeFilter === 'eligible' && 'No eligible tournaments found'}
             </h3>
             <p className="text-[#CEA17A] mb-8 max-w-md mx-auto">
-              {isHost ? 'Create your first tournament to get started with managing cricket tournaments.' : 'Check back later for new tournaments to participate in.'}
+              {activeFilter === 'all' && (isHost ? 'Create your first tournament to get started with managing cricket tournaments.' : 'Check back later for new tournaments to participate in.')}
+              {activeFilter === 'open' && 'No tournaments with open access are currently available.'}
+              {activeFilter === 'restricted' && 'No tournaments with restrictions are currently available.'}
+              {activeFilter === 'eligible' && (user ? 'No tournaments match your current player profile requirements.' : 'Please sign in to see eligible tournaments.')}
             </p>
             {isHost && (
               <Link
@@ -623,9 +947,66 @@ export default function TournamentsPage() {
               </button>
               <button
                 onClick={() => tournamentToDelete && handleDeleteTournament(tournamentToDelete)}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                disabled={isDeleting}
+                className={`flex-1 px-4 py-2 rounded-lg transition-colors flex items-center justify-center ${
+                  isDeleting 
+                    ? 'bg-red-400 text-white cursor-not-allowed' 
+                    : 'bg-red-600 text-white hover:bg-red-700'
+                }`}
               >
-                Delete
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success/Error Message Modal */}
+      {showMessageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                messageModal.type === 'success' ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                {messageModal.type === 'success' ? (
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <h3 className={`text-lg font-semibold ${
+                messageModal.type === 'success' ? 'text-green-800' : 'text-red-800'
+              }`}>
+                {messageModal.type === 'success' ? 'Success!' : 'Error'}
+              </h3>
+            </div>
+            <p className={`mb-4 ${
+              messageModal.type === 'success' ? 'text-green-700' : 'text-red-700'
+            }`}>
+              {messageModal.message}
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowMessageModal(false)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  messageModal.type === 'success' 
+                    ? 'bg-green-600 text-white hover:bg-green-700' 
+                    : 'bg-red-600 text-white hover:bg-red-700'
+                }`}
+              >
+                OK
               </button>
             </div>
           </div>

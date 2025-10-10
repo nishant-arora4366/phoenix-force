@@ -9,6 +9,142 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// Function to validate tournament restrictions
+async function validateTournamentRestrictions(playerId: string, tournament: any) {
+  try {
+    // Get player's skills using the same approach as player profile API
+    const { data: skillAssignments, error: skillsError } = await supabase
+      .from('player_skill_assignments')
+      .select(`
+        id,
+        skill_value_id,
+        skill_value_ids,
+        value_array,
+        player_skills (
+          id,
+          skill_name,
+          skill_type,
+          is_required,
+          display_order,
+          is_admin_managed,
+          viewer_can_see
+        ),
+        player_skill_values (
+          id,
+          value_name,
+          display_order
+        )
+      `)
+      .eq('player_id', playerId)
+
+
+    if (skillsError) {
+      console.error('Error fetching player skills:', skillsError)
+      return { canRegister: true } // Allow registration if we can't fetch skills
+    }
+
+    // Convert skills to a more usable format (same logic as player profile API)
+    const playerSkillsMap: { [key: string]: string[] } = {}
+    if (skillAssignments) {
+      for (const assignment of skillAssignments) {
+        const skillName = (assignment.player_skills as any)?.skill_name
+        const skillType = (assignment.player_skills as any)?.skill_type
+        if (skillName) {
+          if (skillType === 'multiselect') {
+            // For multiselect, use the value_array
+            playerSkillsMap[skillName] = assignment.value_array || []
+          } else {
+            // For single select, use the skill_value_id to get the value
+            if (assignment.player_skill_values) {
+              playerSkillsMap[skillName] = [(assignment.player_skill_values as any).value_name]
+            } else if (assignment.value_array && assignment.value_array.length > 0) {
+              // Fallback: use value_array if player_skill_values is not available
+              playerSkillsMap[skillName] = assignment.value_array
+            }
+          }
+        }
+      }
+    }
+
+    // Debug logging
+    console.log('Player skills map:', playerSkillsMap)
+    console.log('Tournament restrictions:', {
+      community_restrictions: tournament.community_restrictions,
+      base_price_restrictions: tournament.base_price_restrictions,
+      min_base_price: tournament.min_base_price,
+      max_base_price: tournament.max_base_price
+    })
+
+    // Check community restrictions
+    if (tournament.community_restrictions && tournament.community_restrictions.length > 0) {
+      const playerCommunities = playerSkillsMap['Community'] || []
+      console.log('Player communities:', playerCommunities)
+      console.log('Tournament allowed communities:', tournament.community_restrictions)
+      
+      const hasAllowedCommunity = playerCommunities.some(community => 
+        tournament.community_restrictions.includes(community)
+      )
+      
+      if (!hasAllowedCommunity) {
+        return { 
+          canRegister: false, 
+          reason: `This tournament is restricted to: ${tournament.community_restrictions.join(', ')}. Your communities: ${playerCommunities.join(', ') || 'None'}` 
+        }
+      }
+    }
+
+    // Check base price restrictions
+    if (tournament.base_price_restrictions && tournament.base_price_restrictions.length > 0) {
+      const playerBasePrices = playerSkillsMap['Base Price'] || []
+      const hasAllowedBasePrice = playerBasePrices.some(basePrice => 
+        tournament.base_price_restrictions.includes(basePrice)
+      )
+      
+      if (!hasAllowedBasePrice) {
+        return { 
+          canRegister: false, 
+          reason: `This tournament is restricted to base prices: ₹${tournament.base_price_restrictions.join(', ₹')}. Your base price: ₹${playerBasePrices.join(', ₹') || 'Not set'}` 
+        }
+      }
+    }
+
+    // Check price range restrictions
+    if (tournament.min_base_price || tournament.max_base_price) {
+      const playerBasePrices = playerSkillsMap['Base Price'] || []
+      
+      for (const basePriceStr of playerBasePrices) {
+        const basePrice = parseFloat(basePriceStr)
+        
+        if (tournament.min_base_price && basePrice < tournament.min_base_price) {
+          return { 
+            canRegister: false, 
+            reason: `Your base price (₹${basePrice}) is below the minimum required (₹${tournament.min_base_price})` 
+          }
+        }
+        
+        if (tournament.max_base_price && basePrice > tournament.max_base_price) {
+          return { 
+            canRegister: false, 
+            reason: `Your base price (₹${basePrice}) is above the maximum allowed (₹${tournament.max_base_price})` 
+          }
+        }
+      }
+      
+      if (playerBasePrices.length === 0) {
+        return { 
+          canRegister: false, 
+          reason: 'Base price not set in your profile' 
+        }
+      }
+    }
+
+    return { canRegister: true }
+  } catch (error) {
+    console.error('Error validating tournament restrictions:', error)
+    return { canRegister: true } // Allow registration if validation fails
+  }
+}
+
 async function POSTHandler(
   request: NextRequest,
   user: AuthenticatedUser,
@@ -71,6 +207,14 @@ async function POSTHandler(
       console.error('User ID:', sessionUser.id)
       console.error('Player found:', !!player)
       return NextResponse.json({ error: 'Player profile not found. Please create a player profile first.' }, { status: 400 })
+    }
+
+    // Check tournament restrictions
+    const restrictionValidation = await validateTournamentRestrictions(player.id, tournament)
+    if (!restrictionValidation.canRegister) {
+      return NextResponse.json({ 
+        error: `Registration restricted: ${restrictionValidation.reason}` 
+      }, { status: 403 })
     }
 
     // Check if player is already registered for this tournament

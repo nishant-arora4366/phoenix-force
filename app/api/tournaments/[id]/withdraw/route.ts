@@ -17,17 +17,18 @@ async function POSTHandler(
   try {
     const { id: tournamentId } = await params
 
-    // Get user from session
-    const userData = sessionManager.getUserFromRequest(request)
-    if (!userData) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    // User is already authenticated via withAuth middleware
+    const sessionUser = user
+    
+    if (!sessionUser || !sessionUser.id) {
+      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
     }
 
     // Get user's player profile
     const { data: player, error: playerError } = await supabase
       .from('players')
       .select('id')
-      .eq('user_id', userData.id)
+      .eq('user_id', sessionUser.id)
       .single()
 
     if (playerError || !player) {
