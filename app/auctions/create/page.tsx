@@ -2,103 +2,26 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { secureSessionManager } from '@/src/lib/secure-session'
 import { useRoleValidation } from '@/src/hooks/useRoleValidation'
-
-interface Tournament {
-  id: string
-  name: string
-  format: string
-  selected_teams: number
-  tournament_date: string
-  description?: string
-  host_id: string
-  status: string
-  total_slots: number
-  venue?: string
-  google_maps_link?: string
-  created_at: string
-  updated_at: string
-}
 
 export default function CreateAuctionPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [tournaments, setTournaments] = useState<Tournament[]>([])
-  const [selectedTournament, setSelectedTournament] = useState<string>('')
-  const [auctionData, setAuctionData] = useState({
-    tournament_id: '',
-    start_time: '',
-    end_time: '',
-    starting_bid: '',
-    bid_increment: '',
-    description: ''
-  })
 
-  const { user, isAuthenticated, isValidating } = useRoleValidation()
+  const { user } = useRoleValidation()
 
   useEffect(() => {
     setLoading(false)
   }, [user])
 
-  useEffect(() => {
-    const fetchTournaments = async () => {
-      try {
-        const response = await fetch('/api/tournaments')
-        const result = await response.json()
-        if (result.tournaments) {
-          setTournaments(result.tournaments)
-        }
-      } catch (error) {
-        console.error('Error fetching tournaments:', error)
-      }
-    }
-    fetchTournaments()
-  }, [])
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setAuctionData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+  const handleTournamentAuction = () => {
+    // TODO: Navigate to tournament selection step
+    console.log('Tournament Auction selected')
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setShowConfirmModal(true)
-  }
-
-  const confirmCreate = async () => {
-    setIsSubmitting(true)
-    try {
-      const response = await fetch('/api/auctions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...auctionData,
-          tournament_id: selectedTournament
-        }),
-      })
-
-      if (response.ok) {
-        // Redirect to auctions page
-        window.location.href = '/auctions'
-      } else {
-        const error = await response.json()
-        alert(`Error creating auction: ${error.message}`)
-      }
-    } catch (error) {
-      console.error('Error creating auction:', error)
-      alert('Error creating auction')
-    } finally {
-      setIsSubmitting(false)
-      setShowConfirmModal(false)
-    }
+  const handleQuickAuction = () => {
+    // TODO: Navigate to quick auction setup
+    console.log('Quick Auction selected')
   }
 
   if (loading) {
@@ -218,171 +141,82 @@ export default function CreateAuctionPage() {
       {/* Content */}
       <div className="relative z-10 py-8">
         <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-8">
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#DBD0C0] mb-2">
-                  Create New Auction
-                </h1>
-                <p className="text-lg text-[#CEA17A]">
-                  Set up a new auction for tournament players
-                </p>
-              </div>
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <h1 className="text-3xl sm:text-4xl font-bold text-[#DBD0C0] mb-4">
+                Create New Auction
+              </h1>
+              <p className="text-lg text-[#CEA17A]">
+                Choose how you want to start your auction
+              </p>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Tournament Selection */}
-                <div>
-                  <label htmlFor="tournament_id" className="block text-sm font-medium text-[#DBD0C0] mb-2">
-                    Select Tournament *
-                  </label>
-                  <select
-                    id="tournament_id"
-                    name="tournament_id"
-                    value={selectedTournament}
-                    onChange={(e) => setSelectedTournament(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60"
-                  >
-                    <option value="">Choose a tournament...</option>
-                    {tournaments.map((tournament) => (
-                      <option key={tournament.id} value={tournament.id}>
-                        {tournament.name} - {new Date(tournament.tournament_date).toLocaleDateString()}
-                      </option>
-                    ))}
-                  </select>
+            {/* Two Options */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Option 1: Select Tournament */}
+              <button
+                onClick={handleTournamentAuction}
+                className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8 hover:border-[#CEA17A]/40 hover:bg-[#09171F]/70 transition-all duration-200 text-left group"
+              >
+                <div className="flex flex-col h-full">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-[#3E4E5A]/15 rounded-lg flex items-center justify-center mb-4 group-hover:bg-[#3E4E5A]/25 transition-all duration-200">
+                      <svg className="w-8 h-8 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-[#DBD0C0] mb-3">
+                      Select Tournament
+                    </h2>
+                    <p className="text-[#CEA17A] leading-relaxed">
+                      Create an auction linked to an existing tournament with all player and tournament details
+                    </p>
+                  </div>
+                  <div className="mt-auto">
+                    <span className="inline-flex items-center text-[#CEA17A] group-hover:text-[#DBD0C0] transition-colors duration-200">
+                      Get Started
+                      <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  </div>
                 </div>
+              </button>
 
-                {/* Start Time */}
-                <div>
-                  <label htmlFor="start_time" className="block text-sm font-medium text-[#DBD0C0] mb-2">
-                    Auction Start Time *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    id="start_time"
-                    name="start_time"
-                    value={auctionData.start_time}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
-                  />
+              {/* Option 2: Quick Auction */}
+              <button
+                onClick={handleQuickAuction}
+                className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8 hover:border-[#CEA17A]/40 hover:bg-[#09171F]/70 transition-all duration-200 text-left group"
+              >
+                <div className="flex flex-col h-full">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-[#3E4E5A]/15 rounded-lg flex items-center justify-center mb-4 group-hover:bg-[#3E4E5A]/25 transition-all duration-200">
+                      <svg className="w-8 h-8 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-[#DBD0C0] mb-3">
+                      Start Quick Auction
+                    </h2>
+                    <p className="text-[#CEA17A] leading-relaxed">
+                      Start a standalone auction without tournament data. Configure details later as needed
+                    </p>
+                  </div>
+                  <div className="mt-auto">
+                    <span className="inline-flex items-center text-[#CEA17A] group-hover:text-[#DBD0C0] transition-colors duration-200">
+                      Get Started
+                      <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  </div>
                 </div>
-
-                {/* End Time */}
-                <div>
-                  <label htmlFor="end_time" className="block text-sm font-medium text-[#DBD0C0] mb-2">
-                    Auction End Time *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    id="end_time"
-                    name="end_time"
-                    value={auctionData.end_time}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
-                  />
-                </div>
-
-                {/* Starting Bid */}
-                <div>
-                  <label htmlFor="starting_bid" className="block text-sm font-medium text-[#DBD0C0] mb-2">
-                    Starting Bid Amount *
-                  </label>
-                  <input
-                    type="number"
-                    id="starting_bid"
-                    name="starting_bid"
-                    value={auctionData.starting_bid}
-                    onChange={handleInputChange}
-                    required
-                    min="0"
-                    step="0.01"
-                    placeholder="Enter starting bid amount"
-                    className="w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60"
-                  />
-                </div>
-
-                {/* Bid Increment */}
-                <div>
-                  <label htmlFor="bid_increment" className="block text-sm font-medium text-[#DBD0C0] mb-2">
-                    Bid Increment *
-                  </label>
-                  <input
-                    type="number"
-                    id="bid_increment"
-                    name="bid_increment"
-                    value={auctionData.bid_increment}
-                    onChange={handleInputChange}
-                    required
-                    min="0"
-                    step="0.01"
-                    placeholder="Enter minimum bid increment"
-                    className="w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60"
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-[#DBD0C0] mb-2">
-                    Auction Description
-                  </label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={auctionData.description}
-                    onChange={handleInputChange}
-                    rows={4}
-                    placeholder="Describe the auction rules and any special conditions..."
-                    className="w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60 resize-none"
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <div className="flex justify-center pt-6">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-8 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Creating Auction...' : 'Create Auction'}
-                  </button>
-                </div>
-              </form>
+              </button>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowConfirmModal(false)}></div>
-          <div className="relative bg-[#09171F]/95 backdrop-blur-sm rounded-xl shadow-2xl border border-[#CEA17A]/20 p-8 max-w-md mx-4">
-            <div className="text-center">
-              <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">Confirm Auction Creation</h3>
-              <p className="text-[#CEA17A] mb-6">
-                Are you sure you want to create this auction? This action cannot be undone.
-              </p>
-              <div className="flex space-x-4 justify-center">
-                <button
-                  onClick={() => setShowConfirmModal(false)}
-                  className="px-6 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded-lg hover:bg-[#3E4E5A]/25 transition-all duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmCreate}
-                  disabled={isSubmitting}
-                  className="px-6 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded-lg hover:bg-[#3E4E5A]/25 transition-all duration-200 disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Creating...' : 'Create'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

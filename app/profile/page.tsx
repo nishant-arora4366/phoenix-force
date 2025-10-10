@@ -57,7 +57,7 @@ export default function Profile() {
               // Token might be expired or invalid - clear session and redirect
               if (response.status === 401) {
                 console.error('Authentication failed - session expired')
-                secureSessionManager.clearSession()
+                secureSessionManager.clearUser()
                 router.push('/signin?returnUrl=/profile&message=Session expired, please sign in again')
                 return
               }
@@ -78,7 +78,7 @@ export default function Profile() {
         } else {
           console.error('No authentication token found')
           // Clear invalid session and redirect
-          secureSessionManager.clearSession()
+          secureSessionManager.clearUser()
           router.push('/signin?returnUrl=/profile&message=Please sign in to continue')
           return
         }
