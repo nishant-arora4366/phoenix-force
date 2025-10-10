@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 export default function Navbar() {
   const [user, setUser] = useState<any>(null)
@@ -13,10 +13,10 @@ export default function Navbar() {
   const pathname = usePathname()
 
   useEffect(() => {
-    const currentUser = sessionManager.getUser()
+    const currentUser = secureSessionManager.getUser()
     setUser(currentUser)
 
-    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+    const unsubscribe = secureSessionManager.subscribe((sessionUser) => {
       setUser(sessionUser)
     })
 
@@ -27,7 +27,7 @@ export default function Navbar() {
 
   const handleSignOut = async () => {
     try {
-      sessionManager.clearUser()
+      secureSessionManager.clearUser()
       setUser(null)
       // Redirect to home page after sign out
       router.push('/')

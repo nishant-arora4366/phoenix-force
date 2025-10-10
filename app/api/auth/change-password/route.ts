@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 
@@ -6,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   try {
     const { userId, currentPassword, newPassword } = await request.json()
 
@@ -80,3 +81,5 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+

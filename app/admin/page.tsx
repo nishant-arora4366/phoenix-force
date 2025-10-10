@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
+import { useRealtimeAnalytics } from '@/src/hooks/useRealtimeAnalytics'
+import { API_ACCESS_CONFIG, APIAccessConfig, getAPIsByAccessType, getAPIsByRole, getAPIsByStatus } from '@/src/lib/api-access-config'
 
 interface User {
   id: string
@@ -71,7 +73,7 @@ export default function AdminPanel() {
   const [searchEmail, setSearchEmail] = useState('')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [newRole, setNewRole] = useState('')
-  const [activeTab, setActiveTab] = useState<'users' | 'players' | 'skills'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'players' | 'skills' | 'api-access' | 'analytics'>('users')
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
   const [isAddingSkill, setIsAddingSkill] = useState(false)
   const [isEditingSkill, setIsEditingSkill] = useState<string | null>(null)
@@ -105,10 +107,23 @@ export default function AdminPanel() {
     viewerCanSee: true
   })
   const [expandedSkills, setExpandedSkills] = useState<Set<string>>(new Set())
+  const [apiAccessFilter, setApiAccessFilter] = useState<'all' | 'public' | 'authenticated' | 'role-based'>('all')
+  const [apiStatusFilter, setApiStatusFilter] = useState<'all' | 'active' | 'deprecated' | 'planned'>('all')
+  const [apiRoleFilter, setApiRoleFilter] = useState<'all' | 'admin' | 'host' | 'viewer'>('all')
+  
+  // Analytics state
+  const [analyticsData, setAnalyticsData] = useState<any>(null)
+  const [userActivityData, setUserActivityData] = useState<any>(null)
+  const [usagePatternsData, setUsagePatternsData] = useState<any>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<'7d' | '30d' | '90d'>('30d')
+  
+  // Real-time analytics
+  const { data: realtimeData, isLoading: realtimeLoading, isConnected } = useRealtimeAnalytics()
 
   useEffect(() => {
     const getUser = async () => {
-      const currentUser = sessionManager.getUser()
+      const currentUser = secureSessionManager.getUser()
       setUser(currentUser)
       
       if (currentUser) {
@@ -125,7 +140,7 @@ export default function AdminPanel() {
     }
     getUser()
 
-    const unsubscribe = sessionManager.subscribe((userData) => {
+    const unsubscribe = secureSessionManager.subscribe((userData) => {
       setUser(userData)
       setLoading(false)
     })
@@ -147,9 +162,16 @@ export default function AdminPanel() {
     }
   }, [activeTab, user])
 
+  // Fetch analytics data when tab changes to analytics
+  useEffect(() => {
+    if (activeTab === 'analytics' && user) {
+      fetchAnalyticsData()
+    }
+  }, [activeTab, user, analyticsPeriod])
+
   const loadUsers = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -170,7 +192,7 @@ export default function AdminPanel() {
 
   const fetchPlayerProfiles = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -197,7 +219,7 @@ export default function AdminPanel() {
 
   const fetchPlayerSkills = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -270,7 +292,7 @@ export default function AdminPanel() {
 
   const updateUserStatus = async (userId: string, status: string) => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -307,7 +329,7 @@ export default function AdminPanel() {
 
   const updateUserRoleFromTable = async (userId: string, role: string) => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -348,7 +370,7 @@ export default function AdminPanel() {
     }
 
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -380,7 +402,7 @@ export default function AdminPanel() {
 
   const updatePlayerProfileStatus = async (playerId: string, status: string) => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -421,7 +443,7 @@ export default function AdminPanel() {
 
   const addPlayerSkill = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -460,7 +482,7 @@ export default function AdminPanel() {
 
   const editPlayerSkill = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -502,7 +524,7 @@ export default function AdminPanel() {
     }
 
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -539,7 +561,7 @@ export default function AdminPanel() {
 
   const addSkillValue = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -578,7 +600,7 @@ export default function AdminPanel() {
 
   const editSkillValue = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -621,7 +643,7 @@ export default function AdminPanel() {
     }
 
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -664,8 +686,54 @@ export default function AdminPanel() {
     setExpandedSkills(newExpanded)
   }
 
+  const fetchAnalyticsData = async () => {
+    setAnalyticsLoading(true)
+    try {
+      const sessionUser = secureSessionManager.getUser()
+      if (!sessionUser) {
+        throw new Error('User not authenticated')
+      }
+
+      // Calculate date range based on period
+      const now = new Date()
+      const days = analyticsPeriod === '7d' ? 7 : analyticsPeriod === '30d' ? 30 : 90
+      const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+      
+      const startDateStr = startDate.toISOString().split('T')[0]
+      const endDateStr = now.toISOString().split('T')[0]
+
+      // Fetch all analytics data in parallel
+      const [usageResponse, usersResponse, patternsResponse] = await Promise.all([
+        fetch(`/api/analytics/usage?startDate=${startDateStr}&endDate=${endDateStr}`),
+        fetch(`/api/analytics/users?startDate=${startDateStr}&endDate=${endDateStr}`),
+        fetch(`/api/analytics/patterns?startDate=${startDateStr}&endDate=${endDateStr}`)
+      ])
+
+      const [usageData, usersData, patternsData] = await Promise.all([
+        usageResponse.json(),
+        usersResponse.json(),
+        patternsResponse.json()
+      ])
+
+      if (usageData.success) {
+        setAnalyticsData(usageData.data)
+      }
+      if (usersData.success) {
+        setUserActivityData(usersData.data)
+      }
+      if (patternsData.success) {
+        setUsagePatternsData(patternsData.data)
+      }
+    } catch (error) {
+      console.error('Error fetching analytics data:', error)
+      setMessage('Error loading analytics data')
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
+
   const handleSignOut = async () => {
-    sessionManager.clearUser()
+    secureSessionManager.clearUser()
     setUser(null)
   }
 
@@ -822,6 +890,26 @@ export default function AdminPanel() {
                 }`}
               >
                 Skill Management
+              </button>
+              <button
+                onClick={() => setActiveTab('api-access')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'api-access'
+                    ? 'border-[#CEA17A] text-[#CEA17A]'
+                    : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
+                }`}
+              >
+                API Access Control
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'analytics'
+                    ? 'border-[#CEA17A] text-[#CEA17A]'
+                    : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
+                }`}
+              >
+                API Analytics
               </button>
             </nav>
           </div>
@@ -1606,6 +1694,453 @@ export default function AdminPanel() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </>
+          )}
+
+          {/* API Access Control Tab Content */}
+          {activeTab === 'api-access' && (
+            <>
+              <div className="bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                  <h2 className="text-lg sm:text-xl font-semibold text-[#DBD0C0]">API Access Control</h2>
+                  <div className="text-sm text-[#CEA17A]">
+                    Total APIs: {API_ACCESS_CONFIG.length} | 
+                    Active: {getAPIsByStatus('active').length} | 
+                    Deprecated: {getAPIsByStatus('deprecated').length}
+                  </div>
+                </div>
+
+                {/* Filters */}
+                <div className="mb-6 space-y-4">
+                  <div className="flex flex-wrap gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#DBD0C0] mb-2">Access Type</label>
+                      <select
+                        value={apiAccessFilter}
+                        onChange={(e) => setApiAccessFilter(e.target.value as any)}
+                        className="px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
+                      >
+                        <option value="all">All Access Types</option>
+                        <option value="public">Public</option>
+                        <option value="authenticated">Authenticated</option>
+                        <option value="role-based">Role-Based</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#DBD0C0] mb-2">Status</label>
+                      <select
+                        value={apiStatusFilter}
+                        onChange={(e) => setApiStatusFilter(e.target.value as any)}
+                        className="px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
+                      >
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="deprecated">Deprecated</option>
+                        <option value="planned">Planned</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#DBD0C0] mb-2">Role</label>
+                      <select
+                        value={apiRoleFilter}
+                        onChange={(e) => setApiRoleFilter(e.target.value as any)}
+                        className="px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
+                      >
+                        <option value="all">All Roles</option>
+                        <option value="admin">Admin</option>
+                        <option value="host">Host</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* API List */}
+                <div className="space-y-4">
+                  {API_ACCESS_CONFIG
+                    .filter(api => {
+                      if (apiAccessFilter !== 'all' && api.accessType !== apiAccessFilter) return false
+                      if (apiStatusFilter !== 'all' && api.status !== apiStatusFilter) return false
+                      if (apiRoleFilter !== 'all' && apiRoleFilter !== 'viewer') {
+                        if (api.accessType !== 'role-based' || !api.requiredRoles?.includes(apiRoleFilter)) return false
+                      }
+                      return true
+                    })
+                    .map((api, index) => (
+                      <div key={index} className="border border-[#CEA17A]/20 rounded-lg p-4 bg-[#19171b]">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                api.method === 'GET' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                                api.method === 'POST' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+                                api.method === 'PUT' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                                'bg-red-500/20 text-red-300 border border-red-500/30'
+                              }`}>
+                                {api.method}
+                              </span>
+                              <span className="text-sm font-medium text-[#DBD0C0]">{api.route}</span>
+                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                api.status === 'active' ? 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40' :
+                                api.status === 'deprecated' ? 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40' :
+                                'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
+                              }`}>
+                                {api.status}
+                              </span>
+                            </div>
+                            <p className="text-sm text-[#DBD0C0] mb-2">{api.description}</p>
+                            {api.notes && (
+                              <p className="text-xs text-[#CEA17A] mb-2">{api.notes}</p>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end space-y-2">
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                              api.accessType === 'public' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                              api.accessType === 'authenticated' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+                              'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                            }`}>
+                              {api.accessType}
+                            </span>
+                            {api.requiredRoles && (
+                              <div className="flex flex-wrap gap-1">
+                                {api.requiredRoles.map(role => (
+                                  <span key={role} className="px-2 py-1 text-xs bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40 rounded">
+                                    {role}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+
+                {/* Summary Statistics */}
+                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-[#19171b] rounded-lg p-4 border border-[#CEA17A]/20">
+                    <h3 className="text-sm font-medium text-[#DBD0C0] mb-2">Public APIs</h3>
+                    <p className="text-2xl font-bold text-green-300">{getAPIsByAccessType('public').length}</p>
+                    <p className="text-xs text-[#CEA17A]">No authentication required</p>
+                  </div>
+                  <div className="bg-[#19171b] rounded-lg p-4 border border-[#CEA17A]/20">
+                    <h3 className="text-sm font-medium text-[#DBD0C0] mb-2">Authenticated APIs</h3>
+                    <p className="text-2xl font-bold text-blue-300">{getAPIsByAccessType('authenticated').length}</p>
+                    <p className="text-xs text-[#CEA17A]">Login required</p>
+                  </div>
+                  <div className="bg-[#19171b] rounded-lg p-4 border border-[#CEA17A]/20">
+                    <h3 className="text-sm font-medium text-[#DBD0C0] mb-2">Role-Based APIs</h3>
+                    <p className="text-2xl font-bold text-purple-300">{getAPIsByAccessType('role-based').length}</p>
+                    <p className="text-xs text-[#CEA17A]">Specific roles required</p>
+                  </div>
+                  <div className="bg-[#19171b] rounded-lg p-4 border border-[#CEA17A]/20">
+                    <h3 className="text-sm font-medium text-[#DBD0C0] mb-2">Admin APIs</h3>
+                    <p className="text-2xl font-bold text-red-300">{getAPIsByRole('admin').length}</p>
+                    <p className="text-xs text-[#CEA17A]">Admin only</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Analytics Tab Content */}
+          {activeTab === 'analytics' && (
+            <>
+              <div className="bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                  <div className="flex items-center space-x-3">
+                    <h2 className="text-lg sm:text-xl font-semibold text-[#DBD0C0]">API Usage Analytics</h2>
+                    {isConnected && (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-green-400 font-medium">Live</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <select
+                      value={analyticsPeriod}
+                      onChange={(e) => setAnalyticsPeriod(e.target.value as any)}
+                      className="px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
+                    >
+                      <option value="7d">Last 7 days</option>
+                      <option value="30d">Last 30 days</option>
+                      <option value="90d">Last 90 days</option>
+                    </select>
+                    <button
+                      onClick={fetchAnalyticsData}
+                      disabled={analyticsLoading}
+                      className="px-4 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium disabled:opacity-50"
+                    >
+                      {analyticsLoading ? 'Loading...' : 'Refresh'}
+                    </button>
+                  </div>
+                </div>
+
+                {analyticsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto mb-4"></div>
+                    <p className="text-[#CEA17A]">Loading analytics data...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Summary Statistics */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                      <div className="bg-[#19171b] rounded-lg p-4 border border-[#CEA17A]/20">
+                        <h3 className="text-sm font-medium text-[#DBD0C0] mb-2">Total API Calls</h3>
+                        <p className="text-2xl font-bold text-blue-300">
+                          {analyticsData ? analyticsData.reduce((sum: number, item: any) => sum + parseInt(item.total_requests), 0) : 0}
+                        </p>
+                        <p className="text-xs text-[#CEA17A]">All endpoints</p>
+                      </div>
+                      <div className="bg-[#19171b] rounded-lg p-4 border border-[#CEA17A]/20">
+                        <h3 className="text-sm font-medium text-[#DBD0C0] mb-2">Unique Users</h3>
+                        <p className="text-2xl font-bold text-green-300">
+                          {userActivityData ? userActivityData.length : 0}
+                        </p>
+                        <p className="text-xs text-[#CEA17A]">Active users</p>
+                      </div>
+                      <div className="bg-[#19171b] rounded-lg p-4 border border-[#CEA17A]/20">
+                        <h3 className="text-sm font-medium text-[#DBD0C0] mb-2">Avg Response Time</h3>
+                        <p className="text-2xl font-bold text-yellow-300">
+                          {analyticsData && analyticsData.length > 0 
+                            ? Math.round(analyticsData.reduce((sum: number, item: any) => sum + parseFloat(item.avg_response_time_ms || 0), 0) / analyticsData.length)
+                            : 0}ms
+                        </p>
+                        <p className="text-xs text-[#CEA17A]">Across all APIs</p>
+                      </div>
+                      <div className="bg-[#19171b] rounded-lg p-4 border border-[#CEA17A]/20">
+                        <h3 className="text-sm font-medium text-[#DBD0C0] mb-2">Success Rate</h3>
+                        <p className="text-2xl font-bold text-green-300">
+                          {analyticsData && analyticsData.length > 0 
+                            ? Math.round(analyticsData.reduce((sum: number, item: any) => sum + parseFloat(item.success_rate || 0), 0) / analyticsData.length)
+                            : 0}%
+                        </p>
+                        <p className="text-xs text-[#CEA17A]">Overall success</p>
+                      </div>
+                    </div>
+
+                    {/* Top API Endpoints */}
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold text-[#DBD0C0] mb-4">Most Used API Endpoints</h3>
+                      <div className="bg-[#19171b] rounded-lg border border-[#CEA17A]/20 overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-[#CEA17A]/20">
+                            <thead className="bg-[#3E4E5A]/15">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">API Endpoint</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Method</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Total Requests</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Unique Users</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Avg Response Time</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Success Rate</th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-[#09171F]/50 divide-y divide-[#CEA17A]/20">
+                              {analyticsData && analyticsData.slice(0, 10).map((api: any, index: number) => (
+                                <tr key={index} className="hover:bg-[#3E4E5A]/10 transition-colors">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {api.route}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                      api.method === 'GET' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                                      api.method === 'POST' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+                                      api.method === 'PUT' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                                      'bg-red-500/20 text-red-300 border border-red-500/30'
+                                    }`}>
+                                      {api.method}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {api.total_requests}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {api.unique_users}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {Math.round(api.avg_response_time_ms || 0)}ms
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                      parseFloat(api.success_rate || 0) >= 95 ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                                      parseFloat(api.success_rate || 0) >= 90 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                                      'bg-red-500/20 text-red-300 border border-red-500/30'
+                                    }`}>
+                                      {Math.round(api.success_rate || 0)}%
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* User Activity */}
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold text-[#DBD0C0] mb-4">Most Active Users</h3>
+                      <div className="bg-[#19171b] rounded-lg border border-[#CEA17A]/20 overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-[#CEA17A]/20">
+                            <thead className="bg-[#3E4E5A]/15">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">User</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Role</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Total Requests</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Unique Routes</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Last Activity</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Avg Response Time</th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-[#09171F]/50 divide-y divide-[#CEA17A]/20">
+                              {userActivityData && userActivityData.slice(0, 10).map((user: any, index: number) => (
+                                <tr key={index} className="hover:bg-[#3E4E5A]/10 transition-colors">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {user.user_email}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                      user.user_role === 'admin' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
+                                      user.user_role === 'host' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+                                      'bg-green-500/20 text-green-300 border border-green-500/30'
+                                    }`}>
+                                      {user.user_role}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {user.total_requests}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {user.unique_routes}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {new Date(user.last_activity).toLocaleDateString()}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {Math.round(user.avg_response_time_ms || 0)}ms
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hourly Usage Patterns */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-[#DBD0C0] mb-4">Hourly Usage Patterns</h3>
+                      <div className="bg-[#19171b] rounded-lg border border-[#CEA17A]/20 overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-[#CEA17A]/20">
+                            <thead className="bg-[#3E4E5A]/15">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Hour</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Total Requests</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Unique Users</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Avg Response Time</th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-[#09171F]/50 divide-y divide-[#CEA17A]/20">
+                              {usagePatternsData && usagePatternsData.map((pattern: any, index: number) => (
+                                <tr key={index} className="hover:bg-[#3E4E5A]/10 transition-colors">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {pattern.hour_of_day}:00
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {pattern.total_requests}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {pattern.unique_users}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                    {Math.round(pattern.avg_response_time_ms || 0)}ms
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Real-time Recent Activity */}
+                    {realtimeData && realtimeData.recentActivity.length > 0 && (
+                      <div className="mt-8">
+                        <h3 className="text-lg font-semibold text-[#DBD0C0] mb-4">Recent Activity (Live)</h3>
+                        <div className="bg-[#19171b] rounded-lg border border-[#CEA17A]/20 overflow-hidden">
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-[#CEA17A]/20">
+                              <thead className="bg-[#3E4E5A]/15">
+                                <tr>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Time</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">API Endpoint</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Method</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">User</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Status</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">Response Time</th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-[#09171F]/50 divide-y divide-[#CEA17A]/20">
+                                {realtimeData.recentActivity.slice(0, 10).map((activity: any, index: number) => (
+                                  <tr key={index} className="hover:bg-[#3E4E5A]/10 transition-colors">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                      {new Date(activity.created_at).toLocaleTimeString()}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                      {activity.route}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                        activity.method === 'GET' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                                        activity.method === 'POST' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+                                        activity.method === 'PUT' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                                        'bg-red-500/20 text-red-300 border border-red-500/30'
+                                      }`}>
+                                        {activity.method}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                      <div>
+                                        <div className="font-medium">{activity.user_email || 'Anonymous'}</div>
+                                        {activity.user_role && (
+                                          <span className={`px-1 py-0.5 text-xs rounded ${
+                                            activity.user_role === 'admin' ? 'bg-red-500/20 text-red-300' :
+                                            activity.user_role === 'host' ? 'bg-blue-500/20 text-blue-300' :
+                                            'bg-green-500/20 text-green-300'
+                                          }`}>
+                                            {activity.user_role}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                        activity.response_status >= 200 && activity.response_status < 300 
+                                          ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                                        activity.response_status >= 400 
+                                          ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
+                                        'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                                      }`}>
+                                        {activity.response_status}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
+                                      {activity.response_time_ms}ms
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </>
           )}

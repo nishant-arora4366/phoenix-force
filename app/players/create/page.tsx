@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface PlayerFormData {
   display_name: string
@@ -46,7 +46,7 @@ export default function CreatePlayerPage() {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const currentUser = sessionManager.getUser()
+        const currentUser = secureSessionManager.getUser()
         if (currentUser) {
           setUser(currentUser)
           setUserRole(currentUser.role || null)
@@ -72,7 +72,7 @@ export default function CreatePlayerPage() {
     checkUser()
 
     // Listen for auth changes
-    const unsubscribe = sessionManager.subscribe((userData) => {
+    const unsubscribe = secureSessionManager.subscribe((userData) => {
       if (userData) {
         setUser(userData)
         setUserRole(userData.role || null)
@@ -122,7 +122,7 @@ export default function CreatePlayerPage() {
         throw new Error('User not authenticated')
       }
 
-      const currentUser = sessionManager.getUser()
+      const currentUser = secureSessionManager.getUser()
       if (!currentUser) {
         throw new Error('User not authenticated')
       }

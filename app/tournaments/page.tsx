@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface Tournament {
   id: string
@@ -132,12 +132,22 @@ export default function TournamentsPage() {
     const checkUser = async () => {
       try {
         // Get user from session manager
-        const sessionUser = sessionManager.getUser()
+        const sessionUser = secureSessionManager.getUser()
         setUser(sessionUser)
         
         if (sessionUser) {
-          // Fetch user profile
-          const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
+          // Fetch user profile with JWT token
+          const token = secureSessionManager.getToken()
+          const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+          
           const result = await response.json()
           if (result.success) {
             setUserProfile(result.data)
@@ -153,12 +163,17 @@ export default function TournamentsPage() {
     checkUser()
 
     // Subscribe to session changes
-    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+    const unsubscribe = secureSessionManager.subscribe((sessionUser) => {
       setUser(sessionUser)
       
       if (sessionUser) {
         // Fetch user profile when user changes
-        fetch(`/api/user-profile?userId=${sessionUser.id}`)
+        const token = secureSessionManager.getToken()
+        fetch(`/api/user-profile?userId=${sessionUser.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
           .then(response => response.json())
           .then(result => {
             if (result.success) {

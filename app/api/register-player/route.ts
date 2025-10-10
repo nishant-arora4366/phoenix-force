@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -6,7 +7,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   try {
     const { tournament_id, player_id, preferred_slot } = await request.json()
 
@@ -67,3 +68,5 @@ export async function POST(request: NextRequest) {
     }, { status: 500 })
   }
 }
+
+

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -6,7 +7,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function PUT(request: NextRequest) {
+async function putHandler(request: NextRequest) {
   try {
     const body = await request.json()
     const { userId, newRole } = body
@@ -59,7 +60,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const email = searchParams.get('email')
@@ -97,3 +98,4 @@ export async function GET(request: NextRequest) {
     }, { status: 500 })
   }
 }
+

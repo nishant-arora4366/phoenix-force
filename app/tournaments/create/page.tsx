@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 import { PermissionService } from '@/src/lib/permissions'
 
 interface TournamentFormData {
@@ -43,7 +43,7 @@ export default function CreateTournamentPage() {
     const checkUser = async () => {
       try {
         // Get user from session manager
-        const sessionUser = sessionManager.getUser()
+        const sessionUser = secureSessionManager.getUser()
         if (sessionUser) {
           // Fetch user profile to get role and status
           const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
@@ -77,7 +77,7 @@ export default function CreateTournamentPage() {
     checkUser()
 
     // Subscribe to session changes
-    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+    const unsubscribe = secureSessionManager.subscribe((sessionUser) => {
       if (sessionUser) {
         // Re-check permissions when user changes
         checkUser()

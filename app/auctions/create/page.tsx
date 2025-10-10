@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
+import { useRoleValidation } from '@/src/hooks/useRoleValidation'
 
 interface Tournament {
   id: string
@@ -21,7 +22,7 @@ interface Tournament {
 }
 
 export default function CreateAuctionPage() {
-  const [user, setUser] = useState<any>(null)
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -36,20 +37,11 @@ export default function CreateAuctionPage() {
     description: ''
   })
 
+  const { user, isAuthenticated, isValidating } = useRoleValidation()
+
   useEffect(() => {
-    const getUser = async () => {
-      const currentUser = sessionManager.getUser()
-      setUser(currentUser)
-      setLoading(false)
-    }
-    getUser()
-
-    const unsubscribe = sessionManager.subscribe((userData) => {
-      setUser(userData)
-    })
-
-    return () => unsubscribe()
-  }, [])
+    setLoading(false)
+  }, [user])
 
   useEffect(() => {
     const fetchTournaments = async () => {
@@ -192,6 +184,55 @@ export default function CreateAuctionPage() {
                 >
                   Return to Auctions
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show unauthorized message if user doesn't have access
+  if (user && user.role !== 'host' && user.role !== 'admin') {
+    return (
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Hero Section Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+        <div className="absolute inset-0" 
+             style={{
+               background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+             }}></div>
+        
+        {/* Content */}
+        <div className="relative z-10 py-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8 max-w-2xl mx-auto">
+                <div className="text-red-400 mb-6">
+                  <svg className="h-16 w-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">
+                  Access Denied
+                </h2>
+                <p className="text-[#CEA17A] mb-6">
+                  You don't have permission to create auctions. Only hosts and admins can access this feature.
+                </p>
+                <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 justify-center">
+                  <button
+                    onClick={() => router.push('/auctions')}
+                    className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
+                  >
+                    Back to Auctions
+                  </button>
+                  <button
+                    onClick={() => router.push('/')}
+                    className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
+                  >
+                    Go Home
+                  </button>
+                </div>
               </div>
             </div>
           </div>

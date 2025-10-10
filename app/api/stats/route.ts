@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -7,7 +8,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 // Use service role client to bypass RLS for stats
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     // Fetch all statistics in parallel using admin client to bypass RLS
     const [
@@ -111,3 +112,5 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+

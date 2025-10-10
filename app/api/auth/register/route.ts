@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { AuthService } from '@/src/lib/auth'
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   try {
     const { email, password, username, firstname, lastname } = await request.json()
 
@@ -59,3 +60,5 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+

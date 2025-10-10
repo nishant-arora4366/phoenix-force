@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/src/lib/auth'
 import { supabase } from '@/src/lib/supabaseClient'
+import { generateToken } from '@/src/lib/jwt'
+import { withAnalytics } from '@/src/lib/api-analytics'
 
-export async function POST(request: NextRequest) {
+async function loginHandler(request: NextRequest) {
   try {
     const { email, password } = await request.json()
 
@@ -31,11 +33,18 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // For custom authentication, we'll return the user data without Supabase session
-      // The frontend will handle the session state
+      // Generate JWT token for secure authentication
+      const token = generateToken({
+        id: result.user.id,
+        email: result.user.email,
+        role: result.user.role
+      })
+
+      // Return user data with JWT token
       return NextResponse.json({
         success: true,
         user: result.user,
+        token: token,
         message: message
       })
     } else {
@@ -52,3 +61,5 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+export const POST = withAnalytics(loginHandler)

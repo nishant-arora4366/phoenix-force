@@ -1,27 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function GET(request: NextRequest) {
+async function getUserProfile(request: NextRequest, user: AuthenticatedUser) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
 
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'User ID is required'
-      }, { status: 400 })
-    }
+    // If no userId provided, return current user's profile
+    const targetUserId = userId || user.id
 
-    const { data: user, error } = await supabaseAdmin
+    const { data: profileUser, error } = await supabaseAdmin
       .from('users')
       .select('id, email, username, firstname, middlename, lastname, photo, role, status, created_at, updated_at')
-      .eq('id', userId)
+      .eq('id', targetUserId)
       .single()
 
     if (error) {
@@ -33,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: user
+      data: profileUser
     })
 
   } catch (error: any) {
@@ -44,16 +42,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+// Export the authenticated handler
+const getHandler = withAuth(getUserProfile)
+
+async function updateUserProfile(request: NextRequest, user: AuthenticatedUser) {
   try {
     const body = await request.json()
     const { userId, profile } = body
 
-    if (!userId) {
+    // Users can only update their own profile unless they're admin
+    const targetUserId = userId || user.id
+    if (user.role !== 'admin' && targetUserId !== user.id) {
       return NextResponse.json({
         success: false,
-        error: 'User ID is required'
-      }, { status: 400 })
+        error: 'You can only update your own profile'
+      }, { status: 403 })
     }
 
     // Validate required fields
@@ -74,7 +77,7 @@ export async function PUT(request: NextRequest) {
         photo: profile.photo || null,
         updated_at: new Date().toISOString()
       })
-      .eq('id', userId)
+      .eq('id', targetUserId)
       .select()
       .single()
 
@@ -97,3 +100,8 @@ export async function PUT(request: NextRequest) {
     }, { status: 500 })
   }
 }
+
+// Export the authenticated handler
+const putHandler = withAuth(updateUserProfile)
+
+

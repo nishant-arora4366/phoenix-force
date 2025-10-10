@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 import { getSupabaseClient } from '@/src/lib/supabaseClient'
 
 interface Tournament {
@@ -139,7 +139,7 @@ export default function TournamentDetailsPage() {
     const fetchTournamentAndUser = async () => {
       try {
         // Get current user from session manager
-        const sessionUser = sessionManager.getUser()
+        const sessionUser = secureSessionManager.getUser()
         setUser(sessionUser)
 
         // Fetch tournament data via API
@@ -230,7 +230,7 @@ export default function TournamentDetailsPage() {
           console.log('Realtime INSERT received:', payload)
           fetchSlots(true)
           // Only check user registration if user is authenticated
-          const currentUser = sessionManager.getUser()
+          const currentUser = secureSessionManager.getUser()
           if (currentUser) {
             checkUserRegistration()
           }
@@ -248,7 +248,7 @@ export default function TournamentDetailsPage() {
           console.log('Realtime UPDATE received:', payload)
           fetchSlots(true)
           // Only check user registration if user is authenticated
-          const currentUser = sessionManager.getUser()
+          const currentUser = secureSessionManager.getUser()
           if (currentUser) {
             checkUserRegistration()
           }
@@ -268,7 +268,7 @@ export default function TournamentDetailsPage() {
           console.log('DELETE event received, refreshing slots...')
           fetchSlots(true)
           // Only check user registration if user is authenticated
-          const currentUser = sessionManager.getUser()
+          const currentUser = secureSessionManager.getUser()
           if (currentUser) {
             checkUserRegistration()
           }
@@ -372,7 +372,7 @@ export default function TournamentDetailsPage() {
 
   // Subscribe to session changes to handle sign-in/sign-out
   useEffect(() => {
-    const unsubscribe = sessionManager.subscribe((userData) => {
+    const unsubscribe = secureSessionManager.subscribe((userData) => {
       console.log('Session changed:', userData)
       setUser(userData)
       
@@ -850,7 +850,7 @@ export default function TournamentDetailsPage() {
     setStatusMessage('')
     
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -913,7 +913,7 @@ export default function TournamentDetailsPage() {
         currentStatus: tournament.status
       })
       
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -991,7 +991,7 @@ export default function TournamentDetailsPage() {
         setSlotsLoading(true)
       }
       
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       
       // Prepare headers - include authorization if user is authenticated
       const headers: any = {}
@@ -1023,7 +1023,7 @@ export default function TournamentDetailsPage() {
 
   const checkUserRegistration = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) return
 
       // First check if user has a player profile
@@ -1088,7 +1088,7 @@ export default function TournamentDetailsPage() {
             setRegistrationMessage(`Retrying registration (attempt ${attempt}/${maxRetries})...`)
           }
           
-          const sessionUser = sessionManager.getUser()
+          const sessionUser = secureSessionManager.getUser()
           const response = await fetch(`/api/tournaments/${tournamentId}/register`, {
             method: 'POST',
             headers: {
@@ -1177,7 +1177,7 @@ export default function TournamentDetailsPage() {
     setIsWithdrawing(true)
     setRegistrationMessage('')
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       const response = await fetch(`/api/tournaments/${tournamentId}/withdraw`, {
         method: 'POST',
         headers: {
@@ -1212,7 +1212,7 @@ export default function TournamentDetailsPage() {
     }
 
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       const response = await fetch(`/api/tournaments/${tournamentId}/remove-player`, {
         method: 'POST',
         headers: {
@@ -1242,7 +1242,7 @@ export default function TournamentDetailsPage() {
     setIsRegistering(true)
     setRegistrationMessage('')
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       const response = await fetch(`/api/tournaments/${tournamentId}/register`, {
         method: 'DELETE',
         headers: {
@@ -1281,7 +1281,7 @@ export default function TournamentDetailsPage() {
 
   const approveSlot = async (slotId: string) => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
         method: 'PUT',
         headers: {
@@ -1316,7 +1316,7 @@ export default function TournamentDetailsPage() {
 
   const rejectSlot = async (slotId: string) => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
         method: 'PUT',
         headers: {

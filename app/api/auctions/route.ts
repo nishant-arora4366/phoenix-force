@@ -1,25 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sessionManager } from '@/src/lib/session'
+import { withAuth, AuthenticatedUser, isHostOrAdmin } from '@/src/lib/auth-middleware'
+import { withAnalytics } from '@/src/lib/api-analytics'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function POST(request: NextRequest) {
+async function createAuction(request: NextRequest, user: AuthenticatedUser) {
   try {
-    // Get user from session
-    const userData = sessionManager.getUser()
-    if (!userData) {
-      return NextResponse.json({
-        success: false,
-        error: 'Authentication required'
-      }, { status: 401 })
-    }
-
     // Check if user has permission to create auctions
-    if (userData.role !== 'host' && userData.role !== 'admin') {
+    if (!isHostOrAdmin(user)) {
       return NextResponse.json({
         success: false,
         error: 'Insufficient permissions to create auctions'
@@ -70,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is the host of the tournament or admin
-    if (userData.role !== 'admin' && tournament.host_id !== userData.id) {
+    if (user.role !== 'admin' && tournament.host_id !== user.id) {
       return NextResponse.json({
         success: false,
         error: 'You can only create auctions for tournaments you host'
@@ -88,7 +80,7 @@ export async function POST(request: NextRequest) {
         bid_increment: parseFloat(bid_increment),
         description: description || null,
         status: 'scheduled',
-        created_by: userData.id
+        created_by: user.id
       })
       .select()
       .single()
@@ -116,16 +108,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+// Export the authenticated handler with analytics
+export const POST = withAnalytics(withAuth(createAuction, ['host', 'admin']))
+
+async function getAuctions(request: NextRequest, user: AuthenticatedUser) {
   try {
-    // Get user from session
-    const userData = sessionManager.getUser()
-    if (!userData) {
-      return NextResponse.json({
-        success: false,
-        error: 'Authentication required'
-      }, { status: 401 })
-    }
 
     // Fetch auctions with tournament details
     const { data: auctions, error } = await supabase
@@ -163,3 +150,6 @@ export async function GET(request: NextRequest) {
     }, { status: 500 })
   }
 }
+
+// Export the authenticated handler with analytics
+export const GET = withAnalytics(withAuth(getAuctions))

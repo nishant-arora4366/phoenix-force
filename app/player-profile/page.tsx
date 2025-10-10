@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface PlayerFormData {
   id?: string // Optional for new profiles, required for updates
@@ -64,7 +64,7 @@ function PlayerProfileContent() {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const currentUser = sessionManager.getUser()
+        const currentUser = secureSessionManager.getUser()
         if (currentUser) {
           setUser(currentUser)
           setUserRole(currentUser.role || null)
@@ -82,7 +82,7 @@ function PlayerProfileContent() {
     checkUser()
 
     // Listen for auth changes
-        const unsubscribe = sessionManager.subscribe((userData) => {
+        const unsubscribe = secureSessionManager.subscribe((userData) => {
           if (userData) {
             setUser(userData)
             setUserRole(userData.role || null)
@@ -133,7 +133,7 @@ function PlayerProfileContent() {
   const fetchPlayerProfile = async () => {
     try {
       setIsLoadingProfile(true)
-      const currentUser = sessionManager.getUser()
+      const currentUser = secureSessionManager.getUser()
       if (!currentUser) return
 
       const response = await fetch('/api/player-profile', {
@@ -183,7 +183,7 @@ function PlayerProfileContent() {
         throw new Error('User not authenticated')
       }
 
-      const currentUser = sessionManager.getUser()
+      const currentUser = secureSessionManager.getUser()
       if (!currentUser) {
         throw new Error('User not authenticated')
       }

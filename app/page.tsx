@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import AuthForm from '@/src/components/AuthForm'
 import PlayerProfilePrompt from '@/src/components/PlayerProfilePrompt'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 import { supabase } from '@/src/lib/supabaseClient'
 
 export default function Home() {
@@ -24,11 +24,11 @@ export default function Home() {
 
   // User session management
   useEffect(() => {
-    const currentUser = sessionManager.getUser()
+    const currentUser = secureSessionManager.getUser()
     setUser(currentUser)
     setIsLoading(false)
 
-    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+    const unsubscribe = secureSessionManager.subscribe((sessionUser) => {
       setUser(sessionUser)
     })
 

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     // Fetch all tournaments with slot information using service role (bypasses RLS)
     const { data: tournaments, error } = await supabaseAdmin
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   try {
     const body = await request.json()
     const { name, format, selected_teams, tournament_date, description, total_slots, host_id, status, venue, google_maps_link } = body
@@ -140,3 +141,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

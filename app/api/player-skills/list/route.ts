@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -6,7 +7,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     // Get all skills with their values using the correct table structure
     const { data: skills, error } = await supabaseAdmin
@@ -69,3 +70,5 @@ export async function GET(request: NextRequest) {
     }, { status: 500 })
   }
 }
+
+

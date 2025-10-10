@@ -2,21 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 export default function Auctions() {
-  const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     const getUser = async () => {
-      const currentUser = sessionManager.getUser()
+      const currentUser = secureSessionManager.getUser()
       setUser(currentUser)
       setLoading(false)
     }
     getUser()
 
-    const unsubscribe = sessionManager.subscribe((userData) => {
+    const unsubscribe = secureSessionManager.subscribe((userData) => {
       setUser(userData)
       setLoading(false)
     })

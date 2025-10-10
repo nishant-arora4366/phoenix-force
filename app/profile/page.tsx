@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface UserProfile {
   id: string
@@ -35,7 +35,7 @@ export default function Profile() {
   useEffect(() => {
     const getUser = async () => {
       // Get user from session manager
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       setUser(sessionUser)
       
       if (sessionUser) {
@@ -54,7 +54,7 @@ export default function Profile() {
     getUser()
 
     // Subscribe to session changes
-    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+    const unsubscribe = secureSessionManager.subscribe((sessionUser) => {
       setUser(sessionUser)
       
       if (sessionUser) {
@@ -81,7 +81,7 @@ export default function Profile() {
 
   const handleSignOut = async () => {
     // Clear session using session manager
-    sessionManager.clearUser()
+    secureSessionManager.clearUser()
     setUser(null)
     setProfile(null)
   }

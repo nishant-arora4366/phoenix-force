@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface Tournament {
   id: string
@@ -193,7 +193,7 @@ export default function EditTournamentPage() {
     const fetchTournament = async () => {
       try {
         // Get current user from session manager
-        const sessionUser = sessionManager.getUser()
+        const sessionUser = secureSessionManager.getUser()
         if (!sessionUser) {
           router.push('/signin')
           return

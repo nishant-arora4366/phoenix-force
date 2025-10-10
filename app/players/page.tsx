@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface Player {
   id: string
@@ -27,7 +27,7 @@ interface Player {
 
 const fetcher = async (url: string) => {
   // Get current user for role-based skill filtering
-  const currentUser = sessionManager.getUser()
+  const currentUser = secureSessionManager.getUser()
   
   const response = await fetch(url, {
     headers: {
@@ -114,15 +114,15 @@ function SkillFilterInput({ skillName, skillValues, selectedValues, onSelectionC
                     className="inline-flex items-center gap-1 px-2 py-1 bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded text-xs whitespace-nowrap flex-shrink-0"
                   >
                     {value}
-                    <button
+                    <span
                       onClick={(e) => {
                         e.stopPropagation()
                         removeValue(value)
                       }}
-                      className="hover:text-red-400 transition-colors"
+                      className="hover:text-red-400 transition-colors cursor-pointer"
                     >
                       ×
-                    </button>
+                    </span>
                   </span>
                 ))}
                 {selectedValues.length > 2 && (
@@ -232,7 +232,7 @@ export default function PlayersPage() {
     const getUser = async () => {
       try {
         setIsLoadingUser(true)
-        const currentUser = sessionManager.getUser()
+        const currentUser = secureSessionManager.getUser()
         if (currentUser) {
           setUser(currentUser)
           setCurrentUser(currentUser)
@@ -254,7 +254,7 @@ export default function PlayersPage() {
     getUser()
 
     // Listen for auth changes
-    const unsubscribe = sessionManager.subscribe((userData) => {
+    const unsubscribe = secureSessionManager.subscribe((userData) => {
       if (userData) {
         setUser(userData)
         setCurrentUser(userData)
@@ -365,7 +365,7 @@ export default function PlayersPage() {
     }
 
     try {
-      const currentUser = sessionManager.getUser()
+      const currentUser = secureSessionManager.getUser()
       if (!currentUser) {
         throw new Error('User not authenticated')
       }

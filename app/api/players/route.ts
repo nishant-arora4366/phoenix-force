@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     // Get the authorization header
     const authHeader = request.headers.get('authorization')
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   try {
     // Get the authorization header
     const authHeader = request.headers.get('authorization')
@@ -232,7 +233,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function putHandler(request: NextRequest) {
   try {
     // Get the authorization header
     const authHeader = request.headers.get('authorization')
@@ -382,3 +383,4 @@ export async function PUT(request: NextRequest) {
     }, { status: 500 })
   }
 }
+

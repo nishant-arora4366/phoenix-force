@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface Player {
   id: string
@@ -33,7 +33,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         const { id } = await params
         
         // Get user info
-        const currentUser = sessionManager.getUser()
+        const currentUser = secureSessionManager.getUser()
         if (currentUser) {
           setUser(currentUser)
           setCurrentUser(currentUser)
@@ -75,7 +75,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
     fetchData()
 
     // Listen for auth changes
-    const unsubscribe = sessionManager.subscribe((userData) => {
+    const unsubscribe = secureSessionManager.subscribe((userData) => {
       if (userData) {
         setUser(userData)
         setUserRole(userData.role || null)
@@ -95,7 +95,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
     }
 
     try {
-      const currentUser = sessionManager.getUser()
+      const currentUser = secureSessionManager.getUser()
       if (!currentUser) {
         throw new Error('User not authenticated')
       }

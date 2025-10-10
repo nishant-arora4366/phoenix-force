@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface UserProfile {
   username: string
@@ -31,13 +31,13 @@ function SignUpContent() {
   useEffect(() => {
     // Check if user is already logged in
     const getUser = async () => {
-      const currentUser = sessionManager.getUser()
+      const currentUser = secureSessionManager.getUser()
       setUser(currentUser)
     }
     getUser()
 
     // Listen for auth changes
-    const unsubscribe = sessionManager.subscribe((userData) => {
+    const unsubscribe = secureSessionManager.subscribe((userData) => {
       setUser(userData)
     })
 

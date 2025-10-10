@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -6,7 +7,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function GET(
+async function getHandler(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
@@ -43,3 +44,5 @@ export async function GET(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

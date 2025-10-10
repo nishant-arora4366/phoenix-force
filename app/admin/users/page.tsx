@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { sessionManager } from '@/src/lib/session'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface User {
   id: string
@@ -109,7 +109,7 @@ export default function UserManagementPage() {
     const checkUser = async () => {
       try {
         // Get user from session manager
-        const sessionUser = sessionManager.getUser()
+        const sessionUser = secureSessionManager.getUser()
         if (sessionUser) {
           setCurrentUser(sessionUser)
           
@@ -164,7 +164,7 @@ export default function UserManagementPage() {
     checkUser()
 
     // Subscribe to session changes
-    const unsubscribe = sessionManager.subscribe((sessionUser) => {
+    const unsubscribe = secureSessionManager.subscribe((sessionUser) => {
       if (sessionUser) {
         // Re-check permissions when user changes
         checkUser()
@@ -196,7 +196,7 @@ export default function UserManagementPage() {
 
   const fetchUsers = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -222,7 +222,7 @@ export default function UserManagementPage() {
 
   const fetchPlayerProfiles = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -249,7 +249,7 @@ export default function UserManagementPage() {
 
   const updateUserStatus = async (userId: string, status: string) => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -286,7 +286,7 @@ export default function UserManagementPage() {
 
   const updateUserRole = async (userId: string, role: string) => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -327,7 +327,7 @@ export default function UserManagementPage() {
     }
 
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -359,7 +359,7 @@ export default function UserManagementPage() {
 
   const updatePlayerProfileStatus = async (playerId: string, status: string) => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -397,7 +397,7 @@ export default function UserManagementPage() {
 
   const fetchPlayerSkills = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -423,7 +423,7 @@ export default function UserManagementPage() {
 
   const addPlayerSkill = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -462,7 +462,7 @@ export default function UserManagementPage() {
 
   const editPlayerSkill = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -504,7 +504,7 @@ export default function UserManagementPage() {
     }
 
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -541,7 +541,7 @@ export default function UserManagementPage() {
 
   const addSkillValue = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -579,7 +579,7 @@ export default function UserManagementPage() {
 
   const editSkillValue = async () => {
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
@@ -621,7 +621,7 @@ export default function UserManagementPage() {
     }
 
     try {
-      const sessionUser = sessionManager.getUser()
+      const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
         throw new Error('User not authenticated')
       }
