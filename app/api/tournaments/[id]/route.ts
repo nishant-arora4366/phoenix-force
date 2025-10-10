@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -6,7 +7,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-async function getHandler(
+// Public GET handler - no authentication required to view tournament details
+async function getHandlerPublic(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -37,6 +39,7 @@ async function getHandler(
 
 async function putHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -44,32 +47,16 @@ async function putHandler(
     const body = await request.json()
     const { name, format, selected_teams, tournament_date, description, total_slots, status, venue, google_maps_link } = body
 
-    // SECURITY: Check authentication and authorization
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
+    // SECURITY: User is already authenticated via withAuth middleware
+    // The 'user' parameter contains the verified user from JWT
+    const sessionUser = user
+    
+    if (!sessionUser || !sessionUser.id) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    let sessionUser
-    try {
-      sessionUser = JSON.parse(authHeader)
-      if (!sessionUser || !sessionUser.id) {
-        return NextResponse.json({ success: false, error: 'Invalid authentication' }, { status: 401 })
-      }
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authentication format' }, { status: 401 })
-    }
-
-    // Get user profile to check role
-    const { data: userProfile, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', sessionUser.id)
-      .single()
-
-    if (userError || !userProfile) {
-      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
-    }
+    // User role is already in the user object from JWT
+    const userProfile = { role: sessionUser.role }
 
     // Get tournament to check if user is host
     const { data: tournamentData, error: tournamentError } = await supabaseAdmin
@@ -82,17 +69,18 @@ async function putHandler(
       return NextResponse.json({ success: false, error: 'Tournament not found' }, { status: 404 })
     }
 
-    // Check authorization: Only admin or tournament host can update
+    // Check authorization: Only admin or (tournament host with host role) can update
     const isAdmin = userProfile.role === 'admin'
-    const isHost = sessionUser.id === tournamentData.host_id
+    const isTournamentHost = sessionUser.id === tournamentData.host_id
+    const hasHostRole = userProfile.role === 'host'
 
-    if (!isAdmin && !isHost) {
-      return NextResponse.json({ success: false, error: 'Unauthorized: Only admin or tournament host can update' }, { status: 403 })
+    if (!isAdmin && !(isTournamentHost && hasHostRole)) {
+      return NextResponse.json({ success: false, error: 'Not authorized to update this tournament' }, { status: 403 })
     }
 
     // Handle status-only updates
     if (status && !name && !format && !selected_teams && !tournament_date && !description && !total_slots && !venue && !google_maps_link) {
-      const { data: tournament, error } = await supabaseAdmin
+    const { data: updatedTournament, error } = await supabaseAdmin
         .from('tournaments')
         .update({
           status,
@@ -106,7 +94,7 @@ async function putHandler(
         return NextResponse.json({ success: false, error: error.message }, { status: 500 })
       }
 
-      return NextResponse.json({ success: true, tournament })
+      return NextResponse.json({ success: true, tournament: updatedTournament })
     }
 
     // Handle full tournament updates
@@ -115,7 +103,7 @@ async function putHandler(
     }
 
     // Update tournament using service role (bypasses RLS)
-    const { data: tournament, error } = await supabaseAdmin
+    const { data: updatedTournament, error } = await supabaseAdmin
       .from('tournaments')
       .update({
         name,
@@ -136,7 +124,7 @@ async function putHandler(
       return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, tournament })
+    return NextResponse.json({ success: true, tournament: updatedTournament })
   } catch (error: any) {
     console.error('Error updating tournament:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
@@ -145,37 +133,22 @@ async function putHandler(
 
 async function deleteHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
 
-    // SECURITY: Check authentication and authorization
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
+    // SECURITY: User is already authenticated via withAuth middleware
+    // The 'user' parameter contains the verified user from JWT
+    const sessionUser = user
+    
+    if (!sessionUser || !sessionUser.id) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    let sessionUser
-    try {
-      sessionUser = JSON.parse(authHeader)
-      if (!sessionUser || !sessionUser.id) {
-        return NextResponse.json({ success: false, error: 'Invalid authentication' }, { status: 401 })
-      }
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authentication format' }, { status: 401 })
-    }
-
-    // Get user profile to check role
-    const { data: userProfile, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', sessionUser.id)
-      .single()
-
-    if (userError || !userProfile) {
-      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
-    }
+    // User role is already in the user object from JWT
+    const userProfile = { role: sessionUser.role }
 
     // Get tournament to check if user is host
     const { data: tournamentData, error: tournamentError } = await supabaseAdmin
@@ -188,12 +161,13 @@ async function deleteHandler(
       return NextResponse.json({ success: false, error: 'Tournament not found' }, { status: 404 })
     }
 
-    // Check authorization: Only admin or tournament host can delete
+    // Check authorization: Only admin or (tournament host with host role) can delete
     const isAdmin = userProfile.role === 'admin'
-    const isHost = sessionUser.id === tournamentData.host_id
+    const isTournamentHost = sessionUser.id === tournamentData.host_id
+    const hasHostRole = userProfile.role === 'host'
 
-    if (!isAdmin && !isHost) {
-      return NextResponse.json({ success: false, error: 'Unauthorized: Only admin or tournament host can delete' }, { status: 403 })
+    if (!isAdmin && !(isTournamentHost && hasHostRole)) {
+      return NextResponse.json({ success: false, error: 'Not authorized to delete this tournament' }, { status: 403 })
     }
 
     // Delete tournament using service role (bypasses RLS)
@@ -213,3 +187,40 @@ async function deleteHandler(
   }
 }
 
+// Public wrapper for GET - no authentication required
+async function getWrapperPublic(request: NextRequest) {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const tournamentId = pathParts[pathParts.length - 1] // Get the tournament ID from the path
+  if (!tournamentId) {
+    return NextResponse.json({ success: false, error: 'Tournament ID required' }, { status: 400 })
+  }
+  return getHandlerPublic(request, { params: Promise.resolve({ id: tournamentId }) })
+}
+
+async function putWrapper(request: NextRequest, user: AuthenticatedUser) {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const tournamentId = pathParts[pathParts.length - 1] // Get the tournament ID from the path
+  if (!tournamentId) {
+    return NextResponse.json({ success: false, error: 'Tournament ID required' }, { status: 400 })
+  }
+  return putHandler(request, user, { params: Promise.resolve({ id: tournamentId }) })
+}
+
+async function deleteWrapper(request: NextRequest, user: AuthenticatedUser) {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const tournamentId = pathParts[pathParts.length - 1] // Get the tournament ID from the path
+  if (!tournamentId) {
+    return NextResponse.json({ success: false, error: 'Tournament ID required' }, { status: 400 })
+  }
+  return deleteHandler(request, user, { params: Promise.resolve({ id: tournamentId }) })
+}
+
+// Export the handlers with analytics
+// GET is public - anyone can view tournament details
+export const GET = withAnalytics(getWrapperPublic)
+// PUT and DELETE require authentication
+export const PUT = withAnalytics(withAuth(putWrapper, ['viewer', 'host', 'admin']))
+export const DELETE = withAnalytics(withAuth(deleteWrapper, ['viewer', 'host', 'admin']))

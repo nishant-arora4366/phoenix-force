@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -6,7 +8,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function POST(request: NextRequest) {
+async function POSTHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const body = await request.json()
     const { userId, skillId, valueName, displayOrder, value } = body
@@ -20,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is admin
-    const { data: user, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
       .eq('id', userId)
@@ -58,7 +63,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function PUTHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const body = await request.json()
     const { userId, valueId, valueName, displayOrder, value } = body
@@ -72,7 +80,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check if user is admin
-    const { data: user, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
       .eq('id', userId)
@@ -109,7 +117,10 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+async function DELETEHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const body = await request.json()
     const { userId, valueId } = body
@@ -119,7 +130,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if user is admin
-    const { data: user, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
       .eq('id', userId)
@@ -150,3 +161,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// Export handlers with analytics
+
+export const POST = withAnalytics(withAuth(POSTHandler, ['admin']))

@@ -1,4 +1,5 @@
 // Secure JWT-based session management
+import { setSupabaseAuth } from './supabaseClient'
 
 export interface SessionUser {
   id: string
@@ -34,9 +35,13 @@ class SecureSessionManager {
       if (user && token) {
         localStorage.setItem('phoenix_token', token)
         localStorage.setItem('phoenix_user', JSON.stringify(user))
+        // Sync JWT with Supabase for realtime subscriptions
+        setSupabaseAuth(token)
       } else {
         localStorage.removeItem('phoenix_token')
         localStorage.removeItem('phoenix_user')
+        // Clear Supabase auth
+        setSupabaseAuth(null)
       }
     }
   }
@@ -53,6 +58,8 @@ class SecureSessionManager {
           try {
             this.currentUser = JSON.parse(stored)
             this.currentToken = storedToken
+            // Sync restored JWT with Supabase for realtime
+            setSupabaseAuth(storedToken)
           } catch (error) {
             console.error('Error parsing stored user:', error)
             this.clearUser()
@@ -67,6 +74,10 @@ class SecureSessionManager {
   getToken(): string | null {
     if (!this.currentToken && typeof window !== 'undefined') {
       this.currentToken = localStorage.getItem('phoenix_token')
+      // Sync restored token with Supabase for realtime
+      if (this.currentToken) {
+        setSupabaseAuth(this.currentToken)
+      }
     }
     return this.currentToken
   }
@@ -115,6 +126,8 @@ class SecureSessionManager {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('phoenix_token')
       localStorage.removeItem('phoenix_user')
+      // Clear Supabase auth
+      setSupabaseAuth(null)
     }
     this.notifyListeners()
   }

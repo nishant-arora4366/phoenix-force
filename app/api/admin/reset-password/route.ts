@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 
@@ -6,14 +8,16 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function POST(request: NextRequest) {
+async function POSTHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
-    // Get user ID from query parameters (passed from client-side session)
-    const url = new URL(request.url)
-    const userId = url.searchParams.get('userId')
+    // User is already authenticated via withAuth middleware
+    const userId = user.id
     
     if (!userId) {
-      return NextResponse.json({ success: false, error: 'No user ID provided' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
     }
 
     // Check if user is admin using service role (bypasses RLS)
@@ -28,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (userData.role !== 'admin' || userData.status !== 'approved') {
-      return NextResponse.json({ success: false, error: 'Access denied' }, { status: 403 })
+      return NextResponse.json({ success: false, error: 'Access denied - Admin role required' }, { status: 403 })
     }
 
     const { userId: targetUserId } = await request.json()
@@ -72,3 +76,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// Export handlers with analytics
+
+export const POST = withAnalytics(withAuth(POSTHandler, ['admin']))

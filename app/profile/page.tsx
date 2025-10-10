@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface UserProfile {
@@ -18,6 +19,7 @@ interface UserProfile {
 }
 
 export default function Profile() {
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,12 +41,25 @@ export default function Profile() {
       setUser(sessionUser)
       
       if (sessionUser) {
-        // Fetch user profile from users table
-        const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
-        const result = await response.json()
+        // Get JWT token for API request
+        const token = secureSessionManager.getToken()
         
-        if (result.success) {
-          setProfile(result.data)
+        if (token) {
+          // Fetch user profile from users table with JWT authentication
+          const response = await fetch('/api/user-profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          const result = await response.json()
+          
+          if (result.success) {
+            setProfile(result.data)
+          } else {
+            console.error('Failed to fetch profile:', result.error)
+          }
+        } else {
+          console.error('No authentication token found')
         }
       }
       
@@ -59,7 +74,11 @@ export default function Profile() {
       
       if (sessionUser) {
         // Fetch user profile when user changes
-        fetch(`/api/user-profile?userId=${sessionUser.id}`)
+        fetch('/api/user-profile', {
+            headers: {
+              'Authorization': `Bearer ${secureSessionManager.getToken()}`
+            }
+          })
           .then(response => response.json())
           .then(result => {
             if (result.success) {
@@ -79,12 +98,6 @@ export default function Profile() {
     }
   }, [])
 
-  const handleSignOut = async () => {
-    // Clear session using session manager
-    secureSessionManager.clearUser()
-    setUser(null)
-    setProfile(null)
-  }
 
   const handleSave = async () => {
     if (!user || !profile) return
@@ -93,10 +106,18 @@ export default function Profile() {
     setMessage('')
 
     try {
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        setMessage('Error: No authentication token found')
+        setSaving(false)
+        return
+      }
+
       const response = await fetch('/api/user-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: user.id,
@@ -141,10 +162,17 @@ export default function Profile() {
     setPasswordMessage('')
 
     try {
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        setPasswordMessage('Error: No authentication token found')
+        return
+      }
+
       const response = await fetch('/api/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: user.id,
@@ -181,6 +209,7 @@ export default function Profile() {
       </div>
     )
   }
+
 
   if (!user) {
     return (
@@ -646,15 +675,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Sign Out Section */}
-        <div className="mt-8 text-center">
-          <button
-            onClick={handleSignOut}
-            className="px-6 py-3 bg-[#75020f]/15 text-[#75020f] border border-[#75020f]/25 shadow-lg shadow-[#75020f]/10 backdrop-blur-sm rounded-lg hover:bg-[#75020f]/25 hover:border-[#75020f]/40 transition-all duration-200 font-medium"
-          >
-            Sign Out
-          </button>
-        </div>
       </div>
     </div>
   )

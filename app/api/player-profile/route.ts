@@ -1,27 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
-async function getHandler(request: NextRequest) {
+async function getHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    // Parse user data from authorization header
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
-      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
-    }
-
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -32,10 +15,18 @@ async function getHandler(request: NextRequest) {
     const { data: playerBasic, error: playerBasicError } = await supabase
       .from('players')
       .select('*')
-      .eq('user_id', userData.id)
-      .single()
+      .eq('user_id', user.id)
+      .maybeSingle()
     
-    if (playerBasicError || !playerBasic) {
+    if (playerBasicError) {
+      console.error('Error fetching player profile:', playerBasicError)
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Database error while fetching player profile'
+      }, { status: 500 })
+    }
+    
+    if (!playerBasic) {
       return NextResponse.json({ 
         success: true, 
         profile: null,
@@ -68,18 +59,24 @@ async function getHandler(request: NextRequest) {
       `)
       .eq('player_id', playerBasic.id)
     
+    if (skillError) {
+      console.error('Error fetching skill assignments:', skillError)
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Database error while fetching skill assignments'
+      }, { status: 500 })
+    }
+    
     // Combine the results
     const player = {
       ...playerBasic,
       player_skill_assignments: skillAssignments || []
     }
-    
 
     // Format skills data with filtering based on user role and visibility
     const skills: { [key: string]: string | string[] } = {}
-    const userRole = userData.role || 'viewer'
-    
-    
+    const userRole = user.role || 'viewer'
+
     if (player.player_skill_assignments) {
       for (const assignment of player.player_skill_assignments) {
         const skillName = assignment.player_skills?.skill_name
@@ -129,39 +126,21 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-async function postHandler(request: NextRequest) {
+async function postHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    // Parse user data from authorization header
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
-      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
-    }
-
     // Check if user has permission to create their own player profile
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const { data: user, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
-      .eq('id', userData.id)
+      .eq('id', user.id)
       .single()
 
-    if (userError || !user || user.status !== 'approved') {
+    if (userError || !userData || userData.status !== 'approved') {
       return NextResponse.json({ 
         success: false, 
         error: 'User not approved for creating player profile' 
@@ -190,7 +169,7 @@ async function postHandler(request: NextRequest) {
     const { data: existingPlayer } = await supabase
       .from('players')
       .select('id')
-      .eq('user_id', userData.id)
+      .eq('user_id', user.id)
       .single()
 
     if (existingPlayer) {
@@ -202,17 +181,17 @@ async function postHandler(request: NextRequest) {
 
     // Create player profile (only basic info)
     const insertData: any = {
-      user_id: userData.id,
+      user_id: user.id,
       display_name,
       bio: bio || null,
       profile_pic_url: profile_pic_url || null,
       mobile_number: mobile_number || null,
       status: 'pending', // User-created profiles need admin approval
-      created_by: userData.id // Track who created this player
+      created_by: user.id // Track who created this player
     }
 
     // Only include base_price for admins and hosts
-    if ((user.role === 'admin' || user.role === 'host') && base_price !== undefined) {
+    if ((userData.role === 'admin' || userData.role === 'host') && base_price !== undefined) {
       insertData.base_price = base_price || 0
     }
 
@@ -323,39 +302,24 @@ async function postHandler(request: NextRequest) {
   }
 }
 
-async function putHandler(request: NextRequest) {
+async function putHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    // Parse user data from authorization header
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
-      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
-    }
-
     // Check user role and status
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const { data: user, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
-      .eq('id', userData.id)
+      .eq('id', user.id)
       .single()
 
-    if (userError || !user || user.status !== 'approved') {
+    if (userError || !userData || userData.status !== 'approved') {
       return NextResponse.json({ 
         success: false, 
         error: 'User not approved' 
@@ -389,7 +353,7 @@ async function putHandler(request: NextRequest) {
       .eq('id', id)
       .single()
 
-    if (!existingPlayer || existingPlayer.user_id !== userData.id) {
+    if (!existingPlayer || existingPlayer.user_id !== user.id) {
       return NextResponse.json({
         success: false,
         error: 'You can only update your own player profile'
@@ -405,11 +369,11 @@ async function putHandler(request: NextRequest) {
     }
 
     // Only include base_price for admins and hosts
-    if ((user.role === 'admin' || user.role === 'host') && base_price !== undefined) {
+    if ((userData.role === 'admin' || userData.role === 'host') && base_price !== undefined) {
       updateData.base_price = base_price || 0
     }
 
-    const { data: player, error } = await supabase
+    const { data: updatedPlayer, error } = await supabase
       .from('players')
       .update(updateData)
       .eq('id', id)
@@ -509,7 +473,7 @@ async function putHandler(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: player,
+      data: updatedPlayer,
       message: 'Player profile updated successfully'
     })
     
@@ -523,4 +487,7 @@ async function putHandler(request: NextRequest) {
   }
 }
 
-
+// Export the handlers with analytics
+export const GET = withAnalytics(withAuth(getHandler, ['viewer', 'host', 'admin']))
+export const POST = withAnalytics(withAuth(postHandler, ['viewer', 'host', 'admin']))
+export const PUT = withAnalytics(withAuth(putHandler, ['viewer', 'host', 'admin']))

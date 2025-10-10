@@ -1,26 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
-async function getHandler(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    // Parse user data from authorization header
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
-      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
-    }
+    // User is already authenticated by withAuth middleware
+    const userData = user
 
     // Fetch players from database using service role
     const supabase = createClient(
@@ -58,39 +47,24 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-async function postHandler(request: NextRequest) {
+async function postHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    // Parse user data from authorization header
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
-      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
-    }
-
-    // Check if user has permission to create players (any authenticated user can create their own player profile)
+    // User is already authenticated by withAuth middleware
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const { data: user, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
-      .eq('id', userData.id)
+      .eq('id', user.id)
       .single()
 
-    if (userError || !user || user.status !== 'approved') {
+    if (userError || !userData || userData.status !== 'approved') {
       return NextResponse.json({ 
         success: false, 
         error: 'User not approved for creating player profile' 
@@ -132,7 +106,7 @@ async function postHandler(request: NextRequest) {
         profile_pic_url: profile_pic_url || null,
         mobile_number: mobile_number || null,
         status: 'approved', // Admin-created players are auto-approved
-        created_by: userData.id // Track who created this player
+        created_by: user.id // Track who created this player
       })
       .select()
       .single()
@@ -233,39 +207,24 @@ async function postHandler(request: NextRequest) {
   }
 }
 
-async function putHandler(request: NextRequest) {
+async function putHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    // Parse user data from authorization header
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
-      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
-    }
-
-    // Check user role and status
+    // User is already authenticated by withAuth middleware
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const { data: user, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
-      .eq('id', userData.id)
+      .eq('id', user.id)
       .single()
 
-    if (userError || !user || user.status !== 'approved') {
+    if (userError || !userData || userData.status !== 'approved') {
       return NextResponse.json({ 
         success: false, 
         error: 'User not approved' 
@@ -298,7 +257,7 @@ async function putHandler(request: NextRequest) {
       .eq('id', id)
       .single()
 
-    if (!existingPlayer || existingPlayer.user_id !== userData.id) {
+    if (!existingPlayer || existingPlayer.user_id !== user.id) {
       return NextResponse.json({
         success: false,
         error: 'You can only update your own player profile'
@@ -306,7 +265,7 @@ async function putHandler(request: NextRequest) {
     }
 
     // Update player profile (only basic info)
-    const { data: player, error } = await supabase
+    const { data: updatedPlayer, error } = await supabase
       .from('players')
       .update({
         display_name,
@@ -370,7 +329,7 @@ async function putHandler(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: player,
+      data: updatedPlayer,
       message: 'Player profile updated successfully'
     })
     
@@ -384,3 +343,7 @@ async function putHandler(request: NextRequest) {
   }
 }
 
+// Export the handlers with analytics
+export const GET = withAnalytics(withAuth(getHandler, ['viewer', 'host', 'admin']))
+export const POST = withAnalytics(withAuth(postHandler, ['viewer', 'host', 'admin']))
+export const PUT = withAnalytics(withAuth(putHandler, ['viewer', 'host', 'admin']))

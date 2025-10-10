@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -7,7 +8,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-async function getHandler(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const { data: users, error } = await supabaseAdmin
       .from('users')
@@ -34,4 +38,5 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-
+// Export the handlers with analytics
+export const GET = withAnalytics(withAuth(getHandler, ['viewer', 'host', 'admin']))

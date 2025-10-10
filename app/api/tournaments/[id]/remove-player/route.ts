@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -6,8 +8,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function POST(
+async function POSTHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -18,30 +21,11 @@ export async function POST(
       return NextResponse.json({ error: 'Slot ID is required' }, { status: 400 })
     }
     
-    // Get user from Authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
-    }
-    
-    // Parse the user from the authorization header
-    let sessionUser
-    try {
-      sessionUser = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
+    // User is already authenticated via withAuth middleware
+    const sessionUser = user
     
     if (!sessionUser || !sessionUser.id) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
-    }
-
-    // Check if user is host or admin
-    const userResponse = await fetch(`${request.nextUrl.origin}/api/user-profile?userId=${sessionUser.id}`)
-    const userResult = await userResponse.json()
-    
-    if (!userResult.success) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
     }
 
     // Get tournament details
@@ -56,7 +40,7 @@ export async function POST(
     }
 
     const isHost = tournament.host_id === sessionUser.id
-    const isAdmin = userResult.data.role === 'admin'
+    const isAdmin = sessionUser.role === 'admin'
 
     if (!isHost && !isAdmin) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
@@ -70,14 +54,7 @@ export async function POST(
         players (
           id,
           display_name,
-          user_id,
-          users (
-            id,
-            email,
-            firstname,
-            lastname,
-            username
-          )
+          user_id
         )
       `)
       .eq('id', slotId)
@@ -85,6 +62,7 @@ export async function POST(
       .single()
 
     if (slotError || !slot) {
+      console.error('Slot query error:', slotError)
       return NextResponse.json({ error: 'Slot not found' }, { status: 404 })
     }
 
@@ -105,12 +83,12 @@ export async function POST(
 
     // No auto-promotion needed - positions are calculated dynamically in frontend
 
-    // Send notification to the removed player
-    if (slot.player_id) {
+    // Send notification to the removed player (if they have a user account)
+    if (slot.players?.user_id) {
       await supabase
         .from('notifications')
         .insert({
-          user_id: slot.player_id,
+          user_id: slot.players.user_id,
           type: 'player_removed',
           title: 'You have been removed from the tournament',
           message: `You have been removed from the tournament by the host.`,
@@ -137,3 +115,17 @@ export async function POST(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// Wrapper function to match middleware expectations
+async function postWrapper(request: NextRequest, user: AuthenticatedUser) {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const tournamentId = pathParts[pathParts.length - 2] // Get the tournament ID from the path
+  if (!tournamentId) {
+    return NextResponse.json({ error: 'Tournament ID required' }, { status: 400 })
+  }
+  return POSTHandler(request, user, { params: Promise.resolve({ id: tournamentId }) })
+}
+
+// Export the handlers with analytics
+export const POST = withAnalytics(withAuth(postWrapper, ['viewer', 'host', 'admin']))

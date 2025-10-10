@@ -102,7 +102,18 @@ function PlayerProfileContent() {
   useEffect(() => {
     const fetchPlayerSkills = async () => {
       try {
-        const response = await fetch('/api/player-skills')
+        
+        const token = secureSessionManager.getToken()
+        if (!token) {
+          console.error('No authentication token found')
+          return
+        }
+
+        const response = await fetch('/api/player-skills', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
         const result = await response.json()
 
         if (result.success) {
@@ -132,29 +143,46 @@ function PlayerProfileContent() {
 
   const fetchPlayerProfile = async () => {
     try {
+      
       setIsLoadingProfile(true)
       const currentUser = secureSessionManager.getUser()
-      if (!currentUser) return
+      const token = secureSessionManager.getToken()
+      
+      if (!currentUser || !token) return
 
       const response = await fetch('/api/player-profile', {
         headers: {
-          'Authorization': JSON.stringify(currentUser)
+          'Authorization': `Bearer ${token}`
         }
       })
 
       const result = await response.json()
       
-      if (result.success && result.profile) {
-        setPlayerProfile(result.profile)
-        setFormData({
-          id: result.profile.id, // Include player ID for updates
-          display_name: result.profile.display_name || '',
-          bio: result.profile.bio || '',
-          profile_pic_url: result.profile.profile_pic_url || '',
-          mobile_number: result.profile.mobile_number || '',
-          skills: result.skills || {}
-        })
+      if (result.success) {
+        if (result.profile) {
+          // User has a player profile
+          setPlayerProfile(result.profile)
+          setFormData({
+            id: result.profile.id, // Include player ID for updates
+            display_name: result.profile.display_name || '',
+            bio: result.profile.bio || '',
+            profile_pic_url: result.profile.profile_pic_url || '',
+            mobile_number: result.profile.mobile_number || '',
+            skills: result.skills || {}
+          })
+        } else {
+          // User doesn't have a player profile yet
+          setPlayerProfile(null)
+          setFormData({
+            display_name: '',
+            bio: '',
+            profile_pic_url: '',
+            mobile_number: '',
+            skills: {}
+          })
+        }
       } else {
+        console.error('Failed to fetch player profile:', result.error)
         setPlayerProfile(null)
       }
     } catch (error) {
@@ -184,7 +212,9 @@ function PlayerProfileContent() {
       }
 
       const currentUser = secureSessionManager.getUser()
-      if (!currentUser) {
+      const token = secureSessionManager.getToken()
+      
+      if (!currentUser || !token) {
         throw new Error('User not authenticated')
       }
 
@@ -192,7 +222,7 @@ function PlayerProfileContent() {
         method: playerProfile ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(currentUser)
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData),
       })
@@ -221,16 +251,18 @@ function PlayerProfileContent() {
     }
   }
 
+
   if (isLoadingUser || isLoadingProfile) {
     return (
       <div className="min-h-screen bg-[#19171b] py-8 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto mb-4"></div>
           <p className="text-[#CEA17A] text-lg">Loading player profile...</p>
         </div>
       </div>
     )
   }
+
 
   if (!user) {
     return (
@@ -368,6 +400,16 @@ function PlayerProfileContent() {
                       </div>
                     </div>
                   )}
+
+                  {/* Display Name */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-[#CEA17A]">
+                      Display Name
+                    </label>
+                    <div className="px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] font-medium">
+                      {playerProfile.display_name}
+                    </div>
+                  </div>
 
                   {/* Profile Status */}
                   <div className="space-y-2">

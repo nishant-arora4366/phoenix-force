@@ -155,13 +155,20 @@ export default function Home() {
     const checkPlayerProfile = async () => {
       if (user && !isLoading && !hasCheckedProfile) {
         try {
-          console.log('Sending user data for profile check:', user)
-          console.log('Authorization header:', JSON.stringify(user))
+          const token = secureSessionManager.getToken()
+          if (!token) {
+            console.log('No authentication token found')
+            setShowPlayerProfilePrompt(true)
+            setHasCheckedProfile(true)
+            return
+          }
+          
+          console.log('Checking player profile with JWT token')
           
           const response = await fetch('/api/player-profile', {
             method: 'GET',
             headers: {
-              'Authorization': JSON.stringify(user)
+              'Authorization': `Bearer ${token}`
             }
           })
           
@@ -180,6 +187,7 @@ export default function Home() {
             const hasValidProfile = data.success && data.profile !== null && data.profile && data.profile.id
             console.log('Player profile check - hasValidProfile:', hasValidProfile)
             console.log('Player profile check - profile is null:', data.profile === null)
+            console.log('Player profile check - profile object:', data.profile)
             
             // Show prompt if user doesn't have a player profile
             if (!hasValidProfile) {

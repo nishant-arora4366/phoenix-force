@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { createClient } from '@supabase/supabase-js'
+import { withAnalytics } from '@/src/lib/api-analytics'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function GET(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
-    // Get user ID from query parameters (passed from client-side session)
-    const url = new URL(request.url)
-    const userId = url.searchParams.get('userId')
-    
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'No user ID provided'
-      }, { status: 401 })
-    }
+    // Use user ID from JWT token (already authenticated by withAuth middleware)
+    const userId = user.id
 
     // Check if user is admin using service role (bypasses RLS)
     const { data: userData, error: userError } = await supabaseAdmin
@@ -85,20 +82,23 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function putHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
-    // Get user ID from query parameters (passed from client-side session)
-    const url = new URL(request.url)
-    const adminUserId = url.searchParams.get('userId')
+    // User is already authenticated via withAuth middleware
+    // The middleware already checks that user.role === 'admin'
+    const adminUserId = user.id
     
     if (!adminUserId) {
       return NextResponse.json({
         success: false,
-        error: 'No user ID provided'
+        error: 'User not authenticated'
       }, { status: 401 })
     }
 
-    // Check if user is admin using service role (bypasses RLS)
+    // Double-check admin status using service role (bypasses RLS)
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('role, status')
@@ -115,7 +115,7 @@ export async function PUT(request: NextRequest) {
     if (userData.role !== 'admin' || userData.status !== 'approved') {
       return NextResponse.json({
         success: false,
-        error: 'Access denied'
+        error: 'Access denied - Admin role required'
       }, { status: 403 })
     }
 
@@ -164,3 +164,7 @@ export async function PUT(request: NextRequest) {
     }, { status: 500 })
   }
 }
+
+// Export the handlers with analytics
+export const GET = withAnalytics(withAuth(getHandler, ['admin']))
+export const PUT = withAnalytics(withAuth(putHandler, ['admin']))

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -7,28 +8,13 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function getHandler(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({
-        success: false,
-        error: 'Authentication required'
-      }, { status: 401 })
-    }
-
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid authorization header'
-      }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
+    // User is already authenticated via withAuth middleware
+    if (!user || !user.id) {
       return NextResponse.json({
         success: false,
         message: 'No authenticated user',
@@ -40,7 +26,7 @@ async function getHandler(request: NextRequest) {
     const { data: publicUserData, error: userError } = await supabase
       .from('users')
       .select('*')
-      .eq('id', userData.id)
+      .eq('id', user.id)
       .single()
 
     if (userError && userError.code !== 'PGRST116') {
@@ -54,9 +40,8 @@ async function getHandler(request: NextRequest) {
       success: true,
       message: 'User status retrieved',
       auth_user: {
-        id: userData.id,
-        email: userData.email,
-        created_at: userData.created_at
+        id: user.id,
+        email: user.email
       },
       public_user: publicUserData,
       is_synced: !!publicUserData,
@@ -72,4 +57,5 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-
+// Export the handlers with analytics
+export const GET = withAnalytics(withAuth(getHandler, ['viewer', 'host', 'admin']))

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
-import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -104,4 +104,6 @@ async function updateUserProfile(request: NextRequest, user: AuthenticatedUser) 
 // Export the authenticated handler
 const putHandler = withAuth(updateUserProfile)
 
-
+// Export the handlers with analytics
+export const GET = withAnalytics(getHandler)
+export const PUT = withAnalytics(putHandler)

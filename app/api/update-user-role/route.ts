@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -7,10 +8,13 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-async function putHandler(request: NextRequest) {
+async function putHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const body = await request.json()
-    const { userId, newRole } = body
+    const { userId, newRole, status } = body
 
     if (!userId || !newRole) {
       return NextResponse.json({
@@ -28,13 +32,30 @@ async function putHandler(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Update user role
+    // Validate status if provided
+    const validStatuses = ['pending', 'approved', 'rejected']
+    if (status && !validStatuses.includes(status)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid status. Must be one of: pending, approved, rejected'
+      }, { status: 400 })
+    }
+
+    // Prepare update object
+    const updateData: any = {
+      role: newRole,
+      updated_at: new Date().toISOString()
+    }
+    
+    // Add status to update if provided
+    if (status) {
+      updateData.status = status
+    }
+
+    // Update user role and status
     const { data: updatedUser, error } = await supabaseAdmin
       .from('users')
-      .update({
-        role: newRole,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', userId)
       .select()
       .single()
@@ -60,7 +81,10 @@ async function putHandler(request: NextRequest) {
   }
 }
 
-async function getHandler(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const { searchParams } = new URL(request.url)
     const email = searchParams.get('email')
@@ -99,3 +123,6 @@ async function getHandler(request: NextRequest) {
   }
 }
 
+// Export the handlers with analytics
+export const GET = withAnalytics(withAuth(getHandler, ['admin']))
+export const PUT = withAnalytics(withAuth(putHandler, ['admin']))

@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics';
 import { createClient } from '@supabase/supabase-js'
 
-export async function POST(request: Request) {
+async function POSTHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
     const { tournament_id, player_id, team_id, bid_amount } = await request.json()
     
@@ -63,3 +65,8 @@ export async function POST(request: Request) {
     }, { status: 500 })
   }
 }
+
+// Export handlers with analytics
+
+// Export the handlers with analytics
+export const POST = withAnalytics(withAuth(POSTHandler, ['viewer', 'host', 'admin']))

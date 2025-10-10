@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -7,7 +8,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function getHandler(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     // Fetch all player skills with their values
     const { data: skills, error: skillsError } = await supabase
@@ -63,4 +67,5 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-
+// Export the handlers with analytics
+export const GET = withAnalytics(withAuth(getHandler, ['viewer', 'host', 'admin']))

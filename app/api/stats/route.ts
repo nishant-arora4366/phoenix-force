@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -113,4 +114,5 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-
+// Export the handler with analytics
+export const GET = withAnalytics(getHandler)

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -6,8 +8,9 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function POST(
+async function POSTHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -54,7 +57,7 @@ export async function POST(
         id,
         user_id,
         display_name,
-        users(id, email, firstname, lastname, username)
+        users!players_user_id_fkey(id, email, firstname, lastname, username)
       `)
       .in('id', playersToAssign)
 
@@ -123,10 +126,10 @@ export async function POST(
         status,
         requested_at,
         confirmed_at,
-        players(
+        players!tournament_slots_player_id_fkey(
           id,
           display_name,
-          users(id, email, firstname, lastname, username)
+          users!players_user_id_fkey(id, email, firstname, lastname, username)
         )
       `)
 
@@ -192,3 +195,17 @@ export async function POST(
     }, { status: 500 })
   }
 }
+
+// Wrapper function to match middleware expectations
+async function postWrapper(request: NextRequest, user: AuthenticatedUser) {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const tournamentId = pathParts[pathParts.length - 2] // Get the tournament ID from the path
+  if (!tournamentId) {
+    return NextResponse.json({ success: false, error: 'Tournament ID required' }, { status: 400 })
+  }
+  return POSTHandler(request, user, { params: Promise.resolve({ id: tournamentId }) })
+}
+
+// Export the handlers with analytics
+export const POST = withAnalytics(withAuth(postWrapper, ['viewer', 'host', 'admin']))

@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics';
 import { createClient } from '@supabase/supabase-js'
 
-async function postHandler() {
+async function postHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -75,4 +77,5 @@ async function postHandler() {
   }
 }
 
-
+// Export the handlers with analytics
+export const POST = withAnalytics(withAuth(postHandler, ['viewer', 'host', 'admin']))

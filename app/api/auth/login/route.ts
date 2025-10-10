@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth } from '@/src/lib/auth-middleware';
 import { AuthService } from '@/src/lib/auth'
 import { supabase } from '@/src/lib/supabaseClient'
 import { generateToken } from '@/src/lib/jwt'

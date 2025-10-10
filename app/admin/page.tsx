@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/src/contexts/AuthContext'
 import { secureSessionManager } from '@/src/lib/secure-session'
 import { useRealtimeAnalytics } from '@/src/hooks/useRealtimeAnalytics'
 import { API_ACCESS_CONFIG, APIAccessConfig, getAPIsByAccessType, getAPIsByRole, getAPIsByStatus } from '@/src/lib/api-access-config'
@@ -64,6 +66,8 @@ interface PlayerSkillValue {
 }
 
 export default function AdminPanel() {
+  const router = useRouter()
+  const { user: authUser, isSigningOut } = useAuth()
   const [user, setUser] = useState<any>(null)
   const [users, setUsers] = useState<User[]>([])
   const [playerProfiles, setPlayerProfiles] = useState<PlayerProfile[]>([])
@@ -123,6 +127,12 @@ export default function AdminPanel() {
 
   useEffect(() => {
     const getUser = async () => {
+      // Skip error messages during sign-out
+      if (isSigningOut) {
+        setLoading(false)
+        return
+      }
+      
       const currentUser = secureSessionManager.getUser()
       setUser(currentUser)
       
@@ -141,12 +151,22 @@ export default function AdminPanel() {
     getUser()
 
     const unsubscribe = secureSessionManager.subscribe((userData) => {
+      // Skip updates during sign-out to prevent flashing errors
+      if (isSigningOut) {
+        return
+      }
+      
       setUser(userData)
+      // Only update loading state, don't set error messages during subscription updates
+      // This prevents "Access denied" from flashing when user signs out
+      if (userData && userData.role !== 'admin' && message !== 'Access denied. Admin role required.') {
+        setMessage('Access denied. Admin role required.')
+      }
       setLoading(false)
     })
 
     return () => unsubscribe()
-  }, [])
+  }, [message, isSigningOut])
 
   // Fetch player profiles when tab changes to players
   useEffect(() => {
@@ -172,11 +192,17 @@ export default function AdminPanel() {
   const loadUsers = async () => {
     try {
       const sessionUser = secureSessionManager.getUser()
-      if (!sessionUser) {
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
         throw new Error('User not authenticated')
       }
 
-      const response = await fetch(`/api/admin/users?userId=${sessionUser.id}`)
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       const result = await response.json()
       
       if (result.success) {
@@ -197,7 +223,17 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
       
-      const response = await fetch(`/api/admin/player-profiles?userId=${sessionUser.id}`)
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+      
+      const response = await fetch('/api/admin/player-profiles', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       
       if (!response.ok) {
         throw new Error('Failed to fetch player profiles')
@@ -224,7 +260,17 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
       
-      const response = await fetch(`/api/admin/player-skills?userId=${sessionUser.id}`)
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+      
+      const response = await fetch('/api/admin/player-skills', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       
       if (!response.ok) {
         throw new Error('Failed to fetch player skills')
@@ -293,14 +339,17 @@ export default function AdminPanel() {
   const updateUserStatus = async (userId: string, status: string) => {
     try {
       const sessionUser = secureSessionManager.getUser()
-      if (!sessionUser) {
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
         throw new Error('User not authenticated')
       }
       
-      const response = await fetch(`/api/admin/users?userId=${sessionUser.id}`, {
+      const response = await fetch('/api/admin/users', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId, status })
       })
@@ -330,14 +379,17 @@ export default function AdminPanel() {
   const updateUserRoleFromTable = async (userId: string, role: string) => {
     try {
       const sessionUser = secureSessionManager.getUser()
-      if (!sessionUser) {
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
         throw new Error('User not authenticated')
       }
       
-      const response = await fetch(`/api/admin/users?userId=${sessionUser.id}`, {
+      const response = await fetch('/api/admin/users', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId, role })
       })
@@ -375,10 +427,17 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
       
-      const response = await fetch(`/api/admin/reset-password?userId=${sessionUser.id}`, {
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+      
+      const response = await fetch('/api/admin/reset-password', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId })
       })
@@ -407,10 +466,17 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
 
-      const response = await fetch(`/api/admin/player-profiles?userId=${sessionUser.id}`, {
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+      
+      const response = await fetch('/api/admin/player-profiles', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           playerId,
@@ -448,10 +514,17 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
 
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+      
       const response = await fetch('/api/admin/player-skills', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: sessionUser.id,
@@ -487,10 +560,17 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
 
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+      
       const response = await fetch('/api/admin/player-skills', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: sessionUser.id,
@@ -529,10 +609,17 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
 
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+      
       const response = await fetch('/api/admin/player-skills', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: sessionUser.id,
@@ -566,10 +653,17 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
 
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+      
       const response = await fetch('/api/admin/player-skill-values', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: sessionUser.id,
@@ -605,10 +699,17 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
 
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+      
       const response = await fetch('/api/admin/player-skill-values', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: sessionUser.id,
@@ -648,10 +749,17 @@ export default function AdminPanel() {
         throw new Error('User not authenticated')
       }
 
+      const token = secureSessionManager.getToken()
+      
+      if (!sessionUser || !token) {
+        throw new Error('User not authenticated')
+      }
+      
       const response = await fetch('/api/admin/player-skill-values', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: sessionUser.id,
@@ -732,11 +840,6 @@ export default function AdminPanel() {
     }
   }
 
-  const handleSignOut = async () => {
-    secureSessionManager.clearUser()
-    setUser(null)
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen relative overflow-hidden">
@@ -798,7 +901,7 @@ export default function AdminPanel() {
     )
   }
 
-  if (message === 'Access denied. Admin role required.') {
+  if (message === 'Access denied. Admin role required.' && user && user.role !== 'admin') {
     return (
       <div className="min-h-screen relative overflow-hidden">
         {/* Hero Section Background */}

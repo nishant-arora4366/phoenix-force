@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics';
 import { createClient } from '@supabase/supabase-js'
 import { sessionManager } from '@/src/lib/session'
 
@@ -7,26 +9,37 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Get all tournament slots with player information
-export async function GET(
+// Public GET handler - no authentication required to view tournament slots
+async function getHandlerPublic(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: tournamentId } = await params
     
-    // Get user from Authorization header (optional for viewing slots)
+    // Extract optional user info from Authorization header (if present)
+    let sessionUser: AuthenticatedUser | null = null
     const authHeader = request.headers.get('authorization')
-    let sessionUser = null
     
-    if (authHeader) {
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
       try {
-        sessionUser = JSON.parse(authHeader)
-        if (!sessionUser || !sessionUser.id) {
-          sessionUser = null
+        const { verifyToken } = await import('@/src/lib/jwt')
+        const decoded = verifyToken(token)
+        if (decoded) {
+          // Fetch user details from database
+          const { data: userData } = await supabase
+            .from('users')
+            .select('id, email, username, firstname, lastname, role, status')
+            .eq('id', decoded.userId)
+            .single()
+          
+          if (userData) {
+            sessionUser = userData as AuthenticatedUser
+          }
         }
-      } catch (error) {
-        sessionUser = null
+      } catch {
+        // Ignore token validation errors for public endpoint
       }
     }
 
@@ -41,22 +54,17 @@ export async function GET(
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
     }
 
-    // Check if user is host or admin (only if authenticated)
+    // Check if user is host or admin (optional, for logged-in users)
     let isHost = false
     let isAdmin = false
     
     if (sessionUser) {
-      const userResponse = await fetch(`${request.nextUrl.origin}/api/user-profile?userId=${sessionUser.id}`)
-      const userResult = await userResponse.json()
-      
-      if (userResult.success) {
-        isHost = tournament.host_id === sessionUser.id
-        isAdmin = userResult.data.role === 'admin'
-      }
+      isHost = tournament.host_id === sessionUser.id
+      isAdmin = sessionUser.role === 'admin'
     }
 
     // All users (authenticated and unauthenticated) can view tournament slots
-    // Only hosts and admins can manage slots (checked later in PUT method)
+    // Only hosts and admins can manage slots (checked in PUT method)
 
     // Get all existing slots from database (dynamically created)
     const { data: allSlotsData, error: allSlotsError } = await supabase
@@ -182,26 +190,17 @@ export async function GET(
 }
 
 // Approve or reject a slot registration
-export async function PUT(
+async function putHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: tournamentId } = await params
+    const { id: tournamentId} = await params
     
-    // Get user from Authorization header instead of sessionManager
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
-    }
-    
-    // Parse the user from the authorization header
-    let sessionUser
-    try {
-      sessionUser = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
+    // User is already authenticated via withAuth middleware
+    // The 'user' parameter contains the verified user from JWT
+    const sessionUser = user
     
     if (!sessionUser || !sessionUser.id) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
@@ -229,20 +228,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
     }
 
-    // Check if user is host or admin
-    const userResponse = await fetch(`${request.nextUrl.origin}/api/user-profile?userId=${sessionUser.id}`)
-    const userResult = await userResponse.json()
-    
-    if (!userResult.success) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
-    }
-
+    // Check if user is host or admin (user is already authenticated via middleware)
     const isHost = tournament.host_id === sessionUser.id
-    const isAdmin = userResult.data.role === 'admin'
+    const isAdmin = sessionUser.role === 'admin'
 
     // All authenticated users can view tournament slots
     // Only hosts and admins can manage slots
-    if (!isHost && !isAdmin && userResult.data.role !== 'viewer') {
+    if (!isHost && !isAdmin && sessionUser.role !== 'viewer') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
@@ -297,3 +289,30 @@ export async function PUT(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// Public wrapper for GET - no authentication required
+async function getWrapperPublic(request: NextRequest) {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const tournamentId = pathParts[pathParts.length - 2] // Get the tournament ID from the path
+  if (!tournamentId) {
+    return NextResponse.json({ error: 'Tournament ID required' }, { status: 400 })
+  }
+  return getHandlerPublic(request, { params: Promise.resolve({ id: tournamentId }) })
+}
+
+async function putWrapper(request: NextRequest, user: AuthenticatedUser) {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const tournamentId = pathParts[pathParts.length - 2] // Get the tournament ID from the path
+  if (!tournamentId) {
+    return NextResponse.json({ error: 'Tournament ID required' }, { status: 400 })
+  }
+  return putHandler(request, user, { params: Promise.resolve({ id: tournamentId }) })
+}
+
+// Export the handlers with analytics
+// GET is public - anyone can view tournament slots
+export const GET = withAnalytics(getWrapperPublic)
+// PUT requires authentication - only hosts and admins can manage slots
+export const PUT = withAnalytics(withAuth(putWrapper, ['viewer', 'host', 'admin']))

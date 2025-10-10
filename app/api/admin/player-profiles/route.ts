@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics';
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -6,16 +8,18 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-export async function GET(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
-    // Get user ID from query parameters (passed from client-side session)
-    const url = new URL(request.url)
-    const userId = url.searchParams.get('userId')
+    // User is already authenticated via withAuth middleware
+    const userId = user.id
     
     if (!userId) {
       return NextResponse.json({
         success: false,
-        error: 'No user ID provided'
+        error: 'User not authenticated'
       }, { status: 401 })
     }
 
@@ -36,7 +40,7 @@ export async function GET(request: NextRequest) {
     if (userData.role !== 'admin' || userData.status !== 'approved') {
       return NextResponse.json({
         success: false,
-        error: 'Access denied'
+        error: 'Access denied - Admin role required'
       }, { status: 403 })
     }
 
@@ -77,7 +81,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function putHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     // Get user ID from query parameters (passed from client-side session)
     const url = new URL(request.url)
@@ -152,3 +159,7 @@ export async function PUT(request: NextRequest) {
     }, { status: 500 })
   }
 }
+
+// Export the handlers with analytics
+export const GET = withAnalytics(withAuth(getHandler, ['admin']))
+export const PUT = withAnalytics(withAuth(putHandler, ['admin']))

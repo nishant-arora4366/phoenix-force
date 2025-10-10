@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 import { sessionManager } from '@/src/lib/session'
 
@@ -7,42 +9,23 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function POST(
+async function POSTHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: tournamentId } = await params
     
-    // Get user from Authorization header instead of sessionManager
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
-    }
-    
-    // Parse the user from the authorization header
-    let sessionUser
-    try {
-      sessionUser = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
+    // User is already authenticated via withAuth middleware
+    const sessionUser = user
     
     if (!sessionUser || !sessionUser.id) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
     }
-
-    // Get user profile to check if they're approved
-    const userResponse = await fetch(`${request.nextUrl.origin}/api/user-profile?userId=${sessionUser.id}`)
-    const userResult = await userResponse.json()
     
-    console.log('User profile check result:', userResult)
-    console.log('User data:', userResult.data)
-    console.log('User status:', userResult.data?.status)
-    
-    if (!userResult.success) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
-    }
+    console.log('User check:', sessionUser)
+    console.log('User status:', sessionUser.status)
     
     // For now, allow any user to register (remove approval check for testing)
     // if (userResult.data.status !== 'approved') {
@@ -203,39 +186,29 @@ export async function POST(
   }
 }
 
-export async function DELETE(
+async function DELETEHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: tournamentId } = await params
     
-    // Get user from Authorization header instead of sessionManager
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
-    }
-    
-    // Parse the user from the authorization header
-    let sessionUser
-    try {
-      sessionUser = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
+    // User is already authenticated via withAuth middleware
+    const sessionUser = user
     
     if (!sessionUser || !sessionUser.id) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
     }
 
     // Get user's player profile
-    const { data: player, error: playerError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('players')
       .select('*')
       .eq('user_id', sessionUser.id)
       .single()
 
-    if (playerError || !player) {
+    if (userError || !userData) {
       return NextResponse.json({ error: 'Player profile not found' }, { status: 400 })
     }
 
@@ -244,7 +217,7 @@ export async function DELETE(
       .from('tournament_slots')
       .select('*')
       .eq('tournament_id', tournamentId)
-      .eq('player_id', player.id)
+      .eq('player_id', userData.id)
       .single()
 
     if (slotError || !slot) {
@@ -273,3 +246,28 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// Wrapper functions to match middleware expectations
+async function postWrapper(request: NextRequest, user: AuthenticatedUser) {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const tournamentId = pathParts[pathParts.length - 2] // Get the tournament ID from the path
+  if (!tournamentId) {
+    return NextResponse.json({ error: 'Tournament ID required' }, { status: 400 })
+  }
+  return POSTHandler(request, user, { params: Promise.resolve({ id: tournamentId }) })
+}
+
+async function deleteWrapper(request: NextRequest, user: AuthenticatedUser) {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const tournamentId = pathParts[pathParts.length - 2] // Get the tournament ID from the path
+  if (!tournamentId) {
+    return NextResponse.json({ error: 'Tournament ID required' }, { status: 400 })
+  }
+  return DELETEHandler(request, user, { params: Promise.resolve({ id: tournamentId }) })
+}
+
+// Export the handlers with analytics
+export const POST = withAnalytics(withAuth(postWrapper, ['viewer', 'host', 'admin']))
+export const DELETE = withAnalytics(withAuth(deleteWrapper, ['viewer', 'host', 'admin']))

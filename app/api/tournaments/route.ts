@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -56,41 +57,24 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-async function postHandler(request: NextRequest) {
+async function postHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const body = await request.json()
     const { name, format, selected_teams, tournament_date, description, total_slots, host_id, status, venue, google_maps_link } = body
 
-    // SECURITY: Check authentication and authorization
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
+    // SECURITY: User is already authenticated via withAuth middleware
+    const sessionUser = user
+    
+    if (!sessionUser || !sessionUser.id) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    let sessionUser
-    try {
-      sessionUser = JSON.parse(authHeader)
-      if (!sessionUser || !sessionUser.id) {
-        return NextResponse.json({ success: false, error: 'Invalid authentication' }, { status: 401 })
-      }
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authentication format' }, { status: 401 })
-    }
-
-    // Get user profile to check role
-    const { data: userProfile, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', sessionUser.id)
-      .single()
-
-    if (userError || !userProfile) {
-      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
-    }
-
     // Check authorization: Only admin or host role can create tournaments
-    const isAdmin = userProfile.role === 'admin'
-    const isHost = userProfile.role === 'host'
+    const isAdmin = sessionUser.role === 'admin'
+    const isHost = sessionUser.role === 'host'
 
     if (!isAdmin && !isHost) {
       return NextResponse.json({ success: false, error: 'Unauthorized: Only admin or host can create tournaments' }, { status: 403 })
@@ -143,3 +127,8 @@ async function postHandler(request: NextRequest) {
 }
 
 
+
+
+// Export the handlers with analytics
+export const GET = withAnalytics(getHandler)
+export const POST = withAnalytics(withAuth(postHandler, ['host', 'admin']))

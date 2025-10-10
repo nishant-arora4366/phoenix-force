@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -7,14 +8,17 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-async function getHandler(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const url = new URL(request.url)
     const searchTerm = url.searchParams.get('q') || ''
     const tournamentId = url.searchParams.get('tournamentId')
     const skillFilter = url.searchParams.get('skill')
     const skillValue = url.searchParams.get('skillValue')
-    const limit = parseInt(url.searchParams.get('limit') || '100')
+    const limit = parseInt(url.searchParams.get('limit') || '1000')
 
     // Build the base query to get all players (including those not linked to users)
     let query = supabaseAdmin
@@ -22,18 +26,14 @@ async function getHandler(request: NextRequest) {
       .select(`
         id,
         display_name,
-        users(
+        user_id,
+        users!players_user_id_fkey(
           id,
           email,
           firstname,
           lastname,
           username,
           status
-        ),
-        player_skill_assignments(
-          skill_id,
-          skill_value_id,
-          value_array
         )
       `)
 
@@ -98,13 +98,16 @@ async function getHandler(request: NextRequest) {
     // Apply limit
     query = query.limit(limit)
 
+    console.log('Executing players search query with tournamentId:', tournamentId)
     const { data: players, error } = await query
 
     if (error) {
       console.error('Error fetching players:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
       return NextResponse.json({
         success: false,
-        error: 'Failed to fetch players'
+        error: 'Failed to fetch players',
+        details: error.message
       }, { status: 500 })
     }
 
@@ -119,6 +122,44 @@ async function getHandler(request: NextRequest) {
       registeredPlayerIds = registeredPlayers?.map(p => p.player_id) || []
     }
 
+    // Get skills for all players separately to avoid relationship issues
+    const playerIds = players?.map(p => p.id) || []
+    let playerSkills: { [key: string]: any[] } = {}
+    
+    if (playerIds.length > 0) {
+      const { data: skillAssignments } = await supabaseAdmin
+        .from('player_skill_assignments')
+        .select(`
+          player_id,
+          skill_id,
+          skill_value_id,
+          value_array,
+          player_skills!inner(
+            skill_name,
+            skill_type
+          ),
+          player_skill_values(
+            value_name
+          )
+        `)
+        .in('player_id', playerIds)
+      
+      // Group skills by player
+      skillAssignments?.forEach(assignment => {
+        if (!playerSkills[assignment.player_id]) {
+          playerSkills[assignment.player_id] = []
+        }
+        playerSkills[assignment.player_id].push({
+          skill_id: assignment.skill_id,
+          skill_name: (assignment.player_skills as any)?.skill_name,
+          skill_type: (assignment.player_skills as any)?.skill_type,
+          skill_value_id: assignment.skill_value_id,
+          value_name: (assignment.player_skill_values as any)?.value_name,
+          value_array: assignment.value_array
+        })
+      })
+    }
+
     // Format the response
     const formattedPlayers = players?.map(player => ({
       id: player.id,
@@ -131,7 +172,7 @@ async function getHandler(request: NextRequest) {
         username: (player.users as any).username,
         status: (player.users as any).status
       } : null,
-      skills: (player.player_skill_assignments as any[]) || [],
+      skills: playerSkills[player.id] || [],
       isRegistered: registeredPlayerIds.includes(player.id)
     })) || []
 
@@ -149,4 +190,5 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-
+// Export the handlers with analytics
+export const GET = withAnalytics(withAuth(getHandler, ['viewer', 'host', 'admin']))

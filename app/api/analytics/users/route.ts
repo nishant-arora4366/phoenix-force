@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics';
 import { getUserActivityStats } from '@/src/lib/api-analytics'
 
 async function getUserStats(request: NextRequest, user: AuthenticatedUser) {

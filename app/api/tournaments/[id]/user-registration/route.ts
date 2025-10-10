@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics';
 import { createClient } from '@supabase/supabase-js'
-import { sessionManager } from '@/src/lib/session'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function GET(
+async function getHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: tournamentId } = await params
 
-    // Get user from session
-    const userData = sessionManager.getUserFromRequest(request)
-    if (!userData) {
+    // User is already authenticated via withAuth middleware
+    if (!user || !user.id) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -24,7 +25,7 @@ export async function GET(
     const { data: player, error: playerError } = await supabase
       .from('players')
       .select('id')
-      .eq('user_id', userData.id)
+      .eq('user_id', user.id)
       .single()
 
     if (playerError || !player) {
@@ -119,3 +120,17 @@ export async function GET(
     }, { status: 500 })
   }
 }
+
+// Wrapper function to match middleware expectations
+async function getWrapper(request: NextRequest, user: AuthenticatedUser) {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const tournamentId = pathParts[pathParts.length - 2] // Get the tournament ID from the path
+  if (!tournamentId) {
+    return NextResponse.json({ success: false, error: 'Tournament ID required' }, { status: 400 })
+  }
+  return getHandler(request, user, { params: Promise.resolve({ id: tournamentId }) })
+}
+
+// Export the handler with analytics
+export const GET = withAnalytics(withAuth(getWrapper, ['viewer', 'host', 'admin']))

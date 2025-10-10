@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser, isHostOrAdmin } from '@/src/lib/auth-middleware';
 import { createClient } from '@supabase/supabase-js'
-import { withAuth, AuthenticatedUser, isHostOrAdmin } from '@/src/lib/auth-middleware'
 import { withAnalytics } from '@/src/lib/api-analytics'
 
 const supabase = createClient(

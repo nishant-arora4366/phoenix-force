@@ -1,40 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { secureSessionManager } from '@/src/lib/secure-session'
+import { useAuth } from '@/src/contexts/AuthContext'
 
 export default function Navbar() {
-  const [user, setUser] = useState<any>(null)
+  const { user, signOut } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-
-  useEffect(() => {
-    const currentUser = secureSessionManager.getUser()
-    setUser(currentUser)
-
-    const unsubscribe = secureSessionManager.subscribe((sessionUser) => {
-      setUser(sessionUser)
-    })
-
-    return () => {
-      unsubscribe()
-    }
-  }, [])
-
-  const handleSignOut = async () => {
-    try {
-      secureSessionManager.clearUser()
-      setUser(null)
-      // Redirect to home page after sign out
-      router.push('/')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
 
   const handleBackNavigation = () => {
     // Define logical back navigation paths based on current page
@@ -382,7 +358,7 @@ export default function Navbar() {
                           <span>Edit Profile</span>
                         </Link>
                         <button
-                          onClick={handleSignOut}
+                          onClick={signOut}
                           className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-gray-200 hover:bg-[#75020f]/10 hover:text-[#75020f] transition-all duration-300"
                         >
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -499,7 +475,6 @@ export default function Navbar() {
           onClick={() => setIsProfileDropdownOpen(false)}
         />
       )}
-
     </>
   )
 }

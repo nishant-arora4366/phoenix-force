@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
@@ -7,7 +8,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-async function postHandler(request: NextRequest) {
+async function postHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const { userId, currentPassword, newPassword } = await request.json()
 
@@ -25,14 +29,14 @@ async function postHandler(request: NextRequest) {
       )
     }
 
-    // Get user from database
-    const { data: user, error: userError } = await supabaseAdmin
+    // Get user's password hash from database
+    const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, password_hash')
-      .eq('id', userId)
+      .select('password_hash')
+      .eq('id', user.id)
       .single()
 
-    if (userError || !user) {
+    if (userError || !userData) {
       return NextResponse.json(
         { success: false, error: 'User not found' },
         { status: 404 }
@@ -40,7 +44,7 @@ async function postHandler(request: NextRequest) {
     }
 
     // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password_hash)
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, userData.password_hash)
     if (!isCurrentPasswordValid) {
       return NextResponse.json(
         { success: false, error: 'Current password is incorrect' },
@@ -82,4 +86,5 @@ async function postHandler(request: NextRequest) {
   }
 }
 
-
+// Export the handlers with analytics
+export const POST = withAnalytics(withAuth(postHandler, ['viewer', 'host', 'admin']))

@@ -134,11 +134,11 @@ export async function getRequestSize(request: NextRequest): Promise<number> {
       headersSize += key.length + value.length + 4 // +4 for ": " and "\r\n"
     })
     
-    // Get body size if it exists
+    // Get body size if it exists - use content-length header instead of reading body
     let bodySize = 0
-    if (request.body) {
-      const body = await request.text()
-      bodySize = new Blob([body]).size
+    const contentLength = request.headers.get('content-length')
+    if (contentLength) {
+      bodySize = parseInt(contentLength, 10) || 0
     }
     
     return headersSize + bodySize

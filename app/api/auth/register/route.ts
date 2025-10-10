@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { AuthService } from '@/src/lib/auth'
 
@@ -61,4 +62,5 @@ async function postHandler(request: NextRequest) {
   }
 }
 
-
+// Export the handler with analytics
+export const POST = withAnalytics(postHandler)

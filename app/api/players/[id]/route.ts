@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -14,19 +15,14 @@ async function getHandler(
   try {
     const { id } = await params
 
-    // Get user role from authorization header if available
+    // Get user role from authorization header if available (optional for public endpoint)
     let userRole = 'viewer' // Default to viewer
     const authHeader = request.headers.get('authorization')
-    if (authHeader) {
-      try {
-        const userData = JSON.parse(authHeader)
-        if (userData && userData.role) {
-          userRole = userData.role
-        }
-      } catch (error) {
-        // If parsing fails, keep default viewer role
-        console.log('Could not parse authorization header, using viewer role')
-      }
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // JWT token is present - try to decode it (for skill visibility filtering)
+      // For now, default to viewer unless we add JWT decoding
+      // TODO: Add proper JWT decoding if role-based skill filtering is needed
+      userRole = 'viewer'
     }
 
     console.log('User role for skill filtering:', userRole)
@@ -153,36 +149,20 @@ async function getHandler(
 
 async function putHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
 
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
-      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
-    }
-
     // Check if user has permission to update players
-    const { data: user, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
-      .eq('id', userData.id)
+      .eq('id', user.id)
       .single()
 
-    if (userError || !user || user.status !== 'approved') {
+    if (userError || !userData || userData.status !== 'approved') {
       return NextResponse.json({
         success: false,
         error: 'User not approved for updating players'
@@ -207,19 +187,19 @@ async function putHandler(
     // 1. Admin has all access
     // 2. Host can only edit players they created (created_by = user.id)
     // 3. Regular users can only edit their own profile (user_id = user.id)
-    if (user.role === 'admin') {
+    if (userData.role === 'admin') {
       // Admin has full access - no additional checks needed
-    } else if (user.role === 'host') {
+    } else if (userData.role === 'host') {
       // Host can only edit players they created
-      if (existingPlayer.created_by !== userData.id) {
+      if (existingPlayer.created_by !== user.id) {
         return NextResponse.json({
           success: false,
           error: 'You can only edit players you created'
         }, { status: 403 })
       }
-    } else if (user.role === 'user') {
+    } else if (userData.role === 'user') {
       // Regular users can only edit their own profile
-      if (existingPlayer.user_id !== userData.id) {
+      if (existingPlayer.user_id !== user.id) {
         return NextResponse.json({
           success: false,
           error: 'You can only edit your own profile'
@@ -251,7 +231,7 @@ async function putHandler(
     }
 
     // Update player profile (only basic info)
-    const { data: player, error } = await supabase
+    const { data: updatedPlayer, error } = await supabase
       .from('players')
       .update({
         display_name,
@@ -273,7 +253,7 @@ async function putHandler(
       }, { status: 500 })
     }
 
-    if (!player) {
+    if (!updatedPlayer) {
       return NextResponse.json({
         success: false,
         error: 'Player not found'
@@ -363,7 +343,7 @@ async function putHandler(
 
     return NextResponse.json({
       success: true,
-      data: player,
+      data: updatedPlayer,
       message: 'Player updated successfully'
     })
     
@@ -379,36 +359,20 @@ async function putHandler(
 
 async function deleteHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
 
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
-      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
-    }
-
     // Check if user has permission to delete players
-    const { data: user, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
-      .eq('id', userData.id)
+      .eq('id', user.id)
       .single()
 
-    if (userError || !user || user.status !== 'approved') {
+    if (userError || !userData || userData.status !== 'approved') {
       return NextResponse.json({
         success: false,
         error: 'User not approved for deleting players'
@@ -433,19 +397,19 @@ async function deleteHandler(
     // 1. Admin has all access
     // 2. Host can only delete players they created (created_by = user.id)
     // 3. Regular users can only delete their own profile (user_id = user.id)
-    if (user.role === 'admin') {
+    if (userData.role === 'admin') {
       // Admin has full access - no additional checks needed
-    } else if (user.role === 'host') {
+    } else if (userData.role === 'host') {
       // Host can only delete players they created
-      if (playerToDelete.created_by !== userData.id) {
+      if (playerToDelete.created_by !== user.id) {
         return NextResponse.json({
           success: false,
           error: 'You can only delete players you created'
         }, { status: 403 })
       }
-    } else if (user.role === 'user') {
+    } else if (userData.role === 'user') {
       // Regular users can only delete their own profile
-      if (playerToDelete.user_id !== userData.id) {
+      if (playerToDelete.user_id !== user.id) {
         return NextResponse.json({
           success: false,
           error: 'You can only delete your own profile'
@@ -488,4 +452,26 @@ async function deleteHandler(
   }
 }
 
+// Wrapper functions to match middleware expectations
+async function putWrapper(request: NextRequest, user: AuthenticatedUser) {
+  const url = new URL(request.url)
+  const id = url.pathname.split('/').pop()
+  if (!id) {
+    return NextResponse.json({ success: false, error: 'Player ID required' }, { status: 400 })
+  }
+  return putHandler(request, user, { params: Promise.resolve({ id }) })
+}
 
+async function deleteWrapper(request: NextRequest, user: AuthenticatedUser) {
+  const url = new URL(request.url)
+  const id = url.pathname.split('/').pop()
+  if (!id) {
+    return NextResponse.json({ success: false, error: 'Player ID required' }, { status: 400 })
+  }
+  return deleteHandler(request, user, { params: Promise.resolve({ id }) })
+}
+
+// Export the handlers with analytics
+export const GET = getHandler
+export const PUT = withAnalytics(withAuth(putWrapper, ['viewer', 'host', 'admin']))
+export const DELETE = withAnalytics(withAuth(deleteWrapper, ['viewer', 'host', 'admin']))

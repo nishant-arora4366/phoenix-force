@@ -200,28 +200,55 @@ export default function EditTournamentPage() {
         }
         setUser(sessionUser)
 
-        // Fetch tournament data via API
-        const response = await fetch(`/api/tournaments/${tournamentId}`)
-        if (!response.ok) {
-          setError('Tournament not found')
+        // Check if user is authenticated
+        if (!sessionUser) {
+          setError('You must be logged in to edit tournaments')
           return
+        }
+
+        // Fetch tournament data via API with authentication
+        const response = await fetch(`/api/tournaments/${tournamentId}`, {
+          headers: {
+            'Authorization': `Bearer ${secureSessionManager.getToken()}`
+          }
+        })
+        
+        // Handle different response status codes
+        if (!response.ok) {
+          if (response.status === 401) {
+            setError('You are not authorized to edit this tournament')
+            return
+          } else if (response.status === 403) {
+            setError('You are not authorized to edit this tournament')
+            return
+          } else if (response.status === 404) {
+            setError('Tournament not found')
+            return
+          } else {
+            setError('Error loading tournament')
+            return
+          }
         }
         
         const result = await response.json()
         if (!result.success) {
-          setError('Tournament not found')
+          // Check if the error message indicates authorization issue
+          if (result.error?.toLowerCase().includes('authorized') || result.error?.toLowerCase().includes('permission')) {
+            setError('You are not authorized to edit this tournament')
+          } else {
+            setError(result.error || 'Tournament not found')
+          }
           return
         }
         
         const tournamentData = result.tournament
 
-        // Check if user is the host or an admin
-        if (!sessionUser) {
-          setError('User not authenticated')
-          return
-        }
-
-        const userResponse = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
+        // Get user profile to verify permissions
+        const userResponse = await fetch('/api/user-profile', {
+            headers: {
+              'Authorization': `Bearer ${secureSessionManager.getToken()}`
+            }
+          })
         if (!userResponse.ok) {
           setError('Unable to verify user permissions')
           return
@@ -235,7 +262,12 @@ export default function EditTournamentPage() {
         
         const userData = userResult.data
 
-        if (tournamentData.host_id !== sessionUser.id && userData?.role !== 'admin') {
+        // Check authorization: user must be admin OR (be the tournament host AND have host role)
+        const isAdmin = userData?.role === 'admin'
+        const isTournamentHost = tournamentData.host_id === sessionUser.id
+        const hasHostRole = userData?.role === 'host'
+        
+        if (!isAdmin && !(isTournamentHost && hasHostRole)) {
           setError('You are not authorized to edit this tournament')
           return
         }
@@ -274,6 +306,7 @@ export default function EditTournamentPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${secureSessionManager.getToken()}`
         },
         body: JSON.stringify({
           name: formData.name,
@@ -298,7 +331,12 @@ export default function EditTournamentPage() {
         router.push(`/tournaments/${tournamentId}`)
         }, 2000)
       } else {
-        setError(result.error || 'Failed to update tournament')
+        // Handle different error types
+        if (response.status === 401 || response.status === 403) {
+          setError('You are not authorized to update this tournament')
+        } else {
+          setError(result.error || 'Failed to update tournament')
+        }
       }
     } catch (error) {
       console.error('Error updating tournament:', error)

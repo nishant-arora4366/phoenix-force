@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics';
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -6,24 +8,27 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function GET(request: NextRequest) {
+async function getHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
+    // User is already authenticated via withAuth middleware
+    const userId = user.id
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
     }
 
-    // Check if user is admin
-    const { data: user, error: userError } = await supabase
+    // Check if user is admin (withAuth already checks role, but double-check status)
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
       .eq('id', userId)
       .single()
 
-    if (userError || !user || user.role !== 'admin' || user.status !== 'approved') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (userError || !userData || userData.role !== 'admin' || userData.status !== 'approved') {
+      return NextResponse.json({ error: 'Unauthorized - Admin role required' }, { status: 403 })
     }
 
     // Fetch all player skills with their values
@@ -56,24 +61,30 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const body = await request.json()
-    const { userId, skill } = body
+    const { skill } = body
+
+    // User is already authenticated via withAuth middleware
+    const userId = user.id
 
     if (!userId || !skill) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Check if user is admin
-    const { data: user, error: userError } = await supabase
+    // Check if user is admin (withAuth already checks role, but double-check status)
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
       .eq('id', userId)
       .single()
 
-    if (userError || !user || user.role !== 'admin' || user.status !== 'approved') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (userError || !userData || userData.role !== 'admin' || userData.status !== 'approved') {
+      return NextResponse.json({ error: 'Unauthorized - Admin role required' }, { status: 403 })
     }
 
     // Create new skill
@@ -106,24 +117,30 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function putHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const body = await request.json()
-    const { userId, skillId, skill } = body
+    const { skillId, skill } = body
+
+    // User is already authenticated via withAuth middleware
+    const userId = user.id
 
     if (!userId || !skillId || !skill) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Check if user is admin
-    const { data: user, error: userError } = await supabase
+    // Check if user is admin (withAuth already checks role, but double-check status)
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
       .eq('id', userId)
       .single()
 
-    if (userError || !user || user.role !== 'admin' || user.status !== 'approved') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (userError || !userData || userData.role !== 'admin' || userData.status !== 'approved') {
+      return NextResponse.json({ error: 'Unauthorized - Admin role required' }, { status: 403 })
     }
 
     // Update skill
@@ -157,24 +174,30 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+async function deleteHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const body = await request.json()
-    const { userId, skillId } = body
+    const { skillId } = body
+
+    // User is already authenticated via withAuth middleware
+    const userId = user.id
 
     if (!userId || !skillId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Check if user is admin
-    const { data: user, error: userError } = await supabase
+    // Check if user is admin (withAuth already checks role, but double-check status)
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, status')
       .eq('id', userId)
       .single()
 
-    if (userError || !user || user.role !== 'admin' || user.status !== 'approved') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (userError || !userData || userData.role !== 'admin' || userData.status !== 'approved') {
+      return NextResponse.json({ error: 'Unauthorized - Admin role required' }, { status: 403 })
     }
 
     // Delete skill (this will cascade to values and assignments)
@@ -198,3 +221,12 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// Export the handler with analytics
+export const GET = withAnalytics(withAuth(getHandler, ['admin']))
+// Export the handler with analytics
+export const POST = withAnalytics(withAuth(postHandler, ['admin']))
+// Export the handler with analytics
+export const PUT = withAnalytics(withAuth(putHandler, ['admin']))
+// Export the handler with analytics
+export const DELETE = withAnalytics(withAuth(deleteHandler, ['admin']))

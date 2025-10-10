@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -7,7 +8,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function postHandler(request: NextRequest) {
+async function postHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
   try {
     const { tournament_id, player_id, preferred_slot } = await request.json()
 
@@ -20,28 +24,15 @@ async function postHandler(request: NextRequest) {
     }
 
     // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-    }
-
-    let userData
-    try {
-      userData = JSON.parse(authHeader)
-    } catch (error) {
-      return NextResponse.json({ success: false, error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    if (!userData || !userData.id) {
-      return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 })
-    }
+    // User is already authenticated by withAuth middleware
+    const userData = user
 
     // Call the register_player RPC
     const { data, error } = await supabase.rpc('register_player', {
       p_tournament_id: tournament_id,
       p_player_id: player_id,
       p_preferred_slot: preferred_slot || null,
-      p_user_id: userData.id
+      p_user_id: user.id
     })
 
     if (error) {
@@ -69,4 +60,5 @@ async function postHandler(request: NextRequest) {
   }
 }
 
-
+// Export the handlers with analytics
+export const POST = withAnalytics(withAuth(postHandler, ['viewer', 'host', 'admin']))

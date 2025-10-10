@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware';
+import { withAnalytics } from '@/src/lib/api-analytics';
 import { createClient } from '@supabase/supabase-js'
 
-export async function GET(request: Request) {
+async function GETHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
     const { searchParams } = new URL(request.url)
     const tournament_id = searchParams.get('tournament_id')
@@ -52,3 +54,7 @@ export async function GET(request: Request) {
     }, { status: 500 })
   }
 }
+
+// Export handlers with analytics
+
+export const GET = withAnalytics(withAuth(GETHandler, ['viewer', 'host', 'admin']))

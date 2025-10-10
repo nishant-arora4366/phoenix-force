@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAuth } from '@/src/lib/auth-middleware';
 import { withAnalytics } from '@/src/lib/api-analytics'
 import { createClient } from '@supabase/supabase-js'
 
@@ -14,19 +15,14 @@ async function getHandler(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Get user role from authorization header if available
+    // Get user role from authorization header if available (optional for public endpoint)
     let userRole = 'viewer' // Default to viewer
     const authHeader = request.headers.get('authorization')
-    if (authHeader) {
-      try {
-        const userData = JSON.parse(authHeader)
-        if (userData && userData.role) {
-          userRole = userData.role
-        }
-      } catch (error) {
-        // If parsing fails, keep default viewer role
-        console.log('Could not parse authorization header, using viewer role')
-      }
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // JWT token is present - try to decode it (for skill visibility filtering)
+      // For now, default to viewer unless we add JWT decoding
+      // TODO: Add proper JWT decoding if role-based skill filtering is needed
+      userRole = 'viewer'
     }
 
     console.log('User role for skill filtering in public players:', userRole)
@@ -146,4 +142,5 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-
+// Export the handler with analytics
+export const GET = withAnalytics(getHandler)

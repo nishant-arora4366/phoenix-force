@@ -107,6 +107,23 @@ export default function TournamentDetailsPage() {
   const [selectedSkill, setSelectedSkill] = useState('')
   const [selectedSkillValue, setSelectedSkillValue] = useState('')
   const [isLoadingSkills, setIsLoadingSkills] = useState(false)
+  
+  // Confirmation modal state
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+    confirmText?: string
+    type?: 'danger' | 'warning' | 'info'
+  } | null>(null)
+  
+  // Error modal state
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [errorDetails, setErrorDetails] = useState<{
+    title: string
+    message: string
+  } | null>(null)
   const [hideAssignedPlayers, setHideAssignedPlayers] = useState(false)
   
   // Advanced filtering state
@@ -143,7 +160,15 @@ export default function TournamentDetailsPage() {
         setUser(sessionUser)
 
         // Fetch tournament data via API
-        const response = await fetch(`/api/tournaments/${tournamentId}`)
+        const token = secureSessionManager.getToken()
+        const headers: any = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+        
+        const response = await fetch(`/api/tournaments/${tournamentId}`, {
+          headers
+        })
         if (!response.ok) {
           setError('Tournament not found')
           return
@@ -159,7 +184,11 @@ export default function TournamentDetailsPage() {
         setTournament(tournamentData)
 
         // Fetch host information
-        const hostResponse = await fetch(`/api/user-profile?userId=${tournamentData.host_id}`)
+        const hostResponse = await fetch(`/api/user-profile?userId=${tournamentData.host_id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
         if (hostResponse.ok) {
           const hostResult = await hostResponse.json()
           if (hostResult.success) {
@@ -169,14 +198,20 @@ export default function TournamentDetailsPage() {
 
         if (sessionUser) {
           // Fetch user profile
-          const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
+          const response = await fetch('/api/user-profile', {
+            headers: {
+              'Authorization': `Bearer ${secureSessionManager.getToken()}`
+            }
+          })
           const result = await response.json()
           if (result.success) {
             setUserProfile(result.data)
-            // Check if user is admin or the tournament host
+            // Check if user is admin or the tournament host (with host/admin role)
             const isAdmin = result.data.role === 'admin'
             const isTournamentHost = sessionUser.id === tournamentData.host_id
-            setIsHost(isAdmin || isTournamentHost)
+            const isHostRole = result.data.role === 'host'
+            // Only allow host actions if user is admin, or if they're the host AND have host role
+            setIsHost(isAdmin || (isTournamentHost && isHostRole))
           }
         }
 
@@ -185,7 +220,11 @@ export default function TournamentDetailsPage() {
 
         // Fetch user-specific data only for authenticated users
         if (sessionUser) {
-          const userResponse = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
+          const userResponse = await fetch('/api/user-profile', {
+            headers: {
+              'Authorization': `Bearer ${secureSessionManager.getToken()}`
+            }
+          })
           const userResult = await userResponse.json()
           if (userResult.success) {
             const isAdmin = userResult.data.role === 'admin'
@@ -213,9 +252,20 @@ export default function TournamentDetailsPage() {
   useEffect(() => {
     if (!tournamentId) return
 
-    console.log('Setting up realtime subscription for tournament:', tournamentId)
+    console.log('🔵 [REALTIME] Setting up realtime subscription for tournament:', tournamentId)
+    console.log('🔵 [REALTIME] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('🔵 [REALTIME] Has JWT token:', !!secureSessionManager.getToken())
+    
+    // Get the supabase client and log its realtime connection state
+    const client = supabase
+    console.log('🔵 [REALTIME] Supabase client realtime state:', {
+      accessToken: client.realtime.accessToken ? 'SET' : 'NOT SET',
+      channels: client.realtime.channels.length,
+      connected: client.realtime.isConnected()
+    })
 
     // Subscribe to changes in tournament_slots table for this tournament
+    console.log('🔵 [REALTIME] Creating slots channel...')
     const slotsChannel = supabase
       .channel(`tournament-slots-${tournamentId}`)
       .on(
@@ -227,7 +277,7 @@ export default function TournamentDetailsPage() {
           filter: `tournament_id=eq.${tournamentId}`
         },
         (payload: any) => {
-          console.log('Realtime INSERT received:', payload)
+          console.log('✅ [REALTIME] INSERT received:', payload)
           fetchSlots(true)
           // Only check user registration if user is authenticated
           const currentUser = secureSessionManager.getUser()
@@ -245,7 +295,7 @@ export default function TournamentDetailsPage() {
           filter: `tournament_id=eq.${tournamentId}`
         },
         (payload: any) => {
-          console.log('Realtime UPDATE received:', payload)
+          console.log('✅ [REALTIME] UPDATE received:', payload)
           fetchSlots(true)
           // Only check user registration if user is authenticated
           const currentUser = secureSessionManager.getUser()
@@ -262,10 +312,10 @@ export default function TournamentDetailsPage() {
           table: 'tournament_slots'
         },
         (payload: any) => {
-          console.log('Realtime DELETE received (no filter):', payload)
+          console.log('✅ [REALTIME] DELETE received (no filter):', payload)
           // Since DELETE payload only contains id, we'll refresh for any DELETE
           // The fetchSlots() will only return slots for the current tournament anyway
-          console.log('DELETE event received, refreshing slots...')
+          console.log('🔄 [REALTIME] DELETE event received, refreshing slots...')
           fetchSlots(true)
           // Only check user registration if user is authenticated
           const currentUser = secureSessionManager.getUser()
@@ -274,12 +324,28 @@ export default function TournamentDetailsPage() {
           }
         }
       )
-      .subscribe((status: any) => {
-        console.log('Slots subscription status:', status)
+      .subscribe((status: any, err: any) => {
+        console.log('🟡 [REALTIME] Slots subscription status:', status)
+        if (err) {
+          console.error('❌ [REALTIME] Slots subscription error:', err)
+        }
         setIsRealtimeConnected(status === 'SUBSCRIBED')
+        
+        // Handle subscription errors - retry if timeout or error
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('⚠️ [REALTIME] Slots subscription failed:', status)
+          console.log('🔍 [REALTIME] Channel state:', {
+            state: slotsChannel.state,
+            topic: slotsChannel.topic,
+            params: slotsChannel.params
+          })
+        } else if (status === 'SUBSCRIBED') {
+          console.log('✅ [REALTIME] Successfully subscribed to slots!')
+        }
       })
 
     // Subscribe to tournament status changes
+    console.log('🔵 [REALTIME] Creating tournament channel...')
     const tournamentChannel = supabase
       .channel(`tournament-${tournamentId}`)
       .on(
@@ -291,7 +357,7 @@ export default function TournamentDetailsPage() {
           filter: `id=eq.${tournamentId}`
         },
         (payload: any) => {
-          console.log('Tournament status updated:', payload)
+          console.log('✅ [REALTIME] Tournament status updated:', payload)
           // Update local tournament state with new status
           setTournament(prev => {
             if (prev && payload.new) {
@@ -308,12 +374,20 @@ export default function TournamentDetailsPage() {
           }
         }
       )
-      .subscribe((status: any) => {
-        console.log('Tournament subscription status:', status)
+      .subscribe((status: any, err: any) => {
+        console.log('🟡 [REALTIME] Tournament subscription status:', status)
+        if (err) {
+          console.error('❌ [REALTIME] Tournament subscription error:', err)
+        }
         if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to tournament updates')
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Failed to subscribe to tournament updates - real-time may not be enabled for tournaments table')
+          console.log('✅ [REALTIME] Successfully subscribed to tournament updates!')
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('⚠️ [REALTIME] Tournament subscription failed:', status)
+          console.log('🔍 [REALTIME] Tournament channel state:', {
+            state: tournamentChannel.state,
+            topic: tournamentChannel.topic,
+            params: tournamentChannel.params
+          })
         }
       })
 
@@ -415,7 +489,7 @@ export default function TournamentDetailsPage() {
       if (skill && value) {
         const newFilter = {
           skillId: selectedSkill,
-          skillName: skill.name,
+          skillName: skill.skill_name || skill.name,
           value: selectedSkillValue,
           valueName: value.value_name
         }
@@ -469,9 +543,20 @@ export default function TournamentDetailsPage() {
       })
 
       console.log('Fetching all players for tournament:', tournamentId)
-      const response = await fetch(`/api/players/search?${params.toString()}`)
+      const token = secureSessionManager.getToken()
+      console.log('Token for players search:', token ? 'Present' : 'Missing')
+      const headers: any = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
+      const response = await fetch(`/api/players/search?${params.toString()}`, {
+        headers
+      })
       
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Players search API error:', response.status, errorText)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
@@ -515,7 +600,9 @@ export default function TournamentDetailsPage() {
     // Apply skill filters
     Object.entries(skillFilterValues).forEach(([skillId, values]) => {
       if (values.length > 0) {
-        console.log(`Applying skill filter for skill ${skillId} with values:`, values)
+        console.log(`\n=== Applying skill filter ===`)
+        console.log(`Skill ID: ${skillId}`)
+        console.log(`Selected values:`, values)
         
         // Get the skill definition to understand the skill type and get value names
         const skill = availableSkills.find(s => s.id === skillId)
@@ -523,22 +610,29 @@ export default function TournamentDetailsPage() {
           console.log(`Skill ${skillId} not found in available skills`)
           return
         }
+        console.log(`Skill name: ${skill.name || skill.skill_name}`)
+        console.log(`Skill type: ${skill.type}`)
+        console.log(`Skill object:`, skill)
         
-        // Convert skill value IDs to names for multiselect skills, but keep IDs for number skills
+        // For multiselect skills, keep IDs (don't convert to names) since player.value_array contains IDs
+        // For select skills, convert to names for comparison
+        // For number skills, convert to numeric values
         const selectedValueNames = values.map(valueId => {
-          if (skill.type === 'multiselect' && skill.values) {
-            const valueObj = skill.values.find((v: any) => v.id === valueId)
-            return valueObj ? valueObj.name : valueId
-          } else if (skill.type === 'number' && skill.values) {
+          if (skill.type === 'number' && skill.values) {
             // For number skills, convert ID to the actual numeric value
             const valueObj = skill.values.find((v: any) => v.id === valueId)
             console.log(`Converting number skill value: ID ${valueId} -> Value ${valueObj ? valueObj.name : valueId}`)
             return valueObj ? valueObj.name : valueId
+          } else if (skill.type === 'select' && skill.values) {
+            // For select skills, convert to names
+            const valueObj = skill.values.find((v: any) => v.id === valueId)
+            return valueObj ? valueObj.name : valueId
           }
+          // For multiselect and other types, keep the ID
           return valueId
         })
         
-        console.log(`Converted selected values to names:`, selectedValueNames)
+        console.log(`Selected values for filtering (skill type: ${skill.type}):`, selectedValueNames)
         
         filtered = filtered.filter(player => {
           // Check if player has skills data
@@ -566,7 +660,7 @@ export default function TournamentDetailsPage() {
             const minValue = selectedValueNames[0] ? parseFloat(selectedValueNames[0]) : null
             const maxValue = selectedValueNames[1] ? parseFloat(selectedValueNames[1]) : null
             
-            console.log(`Number filter for skill ${skill.name}: min=${minValue}, max=${maxValue}`)
+            console.log(`Number filter for skill ${skill.skill_name || skill.name}: min=${minValue}, max=${maxValue}`)
             console.log(`Player skill assignment:`, skillAssignment)
             console.log(`Available skill values:`, skill.values)
             
@@ -615,9 +709,29 @@ export default function TournamentDetailsPage() {
           } else {
             // Handle other skill types (select, multiselect, text)
             matches = selectedValueNames.some(selectedValueName => {
-              // Handle different skill value types
+              // For multiselect skills, check value_array (contains value NAMES, not IDs!)
+              if (skill.type === 'multiselect') {
+                // Convert the selected value ID to its name for comparison
+                const valueObj = skill.values.find((v: any) => v.id === selectedValueName)
+                const selectedName = valueObj ? valueObj.name : selectedValueName
+                
+                if (skillAssignment.value_array && Array.isArray(skillAssignment.value_array)) {
+                  const arrayMatch = skillAssignment.value_array.some((val: any) => String(val) === String(selectedName))
+                  console.log(`Multiselect array check: ${skillAssignment.value_array} includes ${selectedName} (ID: ${selectedValueName}) = ${arrayMatch}`)
+                  return arrayMatch
+                }
+                // Also check skill_value_id for backward compatibility (old single-value data)
+                if (skillAssignment.skill_value_id) {
+                  const match = String(skillAssignment.skill_value_id) === String(selectedValueName)
+                  console.log(`Multiselect skill_value_id check: ${skillAssignment.skill_value_id} === ${selectedValueName} = ${match}`)
+                  return match
+                }
+                return false
+              }
+              
+              // For single select skills, compare skill_value_id
               if (skillAssignment.skill_value_id) {
-                // For single select skills, we need to get the value name from the skill definition
+                // For select skills, selectedValueName is already the value name
                 if (skill.type === 'select' && skill.values) {
                   const valueObj = skill.values.find((v: any) => v.id === skillAssignment.skill_value_id)
                   const valueName = valueObj ? valueObj.name : String(skillAssignment.skill_value_id)
@@ -629,13 +743,6 @@ export default function TournamentDetailsPage() {
                 const match = String(skillAssignment.skill_value_id) === String(selectedValueName)
                 console.log(`ID match: ${skillAssignment.skill_value_id} === ${selectedValueName} = ${match}`)
                 return match
-              }
-              
-              // Handle array values (for multiselect skills)
-              if (skillAssignment.value_array && Array.isArray(skillAssignment.value_array)) {
-                const arrayMatch = skillAssignment.value_array.some((val: any) => String(val) === String(selectedValueName))
-                console.log(`Array check: ${skillAssignment.value_array} includes ${selectedValueName} = ${arrayMatch}`)
-                return arrayMatch
               }
               
               return false
@@ -655,11 +762,42 @@ export default function TournamentDetailsPage() {
   const loadSkills = async () => {
     setIsLoadingSkills(true)
     try {
-      const response = await fetch('/api/player-skills/list')
+      const token = secureSessionManager.getToken()
+      const headers: any = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
+      const response = await fetch('/api/player-skills', {
+        headers
+      })
       const result = await response.json()
       
       if (result.success) {
-        setAvailableSkills(result.skills)
+        console.log('Skills loaded successfully:', result.skills)
+        console.log('Number of skills loaded:', result.skills?.length || 0)
+        console.log('First skill structure:', result.skills?.[0])
+        console.log('First skill values:', result.skills?.[0]?.values)
+        // Log all skill types to understand what values are in the database
+        result.skills.forEach((skill: any) => {
+          console.log(`Skill: ${skill.skill_name}, Type: ${skill.skill_type}`)
+        })
+        // Map skill_type to type for frontend convenience
+        const mappedSkills = result.skills.map((skill: any) => ({
+          ...skill,
+          type: skill.skill_type,
+          name: skill.skill_name,
+          values: skill.values?.map((value: any) => ({
+            ...value,
+            name: value.value_name
+          }))
+        }))
+        console.log('Mapped skills:', mappedSkills)
+        setAvailableSkills(mappedSkills)
+        // Auto-enable all skills for filtering
+        if (result.skills && result.skills.length > 0) {
+          setEnabledSkills(result.skills.map((s: any) => s.id))
+        }
       } else {
         console.error('Error loading skills:', result.error)
         setAvailableSkills([])
@@ -678,10 +816,12 @@ export default function TournamentDetailsPage() {
 
     setIsAssigning(true)
     try {
+      const token = secureSessionManager.getToken()
       const response = await fetch(`/api/tournaments/${tournamentId}/assign-player`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           playerIds: selectedPlayers.map(p => p.id),
@@ -855,11 +995,12 @@ export default function TournamentDetailsPage() {
         throw new Error('User not authenticated')
       }
 
+      const token = secureSessionManager.getToken()
       const response = await fetch(`/api/tournaments/${tournament.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(sessionUser)
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status: newStatus })
       })
@@ -918,11 +1059,12 @@ export default function TournamentDetailsPage() {
         throw new Error('User not authenticated')
       }
 
+      const token = secureSessionManager.getToken()
       const response = await fetch(`/api/tournaments/${tournament.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(sessionUser)
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status: selectedNewStatus })
       })
@@ -995,8 +1137,9 @@ export default function TournamentDetailsPage() {
       
       // Prepare headers - include authorization if user is authenticated
       const headers: any = {}
-      if (sessionUser) {
-        headers['Authorization'] = JSON.stringify(sessionUser)
+      const token = secureSessionManager.getToken()
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
       }
 
       const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
@@ -1014,7 +1157,7 @@ export default function TournamentDetailsPage() {
     } finally {
       if (isRealtimeUpdate) {
         // Add a small delay for visual feedback
-        setTimeout(() => setIsRealtimeUpdating(false), 500)
+        setTimeout(() => setIsRealtimeUpdating(false), 300)
       } else {
         setSlotsLoading(false)
       }
@@ -1027,9 +1170,10 @@ export default function TournamentDetailsPage() {
       if (!sessionUser) return
 
       // First check if user has a player profile
+      const token = secureSessionManager.getToken()
       const playerResponse = await fetch(`/api/player-profile`, {
         headers: {
-          'Authorization': JSON.stringify(sessionUser),
+          'Authorization': `Bearer ${token}`,
         },
       })
 
@@ -1043,7 +1187,7 @@ export default function TournamentDetailsPage() {
       // User has a player profile, now check registration status
       const response = await fetch(`/api/tournaments/${tournamentId}/user-registration`, {
         headers: {
-          'Authorization': JSON.stringify(sessionUser),
+          'Authorization': `Bearer ${token}`,
         },
       })
 
@@ -1089,11 +1233,12 @@ export default function TournamentDetailsPage() {
           }
           
           const sessionUser = secureSessionManager.getUser()
+          const token = secureSessionManager.getToken()
           const response = await fetch(`/api/tournaments/${tournamentId}/register`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': JSON.stringify(sessionUser),
+              'Authorization': `Bearer ${token}`,
             },
           })
 
@@ -1104,8 +1249,14 @@ export default function TournamentDetailsPage() {
               setRegistrationMessage('Please create a player profile first before registering for tournaments.')
               return
             } else if (result.error.includes('Slot number already taken') || result.error.includes('already registered')) {
-              // These are not retryable errors
-              throw new Error(result.error)
+              // These are not retryable errors - but check if user is actually registered
+              setRegistrationMessage(result.error)
+              await new Promise(resolve => setTimeout(resolve, 500))
+              await Promise.all([
+                fetchSlots(), // Manually fetch slots (fallback since realtime may timeout)
+                checkUserRegistration()
+              ])
+              return
             } else if (result.error.includes('Failed to register after multiple attempts')) {
               // Server-side retry failed, but we can try again
               if (attempt < maxRetries) {
@@ -1126,9 +1277,10 @@ export default function TournamentDetailsPage() {
           console.log('Registration successful:', result)
           setRegistrationMessage(result.message)
           
-          // Refresh slots data and user registration status
+          // Wait for DB to fully update, then refresh both slots and registration status
+          await new Promise(resolve => setTimeout(resolve, 1000))
           await Promise.all([
-            fetchSlots(),
+            fetchSlots(), // Manually fetch slots (fallback since realtime may timeout)
             checkUserRegistration()
           ])
           
@@ -1178,11 +1330,12 @@ export default function TournamentDetailsPage() {
     setRegistrationMessage('')
     try {
       const sessionUser = secureSessionManager.getUser()
+      const token = secureSessionManager.getToken()
       const response = await fetch(`/api/tournaments/${tournamentId}/withdraw`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(sessionUser),
+          'Authorization': `Bearer ${token}`,
         },
       })
 
@@ -1192,9 +1345,10 @@ export default function TournamentDetailsPage() {
       }
 
       setRegistrationMessage(result.message)
-      // Refresh slots data and user registration status
+      // Wait for DB to fully update, then refresh both slots and registration status
+      await new Promise(resolve => setTimeout(resolve, 1000))
       await Promise.all([
-        fetchSlots(),
+        fetchSlots(), // Manually fetch slots (fallback since realtime may timeout)
         checkUserRegistration()
       ])
     } catch (err: any) {
@@ -1206,36 +1360,40 @@ export default function TournamentDetailsPage() {
     }
   }
 
-  const removePlayerFromSlot = async (slotId: string, playerName: string) => {
-    if (!confirm(`Are you sure you want to remove ${playerName} from this tournament slot?`)) {
-      return
-    }
+  const removePlayerFromSlot = (slotId: string, playerName: string) => {
+    setConfirmAction({
+      title: 'Remove Player',
+      message: `Are you sure you want to remove ${playerName} from this tournament?`,
+      confirmText: 'Remove',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const token = secureSessionManager.getToken()
+          const response = await fetch(`/api/tournaments/${tournamentId}/remove-player`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ slotId })
+          })
 
-    try {
-      const sessionUser = secureSessionManager.getUser()
-      const response = await fetch(`/api/tournaments/${tournamentId}/remove-player`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(sessionUser),
-        },
-        body: JSON.stringify({ slotId })
-      })
+          const result = await response.json()
+          if (!result.success) {
+            throw new Error(result.error)
+          }
 
-      const result = await response.json()
-      if (!result.success) {
-        throw new Error(result.error)
+          setRegistrationMessage(`Successfully removed ${playerName} from tournament`)
+          // Realtime will update the UI automatically
+        } catch (error: any) {
+          console.error('Error removing player from tournament:', error)
+          setRegistrationMessage(`Error: ${error.message}`)
+        } finally {
+          setTimeout(() => setRegistrationMessage(''), 5000)
+        }
       }
-
-      setRegistrationMessage(`Successfully removed ${playerName} from tournament`)
-      // Refresh slots
-      await fetchSlots()
-    } catch (error: any) {
-      console.error('Error removing player from tournament:', error)
-      setRegistrationMessage(`Error: ${error.message}`)
-    } finally {
-      setTimeout(() => setRegistrationMessage(''), 5000) // Clear message after 5 seconds
-    }
+    })
+    setShowConfirmModal(true)
   }
 
   const cancelRegistration = async () => {
@@ -1243,11 +1401,12 @@ export default function TournamentDetailsPage() {
     setRegistrationMessage('')
     try {
       const sessionUser = secureSessionManager.getUser()
+      const token = secureSessionManager.getToken()
       const response = await fetch(`/api/tournaments/${tournamentId}/register`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(sessionUser),
+          'Authorization': `Bearer ${token}`,
         },
       })
 
@@ -1260,7 +1419,7 @@ export default function TournamentDetailsPage() {
       // Refresh slots data
       const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
         headers: {
-          'Authorization': JSON.stringify(sessionUser),
+          'Authorization': `Bearer ${token}`,
         },
       })
       if (slotsResponse.ok) {
@@ -1279,74 +1438,76 @@ export default function TournamentDetailsPage() {
     }
   }
 
-  const approveSlot = async (slotId: string) => {
-    try {
-      const sessionUser = secureSessionManager.getUser()
-      const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(sessionUser),
-        },
-        body: JSON.stringify({ slotId, action: 'approve' }),
-      })
+  const approveSlot = (slotId: string, playerName?: string) => {
+    const slot = slots.find(s => s.id === slotId)
+    const name = playerName || slot?.players?.display_name || 'this player'
+    
+    setConfirmAction({
+      title: 'Approve Registration',
+      message: `Approve ${name} for this tournament?`,
+      confirmText: 'Approve',
+      type: 'info',
+      onConfirm: async () => {
+        try {
+          const token = secureSessionManager.getToken()
+          const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ slotId, action: 'approve' }),
+          })
 
-      const result = await response.json()
-      if (!result.success) {
-        throw new Error(result.error)
-      }
-
-      // Refresh slots data
-      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
-        headers: {
-          'Authorization': JSON.stringify(sessionUser),
-        },
-      })
-      if (slotsResponse.ok) {
-        const slotsResult = await slotsResponse.json()
-        if (slotsResult.success) {
-          setSlots(slotsResult.slots)
-          setSlotsStats(slotsResult.stats)
+          const result = await response.json()
+          if (!result.success) {
+            throw new Error(result.error)
+          }
+          // Realtime will update the UI automatically
+        } catch (err: any) {
+          console.error('Error approving slot:', err)
+          setRegistrationMessage(`Error: ${err.message}`)
+          setTimeout(() => setRegistrationMessage(''), 5000)
         }
       }
-    } catch (err: any) {
-      console.error('Error approving slot:', err)
-    }
+    })
+    setShowConfirmModal(true)
   }
 
-  const rejectSlot = async (slotId: string) => {
-    try {
-      const sessionUser = secureSessionManager.getUser()
-      const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': JSON.stringify(sessionUser),
-        },
-        body: JSON.stringify({ slotId, action: 'reject' }),
-      })
+  const rejectSlot = (slotId: string, playerName?: string) => {
+    const slot = slots.find(s => s.id === slotId)
+    const name = playerName || slot?.players?.display_name || 'this player'
+    
+    setConfirmAction({
+      title: 'Reject Registration',
+      message: `Reject ${name}'s registration? They will be removed from the tournament.`,
+      confirmText: 'Reject',
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          const token = secureSessionManager.getToken()
+          const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ slotId, action: 'reject' }),
+          })
 
-      const result = await response.json()
-      if (!result.success) {
-        throw new Error(result.error)
-      }
-
-      // Refresh slots data
-      const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
-        headers: {
-          'Authorization': JSON.stringify(sessionUser),
-        },
-      })
-      if (slotsResponse.ok) {
-        const slotsResult = await slotsResponse.json()
-        if (slotsResult.success) {
-          setSlots(slotsResult.slots)
-          setSlotsStats(slotsResult.stats)
+          const result = await response.json()
+          if (!result.success) {
+            throw new Error(result.error)
+          }
+          // Realtime will update the UI automatically
+        } catch (err: any) {
+          console.error('Error rejecting slot:', err)
+          setRegistrationMessage(`Error: ${err.message}`)
+          setTimeout(() => setRegistrationMessage(''), 5000)
         }
       }
-    } catch (err: any) {
-      console.error('Error rejecting slot:', err)
-    }
+    })
+    setShowConfirmModal(true)
   }
 
   // Component render logic
@@ -1526,40 +1687,47 @@ export default function TournamentDetailsPage() {
                     {!isHost && user && (
                       <div className="mt-4 sm:mt-0">
                         {userRegistration ? (
-                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+                          <div className="bg-gradient-to-br from-[#09171f]/80 to-[#09171f]/60 border border-green-500/30 rounded-xl p-4 backdrop-blur-sm shadow-lg shadow-green-500/10">
                             <div className="flex items-center space-x-2 mb-2">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <h4 className="text-sm font-semibold text-green-900">Registered</h4>
-                              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                              <h4 className="text-sm font-semibold text-[#DBD0C0]">Registered</h4>
+                              <span className="px-2 py-1 bg-green-500/20 text-green-300 border border-green-500/30 text-xs font-medium rounded-full">
                                 Slot #{userRegistration.position || 'Calculating...'}
                               </span>
                             </div>
-                            <div className="text-xs text-blue-700">
-                              <span className={userRegistration.status === 'pending' ? 'text-yellow-600 font-medium' : 'text-green-600 font-medium'}>
-                                {userRegistration.status === 'pending' ? 'Awaiting Payment Confirmation' : 'Payment Verified'}
+                            <div className="text-xs mb-3">
+                              <span className={userRegistration.status === 'pending' ? 'text-yellow-400 font-medium' : 'text-green-400 font-medium'}>
+                                {userRegistration.status === 'pending' ? 'Awaiting Host Approval' : 'Confirmed'}
                               </span>
                             </div>
                             <button
                               onClick={withdrawFromTournament}
                               disabled={isWithdrawing}
-                              className="mt-2 w-full px-3 py-1.5 bg-red-600 text-[#DBD0C0] rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                              className="w-full px-4 py-2 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                             >
-                              {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
+                              {isWithdrawing ? (
+                                <div className="flex items-center justify-center">
+                                  <div className="w-4 h-4 border-2 border-red-300 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                  Withdrawing...
+                                </div>
+                              ) : (
+                                'Withdraw Registration'
+                              )}
                             </button>
                           </div>
                         ) : (
                           <button
                             onClick={registerForTournament}
                             disabled={isRegistering || tournament.status !== 'registration_open'}
-                            className={`px-4 py-2 rounded-lg transition-all duration-200 font-medium shadow-md ${
+                            className={`px-6 py-2.5 rounded-lg transition-all duration-200 font-medium shadow-lg text-sm ${
                               tournament.status === 'registration_open' 
-                                ? 'bg-gradient-to-r from-emerald-600 to-green-600 text-[#DBD0C0] hover:from-emerald-700 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed' 
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30 shadow-green-500/20 hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-500/40 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm' 
+                                : 'bg-[#CEA17A]/10 text-[#CEA17A]/50 border border-[#CEA17A]/20 cursor-not-allowed'
                             }`}
                           >
                             {isRegistering ? (
                               <div className="flex items-center">
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                <div className="w-4 h-4 border-2 border-green-300 border-t-transparent rounded-full animate-spin mr-2"></div>
                                 Registering...
                               </div>
                             ) : tournament.status === 'registration_open' ? (
@@ -2234,14 +2402,14 @@ export default function TournamentDetailsPage() {
 
       {/* Enhanced Player Assignment Modal */}
       {showAssignModal && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
-              <div className="relative overflow-hidden bg-[#19171b] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-500 scale-100 border border-[#CEA17A]/30 animate-slide-up">
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in overflow-y-auto">
+              <div className="relative bg-[#19171b] rounded-2xl shadow-2xl max-w-4xl w-full my-8 transform transition-all duration-500 scale-100 border border-[#CEA17A]/30 animate-slide-up flex flex-col max-h-[calc(100vh-4rem)]">
             {/* Dark Blue Palette Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#3E4E5A]/5 rounded-2xl"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#3E4E5A]/5 rounded-2xl pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl pointer-events-none"></div>
             {/* Content */}
-            <div className="relative z-10 p-4 sm:p-6">
+            <div className="relative z-10 p-4 sm:p-6 overflow-y-auto flex-1">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg sm:text-xl font-semibold text-[#DBD0C0]">Register Players to Tournament</h3>
                 <button
@@ -2321,7 +2489,7 @@ export default function TournamentDetailsPage() {
                           onChange={() => toggleSkillEnabled(skill.id)}
                           className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        <span className="text-xs text-[#DBD0C0]">{skill.name}</span>
+                        <span className="text-xs text-[#DBD0C0]">{skill.skill_name || skill.name}</span>
                       </label>
                     ))}
                   </div>
@@ -2362,13 +2530,13 @@ export default function TournamentDetailsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {enabledSkills.map((skillId) => {
                       const skill = availableSkills.find(s => s.id === skillId)
-                      if (!skill) return null
+                      if (!skill || !skill.skill_name) return null
                       
                       return (
                         <div key={skillId} className="bg-[#09171F]/50 rounded-lg p-3 border border-[#CEA17A]/20 shadow-sm">
                           <div className="flex items-center justify-between mb-2">
                             <label className="text-xs font-semibold text-[#DBD0C0] uppercase tracking-wide">
-                              {skill.name}
+                              {skill.skill_name || skill.name}
                             </label>
                             <button
                               onClick={() => clearSkillFilter(skillId)}
@@ -2384,10 +2552,10 @@ export default function TournamentDetailsPage() {
                               onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
                               className="w-full px-2 py-1.5 border border-[#CEA17A]/30 rounded-md focus:ring-1 focus:ring-[#CEA17A] focus:border-[#CEA17A] text-xs bg-[#09171F] text-[#DBD0C0]"
                             >
-                              <option value="">All {skill.name}</option>
+                              <option value="">All {skill.skill_name || skill.name}</option>
                               {skill.values?.map((value: any) => (
                                 <option key={value.id} value={value.id}>
-                                  {value.name}
+                                  {value.value_name || value.name}
                                 </option>
                               ))}
                             </select>
@@ -2410,7 +2578,7 @@ export default function TournamentDetailsPage() {
                                         }}
                                         className="h-3 w-3 text-[#DBD0C0] focus:ring-gray-500 border-gray-300 rounded"
                                       />
-                                      <span className="text-xs text-[#DBD0C0]">{value.name}</span>
+                                      <span className="text-xs text-[#DBD0C0]">{value.value_name || value.name}</span>
                                     </label>
                                   )
                                 })}
@@ -2451,7 +2619,7 @@ export default function TournamentDetailsPage() {
                               type="text"
                               value={skillFilterValues[skillId]?.[0] || ''}
                               onChange={(e) => updateSkillFilterValue(skillId, e.target.value ? [e.target.value] : [])}
-                              placeholder={`Filter by ${skill.name.toLowerCase()}...`}
+                              placeholder={`Filter by ${(skill.skill_name || skill.name || 'skill').toLowerCase()}...`}
                               className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs bg-[#51080d]"
                             />
                           )}
@@ -2856,6 +3024,65 @@ export default function TournamentDetailsPage() {
                   {isUpdatingStatus ? 'Updating...' : 'Confirm Change'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && confirmAction && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#09171f]/95 border border-[#CEA17A]/20 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                confirmAction.type === 'danger' ? 'bg-red-500/20' :
+                confirmAction.type === 'warning' ? 'bg-yellow-500/20' :
+                'bg-blue-500/20'
+              }`}>
+                {confirmAction.type === 'danger' ? (
+                  <span className="text-red-400 text-xl">⚠️</span>
+                ) : confirmAction.type === 'warning' ? (
+                  <span className="text-yellow-400 text-xl">⚠️</span>
+                ) : (
+                  <span className="text-blue-400 text-xl">ℹ️</span>
+                )}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">
+                  {confirmAction.title}
+                </h3>
+                <p className="text-[#CEA17A]/90 text-sm">
+                  {confirmAction.message}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 pt-2">
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false)
+                  setConfirmAction(null)
+                }}
+                className="flex-1 px-4 py-2.5 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  confirmAction.onConfirm()
+                  setShowConfirmModal(false)
+                  setConfirmAction(null)
+                }}
+                className={`flex-1 px-4 py-2.5 border rounded-lg transition-all duration-150 font-medium ${
+                  confirmAction.type === 'danger'
+                    ? 'bg-red-500/15 text-red-300 border-red-500/25 hover:bg-red-500/25'
+                    : confirmAction.type === 'warning'
+                    ? 'bg-yellow-500/15 text-yellow-300 border-yellow-500/25 hover:bg-yellow-500/25'
+                    : 'bg-blue-500/15 text-blue-300 border-blue-500/25 hover:bg-blue-500/25'
+                }`}
+              >
+                {confirmAction.confirmText || 'Confirm'}
+              </button>
             </div>
           </div>
         </div>

@@ -46,7 +46,11 @@ export default function CreateTournamentPage() {
         const sessionUser = secureSessionManager.getUser()
         if (sessionUser) {
           // Fetch user profile to get role and status
-          const response = await fetch(`/api/user-profile?userId=${sessionUser.id}`)
+          const response = await fetch('/api/user-profile', {
+            headers: {
+              'Authorization': `Bearer ${secureSessionManager.getToken()}`
+            }
+          })
           const result = await response.json()
           
           if (result.success) {
