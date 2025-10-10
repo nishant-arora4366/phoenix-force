@@ -124,6 +124,9 @@ export default function AuthFormExtended({ onAuthChange }: AuthFormProps) {
       if (onAuthChange) {
         onAuthChange(null)
       }
+      
+      // Redirect to home page after sign out
+      window.location.href = '/'
     } catch (error: any) {
       setMessage(`Error: ${error.message}`)
     } finally {

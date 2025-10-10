@@ -671,10 +671,25 @@ export default function AdminPanel() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#19171b] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-[#CEA17A]">Loading...</p>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Hero Section Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+        <div className="absolute inset-0" 
+             style={{
+               background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+             }}></div>
+        
+        {/* Content */}
+        <div className="relative z-10 py-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto mb-4"></div>
+                <h2 className="text-xl font-semibold text-[#DBD0C0] mb-2">Loading...</h2>
+                <p className="text-[#CEA17A]">Fetching admin panel data</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -682,21 +697,33 @@ export default function AdminPanel() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#19171b]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-[#DBD0C0] mb-6">
-              Please Sign In
-            </h1>
-            <p className="text-xl text-[#CEA17A] mb-8">
-              You need to be signed in to access the admin panel.
-            </p>
-            <Link
-              href="/signin?returnUrl=/admin"
-              className="inline-block px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              Sign In
-            </Link>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Hero Section Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+        <div className="absolute inset-0" 
+             style={{
+               background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+             }}></div>
+        
+        {/* Content */}
+        <div className="relative z-10 py-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8">
+              <div className="text-center">
+                <h1 className="text-4xl font-bold text-[#DBD0C0] mb-6">
+                  Please Sign In
+                </h1>
+                <p className="text-xl text-[#CEA17A] mb-8">
+                  You need to be signed in to access the admin panel.
+                </p>
+                <Link
+                  href="/signin?returnUrl=/admin"
+                  className="inline-block px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
+                >
+                  Sign In
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -705,21 +732,33 @@ export default function AdminPanel() {
 
   if (message === 'Access denied. Admin role required.') {
     return (
-      <div className="min-h-screen bg-[#19171b]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-[#DBD0C0] mb-6">
-              Access Denied
-            </h1>
-            <p className="text-xl text-[#CEA17A] mb-8">
-              You need admin privileges to access this page.
-            </p>
-            <Link
-              href="/"
-              className="inline-block px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              Return to Homepage
-            </Link>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Hero Section Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+        <div className="absolute inset-0" 
+             style={{
+               background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+             }}></div>
+        
+        {/* Content */}
+        <div className="relative z-10 py-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8">
+              <div className="text-center">
+                <h1 className="text-4xl font-bold text-[#DBD0C0] mb-6">
+                  Access Denied
+                </h1>
+                <p className="text-xl text-[#CEA17A] mb-8">
+                  You need admin privileges to access this page.
+                </p>
+                <Link
+                  href="/"
+                  className="inline-block px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
+                >
+                  Return to Homepage
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -727,16 +766,25 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-        <div className="bg-[#09171F]/50 rounded-xl shadow-xl p-4 sm:p-8">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Hero Section Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+      <div className="absolute inset-0" 
+           style={{
+             background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+           }}></div>
+      
+      {/* Content */}
+      <div className="relative z-10 py-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#DBD0C0] mb-6 sm:mb-8">Admin Panel</h1>
 
           {message && (
-            <div className={`mb-6 p-4 rounded-lg ${
+            <div className={`mb-6 p-4 rounded-lg border ${
               message.includes('Error') 
-                ? 'bg-red-100 text-red-800'
-                : 'bg-green-100 text-green-800'
+                ? 'bg-[#75020f]/15 text-[#75020f] border-[#75020f]/25'
+                : 'bg-[#3E4E5A]/15 text-[#CEA17A] border-[#CEA17A]/25'
             }`}>
               {message}
             </div>
@@ -749,8 +797,8 @@ export default function AdminPanel() {
                 onClick={() => setActiveTab('users')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'users'
-                    ? 'border-gray-500 text-[#CEA17A]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#CEA17A] text-[#CEA17A]'
+                    : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
                 }`}
               >
                 User Management
@@ -759,8 +807,8 @@ export default function AdminPanel() {
                 onClick={() => setActiveTab('players')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'players'
-                    ? 'border-gray-500 text-[#CEA17A]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#CEA17A] text-[#CEA17A]'
+                    : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
                 }`}
               >
                 Player Management
@@ -769,8 +817,8 @@ export default function AdminPanel() {
                 onClick={() => setActiveTab('skills')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'skills'
-                    ? 'border-gray-500 text-[#CEA17A]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#CEA17A] text-[#CEA17A]'
+                    : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
                 }`}
               >
                 Skill Management
@@ -790,28 +838,28 @@ export default function AdminPanel() {
                     value={searchEmail}
                     onChange={(e) => setSearchEmail(e.target.value)}
                     placeholder="Enter user email"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60"
                   />
                   <button
                     onClick={searchUser}
-                    className="w-full sm:w-auto px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                    className="w-full sm:w-auto px-4 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
                   >
                     Search
                   </button>
                 </div>
 
                 {selectedUser && (
-                  <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+                  <div className="mt-4 p-4 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 rounded-lg">
                     <h3 className="font-semibold text-[#DBD0C0] mb-2">User Found:</h3>
-                    <p><strong>Name:</strong> {selectedUser.firstname} {selectedUser.lastname}</p>
-                    <p><strong>Email:</strong> {selectedUser.email}</p>
-                    <p><strong>Current Role:</strong> {selectedUser.role}</p>
+                    <p className="text-[#DBD0C0]"><strong>Name:</strong> {selectedUser.firstname} {selectedUser.lastname}</p>
+                    <p className="text-[#DBD0C0]"><strong>Email:</strong> {selectedUser.email}</p>
+                    <p className="text-[#DBD0C0]"><strong>Current Role:</strong> {selectedUser.role}</p>
                     
                     <div className="mt-4 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                       <select
                         value={newRole}
                         onChange={(e) => setNewRole(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                        className="flex-1 px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
                       >
                         <option value="viewer">Viewer</option>
                         <option value="host">Host</option>
@@ -820,7 +868,7 @@ export default function AdminPanel() {
                       </select>
                       <button
                         onClick={updateUserRole}
-                        className="w-full sm:w-auto px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                        className="w-full sm:w-auto px-4 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
                       >
                         Update Role
                       </button>
@@ -836,8 +884,8 @@ export default function AdminPanel() {
                     onClick={() => setFilter('all')}
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       filter === 'all'
-                        ? 'bg-gray-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ? 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
+                        : 'bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 hover:bg-[#3E4E5A]/25'
                     }`}
                   >
                     All Users
@@ -846,8 +894,8 @@ export default function AdminPanel() {
                     onClick={() => setFilter('pending')}
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       filter === 'pending'
-                        ? 'bg-yellow-600 text-white'
-                        : 'bg-yellow-200 text-yellow-700 hover:bg-yellow-300'
+                        ? 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
+                        : 'bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 hover:bg-[#3E4E5A]/25'
                     }`}
                   >
                     Pending
@@ -856,8 +904,8 @@ export default function AdminPanel() {
                     onClick={() => setFilter('approved')}
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       filter === 'approved'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-green-200 text-green-700 hover:bg-green-300'
+                        ? 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
+                        : 'bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 hover:bg-[#3E4E5A]/25'
                     }`}
                   >
                     Approved
@@ -866,8 +914,8 @@ export default function AdminPanel() {
                     onClick={() => setFilter('rejected')}
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       filter === 'rejected'
-                        ? 'bg-red-600 text-white'
-                        : 'bg-red-200 text-red-700 hover:bg-red-300'
+                        ? 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40'
+                        : 'bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 hover:bg-[#3E4E5A]/25'
                     }`}
                   >
                     Rejected
@@ -878,35 +926,35 @@ export default function AdminPanel() {
               {/* All Users List */}
               <div>
                 <h2 className="text-lg sm:text-xl font-semibold text-[#DBD0C0] mb-4">All Users</h2>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-[#19171b]">
-                      <tr>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Name
-                        </th>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Role
-                        </th>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Created
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-[#09171F]/50 divide-y divide-gray-200">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-[#CEA17A]/20">
+                  <thead className="bg-[#3E4E5A]/15">
+                    <tr>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
+                        Actions
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
+                        Created
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-[#09171F]/50 divide-y divide-[#CEA17A]/20">
                       {users
                         .filter(user => filter === 'all' || user.status === filter)
                         .map((user) => (
-                        <tr key={user.id}>
+                        <tr key={user.id} className="hover:bg-[#3E4E5A]/10 transition-colors">
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-[#DBD0C0]">
                             {user.firstname} {user.lastname}
                           </td>
@@ -917,7 +965,7 @@ export default function AdminPanel() {
                             <select
                               value={user.role}
                               onChange={(e) => updateUserRoleFromTable(user.id, e.target.value)}
-                              className="text-sm border border-gray-300 rounded px-2 py-1"
+                              className="text-sm bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded px-2 py-1 focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
                             >
                               <option value="viewer">Viewer</option>
                               <option value="host">Host</option>
@@ -927,10 +975,10 @@ export default function AdminPanel() {
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              user.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              user.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              user.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-gray-100 text-gray-800'
+                              user.status === 'approved' ? 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40' :
+                              user.status === 'pending' ? 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40' :
+                              user.status === 'rejected' ? 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40' :
+                              'bg-[#3E4E5A]/25 text-[#DBD0C0] border border-[#CEA17A]/40'
                             }`}>
                               {user.status}
                             </span>
@@ -940,13 +988,13 @@ export default function AdminPanel() {
                               <>
                                 <button
                                   onClick={() => updateUserStatus(user.id, 'approved')}
-                                  className="text-green-600 hover:text-green-900"
+                                  className="text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded text-xs hover:bg-[#3E4E5A]/25 transition-colors"
                                 >
                                   Approve
                                 </button>
                                 <button
                                   onClick={() => updateUserStatus(user.id, 'rejected')}
-                                  className="text-red-600 hover:text-red-900"
+                                  className="text-[#75020f] hover:text-[#75020f]/80 bg-[#75020f]/15 border border-[#75020f]/25 px-2 py-1 rounded text-xs hover:bg-[#75020f]/25 transition-colors"
                                 >
                                   Reject
                                 </button>
@@ -954,12 +1002,12 @@ export default function AdminPanel() {
                             )}
                             <button
                               onClick={() => resetUserPassword(user.id, user.email)}
-                              className="text-blue-600 hover:text-blue-900"
+                              className="text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded text-xs hover:bg-[#3E4E5A]/25 transition-colors"
                             >
                               Reset Password
                             </button>
                           </td>
-                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-[#CEA17A]">
                             {new Date(user.created_at).toLocaleDateString()}
                           </td>
                         </tr>
@@ -980,35 +1028,35 @@ export default function AdminPanel() {
                   <h3 className="text-lg font-medium text-[#DBD0C0]">Player Profiles</h3>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-[#19171b]">
+                  <table className="min-w-full divide-y divide-[#CEA17A]/20">
+                    <thead className="bg-[#3E4E5A]/15">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                           Player Name
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                           User
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                           Created
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-[#09171F]/50 divide-y divide-gray-200">
+                    <tbody className="bg-[#09171F]/50 divide-y divide-[#CEA17A]/20">
                       {playerProfiles.map((profile) => (
-                        <tr key={profile.id}>
+                        <tr key={profile.id} className="hover:bg-[#3E4E5A]/10 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-[#DBD0C0]">
                               {profile.display_name}
                             </div>
                             {profile.bio && (
-                              <div className="text-sm text-gray-500 truncate max-w-xs">
+                              <div className="text-sm text-[#CEA17A] truncate max-w-xs">
                                 {profile.bio}
                               </div>
                             )}
@@ -1019,23 +1067,23 @@ export default function AdminPanel() {
                                 <div className="font-medium">
                                   {profile.users.firstname} {profile.users.lastname}
                                 </div>
-                                <div className="text-gray-500">{profile.users.email}</div>
+                                <div className="text-[#CEA17A]">{profile.users.email}</div>
                               </div>
                             ) : (
-                              <span className="text-gray-400">No user data</span>
+                              <span className="text-[#CEA17A]/60">No user data</span>
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              profile.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              profile.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              profile.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-gray-100 text-gray-800'
+                              profile.status === 'approved' ? 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40' :
+                              profile.status === 'pending' ? 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40' :
+                              profile.status === 'rejected' ? 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40' :
+                              'bg-[#3E4E5A]/25 text-[#DBD0C0] border border-[#CEA17A]/40'
                             }`}>
                               {profile.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-[#CEA17A]">
                             {new Date(profile.created_at).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
@@ -1043,13 +1091,13 @@ export default function AdminPanel() {
                               <>
                                 <button
                                   onClick={() => updatePlayerProfileStatus(profile.id, 'approved')}
-                                  className="text-green-600 hover:text-green-900"
+                                  className="text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded text-xs hover:bg-[#3E4E5A]/25 transition-colors"
                                 >
                                   Approve
                                 </button>
                                 <button
                                   onClick={() => updatePlayerProfileStatus(profile.id, 'rejected')}
-                                  className="text-red-600 hover:text-red-900"
+                                  className="text-[#75020f] hover:text-[#75020f]/80 bg-[#75020f]/15 border border-[#75020f]/25 px-2 py-1 rounded text-xs hover:bg-[#75020f]/25 transition-colors"
                                 >
                                   Reject
                                 </button>
@@ -1079,10 +1127,10 @@ export default function AdminPanel() {
                         )}
                       </div>
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        profile.status === 'approved' ? 'bg-green-100 text-green-800' :
-                        profile.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        profile.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
+                        profile.status === 'approved' ? 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40' :
+                        profile.status === 'pending' ? 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40' :
+                        profile.status === 'rejected' ? 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40' :
+                        'bg-[#3E4E5A]/25 text-[#DBD0C0] border border-[#CEA17A]/40'
                       }`}>
                         {profile.status}
                       </span>
@@ -1093,24 +1141,24 @@ export default function AdminPanel() {
                     )}
                     
                     {profile.users && (
-                      <p className="text-sm text-gray-500 mb-3">{profile.users.email}</p>
+                      <p className="text-sm text-[#CEA17A] mb-3">{profile.users.email}</p>
                     )}
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-[#CEA17A]">
                         Created: {new Date(profile.created_at).toLocaleDateString()}
                       </span>
                       {profile.status === 'pending' && (
                         <div className="space-x-2">
                           <button
                             onClick={() => updatePlayerProfileStatus(profile.id, 'approved')}
-                            className="text-green-600 hover:text-green-900 text-sm"
+                            className="text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded text-xs hover:bg-[#3E4E5A]/25 transition-colors"
                           >
                             Approve
                           </button>
                           <button
                             onClick={() => updatePlayerProfileStatus(profile.id, 'rejected')}
-                            className="text-red-600 hover:text-red-900 text-sm"
+                            className="text-[#75020f] hover:text-[#75020f]/80 bg-[#75020f]/15 border border-[#75020f]/25 px-2 py-1 rounded text-xs hover:bg-[#75020f]/25 transition-colors"
                           >
                             Reject
                           </button>
@@ -1131,7 +1179,7 @@ export default function AdminPanel() {
                   <h2 className="text-lg sm:text-xl font-semibold text-[#DBD0C0]">Player Skills Configuration</h2>
                   <button
                     onClick={() => setIsAddingSkill(true)}
-                    className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    className="w-full sm:w-auto px-4 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
                   >
                     Add New Skill
                   </button>
@@ -1143,21 +1191,21 @@ export default function AdminPanel() {
                     <h3 className="text-base sm:text-lg font-medium text-[#DBD0C0] mb-4">Add New Player Skill</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Skill Name</label>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Skill Name</label>
                         <input
                           type="text"
                           value={newSkill.name}
                           onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60"
                           placeholder="e.g., Batting Style"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Skill Type</label>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Skill Type</label>
                         <select
                           value={newSkill.type}
                           onChange={(e) => setNewSkill({ ...newSkill, type: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
                         >
                           <option value="select">Select</option>
                           <option value="text">Text</option>
@@ -1166,12 +1214,12 @@ export default function AdminPanel() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
+                        <label className="block text-sm font-medium text-[#DBD0C0] mb-1">Display Order</label>
                         <input
                           type="number"
                           value={newSkill.displayOrder}
                           onChange={(e) => setNewSkill({ ...newSkill, displayOrder: parseInt(e.target.value) || 0 })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                          className="w-full px-3 py-2 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
                         />
                       </div>
                       <div className="flex items-center space-x-4">
@@ -1180,27 +1228,27 @@ export default function AdminPanel() {
                             type="checkbox"
                             checked={newSkill.required}
                             onChange={(e) => setNewSkill({ ...newSkill, required: e.target.checked })}
-                            className="rounded border-gray-300 text-[#CEA17A] focus:ring-gray-500"
+                            className="rounded border-[#CEA17A]/25 text-[#CEA17A] focus:ring-[#CEA17A]/50"
                           />
-                          <span className="ml-2 text-sm text-gray-700">Required</span>
+                          <span className="ml-2 text-sm text-[#DBD0C0]">Required</span>
                         </label>
                         <label className="flex items-center">
                           <input
                             type="checkbox"
                             checked={newSkill.isAdminManaged}
                             onChange={(e) => setNewSkill({ ...newSkill, isAdminManaged: e.target.checked })}
-                            className="rounded border-gray-300 text-[#CEA17A] focus:ring-gray-500"
+                            className="rounded border-[#CEA17A]/25 text-[#CEA17A] focus:ring-[#CEA17A]/50"
                           />
-                          <span className="ml-2 text-sm text-gray-700">Admin Managed</span>
+                          <span className="ml-2 text-sm text-[#DBD0C0]">Admin Managed</span>
                         </label>
                         <label className="flex items-center">
                           <input
                             type="checkbox"
                             checked={newSkill.viewerCanSee}
                             onChange={(e) => setNewSkill({ ...newSkill, viewerCanSee: e.target.checked })}
-                            className="rounded border-gray-300 text-[#CEA17A] focus:ring-gray-500"
+                            className="rounded border-[#CEA17A]/25 text-[#CEA17A] focus:ring-[#CEA17A]/50"
                           />
-                          <span className="ml-2 text-sm text-gray-700">Viewer Can See</span>
+                          <span className="ml-2 text-sm text-[#DBD0C0]">Viewer Can See</span>
                         </label>
                       </div>
                     </div>
@@ -1210,14 +1258,14 @@ export default function AdminPanel() {
                           setIsAddingSkill(false)
                           setNewSkill({ name: '', type: 'select', required: false, displayOrder: 0, isAdminManaged: false, viewerCanSee: true })
                         }}
-                        className="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-[#19171b] transition-colors"
+                        className="w-full sm:w-auto px-4 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={addPlayerSkill}
                         disabled={!newSkill.name}
-                        className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="w-full sm:w-auto px-4 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Add Skill
                       </button>
@@ -1418,7 +1466,7 @@ export default function AdminPanel() {
                                   setIsAddingValue(true)
                                   setNewValue({ skillId: skill.id, valueName: '', displayOrder: 0 })
                                 }}
-                                className="text-xs px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+                                className="text-xs px-2 py-1 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-150"
                               >
                                 Add Value
                               </button>
@@ -1446,7 +1494,7 @@ export default function AdminPanel() {
                                     <button
                                       onClick={addSkillValue}
                                       disabled={!newValue.valueName}
-                                      className="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                      className="px-3 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded text-sm hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                       Add
                                     </button>
@@ -1455,7 +1503,7 @@ export default function AdminPanel() {
                                         setIsAddingValue(false)
                                         setNewValue({ skillId: '', valueName: '', displayOrder: 0 })
                                       }}
-                                      className="px-3 py-2 border border-gray-300 text-gray-700 rounded text-sm hover:bg-[#19171b] transition-colors"
+                                      className="px-3 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded text-sm hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-150"
                                     >
                                       Cancel
                                     </button>
@@ -1484,13 +1532,13 @@ export default function AdminPanel() {
                                             displayOrder: value.display_order
                                           })
                                         }}
-                                        className="text-xs px-2 py-1 text-blue-600 hover:text-blue-800 border border-blue-200 rounded hover:bg-blue-50 transition-colors"
+                                        className="text-xs px-2 py-1 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-150"
                                       >
                                         Edit
                                       </button>
                                       <button
                                         onClick={() => deleteSkillValue(value.id)}
-                                        className="text-xs px-2 py-1 text-red-600 hover:text-red-800 border border-red-200 rounded hover:bg-red-50 transition-colors"
+                                        className="text-xs px-2 py-1 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150"
                                       >
                                         Delete
                                       </button>
@@ -1538,14 +1586,14 @@ export default function AdminPanel() {
                                       setIsEditingValue(null)
                                       setEditingValue({ skillId: '', valueId: '', valueName: '', displayOrder: 0 })
                                     }}
-                                    className="w-full sm:w-auto px-3 py-1 text-xs border border-gray-300 text-gray-700 rounded hover:bg-[#19171b] transition-colors"
+                                    className="w-full sm:w-auto px-3 py-1 text-xs bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-150"
                                   >
                                     Cancel
                                   </button>
                                   <button
                                     onClick={editSkillValue}
                                     disabled={!editingValue.valueName}
-                                    className="w-full sm:w-auto px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="w-full sm:w-auto px-3 py-1 text-xs bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     Update Value
                                   </button>
@@ -1561,6 +1609,7 @@ export default function AdminPanel() {
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
     </div>

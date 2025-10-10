@@ -667,39 +667,39 @@ export default function UserManagementPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-gray-200 text-gray-700'
+        return 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
       case 'approved':
-        return 'bg-gray-100 text-gray-700'
+        return 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
       case 'rejected':
-        return 'bg-gray-300 text-gray-800'
+        return 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-[#3E4E5A]/25 text-[#DBD0C0] border border-[#CEA17A]/40'
     }
   }
 
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-gray-200 text-gray-800'
+        return 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
       case 'host':
-        return 'bg-gray-100 text-gray-700'
+        return 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
       case 'viewer':
-        return 'bg-gray-100 text-[#CEA17A]'
+        return 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-[#3E4E5A]/25 text-[#DBD0C0] border border-[#CEA17A]/40'
     }
   }
 
   const getPlayerProfileStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'bg-green-100 text-green-800'
+        return 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
       case 'rejected':
-        return 'bg-red-100 text-red-800'
+        return 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-[#3E4E5A]/25 text-[#DBD0C0] border border-[#CEA17A]/40'
     }
   }
 
@@ -710,10 +710,20 @@ export default function UserManagementPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#19171b] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-[#DBD0C0]">Loading...</h2>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Hero Section Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+        <div className="absolute inset-0" 
+             style={{
+               background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+             }}></div>
+        
+        {/* Content */}
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-[#DBD0C0]">Loading...</h2>
+          </div>
         </div>
       </div>
     )
@@ -721,42 +731,60 @@ export default function UserManagementPage() {
 
   if (userRole !== 'admin') {
     return (
-      <div className="min-h-screen bg-[#19171b] flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">🚫</div>
-          <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">Access Denied</h2>
-          <p className="text-[#CEA17A] mb-6">You need admin privileges to access this page.</p>
-          <button
-            onClick={() => router.push('/')}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Go Home
-          </button>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Hero Section Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+        <div className="absolute inset-0" 
+             style={{
+               background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+             }}></div>
+        
+        {/* Content */}
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="text-red-500 text-6xl mb-4">🚫</div>
+            <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">Access Denied</h2>
+            <p className="text-[#CEA17A] mb-6">You need admin privileges to access this page.</p>
+            <button
+              onClick={() => router.push('/')}
+              className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
+            >
+              Return to Homepage
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#19171b] py-4 sm:py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="bg-gradient-to-r from-gray-600 to-gray-700 rounded-lg p-6 text-white">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Hero Section Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+      <div className="absolute inset-0" 
+           style={{
+             background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+           }}></div>
+      
+      {/* Content */}
+      <div className="relative z-10 py-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-8">
+          {/* Header */}
+          <div className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">Admin Panel</h1>
-                <p className="text-gray-200 mt-1">Manage users and player profiles</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#DBD0C0]">Admin Panel</h1>
+                <p className="text-[#CEA17A] mt-1">Manage users and player profiles</p>
               </div>
               <button
                 onClick={() => router.push('/')}
-                className="mt-4 sm:mt-0 px-4 py-2 bg-[#09171F]/50 bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors"
+                className="mt-4 sm:mt-0 px-4 py-2 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
               >
                 Back to Dashboard
               </button>
             </div>
           </div>
-        </div>
 
         {/* Tab Navigation */}
         <div className="mb-6">
@@ -766,8 +794,8 @@ export default function UserManagementPage() {
                 onClick={() => setActiveTab('users')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'users'
-                    ? 'border-gray-500 text-[#CEA17A]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#CEA17A] text-[#CEA17A]'
+                    : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
                 }`}
               >
                 User Management
@@ -776,8 +804,8 @@ export default function UserManagementPage() {
                 onClick={() => setActiveTab('players')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'players'
-                    ? 'border-gray-500 text-[#CEA17A]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#CEA17A] text-[#CEA17A]'
+                    : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
                 }`}
               >
                 Player Profiles
@@ -786,8 +814,8 @@ export default function UserManagementPage() {
                 onClick={() => setActiveTab('skills')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'skills'
-                    ? 'border-gray-500 text-[#CEA17A]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#CEA17A] text-[#CEA17A]'
+                    : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
                 }`}
               >
                 Player Skills
@@ -798,10 +826,10 @@ export default function UserManagementPage() {
 
         {/* Message */}
         {message && (
-          <div className={`mb-6 p-4 rounded-lg ${
+          <div className={`mb-6 p-4 rounded-lg border ${
             message.includes('Error') 
-              ? 'bg-gray-200 text-gray-800 border border-gray-300' 
-              : 'bg-gray-100 text-gray-700 border border-[#CEA17A]/20'
+              ? 'bg-[#75020f]/15 text-[#75020f] border-[#75020f]/25' 
+              : 'bg-[#3E4E5A]/15 text-[#CEA17A] border-[#CEA17A]/25'
           }`}>
             {message}
           </div>
@@ -824,8 +852,8 @@ export default function UserManagementPage() {
                     onClick={() => setFilter(filterOption.value as any)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       filter === filterOption.value
-                        ? 'bg-gray-700 text-white'
-                        : 'bg-[#09171F]/50 text-[#CEA17A] border border-[#CEA17A]/20 hover:bg-[#19171b]'
+                        ? 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
+                        : 'bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 hover:bg-[#3E4E5A]/25'
                     }`}
                   >
                     {filterOption.label}
@@ -837,8 +865,8 @@ export default function UserManagementPage() {
         {/* Users Table - Desktop */}
         <div className="hidden md:block bg-[#09171F]/50 rounded-lg shadow-sm border border-[#CEA17A]/20 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-100">
+            <table className="min-w-full divide-y divide-[#CEA17A]/20">
+              <thead className="bg-[#3E4E5A]/15">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#CEA17A] uppercase tracking-wider">
                     User
@@ -860,14 +888,14 @@ export default function UserManagementPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-[#09171F]/50 divide-y divide-gray-200">
+              <tbody className="bg-[#09171F]/50 divide-y divide-[#CEA17A]/20">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-[#19171b] transition-colors">
+                  <tr key={user.id} className="hover:bg-[#3E4E5A]/10 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-700">
+                          <div className="h-10 w-10 rounded-full bg-[#3E4E5A]/25 flex items-center justify-center">
+                            <span className="text-sm font-medium text-[#DBD0C0]">
                               {user.firstname?.[0] || user.username?.[0] || user.email[0].toUpperCase()}
                             </span>
                           </div>
@@ -879,7 +907,7 @@ export default function UserManagementPage() {
                               : user.username || user.email
                             }
                           </div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
+                          <div className="text-sm text-[#CEA17A]">{user.email}</div>
                         </div>
                       </div>
                     </td>
@@ -904,27 +932,27 @@ export default function UserManagementPage() {
                           </span>
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-400">No profile</span>
+                        <span className="text-sm text-[#CEA17A]/60">No profile</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#CEA17A]">
                       {new Date(user.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       {user.status === 'pending' && (
                         <>
-                          <button
-                            onClick={() => updateUserStatus(user.id, 'approved')}
-                            className="text-[#CEA17A] hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-xs"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => updateUserStatus(user.id, 'rejected')}
-                            className="text-[#CEA17A] hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-xs"
-                          >
-                            Reject
-                          </button>
+                            <button
+                              onClick={() => updateUserStatus(user.id, 'approved')}
+                              className="text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded text-xs hover:bg-[#3E4E5A]/25 transition-colors"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => updateUserStatus(user.id, 'rejected')}
+                              className="text-[#75020f] hover:text-[#75020f]/80 bg-[#75020f]/15 border border-[#75020f]/25 px-2 py-1 rounded text-xs hover:bg-[#75020f]/25 transition-colors"
+                            >
+                              Reject
+                            </button>
                         </>
                       )}
                       {user.status === 'approved' && (
@@ -932,7 +960,7 @@ export default function UserManagementPage() {
                           <select
                             value={user.role}
                             onChange={(e) => updateUserRole(user.id, e.target.value)}
-                            className="text-sm border border-gray-300 rounded px-2 py-1"
+                            className="text-sm bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded px-2 py-1 focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
                           >
                             <option value="viewer">Viewer</option>
                             <option value="host">Host</option>
@@ -940,7 +968,7 @@ export default function UserManagementPage() {
                           </select>
                           <button
                             onClick={() => resetUserPassword(user.id, user.email)}
-                            className="text-xs text-[#CEA17A] hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+                            className="text-xs text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded hover:bg-[#3E4E5A]/25 transition-colors"
                           >
                             Reset Password
                           </button>
@@ -948,13 +976,13 @@ export default function UserManagementPage() {
                             <div className="flex space-x-1">
                               <button
                                 onClick={() => updatePlayerProfileStatus(user.player_profile!.id, 'approved')}
-                                className="text-xs text-green-600 hover:text-green-800 bg-green-100 hover:bg-green-200 px-2 py-1 rounded"
+                                className="text-xs text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded hover:bg-[#3E4E5A]/25 transition-colors"
                               >
                                 Approve Profile
                               </button>
                               <button
                                 onClick={() => updatePlayerProfileStatus(user.player_profile!.id, 'rejected')}
-                                className="text-xs text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200 px-2 py-1 rounded"
+                                className="text-xs text-[#75020f] hover:text-[#75020f]/80 bg-[#75020f]/15 border border-[#75020f]/25 px-2 py-1 rounded hover:bg-[#75020f]/25 transition-colors"
                               >
                                 Reject Profile
                               </button>
@@ -977,8 +1005,8 @@ export default function UserManagementPage() {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-10 w-10">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-700">
+                    <div className="h-10 w-10 rounded-full bg-[#3E4E5A]/25 flex items-center justify-center">
+                      <span className="text-sm font-medium text-[#DBD0C0]">
                         {user.firstname?.[0] || user.username?.[0] || user.email[0].toUpperCase()}
                       </span>
                     </div>
@@ -990,7 +1018,7 @@ export default function UserManagementPage() {
                         : user.username || user.email
                       }
                     </div>
-                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <div className="text-sm text-[#CEA17A]">{user.email}</div>
                   </div>
                 </div>
                 <div className="flex flex-col space-y-1">
@@ -1013,7 +1041,7 @@ export default function UserManagementPage() {
                 </div>
               </div>
               
-              <div className="text-xs text-gray-500 mb-3">
+              <div className="text-xs text-[#CEA17A] mb-3">
                 Created: {new Date(user.created_at).toLocaleDateString()}
               </div>
               
@@ -1022,13 +1050,13 @@ export default function UserManagementPage() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => updateUserStatus(user.id, 'approved')}
-                      className="flex-1 bg-gray-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-700 transition-colors"
+                      className="flex-1 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 px-3 py-2 rounded text-sm font-medium hover:bg-[#3E4E5A]/25 transition-colors"
                     >
                       Approve
                     </button>
                     <button
                       onClick={() => updateUserStatus(user.id, 'rejected')}
-                      className="flex-1 bg-[#19171b]0 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-600 transition-colors"
+                      className="flex-1 bg-[#75020f]/15 text-[#75020f] border border-[#75020f]/25 px-3 py-2 rounded text-sm font-medium hover:bg-[#75020f]/25 transition-colors"
                     >
                       Reject
                     </button>
@@ -1037,11 +1065,11 @@ export default function UserManagementPage() {
                 {user.status === 'approved' && (
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Role</label>
+                      <label className="block text-xs font-medium text-[#DBD0C0] mb-1">Role</label>
                       <select
                         value={user.role}
                         onChange={(e) => updateUserRole(user.id, e.target.value)}
-                        className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+                        className="w-full text-sm bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded px-3 py-2 focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
                       >
                         <option value="viewer">Viewer</option>
                         <option value="host">Host</option>
@@ -1050,7 +1078,7 @@ export default function UserManagementPage() {
                     </div>
                     <button
                       onClick={() => resetUserPassword(user.id, user.email)}
-                      className="w-full bg-gray-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-700 transition-colors"
+                      className="w-full bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 px-3 py-2 rounded text-sm font-medium hover:bg-[#3E4E5A]/25 transition-colors"
                     >
                       Reset Password
                     </button>
@@ -1058,13 +1086,13 @@ export default function UserManagementPage() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => updatePlayerProfileStatus(user.player_profile!.id, 'approved')}
-                          className="flex-1 bg-green-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-green-700 transition-colors"
+                          className="flex-1 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 px-3 py-2 rounded text-sm font-medium hover:bg-[#3E4E5A]/25 transition-colors"
                         >
                           Approve Profile
                         </button>
                         <button
                           onClick={() => updatePlayerProfileStatus(user.player_profile!.id, 'rejected')}
-                          className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-red-700 transition-colors"
+                          className="flex-1 bg-[#75020f]/15 text-[#75020f] border border-[#75020f]/25 px-3 py-2 rounded text-sm font-medium hover:bg-[#75020f]/25 transition-colors"
                         >
                           Reject Profile
                         </button>
@@ -1079,7 +1107,7 @@ export default function UserManagementPage() {
 
         {filteredUsers.length === 0 && (
           <div className="text-center py-8">
-            <div className="text-gray-500">No users found</div>
+            <div className="text-[#CEA17A]">No users found</div>
           </div>
         )}
           </>
@@ -1721,6 +1749,8 @@ export default function UserManagementPage() {
             </div>
           </>
         )}
+          </div>
+        </div>
       </div>
     </div>
   )

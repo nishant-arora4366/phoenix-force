@@ -1442,18 +1442,18 @@ export default function TournamentDetailsPage() {
         <div className="space-y-8">
           {/* Sign In Card for Unauthenticated Users */}
           {!user && !isHost && (
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#09171F] via-[#3E4E5A] to-[#09171F] rounded-2xl p-6 sm:p-8 shadow-2xl border border-[#CEA17A]/30">
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-2xl p-6 sm:p-8 shadow-2xl border border-[#CEA17A]/30">
               {/* Luxury Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-2xl"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#09171F]/60 via-transparent to-[#3E4E5A]/30 rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-2xl"></div>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl"></div>
               
               {/* Content */}
               <div className="relative z-10">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
                   <div className="flex-shrink-0">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#CEA17A] rounded-2xl flex items-center justify-center shadow-lg">
-                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#09171F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#8B0000]/30 rounded-2xl flex items-center justify-center shadow-lg">
+                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#FF6B6B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
                     </div>
@@ -1472,13 +1472,12 @@ export default function TournamentDetailsPage() {
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link
                   href={`/signin?returnUrl=${encodeURIComponent(`/tournaments/${tournament.id}`)}`}
-                  className="group relative flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#CEA17A] text-[#09171F] rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 hover:bg-[#DBD0C0] hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
+                  className="group relative flex-1 inline-flex items-center justify-center px-6 py-4 bg-green-500/20 text-green-300 border border-green-500/30 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 hover:bg-green-500/30 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500/40 focus:ring-offset-2 focus:ring-offset-transparent shadow-sm"
                 >
                     <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                     </svg>
                     <span>Sign In to Register</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#CEA17A] to-[#DBD0C0] rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
                   </Link>
                   <Link
                     href="/tournaments"
@@ -1492,9 +1491,9 @@ export default function TournamentDetailsPage() {
                 </div>
                 
                 {/* Additional Info */}
-                <div className="mt-4 pt-4 border-t border-slate-700/50">
-                  <p className="text-slate-300 text-xs sm:text-sm text-center">
-                    New to Phoenix Force? <span className="text-blue-300 font-medium">Create a free account</span> to get started
+                <div className="mt-4 pt-4 border-t border-[#CEA17A]/20">
+                  <p className="text-[#DBD0C0] text-xs sm:text-sm text-center">
+                    New to Phoenix Force? <span className="text-[#CEA17A] font-medium">Create a free account</span> to get started
                   </p>
                 </div>
               </div>
