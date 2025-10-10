@@ -74,7 +74,8 @@ async function getHandlerPublic(
         players (
           id,
           display_name,
-          user_id
+          user_id,
+          profile_pic_url
         )
       `)
       .eq('tournament_id', tournamentId)
@@ -85,6 +86,62 @@ async function getHandlerPublic(
     }
 
     console.log('All slots from database:', allSlotsData?.length || 0)
+    
+    // Fetch skills for all players in the slots
+    const playerIds = allSlotsData
+      ?.filter(slot => slot.player_id)
+      .map(slot => slot.player_id) || []
+    
+    let playerSkillsMap: { [playerId: string]: { [skillName: string]: string | string[] } } = {}
+    
+    if (playerIds.length > 0) {
+      const { data: skillAssignments, error: skillsError } = await supabase
+        .from('player_skill_assignments')
+        .select(`
+          player_id,
+          skill_value_id,
+          skill_value_ids,
+          value_array,
+          player_skills (
+            skill_name,
+            skill_type,
+            viewer_can_see
+          ),
+          player_skill_values (
+            value_name
+          )
+        `)
+        .in('player_id', playerIds)
+      
+      if (!skillsError && skillAssignments) {
+        // Group skills by player_id
+        skillAssignments.forEach((assignment: any) => {
+          const playerId = assignment.player_id
+          const skillName = assignment.player_skills?.skill_name
+          const viewerCanSee = assignment.player_skills?.viewer_can_see
+          
+          // Only include skills that viewers can see (for public tournament view)
+          if (skillName && viewerCanSee) {
+            if (!playerSkillsMap[playerId]) {
+              playerSkillsMap[playerId] = {}
+            }
+            
+            if (assignment.player_skills?.skill_type === 'multiselect') {
+              playerSkillsMap[playerId][skillName] = assignment.value_array || []
+            } else if (assignment.player_skill_values) {
+              playerSkillsMap[playerId][skillName] = assignment.player_skill_values.value_name
+            }
+          }
+        })
+      }
+    }
+    
+    // Attach skills to player data in slots
+    allSlotsData?.forEach((slot: any) => {
+      if (slot.players && slot.player_id) {
+        slot.players.skills = playerSkillsMap[slot.player_id] || {}
+      }
+    })
     
     const totalSlots = tournament.total_slots
     
