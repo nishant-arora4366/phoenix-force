@@ -101,16 +101,16 @@ export default function CreateAuctionPage() {
 
   const handleTournamentSelect = async (tournament: Tournament) => {
     setSelectedTournament(tournament)
-    await fetchTournamentPlayers(tournament.id)
+    await fetchTournamentPlayers(tournament)
     setCurrentStep('confirm-players')
   }
 
-  const fetchTournamentPlayers = async (tournamentId: string) => {
+  const fetchTournamentPlayers = async (tournament: Tournament) => {
     try {
       const token = secureSessionManager.getToken()
       if (!token) return
 
-      const response = await fetch(`/api/tournaments/${tournamentId}/slots`, {
+      const response = await fetch(`/api/tournaments/${tournament.id}/slots`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -118,11 +118,16 @@ export default function CreateAuctionPage() {
 
       const result = await response.json()
       if (result.success && result.slots) {
-        // Extract players from slots
-        const tournamentPlayers = result.slots
-          .filter((slot: any) => slot.players)
+        // Only get players in playing slots (not waitlist)
+        // Filter slots where slot_number <= tournament total_slots
+        const playingSlots = result.slots
+          .filter((slot: any) => 
+            slot.players && 
+            slot.slot_number <= tournament.total_slots
+          )
           .map((slot: any) => slot.players)
-        setPlayers(tournamentPlayers)
+        
+        setPlayers(playingSlots)
       }
     } catch (error) {
       console.error('Error fetching tournament players:', error)
