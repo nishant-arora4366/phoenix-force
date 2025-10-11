@@ -1,0 +1,367 @@
+{
+  "table_name": "auction_teams",
+  "backup_timestamp": "2025-10-11T12:08:28.027Z",
+  "record_count": 36,
+  "data": [
+    {
+      "id": "2fdb74e3-a030-4d0e-a883-e06e5f497bb5",
+      "auction_id": "88fdedaa-edaf-45f8-9f05-1a23317f6888",
+      "captain_id": "7df09fb1-4517-4cb5-83fa-8fe4f194e184",
+      "team_name": "Ambarish Karan's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:16:11.054522+00:00",
+      "updated_at": "2025-10-10T21:16:11.054522+00:00"
+    },
+    {
+      "id": "e436bc05-a916-4e40-9f2d-c3af10cf438b",
+      "auction_id": "88fdedaa-edaf-45f8-9f05-1a23317f6888",
+      "captain_id": "d3f0f819-499d-4bb8-bf36-948ba99a9c61",
+      "team_name": "Arul's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:16:11.054522+00:00",
+      "updated_at": "2025-10-10T21:16:11.054522+00:00"
+    },
+    {
+      "id": "54184327-db34-451e-975f-07b7d65bbda1",
+      "auction_id": "88fdedaa-edaf-45f8-9f05-1a23317f6888",
+      "captain_id": "f5903e1a-85ff-4c81-9c97-57395dd28930",
+      "team_name": "Arun Balaji's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:16:11.054522+00:00",
+      "updated_at": "2025-10-10T21:16:11.054522+00:00"
+    },
+    {
+      "id": "c29f42fc-2fac-410b-9a1d-c93dc968c044",
+      "auction_id": "88fdedaa-edaf-45f8-9f05-1a23317f6888",
+      "captain_id": "dfd36478-b73c-462c-b7a4-2ac4966e9079",
+      "team_name": "Nishant's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:16:11.054522+00:00",
+      "updated_at": "2025-10-10T21:16:11.054522+00:00"
+    },
+    {
+      "id": "4828b3d0-7810-4c90-85b2-3235cb7fffef",
+      "auction_id": "fb7e373e-daad-4c46-af65-11d115ca28f3",
+      "captain_id": "7df09fb1-4517-4cb5-83fa-8fe4f194e184",
+      "team_name": "Ambarish Karan's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:16:35.237444+00:00",
+      "updated_at": "2025-10-10T21:16:35.237444+00:00"
+    },
+    {
+      "id": "46def7cb-c18a-4ffd-828a-6ead6a1d6694",
+      "auction_id": "fb7e373e-daad-4c46-af65-11d115ca28f3",
+      "captain_id": "d3f0f819-499d-4bb8-bf36-948ba99a9c61",
+      "team_name": "Arul's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:16:35.237444+00:00",
+      "updated_at": "2025-10-10T21:16:35.237444+00:00"
+    },
+    {
+      "id": "1d5c203e-85cd-4687-a934-c7b38b6f1fe8",
+      "auction_id": "fb7e373e-daad-4c46-af65-11d115ca28f3",
+      "captain_id": "f5903e1a-85ff-4c81-9c97-57395dd28930",
+      "team_name": "Arun Balaji's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:16:35.237444+00:00",
+      "updated_at": "2025-10-10T21:16:35.237444+00:00"
+    },
+    {
+      "id": "7abff508-aaec-4797-85d9-fca48e239b02",
+      "auction_id": "fb7e373e-daad-4c46-af65-11d115ca28f3",
+      "captain_id": "dfd36478-b73c-462c-b7a4-2ac4966e9079",
+      "team_name": "Nishant's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:16:35.237444+00:00",
+      "updated_at": "2025-10-10T21:16:35.237444+00:00"
+    },
+    {
+      "id": "494c49c5-5485-45de-bdb3-8f818f250d7c",
+      "auction_id": "f5e85c4e-912d-4b1f-b7bc-686169ad8ab0",
+      "captain_id": "7df09fb1-4517-4cb5-83fa-8fe4f194e184",
+      "team_name": "Ambarish Karan's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:17:30.910669+00:00",
+      "updated_at": "2025-10-10T21:17:30.910669+00:00"
+    },
+    {
+      "id": "ebbe8504-76f6-4cd4-a3bd-b38c31a39cd9",
+      "auction_id": "f5e85c4e-912d-4b1f-b7bc-686169ad8ab0",
+      "captain_id": "d3f0f819-499d-4bb8-bf36-948ba99a9c61",
+      "team_name": "Arul's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:17:30.910669+00:00",
+      "updated_at": "2025-10-10T21:17:30.910669+00:00"
+    },
+    {
+      "id": "3e663e8e-248c-4124-ac4f-ca3560983ccd",
+      "auction_id": "f5e85c4e-912d-4b1f-b7bc-686169ad8ab0",
+      "captain_id": "f5903e1a-85ff-4c81-9c97-57395dd28930",
+      "team_name": "Arun Balaji's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:17:30.910669+00:00",
+      "updated_at": "2025-10-10T21:17:30.910669+00:00"
+    },
+    {
+      "id": "2c8a6789-ccd9-4724-8c7b-c5093574cd35",
+      "auction_id": "f5e85c4e-912d-4b1f-b7bc-686169ad8ab0",
+      "captain_id": "dfd36478-b73c-462c-b7a4-2ac4966e9079",
+      "team_name": "Nishant's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:17:30.910669+00:00",
+      "updated_at": "2025-10-10T21:17:30.910669+00:00"
+    },
+    {
+      "id": "957f9acd-c990-43c0-babd-5a4914d93ac0",
+      "auction_id": "fd644dc3-130b-4c16-9765-1f08c99b3c83",
+      "captain_id": "7df09fb1-4517-4cb5-83fa-8fe4f194e184",
+      "team_name": "Ambarish Karan's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:22:49.097829+00:00",
+      "updated_at": "2025-10-10T21:22:49.097829+00:00"
+    },
+    {
+      "id": "0c4c4a94-c2c3-4bd2-b2a8-02fd258009b9",
+      "auction_id": "fd644dc3-130b-4c16-9765-1f08c99b3c83",
+      "captain_id": "d3f0f819-499d-4bb8-bf36-948ba99a9c61",
+      "team_name": "Arul's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:22:49.097829+00:00",
+      "updated_at": "2025-10-10T21:22:49.097829+00:00"
+    },
+    {
+      "id": "bab25981-8664-45f6-a366-14fdffd4d137",
+      "auction_id": "fd644dc3-130b-4c16-9765-1f08c99b3c83",
+      "captain_id": "f5903e1a-85ff-4c81-9c97-57395dd28930",
+      "team_name": "Arun Balaji's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:22:49.097829+00:00",
+      "updated_at": "2025-10-10T21:22:49.097829+00:00"
+    },
+    {
+      "id": "414eb6f4-a418-4d6c-a3f3-ac2a16dae6b7",
+      "auction_id": "fd644dc3-130b-4c16-9765-1f08c99b3c83",
+      "captain_id": "dfd36478-b73c-462c-b7a4-2ac4966e9079",
+      "team_name": "Nishant's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:22:49.097829+00:00",
+      "updated_at": "2025-10-10T21:22:49.097829+00:00"
+    },
+    {
+      "id": "03b9db97-2426-41cb-847a-8178e0d31616",
+      "auction_id": "265eea5d-f656-494a-a999-23cc049a3d92",
+      "captain_id": "7df09fb1-4517-4cb5-83fa-8fe4f194e184",
+      "team_name": "Ambarish Karan's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:23:00.535369+00:00",
+      "updated_at": "2025-10-10T21:23:00.535369+00:00"
+    },
+    {
+      "id": "c9311032-68eb-4301-9899-7313cb2d94d4",
+      "auction_id": "265eea5d-f656-494a-a999-23cc049a3d92",
+      "captain_id": "d3f0f819-499d-4bb8-bf36-948ba99a9c61",
+      "team_name": "Arul's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:23:00.535369+00:00",
+      "updated_at": "2025-10-10T21:23:00.535369+00:00"
+    },
+    {
+      "id": "e8def456-4619-4b0f-b3d0-43f4d24b1959",
+      "auction_id": "265eea5d-f656-494a-a999-23cc049a3d92",
+      "captain_id": "f5903e1a-85ff-4c81-9c97-57395dd28930",
+      "team_name": "Arun Balaji's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:23:00.535369+00:00",
+      "updated_at": "2025-10-10T21:23:00.535369+00:00"
+    },
+    {
+      "id": "90769a21-7c2c-4204-817f-b998e3bf90bc",
+      "auction_id": "265eea5d-f656-494a-a999-23cc049a3d92",
+      "captain_id": "dfd36478-b73c-462c-b7a4-2ac4966e9079",
+      "team_name": "Nishant's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:23:00.535369+00:00",
+      "updated_at": "2025-10-10T21:23:00.535369+00:00"
+    },
+    {
+      "id": "ad311abd-e279-44f5-9bba-b92778dc63c3",
+      "auction_id": "7185ff16-a967-47a1-9efd-b34b271650bc",
+      "captain_id": "7df09fb1-4517-4cb5-83fa-8fe4f194e184",
+      "team_name": "Ambarish Karan's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:26:55.891688+00:00",
+      "updated_at": "2025-10-10T21:26:55.891688+00:00"
+    },
+    {
+      "id": "e8bbe235-9277-4b5f-981e-fecb08f64051",
+      "auction_id": "7185ff16-a967-47a1-9efd-b34b271650bc",
+      "captain_id": "d3f0f819-499d-4bb8-bf36-948ba99a9c61",
+      "team_name": "Arul's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:26:55.891688+00:00",
+      "updated_at": "2025-10-10T21:26:55.891688+00:00"
+    },
+    {
+      "id": "4fafadab-931c-4e36-97f4-08d77501b9ca",
+      "auction_id": "7185ff16-a967-47a1-9efd-b34b271650bc",
+      "captain_id": "f5903e1a-85ff-4c81-9c97-57395dd28930",
+      "team_name": "Arun Balaji's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:26:55.891688+00:00",
+      "updated_at": "2025-10-10T21:26:55.891688+00:00"
+    },
+    {
+      "id": "5de3dc61-df14-4fce-a991-4c6842b4cbd1",
+      "auction_id": "7185ff16-a967-47a1-9efd-b34b271650bc",
+      "captain_id": "dfd36478-b73c-462c-b7a4-2ac4966e9079",
+      "team_name": "Nishant's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:26:55.891688+00:00",
+      "updated_at": "2025-10-10T21:26:55.891688+00:00"
+    },
+    {
+      "id": "0cb833f5-87eb-499c-bb26-59692edf2857",
+      "auction_id": "9e73e378-be9a-4536-b234-62f45013d74f",
+      "captain_id": "7df09fb1-4517-4cb5-83fa-8fe4f194e184",
+      "team_name": "Ambarish Karan's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:27:08.21245+00:00",
+      "updated_at": "2025-10-10T21:27:08.21245+00:00"
+    },
+    {
+      "id": "af800f0d-06cc-4561-aba7-507cda651383",
+      "auction_id": "9e73e378-be9a-4536-b234-62f45013d74f",
+      "captain_id": "d3f0f819-499d-4bb8-bf36-948ba99a9c61",
+      "team_name": "Arul's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:27:08.21245+00:00",
+      "updated_at": "2025-10-10T21:27:08.21245+00:00"
+    },
+    {
+      "id": "95742c9c-045d-4116-a1b7-6bcfc7d260e7",
+      "auction_id": "9e73e378-be9a-4536-b234-62f45013d74f",
+      "captain_id": "f5903e1a-85ff-4c81-9c97-57395dd28930",
+      "team_name": "Arun Balaji's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:27:08.21245+00:00",
+      "updated_at": "2025-10-10T21:27:08.21245+00:00"
+    },
+    {
+      "id": "718d06b0-5736-4eb9-8abb-b443e9f014ad",
+      "auction_id": "9e73e378-be9a-4536-b234-62f45013d74f",
+      "captain_id": "dfd36478-b73c-462c-b7a4-2ac4966e9079",
+      "team_name": "Nishant's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:27:08.21245+00:00",
+      "updated_at": "2025-10-10T21:27:08.21245+00:00"
+    },
+    {
+      "id": "125f7c4e-7e19-47e3-97e2-571258a35f1c",
+      "auction_id": "7a6349d1-ef15-4a5d-a8c0-11597f2e1075",
+      "captain_id": "7df09fb1-4517-4cb5-83fa-8fe4f194e184",
+      "team_name": "Ambarish Karan's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:29:24.120804+00:00",
+      "updated_at": "2025-10-10T21:29:24.120804+00:00"
+    },
+    {
+      "id": "b2ad3c34-eed8-4231-9426-5e57c48833d8",
+      "auction_id": "7a6349d1-ef15-4a5d-a8c0-11597f2e1075",
+      "captain_id": "d3f0f819-499d-4bb8-bf36-948ba99a9c61",
+      "team_name": "Arul's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:29:24.120804+00:00",
+      "updated_at": "2025-10-10T21:29:24.120804+00:00"
+    },
+    {
+      "id": "d559fc52-dbba-416b-826f-00fd8b63e4a0",
+      "auction_id": "7a6349d1-ef15-4a5d-a8c0-11597f2e1075",
+      "captain_id": "f5903e1a-85ff-4c81-9c97-57395dd28930",
+      "team_name": "Arun Balaji's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:29:24.120804+00:00",
+      "updated_at": "2025-10-10T21:29:24.120804+00:00"
+    },
+    {
+      "id": "e17de967-7047-442c-9da6-978a5328cdbb",
+      "auction_id": "7a6349d1-ef15-4a5d-a8c0-11597f2e1075",
+      "captain_id": "dfd36478-b73c-462c-b7a4-2ac4966e9079",
+      "team_name": "Nishant's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-10T21:29:24.120804+00:00",
+      "updated_at": "2025-10-10T21:29:24.120804+00:00"
+    },
+    {
+      "id": "58457588-7fe4-4622-886a-b1381b336ba7",
+      "auction_id": "5884c1b9-993c-4688-89d2-d3118fb473f8",
+      "captain_id": "7df09fb1-4517-4cb5-83fa-8fe4f194e184",
+      "team_name": "Ambarish Karan's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-11T11:25:19.032299+00:00",
+      "updated_at": "2025-10-11T11:25:19.032299+00:00"
+    },
+    {
+      "id": "52bee0ba-0217-4fc7-ad8f-916a79341837",
+      "auction_id": "5884c1b9-993c-4688-89d2-d3118fb473f8",
+      "captain_id": "bd22094c-2dc3-446c-8359-4589164525fd",
+      "team_name": "Archit Raj's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-11T11:25:19.032299+00:00",
+      "updated_at": "2025-10-11T11:25:19.032299+00:00"
+    },
+    {
+      "id": "c9efd371-6197-472f-9cf8-e53d73abe3ed",
+      "auction_id": "5884c1b9-993c-4688-89d2-d3118fb473f8",
+      "captain_id": "dfd36478-b73c-462c-b7a4-2ac4966e9079",
+      "team_name": "Nishant's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-11T11:25:19.032299+00:00",
+      "updated_at": "2025-10-11T11:25:19.032299+00:00"
+    },
+    {
+      "id": "fe183cd6-fcc8-47fa-ad14-cd1b72f152ea",
+      "auction_id": "5884c1b9-993c-4688-89d2-d3118fb473f8",
+      "captain_id": "16d13c0b-9644-4941-8a74-e4d7bbbaf538",
+      "team_name": "Pravin Agarwal's Team",
+      "total_spent": 0,
+      "remaining_purse": 1000000,
+      "created_at": "2025-10-11T11:25:19.032299+00:00",
+      "updated_at": "2025-10-11T11:25:19.032299+00:00"
+    }
+  ]
+}

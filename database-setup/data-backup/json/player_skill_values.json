@@ -1,0 +1,196 @@
+{
+  "table_name": "player_skill_values",
+  "backup_timestamp": "2025-10-11T12:08:27.548Z",
+  "record_count": 21,
+  "data": [
+    {
+      "id": "652b42c6-533b-4367-bc26-690f4c1d7917",
+      "skill_id": "66401c99-e797-4966-a742-1a5b4013345a",
+      "value_name": "Right Hand Batter",
+      "display_order": 2,
+      "is_active": true,
+      "created_at": "2025-10-08T08:57:06.398666+00:00",
+      "updated_at": "2025-10-08T08:57:06.398666+00:00"
+    },
+    {
+      "id": "4d1e8210-40b3-4e59-ae78-8e28ffec6ace",
+      "skill_id": "66401c99-e797-4966-a742-1a5b4013345a",
+      "value_name": "Left Hand Batter",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2025-10-08T08:57:20.502933+00:00",
+      "updated_at": "2025-10-08T08:57:20.502933+00:00"
+    },
+    {
+      "id": "5cfc7645-3b65-4c7a-a7f5-0ad348dc3164",
+      "skill_id": "1a078475-a428-4548-87f0-2e7e02bec3b3",
+      "value_name": "Batter",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2025-10-08T08:57:31.178001+00:00",
+      "updated_at": "2025-10-08T08:57:31.178001+00:00"
+    },
+    {
+      "id": "3ba9c9f2-18f3-48bc-a3d9-87a6dbe1254b",
+      "skill_id": "1a078475-a428-4548-87f0-2e7e02bec3b3",
+      "value_name": "Bowler",
+      "display_order": 2,
+      "is_active": true,
+      "created_at": "2025-10-08T08:57:37.978397+00:00",
+      "updated_at": "2025-10-08T08:57:37.978397+00:00"
+    },
+    {
+      "id": "fe0eb9ee-6ce3-443d-83ff-bc9cb52d4183",
+      "skill_id": "1a078475-a428-4548-87f0-2e7e02bec3b3",
+      "value_name": "Wicket Keeper",
+      "display_order": 3,
+      "is_active": true,
+      "created_at": "2025-10-08T08:57:45.464259+00:00",
+      "updated_at": "2025-10-08T08:57:45.464259+00:00"
+    },
+    {
+      "id": "20e24af7-c2e6-4bc7-9620-46cb71237ce2",
+      "skill_id": "60fba08e-9de9-4542-b444-6a1fcbf68147",
+      "value_name": "Right Arm Fast",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2025-10-08T08:58:27.774419+00:00",
+      "updated_at": "2025-10-08T08:58:27.774419+00:00"
+    },
+    {
+      "id": "fcf372ce-6899-4622-a01d-7f486003b624",
+      "skill_id": "60fba08e-9de9-4542-b444-6a1fcbf68147",
+      "value_name": "Left Arm Fast",
+      "display_order": 2,
+      "is_active": true,
+      "created_at": "2025-10-08T08:58:44.337308+00:00",
+      "updated_at": "2025-10-08T08:58:44.337308+00:00"
+    },
+    {
+      "id": "96d2221d-27c0-4bcd-9d3c-277f3c20b23a",
+      "skill_id": "60fba08e-9de9-4542-b444-6a1fcbf68147",
+      "value_name": "Left Arm Spin",
+      "display_order": 6,
+      "is_active": true,
+      "created_at": "2025-10-08T08:59:29.253552+00:00",
+      "updated_at": "2025-10-08T08:59:29.253552+00:00"
+    },
+    {
+      "id": "b8dc6998-23e0-4264-9015-1a584f945a5c",
+      "skill_id": "60fba08e-9de9-4542-b444-6a1fcbf68147",
+      "value_name": "Right Arm Medium",
+      "display_order": 3,
+      "is_active": true,
+      "created_at": "2025-10-08T08:58:55.165212+00:00",
+      "updated_at": "2025-10-08T08:58:55.165212+00:00"
+    },
+    {
+      "id": "88c1748d-cae1-410a-876a-e4eee0328ebf",
+      "skill_id": "60fba08e-9de9-4542-b444-6a1fcbf68147",
+      "value_name": "Right Arm Spin",
+      "display_order": 5,
+      "is_active": true,
+      "created_at": "2025-10-08T08:59:13.949945+00:00",
+      "updated_at": "2025-10-08T08:59:13.949945+00:00"
+    },
+    {
+      "id": "63b058c8-90c6-4511-b0d4-a02fdb35fd0d",
+      "skill_id": "60fba08e-9de9-4542-b444-6a1fcbf68147",
+      "value_name": "Left Arm Medium",
+      "display_order": 4,
+      "is_active": true,
+      "created_at": "2025-10-08T08:59:04.805688+00:00",
+      "updated_at": "2025-10-08T08:59:04.805688+00:00"
+    },
+    {
+      "id": "fb4c43eb-a04d-4e89-a6d1-439a05eab691",
+      "skill_id": "f36878a0-3fc7-45d9-a5d0-6d70998fa282",
+      "value_name": "40",
+      "display_order": 0,
+      "is_active": true,
+      "created_at": "2025-10-08T09:03:57.306354+00:00",
+      "updated_at": "2025-10-08T09:03:57.306354+00:00"
+    },
+    {
+      "id": "18a82ef5-6a94-4eca-b4c1-1c67dceab335",
+      "skill_id": "f36878a0-3fc7-45d9-a5d0-6d70998fa282",
+      "value_name": "60",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2025-10-08T09:04:04.917258+00:00",
+      "updated_at": "2025-10-08T09:04:04.917258+00:00"
+    },
+    {
+      "id": "2c5f8dc9-64ab-4a06-bb58-b0ff4d639827",
+      "skill_id": "f36878a0-3fc7-45d9-a5d0-6d70998fa282",
+      "value_name": "80",
+      "display_order": 2,
+      "is_active": true,
+      "created_at": "2025-10-08T09:04:11.041865+00:00",
+      "updated_at": "2025-10-08T09:04:11.041865+00:00"
+    },
+    {
+      "id": "55421821-b856-40b4-8183-da6200c649a0",
+      "skill_id": "f36878a0-3fc7-45d9-a5d0-6d70998fa282",
+      "value_name": "100",
+      "display_order": 3,
+      "is_active": true,
+      "created_at": "2025-10-08T09:04:17.686427+00:00",
+      "updated_at": "2025-10-08T09:04:17.686427+00:00"
+    },
+    {
+      "id": "5e868649-1328-4c90-842b-e9d72afa0eb9",
+      "skill_id": "f36878a0-3fc7-45d9-a5d0-6d70998fa282",
+      "value_name": "150",
+      "display_order": 4,
+      "is_active": true,
+      "created_at": "2025-10-08T09:04:39.44+00:00",
+      "updated_at": "2025-10-08T09:04:39.44+00:00"
+    },
+    {
+      "id": "6dacee83-e6df-444b-b4b0-f3b12dd2221e",
+      "skill_id": "f36878a0-3fc7-45d9-a5d0-6d70998fa282",
+      "value_name": "200",
+      "display_order": 5,
+      "is_active": true,
+      "created_at": "2025-10-08T09:04:48.240223+00:00",
+      "updated_at": "2025-10-08T09:04:48.240223+00:00"
+    },
+    {
+      "id": "45b6f6f8-b608-430e-959a-7a263c00bc2f",
+      "skill_id": "30e8ca29-831d-4000-9157-47ee976d24b4",
+      "value_name": "iBlitz",
+      "display_order": 0,
+      "is_active": true,
+      "created_at": "2025-10-08T10:56:38.757181+00:00",
+      "updated_at": "2025-10-08T10:56:38.757181+00:00"
+    },
+    {
+      "id": "73756899-2eea-48fb-91fe-46b692023f43",
+      "skill_id": "30e8ca29-831d-4000-9157-47ee976d24b4",
+      "value_name": "SmashToPlay",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2025-10-08T10:56:49.531146+00:00",
+      "updated_at": "2025-10-08T10:56:49.531146+00:00"
+    },
+    {
+      "id": "122a60b5-8595-4977-8e64-bf9048361c25",
+      "skill_id": "30e8ca29-831d-4000-9157-47ee976d24b4",
+      "value_name": "Powerplay",
+      "display_order": 2,
+      "is_active": true,
+      "created_at": "2025-10-08T10:56:57.582059+00:00",
+      "updated_at": "2025-10-08T10:56:57.582059+00:00"
+    },
+    {
+      "id": "ed0fde02-a0df-47aa-91b0-9f5f8fad84b6",
+      "skill_id": "30e8ca29-831d-4000-9157-47ee976d24b4",
+      "value_name": "PlayTM",
+      "display_order": 3,
+      "is_active": true,
+      "created_at": "2025-10-08T10:57:10.537073+00:00",
+      "updated_at": "2025-10-08T10:57:10.537073+00:00"
+    }
+  ]
+}

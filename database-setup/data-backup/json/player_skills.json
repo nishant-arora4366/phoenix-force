@@ -1,0 +1,62 @@
+{
+  "table_name": "player_skills",
+  "backup_timestamp": "2025-10-11T12:08:27.448Z",
+  "record_count": 5,
+  "data": [
+    {
+      "id": "1a078475-a428-4548-87f0-2e7e02bec3b3",
+      "skill_name": "Role",
+      "skill_type": "multiselect",
+      "is_required": true,
+      "display_order": 1,
+      "created_at": "2025-10-08T08:52:17.007763+00:00",
+      "updated_at": "2025-10-08T08:52:17.007763+00:00",
+      "is_admin_managed": false,
+      "viewer_can_see": true
+    },
+    {
+      "id": "66401c99-e797-4966-a742-1a5b4013345a",
+      "skill_name": "Batting Style",
+      "skill_type": "select",
+      "is_required": false,
+      "display_order": 2,
+      "created_at": "2025-10-08T08:53:57.24479+00:00",
+      "updated_at": "2025-10-08T08:53:57.24479+00:00",
+      "is_admin_managed": false,
+      "viewer_can_see": true
+    },
+    {
+      "id": "30e8ca29-831d-4000-9157-47ee976d24b4",
+      "skill_name": "Community",
+      "skill_type": "multiselect",
+      "is_required": false,
+      "display_order": 0,
+      "created_at": "2025-10-08T10:56:28.815683+00:00",
+      "updated_at": "2025-10-08T10:56:28.815683+00:00",
+      "is_admin_managed": false,
+      "viewer_can_see": true
+    },
+    {
+      "id": "60fba08e-9de9-4542-b444-6a1fcbf68147",
+      "skill_name": "Bowling Style",
+      "skill_type": "select",
+      "is_required": false,
+      "display_order": 3,
+      "created_at": "2025-10-08T08:58:13.519497+00:00",
+      "updated_at": "2025-10-08T08:58:13.519497+00:00",
+      "is_admin_managed": false,
+      "viewer_can_see": true
+    },
+    {
+      "id": "f36878a0-3fc7-45d9-a5d0-6d70998fa282",
+      "skill_name": "Base Price",
+      "skill_type": "select",
+      "is_required": false,
+      "display_order": 4,
+      "created_at": "2025-10-08T09:03:37.711655+00:00",
+      "updated_at": "2025-10-08T09:03:37.711655+00:00",
+      "is_admin_managed": true,
+      "viewer_can_see": true
+    }
+  ]
+}

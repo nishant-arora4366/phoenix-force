@@ -9,7 +9,10 @@ This directory contains scripts and tools for setting up and managing the Phoeni
 - `essential-supabase-queries.sql` - SQL queries for capturing Supabase configurations
 - `setup-realtime.sql` - Standalone realtime configuration setup
 - `setup-with-realtime.sql` - Complete database setup with realtime
+- `backup-data.js` - Comprehensive data backup system
+- `restore-data.js` - Data restoration system
 - `schema/` - Directory containing generated database schema files
+- `data-backup/` - Directory containing data backups (JSON and SQL formats)
 - `README.md` - This documentation file
 
 ## 🚀 Quick Start
@@ -66,6 +69,82 @@ psql -f setup-with-realtime.sql
 psql -f setup-realtime.sql
 ```
 
+### 4. Data Backup and Restoration
+
+#### **Backup Current Data:**
+```bash
+# Create comprehensive backup (JSON + SQL)
+npm run backup
+
+# Backup only JSON format
+npm run backup:json
+
+# Backup only SQL format
+npm run backup:sql
+```
+
+#### **Restore Data:**
+```bash
+# Restore from JSON backup
+npm run restore:json
+
+# Restore from SQL backup
+npm run restore:sql
+
+# Restore from complete SQL file
+npm run restore:complete
+
+# Dry run (test without making changes)
+npm run restore:dry-run
+```
+
+### 5. Docker-Based Operations
+
+#### **Docker Backup:**
+```bash
+# Full backup using Docker
+npm run docker:backup
+
+# JSON only backup
+npm run docker:backup:json
+
+# SQL only backup
+npm run docker:backup:sql
+```
+
+#### **Docker Restore:**
+```bash
+# Restore from JSON backup
+npm run docker:restore:json
+
+# Restore from SQL backup
+npm run docker:restore:sql
+
+# Restore from complete SQL file
+npm run docker:restore:complete
+
+# Dry run restore
+npm run docker:restore:dry-run
+```
+
+#### **Local Development Environment:**
+```bash
+# Set up complete local environment with PostgreSQL
+npm run docker:setup
+
+# Set up with sample data
+npm run docker:setup:with-data
+
+# Start local PostgreSQL and pgAdmin
+npm run docker:local-db
+
+# Stop local services
+npm run docker:local-db:down
+
+# View logs
+npm run docker:local-db:logs
+```
+
 ## 📋 Prerequisites
 
 1. **Environment Variables**: Ensure your `.env.local` file contains:
@@ -78,6 +157,10 @@ psql -f setup-realtime.sql
    ```bash
    npm install @supabase/supabase-js dotenv
    ```
+
+3. **Docker** (Optional): For containerized operations and local development
+   - Docker Desktop or Docker Engine
+   - Docker Compose
 
 ## 🔧 Script Details
 

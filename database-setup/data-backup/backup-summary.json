@@ -1,0 +1,93 @@
+{
+  "backup_timestamp": "2025-10-11T12:08:28.772Z",
+  "total_tables": 14,
+  "successful_backups": 14,
+  "failed_backups": 0,
+  "total_records": 2707,
+  "tables": [
+    {
+      "table_name": "users",
+      "success": true,
+      "record_count": 18,
+      "error": null
+    },
+    {
+      "table_name": "players",
+      "success": true,
+      "record_count": 248,
+      "error": null
+    },
+    {
+      "table_name": "tournaments",
+      "success": true,
+      "record_count": 2,
+      "error": null
+    },
+    {
+      "table_name": "tournament_slots",
+      "success": true,
+      "record_count": 50,
+      "error": null
+    },
+    {
+      "table_name": "player_skills",
+      "success": true,
+      "record_count": 5,
+      "error": null
+    },
+    {
+      "table_name": "player_skill_values",
+      "success": true,
+      "record_count": 21,
+      "error": null
+    },
+    {
+      "table_name": "player_skill_assignments",
+      "success": true,
+      "record_count": 1000,
+      "error": null
+    },
+    {
+      "table_name": "auctions",
+      "success": true,
+      "record_count": 18,
+      "error": null
+    },
+    {
+      "table_name": "auction_teams",
+      "success": true,
+      "record_count": 36,
+      "error": null
+    },
+    {
+      "table_name": "auction_players",
+      "success": true,
+      "record_count": 288,
+      "error": null
+    },
+    {
+      "table_name": "auction_bids",
+      "success": true,
+      "record_count": 0,
+      "error": null
+    },
+    {
+      "table_name": "auction_config",
+      "success": true,
+      "record_count": 0,
+      "error": null
+    },
+    {
+      "table_name": "notifications",
+      "success": true,
+      "record_count": 21,
+      "error": null
+    },
+    {
+      "table_name": "api_usage_analytics",
+      "success": true,
+      "record_count": 1000,
+      "error": null
+    }
+  ]
+}

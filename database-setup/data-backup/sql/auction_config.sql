@@ -1,0 +1,1 @@
+-- No data to insert for table auction_config

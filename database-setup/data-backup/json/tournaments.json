@@ -1,0 +1,64 @@
+{
+  "table_name": "tournaments",
+  "backup_timestamp": "2025-10-11T12:08:27.236Z",
+  "record_count": 2,
+  "data": [
+    {
+      "id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
+      "name": "Quad Series 43",
+      "host_id": "55edaef4-2977-40b8-b533-365cae96fbbe",
+      "host_player_id": null,
+      "status": "completed",
+      "total_slots": 32,
+      "created_at": "2025-10-10T17:38:35.96025+00:00",
+      "updated_at": "2025-10-10T19:12:52.888+00:00",
+      "format": "Quad",
+      "selected_teams": 4,
+      "description": "",
+      "venue": "iBlitz",
+      "google_maps_link": "",
+      "tournament_date": "2025-10-12T01:30:00+00:00",
+      "community_restrictions": [
+        "iBlitz"
+      ],
+      "base_price_restrictions": [
+        "60",
+        "150",
+        "100",
+        "80",
+        "200",
+        "40"
+      ],
+      "min_base_price": null,
+      "max_base_price": null
+    },
+    {
+      "id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+      "name": "Quad Series 44",
+      "host_id": "55edaef4-2977-40b8-b533-365cae96fbbe",
+      "host_player_id": null,
+      "status": "registration_open",
+      "total_slots": 32,
+      "created_at": "2025-10-10T17:41:09.319008+00:00",
+      "updated_at": "2025-10-11T05:48:00.885+00:00",
+      "format": "Quad",
+      "selected_teams": 4,
+      "description": "",
+      "venue": "iBlitz",
+      "google_maps_link": "",
+      "tournament_date": "2025-10-19T01:30:00+00:00",
+      "community_restrictions": [
+        "iBlitz"
+      ],
+      "base_price_restrictions": [
+        "100",
+        "60",
+        "150",
+        "80",
+        "200"
+      ],
+      "min_base_price": null,
+      "max_base_price": null
+    }
+  ]
+}
