@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRoleValidation } from '@/src/hooks/useRoleValidation'
 import { secureSessionManager } from '@/src/lib/secure-session'
+import { supabase } from '@/src/lib/supabaseClient'
 
-type AuctionStep = 'select-type' | 'select-tournament' | 'confirm-players' | 'validate-teams' | 'select-captains' | 'enter-team-names'
+type AuctionStep = 'select-type' | 'select-tournament' | 'confirm-players' | 'validate-teams' | 'select-captains' | 'enter-team-names' | 'auction-config' | 'review-and-start'
 
 interface Tournament {
   id: string
@@ -49,6 +50,21 @@ interface Captain {
   profile_pic_url?: string
 }
 
+interface AuctionConfig {
+  maxTokensPerCaptain: number
+  minimumBid: number
+  useBasePrice: boolean
+  minimumIncrement: number
+  useFixedIncrement: boolean
+  customIncrements: Array<{
+    min: number
+    max: number
+    increment: number
+  }>
+  timerSeconds: number
+  playerOrder: 'base_price_desc' | 'base_price_asc' | 'alphabetical' | 'random'
+}
+
 export default function CreateAuctionPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -66,6 +82,18 @@ export default function CreateAuctionPage() {
   
   // Captains
   const [captains, setCaptains] = useState<Captain[]>([])
+  
+  // Auction Configuration
+  const [auctionConfig, setAuctionConfig] = useState<AuctionConfig>({
+    maxTokensPerCaptain: 2000,
+    minimumBid: 1000,
+    useBasePrice: false,
+    minimumIncrement: 100,
+    useFixedIncrement: true,
+    customIncrements: [],
+    timerSeconds: 30,
+    playerOrder: 'base_price_desc'
+  })
 
   const { user } = useRoleValidation()
 
@@ -81,6 +109,16 @@ export default function CreateAuctionPage() {
           setPlayers(state.players || [])
           setTempPlayers(state.tempPlayers || [])
           setCaptains(state.captains || [])
+          setAuctionConfig(state.auctionConfig || {
+            maxTokensPerCaptain: 2000,
+            minimumBid: 1000,
+            useBasePrice: false,
+            minimumIncrement: 100,
+            useFixedIncrement: true,
+            customIncrements: [],
+            timerSeconds: 30,
+            playerOrder: 'base_price_desc'
+          })
         } catch (error) {
           console.error('Error loading saved state:', error)
         }
@@ -97,11 +135,12 @@ export default function CreateAuctionPage() {
         selectedTournament,
         players,
         tempPlayers,
-        captains
+        captains,
+        auctionConfig
       }
       sessionStorage.setItem('auction_creation_state', JSON.stringify(state))
     }
-  }, [currentStep, selectedTournament, players, tempPlayers, captains, loading])
+  }, [currentStep, selectedTournament, players, tempPlayers, captains, auctionConfig, loading])
 
   const handleTournamentAuction = () => {
     setCurrentStep('select-tournament')
@@ -175,6 +214,7 @@ export default function CreateAuctionPage() {
         
         console.log('Playing players filtered:', playingPlayers)
         console.log('First player skills:', playingPlayers[0]?.skills)
+        console.log('First 3 player IDs:', playingPlayers.slice(0, 3).map((p: any) => p.id))
         setPlayers(playingPlayers)
       }
     } catch (error) {
@@ -232,6 +272,131 @@ export default function CreateAuctionPage() {
       return '🏏' // Default
     })
   }
+
+  const handleStartAuction = async () => {
+    try {
+      if (!selectedTournament || captains.length === 0) {
+        alert('Please complete all steps before starting auction');
+        return;
+      }
+
+      // Check if user is authenticated
+      if (!secureSessionManager.isAuthenticated()) {
+        alert('Please log in to create an auction');
+        return;
+      }
+
+      const token = secureSessionManager.getToken();
+      console.log('Auth check:', { authenticated: secureSessionManager.isAuthenticated() });
+
+      // Create auction
+      const auctionData = {
+        tournament_id: selectedTournament.id
+      };
+
+      console.log('Sending auction data:', auctionData);
+
+      const response = await fetch('/api/auctions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(auctionData),
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        console.error('Auction creation error:', errorData);
+        console.error('Response status:', response.status);
+        console.error('Response headers:', Object.fromEntries(response.headers.entries()));
+        throw new Error(errorData.error || `Failed to create auction (${response.status})`);
+      }
+
+      const { data: auction } = await response.json();
+      console.log('Auction created successfully:', auction);
+
+      // Create auction teams
+      console.log('Creating teams with data:', {
+        auction_id: auction.id,
+        teams: captains.map(captain => ({
+          playerId: captain.playerId,
+          teamName: captain.teamName
+        }))
+      });
+      
+      const teamsResponse = await fetch('/api/auctions/teams', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          auction_id: auction.id,
+          teams: captains.map(captain => ({
+            playerId: captain.playerId,
+            teamName: captain.teamName
+          }))
+        }),
+      });
+
+      if (!teamsResponse.ok) {
+        const errorData = await teamsResponse.json();
+        console.error('Teams creation error:', errorData);
+        throw new Error(errorData.error || 'Failed to create auction teams');
+      }
+      console.log('Teams created successfully');
+
+      // Create auction players (tournament players + temp players)
+      const allPlayers = [...players, ...tempPlayers];
+      console.log('Creating players with data:', {
+        auction_id: auction.id,
+        players: allPlayers.map(player => ({
+          id: player.id
+        })),
+        playersCount: allPlayers.length,
+        tournamentPlayersCount: players.length,
+        tempPlayersCount: tempPlayers.length,
+        allPlayers: allPlayers
+      });
+      
+      const playersResponse = await fetch('/api/auctions/players', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          auction_id: auction.id,
+          players: allPlayers.map(player => ({
+            id: player.id
+          }))
+        }),
+      });
+
+      if (!playersResponse.ok) {
+        const errorData = await playersResponse.json();
+        console.error('Players creation error:', errorData);
+        throw new Error(errorData.error || 'Failed to add auction players');
+      }
+      console.log('Players added successfully');
+
+      // Clear session storage
+      sessionStorage.removeItem('auction-creation-state');
+
+      // Redirect to auction bidding page
+      window.location.href = `/auctions/${auction.id}/bidding`;
+      
+    } catch (error) {
+      console.error('Error starting auction:', error);
+      alert('Failed to start auction: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+  };
 
   if (loading) {
     return (
@@ -353,6 +518,10 @@ export default function CreateAuctionPage() {
         return renderSelectCaptains()
       case 'enter-team-names':
         return renderEnterTeamNames()
+      case 'auction-config':
+        return renderAuctionConfig()
+      case 'review-and-start':
+        return renderReviewAndStart()
       default:
         return renderSelectType()
     }
@@ -1247,14 +1416,468 @@ export default function CreateAuctionPage() {
 
         <div className="flex justify-end">
           <button
-            onClick={() => {
-              // TODO: Create auction with selected data
-              console.log('Creating auction with:', { selectedTournament, players, tempPlayers, captains })
-            }}
+            onClick={() => setCurrentStep('auction-config')}
             disabled={!canContinue}
             className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Start Auction
+            Configure Auction
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const renderAuctionConfig = () => {
+    const handleConfigChange = (key: keyof AuctionConfig, value: any) => {
+      setAuctionConfig(prev => ({ ...prev, [key]: value }))
+    }
+
+    const addCustomIncrement = () => {
+      setAuctionConfig(prev => ({
+        ...prev,
+        customIncrements: [...prev.customIncrements, { min: 0, max: 1000, increment: 100 }]
+      }))
+    }
+
+    const updateCustomIncrement = (index: number, field: 'min' | 'max' | 'increment', value: number) => {
+      setAuctionConfig(prev => ({
+        ...prev,
+        customIncrements: prev.customIncrements.map((item, i) => 
+          i === index ? { ...item, [field]: value } : item
+        )
+      }))
+    }
+
+    const removeCustomIncrement = (index: number) => {
+      setAuctionConfig(prev => ({
+        ...prev,
+        customIncrements: prev.customIncrements.filter((_, i) => i !== index)
+      }))
+    }
+
+    return (
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-[#DBD0C0] mb-2">Auction Configuration</h1>
+          <p className="text-[#CEA17A]">Configure the auction settings and rules</p>
+        </div>
+
+        <div className="space-y-8">
+          {/* Max Tokens per Captain */}
+          <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+            <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">1. Maximum Tokens per Captain</h3>
+            <div className="flex items-center space-x-4">
+              <label className="text-[#CEA17A] font-medium">Max Tokens:</label>
+              <input
+                type="number"
+                value={auctionConfig.maxTokensPerCaptain}
+                onChange={(e) => handleConfigChange('maxTokensPerCaptain', parseInt(e.target.value) || 0)}
+                className="px-4 py-2 bg-[#0A0E1A]/50 border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] focus:border-[#CEA17A] focus:outline-none"
+                min="100"
+                step="100"
+              />
+              <span className="text-[#CEA17A] text-sm">tokens</span>
+            </div>
+          </div>
+
+          {/* Minimum Bid */}
+          <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+            <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">2. Minimum Bid Settings</h3>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <label className="text-[#CEA17A] font-medium">Minimum Bid:</label>
+                <input
+                  type="number"
+                  value={auctionConfig.minimumBid}
+                  onChange={(e) => handleConfigChange('minimumBid', parseInt(e.target.value) || 0)}
+                  className="px-4 py-2 bg-[#0A0E1A]/50 border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] focus:border-[#CEA17A] focus:outline-none"
+                  min="100"
+                  step="100"
+                />
+                <span className="text-[#CEA17A] text-sm">₹</span>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="useBasePrice"
+                  checked={auctionConfig.useBasePrice}
+                  onChange={(e) => handleConfigChange('useBasePrice', e.target.checked)}
+                  className="w-4 h-4 text-[#CEA17A] bg-[#0A0E1A] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                />
+                <label htmlFor="useBasePrice" className="text-[#DBD0C0]">
+                  Use base price for bidding (if available)
+                </label>
+              </div>
+              {auctionConfig.useBasePrice && (
+                <div className="ml-7 text-sm text-[#CEA17A]">
+                  <p>• If player has base price &gt; minimum bid, first bid = base price</p>
+                  <p>• If no base price, first bid = minimum bid</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Minimum Increments */}
+          <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+            <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">3. Bidding Increments</h3>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="useFixedIncrement"
+                  checked={auctionConfig.useFixedIncrement}
+                  onChange={(e) => handleConfigChange('useFixedIncrement', e.target.checked)}
+                  className="w-4 h-4 text-[#CEA17A] bg-[#0A0E1A] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                />
+                <label htmlFor="useFixedIncrement" className="text-[#DBD0C0]">
+                  Use fixed increment for all bids
+                </label>
+              </div>
+              
+              {auctionConfig.useFixedIncrement ? (
+                <div className="flex items-center space-x-4 ml-7">
+                  <label className="text-[#CEA17A] font-medium">Fixed Increment:</label>
+                  <input
+                    type="number"
+                    value={auctionConfig.minimumIncrement}
+                    onChange={(e) => handleConfigChange('minimumIncrement', parseInt(e.target.value) || 0)}
+                    className="px-4 py-2 bg-[#0A0E1A]/50 border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] focus:border-[#CEA17A] focus:outline-none"
+                    min="50"
+                    step="50"
+                  />
+                  <span className="text-[#CEA17A] text-sm">₹</span>
+                </div>
+              ) : (
+                <div className="ml-7 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[#DBD0C0] font-medium">Custom Increments:</h4>
+                    <button
+                      onClick={addCustomIncrement}
+                      className="px-3 py-1 bg-[#CEA17A] text-[#0A0E1A] rounded-lg hover:bg-[#B8915F] transition-colors text-sm"
+                    >
+                      Add Range
+                    </button>
+                  </div>
+                  
+                  {auctionConfig.customIncrements.map((increment, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-[#0A0E1A]/50 rounded-lg">
+                      <input
+                        type="number"
+                        value={increment.min}
+                        onChange={(e) => updateCustomIncrement(index, 'min', parseInt(e.target.value) || 0)}
+                        className="w-20 px-2 py-1 bg-[#0A0E1A] border border-[#CEA17A]/30 rounded text-[#DBD0C0] text-sm"
+                        placeholder="Min"
+                      />
+                      <span className="text-[#CEA17A]">to</span>
+                      <input
+                        type="number"
+                        value={increment.max}
+                        onChange={(e) => updateCustomIncrement(index, 'max', parseInt(e.target.value) || 0)}
+                        className="w-20 px-2 py-1 bg-[#0A0E1A] border border-[#CEA17A]/30 rounded text-[#DBD0C0] text-sm"
+                        placeholder="Max"
+                      />
+                      <span className="text-[#CEA17A]">increment by</span>
+                      <input
+                        type="number"
+                        value={increment.increment}
+                        onChange={(e) => updateCustomIncrement(index, 'increment', parseInt(e.target.value) || 0)}
+                        className="w-20 px-2 py-1 bg-[#0A0E1A] border border-[#CEA17A]/30 rounded text-[#DBD0C0] text-sm"
+                        placeholder="₹"
+                      />
+                      <button
+                        onClick={() => removeCustomIncrement(index)}
+                        className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Timer */}
+          <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+            <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">4. Timer Settings</h3>
+            <div className="flex items-center space-x-4">
+              <label className="text-[#CEA17A] font-medium">Timer per action:</label>
+              <input
+                type="number"
+                value={auctionConfig.timerSeconds}
+                onChange={(e) => handleConfigChange('timerSeconds', parseInt(e.target.value) || 0)}
+                className="px-4 py-2 bg-[#0A0E1A]/50 border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] focus:border-[#CEA17A] focus:outline-none"
+                min="10"
+                max="300"
+                step="5"
+              />
+              <span className="text-[#CEA17A] text-sm">seconds</span>
+            </div>
+          </div>
+
+          {/* Player Order */}
+          <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+            <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">5. Player Order</h3>
+            <div className="space-y-3">
+              {[
+                { value: 'base_price_desc', label: 'Base Price (High to Low)' },
+                { value: 'base_price_asc', label: 'Base Price (Low to High)' },
+                { value: 'alphabetical', label: 'Alphabetical Order' },
+                { value: 'random', label: 'Random Order' }
+              ].map((option) => (
+                <div key={option.value} className="flex items-center space-x-3">
+                  <input
+                    type="radio"
+                    id={option.value}
+                    name="playerOrder"
+                    value={option.value}
+                    checked={auctionConfig.playerOrder === option.value}
+                    onChange={(e) => handleConfigChange('playerOrder', e.target.value)}
+                    className="w-4 h-4 text-[#CEA17A] bg-[#0A0E1A] border-[#CEA17A]/30 focus:ring-[#CEA17A] focus:ring-2"
+                  />
+                  <label htmlFor={option.value} className="text-[#DBD0C0]">
+                    {option.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <button
+            onClick={() => setCurrentStep('enter-team-names')}
+            className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
+          >
+            Back
+          </button>
+          <button
+            onClick={() => setCurrentStep('review-and-start')}
+            className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
+          >
+            Review & Start
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const renderReviewAndStart = () => {
+    if (!selectedTournament) return null
+
+    const allPlayers = [...players, ...tempPlayers]
+    const totalPlayers = allPlayers.length
+    const playersPerTeam = Math.floor(totalPlayers / selectedTournament.selected_teams)
+
+    const getPlayerOrderLabel = (order: string) => {
+      switch (order) {
+        case 'base_price_desc': return 'Base Price (High to Low)'
+        case 'base_price_asc': return 'Base Price (Low to High)'
+        case 'alphabetical': return 'Alphabetical Order'
+        case 'random': return 'Random Order'
+        default: return order
+      }
+    }
+
+    return (
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-[#DBD0C0] mb-2">Review & Start Auction</h1>
+          <p className="text-[#CEA17A]">Review all settings before starting the auction</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column - Tournament & Teams */}
+          <div className="space-y-6">
+            {/* Tournament Info */}
+            <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+              <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">Tournament Details</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Tournament:</span>
+                  <span className="text-[#DBD0C0] font-medium">{selectedTournament.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Format:</span>
+                  <span className="text-[#DBD0C0]">{selectedTournament.format}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Date:</span>
+                  <span className="text-[#DBD0C0]">{new Date(selectedTournament.tournament_date).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Venue:</span>
+                  <span className="text-[#DBD0C0]">{selectedTournament.venue || 'TBD'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Teams & Players */}
+            <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+              <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">Teams & Players</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Number of Teams:</span>
+                  <span className="text-[#DBD0C0] font-medium">{selectedTournament.selected_teams}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Total Players:</span>
+                  <span className="text-[#DBD0C0]">{totalPlayers}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Players per Team:</span>
+                  <span className="text-[#DBD0C0]">{playersPerTeam}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Tournament Players:</span>
+                  <span className="text-[#DBD0C0]">{players.length}</span>
+                </div>
+                {tempPlayers.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-[#CEA17A]">Temporary Players:</span>
+                    <span className="text-[#DBD0C0]">{tempPlayers.length}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Captains */}
+            <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+              <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">Team Captains & Team Names</h3>
+              <div className="space-y-3">
+                {captains.map((captain, index) => (
+                  <div key={captain.playerId} className="p-4 bg-[#0A0E1A]/50 rounded-lg border border-[#CEA17A]/10">
+                    <div className="flex items-center space-x-3 mb-2">
+                      {captain.profile_pic_url ? (
+                        <img
+                          src={captain.profile_pic_url}
+                          alt={captain.playerName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-[#CEA17A]/20 flex items-center justify-center">
+                          <span className="text-sm font-bold text-[#CEA17A]">
+                            {captain.playerName.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-[#DBD0C0] font-medium">{captain.playerName}</div>
+                        <div className="text-[#CEA17A] text-sm">Captain</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[#CEA17A] text-sm">Team Name:</span>
+                      <span className="text-[#DBD0C0] font-semibold bg-[#CEA17A]/10 px-3 py-1 rounded-full">
+                        {captain.teamName}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Auction Configuration */}
+          <div className="space-y-6">
+            {/* Auction Settings */}
+            <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+              <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">Auction Configuration</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Max Tokens per Captain:</span>
+                  <span className="text-[#DBD0C0] font-medium">{auctionConfig.maxTokensPerCaptain.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Minimum Bid:</span>
+                  <span className="text-[#DBD0C0]">₹{auctionConfig.minimumBid.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Use Base Price:</span>
+                  <span className={`font-medium ${auctionConfig.useBasePrice ? 'text-green-400' : 'text-red-400'}`}>
+                    {auctionConfig.useBasePrice ? 'Yes' : 'No'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Bidding Increments:</span>
+                  <span className="text-[#DBD0C0]">
+                    {auctionConfig.useFixedIncrement 
+                      ? `₹${auctionConfig.minimumIncrement} (Fixed)`
+                      : `${auctionConfig.customIncrements.length} Custom Ranges`
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Timer per Action:</span>
+                  <span className="text-[#DBD0C0]">{auctionConfig.timerSeconds} seconds</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#CEA17A]">Player Order:</span>
+                  <span className="text-[#DBD0C0]">{getPlayerOrderLabel(auctionConfig.playerOrder)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Increments (if any) */}
+            {!auctionConfig.useFixedIncrement && auctionConfig.customIncrements.length > 0 && (
+              <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+                <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">Custom Increment Ranges</h3>
+                <div className="space-y-2">
+                  {auctionConfig.customIncrements.map((increment, index) => (
+                    <div key={index} className="flex justify-between p-2 bg-[#0A0E1A]/50 rounded">
+                      <span className="text-[#CEA17A]">
+                        ₹{increment.min.toLocaleString()} - ₹{increment.max.toLocaleString()}
+                      </span>
+                      <span className="text-[#DBD0C0]">+₹{increment.increment.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Summary */}
+            <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-6">
+              <h3 className="text-xl font-bold text-[#DBD0C0] mb-4">Auction Summary</h3>
+              <div className="space-y-2 text-sm">
+                <p className="text-[#CEA17A]">
+                  • {selectedTournament.selected_teams} teams will compete in this auction
+                </p>
+                <p className="text-[#CEA17A]">
+                  • Team names: {captains.map(c => c.teamName).join(', ')}
+                </p>
+                <p className="text-[#CEA17A]">
+                  • Each captain starts with {auctionConfig.maxTokensPerCaptain.toLocaleString()} tokens
+                </p>
+                <p className="text-[#CEA17A]">
+                  • {totalPlayers} players will be auctioned in {getPlayerOrderLabel(auctionConfig.playerOrder).toLowerCase()}
+                </p>
+                <p className="text-[#CEA17A]">
+                  • Minimum bid starts at ₹{auctionConfig.minimumBid.toLocaleString()}
+                  {auctionConfig.useBasePrice && ' (or base price if higher)'}
+                </p>
+                <p className="text-[#CEA17A]">
+                  • Timer set to {auctionConfig.timerSeconds} seconds per action
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <button
+            onClick={() => setCurrentStep('auction-config')}
+            className="px-6 py-3 bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#3E4E5A]/10 backdrop-blur-sm rounded-lg hover:bg-[#3E4E5A]/25 hover:border-[#CEA17A]/40 transition-all duration-200 font-medium"
+          >
+            Back to Config
+          </button>
+          <button
+            onClick={handleStartAuction}
+            className="px-8 py-3 bg-gradient-to-r from-[#CEA17A] to-[#B8915F] text-[#0A0E1A] font-bold rounded-lg hover:from-[#B8915F] hover:to-[#A67D4A] transition-all duration-200 shadow-lg"
+          >
+            🚀 Start Auction
           </button>
         </div>
       </div>

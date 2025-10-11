@@ -224,6 +224,7 @@ export default function PlayersPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showCreatedByMe, setShowCreatedByMe] = useState(false)
+  const [hideUnverified, setHideUnverified] = useState(true) // Hide unverified players by default
   const [user, setUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -354,7 +355,13 @@ export default function PlayersPage() {
     // Check "Created by me" filter
     const matchesCreatedByMe = !showCreatedByMe || player.created_by === currentUser?.id
     
-    return matchesSearch && matchesAllSkills && matchesCreatedByMe
+    // Check "Hide Unverified" filter
+    // Unverified players are identified by having no user_id (null)
+    // Verified players have user_id set (linked to a user account)
+    const isUnverified = player.user_id === null || player.user_id === undefined
+    const matchesUnverifiedFilter = !hideUnverified || !isUnverified
+    
+    return matchesSearch && matchesAllSkills && matchesCreatedByMe && matchesUnverifiedFilter
   })?.sort((a, b) => {
     let comparison = 0
     
@@ -548,9 +555,9 @@ export default function PlayersPage() {
               </div>
 
             {/* Sort Controls */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               {/* Sort Direction Icons - Side by Side */}
-              <div className="flex">
+              <div className="flex flex-shrink-0">
                 <button
                   onClick={() => setSortDirection('asc')}
                   className={`px-3 py-3 border-2 border-[#CEA17A]/30 rounded-l-lg transition-all duration-200 ${
@@ -579,11 +586,11 @@ export default function PlayersPage() {
                 </button>
             </div>
 
-              {/* Sort Field Input */}
+              {/* Sort Field Input - Takes remaining width */}
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-3 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-sm"
+                className="flex-1 px-3 py-3 border-2 border-[#CEA17A]/30 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-300 bg-[#19171b]/60 backdrop-blur-sm text-[#DBD0C0] text-sm"
                 >
                   <option value="name">Name</option>
                 <option value="base_price">Base Price</option>
@@ -619,21 +626,38 @@ export default function PlayersPage() {
                 </button>
               </div>
 
-            {/* "Created by me" filter - Only for hosts and admins */}
-            {(userRole === 'host' || userRole === 'admin') && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl">
+            {/* Filter Checkboxes - Mobile: One row, Desktop: Separate */}
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              {/* "Created by me" filter - Only for hosts and admins */}
+              {(userRole === 'host' || userRole === 'admin') && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl flex-1 sm:flex-none">
+                  <input
+                    type="checkbox"
+                    id="createdByMe"
+                    checked={showCreatedByMe}
+                    onChange={(e) => setShowCreatedByMe(e.target.checked)}
+                    className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                  />
+                  <label htmlFor="createdByMe" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
+                    Created by me
+                  </label>
+                </div>
+              )}
+
+              {/* "Hide Unverified" filter - Available to all users */}
+              <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl flex-1 sm:flex-none">
                 <input
                   type="checkbox"
-                  id="createdByMe"
-                  checked={showCreatedByMe}
-                  onChange={(e) => setShowCreatedByMe(e.target.checked)}
+                  id="hideUnverified"
+                  checked={hideUnverified}
+                  onChange={(e) => setHideUnverified(e.target.checked)}
                   className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
                 />
-                <label htmlFor="createdByMe" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
-                  Created by me
+                <label htmlFor="hideUnverified" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
+                  Hide Unverified
                 </label>
               </div>
-            )}
+            </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -643,6 +667,7 @@ export default function PlayersPage() {
                   setSearchTerm('')
                   setSkillFilters({})
                   setShowCreatedByMe(false)
+                  setHideUnverified(true) // Reset to default (hide unverified)
                 }}
                 className="w-full sm:w-auto px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
                 title="Clear all filters"
@@ -869,18 +894,19 @@ export default function PlayersPage() {
             <div className="bg-gradient-to-r from-[#CEA17A]/10 to-[#CEA17A]/5 border-b border-[#CEA17A]/20">
               <div className={`grid gap-2 sm:gap-4 p-2 sm:p-4 text-xs font-semibold text-[#CEA17A] uppercase tracking-wide ${
                 (userRole === 'admin' || userRole === 'host') 
-                  ? 'grid-cols-8' 
-                  : 'grid-cols-8'
+                  ? 'grid-cols-10 sm:grid-cols-8' 
+                  : 'grid-cols-10 sm:grid-cols-8'
               }`}>
                 <div className="col-span-1 sm:col-span-1"></div>
                 <div className="col-span-3 sm:col-span-2">Name</div>
                 <div className="col-span-1 sm:col-span-1">Role</div>
+                <div className="col-span-1 sm:col-span-0"></div> {/* Extra space on mobile */}
                 <div className="col-span-2 sm:col-span-2">Community</div>
                 {(userRole === 'admin' || userRole === 'host') && (
                   <div className="col-span-1 sm:col-span-1 text-right">Price</div>
                 )}
                 {!(userRole === 'admin' || userRole === 'host') && (
-                  <div className="col-span-2 sm:col-span-1"></div>
+                  <div className="col-span-1 sm:col-span-1"></div>
                 )}
                       </div>
                       </div>
@@ -893,8 +919,8 @@ export default function PlayersPage() {
                       onClick={() => handlePlayerClick(player)}
                   className={`grid gap-1 sm:gap-4 p-2 sm:p-4 hover:bg-[#CEA17A]/5 transition-all duration-200 cursor-pointer group ${
                     (userRole === 'admin' || userRole === 'host') 
-                      ? 'grid-cols-8' 
-                      : 'grid-cols-8'
+                      ? 'grid-cols-10 sm:grid-cols-8' 
+                      : 'grid-cols-10 sm:grid-cols-8'
                   }`}
                 >
                   {/* Photo */}
@@ -957,6 +983,9 @@ export default function PlayersPage() {
                       )}
                     </div>
                     </div>
+
+                  {/* Extra spacing on mobile */}
+                  <div className="col-span-1 sm:col-span-0"></div>
 
                   {/* Community */}
                   <div className="col-span-2 sm:col-span-2 flex items-center">
@@ -1032,6 +1061,7 @@ export default function PlayersPage() {
                 onClick={() => {
                   setSearchTerm('')
                   setSkillFilters({})
+                  setHideUnverified(true) // Reset to default (hide unverified)
                 }}
                 className="bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium px-6 py-2"
               >

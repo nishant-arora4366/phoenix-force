@@ -25,12 +25,13 @@ async function getHandler(request: NextRequest) {
     // Process tournaments to add slot information
     const tournamentsWithSlots = await Promise.all(
       (tournaments || []).map(async (tournament) => {
-        // Count all registered players (both confirmed and pending)
+        // Count all registered players (both confirmed and pending) that have a player assigned
         const { count: totalRegistered } = await supabaseAdmin
           .from('tournament_slots')
           .select('*', { count: 'exact', head: true })
           .eq('tournament_id', tournament.id)
           .in('status', ['confirmed', 'pending'])
+          .not('player_id', 'is', null)
 
         const totalRegisteredCount = totalRegistered || 0
         const tournamentCapacity = tournament.total_slots || 0

@@ -19,31 +19,13 @@ async function createAuction(request: NextRequest, user: AuthenticatedUser) {
     }
 
     const body = await request.json()
-    const { tournament_id, start_time, end_time, starting_bid, bid_increment, description } = body
+    const { tournament_id } = body
 
     // Validate required fields
-    if (!tournament_id || !start_time || !end_time || !starting_bid || !bid_increment) {
+    if (!tournament_id) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields'
-      }, { status: 400 })
-    }
-
-    // Validate that start time is before end time
-    const startDate = new Date(start_time)
-    const endDate = new Date(end_time)
-    if (startDate >= endDate) {
-      return NextResponse.json({
-        success: false,
-        error: 'Start time must be before end time'
-      }, { status: 400 })
-    }
-
-    // Validate that start time is in the future
-    if (startDate <= new Date()) {
-      return NextResponse.json({
-        success: false,
-        error: 'Start time must be in the future'
+        error: 'Missing required field: tournament_id'
       }, { status: 400 })
     }
 
@@ -74,13 +56,10 @@ async function createAuction(request: NextRequest, user: AuthenticatedUser) {
       .from('auctions')
       .insert({
         tournament_id,
-        start_time,
-        end_time,
-        starting_bid: parseFloat(starting_bid),
-        bid_increment: parseFloat(bid_increment),
-        description: description || null,
-        status: 'scheduled',
-        created_by: user.id
+        status: 'pending',
+        current_bid: 0,
+        timer_seconds: 30,
+        total_purse: 1000000
       })
       .select()
       .single()

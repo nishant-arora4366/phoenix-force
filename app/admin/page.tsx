@@ -1392,7 +1392,8 @@ export default function AdminPanel() {
 
           {/* Tab Navigation */}
           <div className="border-b border-[#CEA17A]/20 mb-6">
-            <nav className="-mb-px flex space-x-8">
+            {/* Desktop Tab Navigation */}
+            <nav className="hidden sm:flex -mb-px space-x-8">
               <button
                 onClick={() => setActiveTab('users')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -1444,6 +1445,89 @@ export default function AdminPanel() {
                 API Analytics
               </button>
             </nav>
+
+            {/* Mobile Tab Navigation - Horizontal Scroll */}
+            <div className="sm:hidden">
+              <div className="overflow-x-auto scrollbar-hide">
+                <nav className="flex space-x-4 min-w-max px-1">
+                  <button
+                    onClick={() => setActiveTab('users')}
+                    className={`py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
+                      activeTab === 'users'
+                        ? 'border-[#CEA17A] text-[#CEA17A]'
+                        : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                      </svg>
+                      Users
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('players')}
+                    className={`py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
+                      activeTab === 'players'
+                        ? 'border-[#CEA17A] text-[#CEA17A]'
+                        : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      Players
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('skills')}
+                    className={`py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
+                      activeTab === 'skills'
+                        ? 'border-[#CEA17A] text-[#CEA17A]'
+                        : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                      </svg>
+                      Skills
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('api-access')}
+                    className={`py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
+                      activeTab === 'api-access'
+                        ? 'border-[#CEA17A] text-[#CEA17A]'
+                        : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      API Access
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('analytics')}
+                    className={`py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
+                      activeTab === 'analytics'
+                        ? 'border-[#CEA17A] text-[#CEA17A]'
+                        : 'border-transparent text-[#DBD0C0] hover:text-[#CEA17A] hover:border-[#CEA17A]/50'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      Analytics
+                    </span>
+                  </button>
+                </nav>
+              </div>
+            </div>
           </div>
 
           {/* Users Tab Content */}

@@ -409,7 +409,7 @@ export default function Navbar() {
             <div className="p-6">
               <div className="space-y-3">
                 {/* Main Navigation */}
-                {allNavigationLinks.slice(0, 5).map((link, index) => (
+                {allNavigationLinks.filter(link => link.href !== '/tournament-rules').slice(0, 4).map((link, index) => (
                   <Link
                     key={link.href}
                     href={link.href}
@@ -424,13 +424,13 @@ export default function Navbar() {
                 ))}
                 
                 {/* Separator for user-specific actions */}
-                {user && allNavigationLinks.length > 5 && (
+                {user && allNavigationLinks.filter(link => link.href !== '/tournament-rules').length > 4 && (
                   <>
                     <div className="border-t border-[#75020f]/20 my-4"></div>
                     <div className="text-xs text-[#CEA17A] font-semibold uppercase tracking-wider px-4 mb-2">
                       Quick Actions
                     </div>
-                    {allNavigationLinks.slice(5).map((link, index) => (
+                    {allNavigationLinks.filter(link => link.href !== '/tournament-rules').slice(4).map((link, index) => (
                       <Link
                         key={link.href}
                         href={link.href}

@@ -758,7 +758,7 @@ export default function TournamentsPage() {
                         </div>
                         <div className="flex justify-between text-xs text-[#CEA17A] mt-1">
                           <span>{tournament.filled_slots || 0} filled</span>
-                          <span>{tournament.available_slots || tournament.total_slots} available</span>
+                          <span>{tournament.available_slots !== undefined ? tournament.available_slots : (tournament.total_slots - (tournament.filled_slots || 0))} available</span>
                         </div>
                       </div>
                       
