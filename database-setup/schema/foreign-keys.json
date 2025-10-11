@@ -1,0 +1,266 @@
+[
+    {
+      "constraint_name": "api_usage_analytics_user_id_fkey",
+      "table_name": "api_usage_analytics",
+      "column_name": "user_id",
+      "foreign_table_name": "users",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auction_bids_bidder_user_id_fkey",
+      "table_name": "auction_bids",
+      "column_name": "bidder_user_id",
+      "foreign_table_name": "users",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auction_bids_player_id_fkey",
+      "table_name": "auction_bids",
+      "column_name": "player_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auction_bids_team_id_fkey",
+      "table_name": "auction_bids",
+      "column_name": "team_id",
+      "foreign_table_name": "teams",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auction_bids_tournament_id_fkey",
+      "table_name": "auction_bids",
+      "column_name": "tournament_id",
+      "foreign_table_name": "tournaments",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auction_config_tournament_id_fkey",
+      "table_name": "auction_config",
+      "column_name": "tournament_id",
+      "foreign_table_name": "tournaments",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auction_players_auction_id_fkey",
+      "table_name": "auction_players",
+      "column_name": "auction_id",
+      "foreign_table_name": "auctions",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auction_players_player_id_fkey",
+      "table_name": "auction_players",
+      "column_name": "player_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auction_players_sold_to_fkey",
+      "table_name": "auction_players",
+      "column_name": "sold_to",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auction_teams_auction_id_fkey",
+      "table_name": "auction_teams",
+      "column_name": "auction_id",
+      "foreign_table_name": "auctions",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auction_teams_captain_id_fkey",
+      "table_name": "auction_teams",
+      "column_name": "captain_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auctions_current_player_id_fkey",
+      "table_name": "auctions",
+      "column_name": "current_player_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "auctions_tournament_id_fkey",
+      "table_name": "auctions",
+      "column_name": "tournament_id",
+      "foreign_table_name": "tournaments",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "notifications_user_id_fkey",
+      "table_name": "notifications",
+      "column_name": "user_id",
+      "foreign_table_name": "users",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "player_skill_assignments_player_id_fkey",
+      "table_name": "player_skill_assignments",
+      "column_name": "player_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "player_skill_assignments_skill_id_fkey",
+      "table_name": "player_skill_assignments",
+      "column_name": "skill_id",
+      "foreign_table_name": "player_skills",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "player_skill_assignments_skill_value_id_fkey",
+      "table_name": "player_skill_assignments",
+      "column_name": "skill_value_id",
+      "foreign_table_name": "player_skill_values",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "player_skill_values_skill_id_fkey",
+      "table_name": "player_skill_values",
+      "column_name": "skill_id",
+      "foreign_table_name": "player_skills",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "player_tags_player_id_fkey",
+      "table_name": "player_tags",
+      "column_name": "player_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "player_tags_tag_id_fkey",
+      "table_name": "player_tags",
+      "column_name": "tag_id",
+      "foreign_table_name": "tags",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "players_created_by_fkey",
+      "table_name": "players",
+      "column_name": "created_by",
+      "foreign_table_name": "users",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "players_user_id_fkey",
+      "table_name": "players",
+      "column_name": "user_id",
+      "foreign_table_name": "users",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "team_players_player_id_fkey",
+      "table_name": "team_players",
+      "column_name": "player_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "team_players_team_id_fkey",
+      "table_name": "team_players",
+      "column_name": "team_id",
+      "foreign_table_name": "teams",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "teams_captain_id_fkey",
+      "table_name": "teams",
+      "column_name": "captain_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "teams_captain_user_id_fkey",
+      "table_name": "teams",
+      "column_name": "captain_user_id",
+      "foreign_table_name": "users",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "teams_tournament_id_fkey",
+      "table_name": "teams",
+      "column_name": "tournament_id",
+      "foreign_table_name": "tournaments",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "tournament_slots_player_id_fkey",
+      "table_name": "tournament_slots",
+      "column_name": "player_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "tournament_slots_tournament_id_fkey",
+      "table_name": "tournament_slots",
+      "column_name": "tournament_id",
+      "foreign_table_name": "tournaments",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "tournaments_host_id_fkey",
+      "table_name": "tournaments",
+      "column_name": "host_id",
+      "foreign_table_name": "users",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "tournaments_host_player_id_fkey",
+      "table_name": "tournaments",
+      "column_name": "host_player_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "waitlist_player_id_fkey",
+      "table_name": "waitlist",
+      "column_name": "player_id",
+      "foreign_table_name": "players",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    },
+    {
+      "constraint_name": "waitlist_tournament_id_fkey",
+      "table_name": "waitlist",
+      "column_name": "tournament_id",
+      "foreign_table_name": "tournaments",
+      "foreign_column_name": "id",
+      "constraint_type": "FOREIGN KEY"
+    }
+  ]

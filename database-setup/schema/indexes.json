@@ -1,0 +1,386 @@
+[
+    {
+      "schemaname": "public",
+      "tablename": "api_usage_analytics",
+      "indexname": "api_usage_analytics_created_at_idx",
+      "indexdef": "CREATE INDEX api_usage_analytics_created_at_idx ON public.api_usage_analytics USING btree (created_at)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "api_usage_analytics",
+      "indexname": "api_usage_analytics_pkey",
+      "indexdef": "CREATE UNIQUE INDEX api_usage_analytics_pkey ON public.api_usage_analytics USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "api_usage_analytics",
+      "indexname": "api_usage_analytics_response_status_idx",
+      "indexdef": "CREATE INDEX api_usage_analytics_response_status_idx ON public.api_usage_analytics USING btree (response_status)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "api_usage_analytics",
+      "indexname": "api_usage_analytics_route_method_created_at_idx",
+      "indexdef": "CREATE INDEX api_usage_analytics_route_method_created_at_idx ON public.api_usage_analytics USING btree (route, method, created_at)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "api_usage_analytics",
+      "indexname": "api_usage_analytics_route_method_idx",
+      "indexdef": "CREATE INDEX api_usage_analytics_route_method_idx ON public.api_usage_analytics USING btree (route, method)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "api_usage_analytics",
+      "indexname": "api_usage_analytics_user_id_idx",
+      "indexdef": "CREATE INDEX api_usage_analytics_user_id_idx ON public.api_usage_analytics USING btree (user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "api_usage_analytics",
+      "indexname": "api_usage_analytics_user_role_idx",
+      "indexdef": "CREATE INDEX api_usage_analytics_user_role_idx ON public.api_usage_analytics USING btree (user_role)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_bids",
+      "indexname": "auction_bids_pkey",
+      "indexdef": "CREATE UNIQUE INDEX auction_bids_pkey ON public.auction_bids USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_bids",
+      "indexname": "idx_auction_bids_created_at",
+      "indexdef": "CREATE INDEX idx_auction_bids_created_at ON public.auction_bids USING btree (created_at DESC)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_bids",
+      "indexname": "idx_auction_bids_player_id",
+      "indexdef": "CREATE INDEX idx_auction_bids_player_id ON public.auction_bids USING btree (player_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_bids",
+      "indexname": "idx_auction_bids_team_id",
+      "indexdef": "CREATE INDEX idx_auction_bids_team_id ON public.auction_bids USING btree (team_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_bids",
+      "indexname": "idx_auction_bids_tournament_id",
+      "indexdef": "CREATE INDEX idx_auction_bids_tournament_id ON public.auction_bids USING btree (tournament_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_config",
+      "indexname": "auction_config_pkey",
+      "indexdef": "CREATE UNIQUE INDEX auction_config_pkey ON public.auction_config USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_config",
+      "indexname": "auction_config_tournament_id_key",
+      "indexdef": "CREATE UNIQUE INDEX auction_config_tournament_id_key ON public.auction_config USING btree (tournament_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_players",
+      "indexname": "auction_players_auction_id_player_id_key",
+      "indexdef": "CREATE UNIQUE INDEX auction_players_auction_id_player_id_key ON public.auction_players USING btree (auction_id, player_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_players",
+      "indexname": "auction_players_pkey",
+      "indexdef": "CREATE UNIQUE INDEX auction_players_pkey ON public.auction_players USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_players",
+      "indexname": "idx_auction_players_auction_id",
+      "indexdef": "CREATE INDEX idx_auction_players_auction_id ON public.auction_players USING btree (auction_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_players",
+      "indexname": "idx_auction_players_status",
+      "indexdef": "CREATE INDEX idx_auction_players_status ON public.auction_players USING btree (status)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_teams",
+      "indexname": "auction_teams_auction_id_captain_id_key",
+      "indexdef": "CREATE UNIQUE INDEX auction_teams_auction_id_captain_id_key ON public.auction_teams USING btree (auction_id, captain_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_teams",
+      "indexname": "auction_teams_pkey",
+      "indexdef": "CREATE UNIQUE INDEX auction_teams_pkey ON public.auction_teams USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_teams",
+      "indexname": "idx_auction_teams_auction_id",
+      "indexdef": "CREATE INDEX idx_auction_teams_auction_id ON public.auction_teams USING btree (auction_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auction_teams",
+      "indexname": "idx_auction_teams_captain_id",
+      "indexdef": "CREATE INDEX idx_auction_teams_captain_id ON public.auction_teams USING btree (captain_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "auctions",
+      "indexname": "auctions_pkey",
+      "indexdef": "CREATE UNIQUE INDEX auctions_pkey ON public.auctions USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "indexname": "idx_notifications_created_at",
+      "indexdef": "CREATE INDEX idx_notifications_created_at ON public.notifications USING btree (created_at)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "indexname": "idx_notifications_read_at",
+      "indexdef": "CREATE INDEX idx_notifications_read_at ON public.notifications USING btree (read_at)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "indexname": "idx_notifications_type",
+      "indexdef": "CREATE INDEX idx_notifications_type ON public.notifications USING btree (type)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "indexname": "idx_notifications_user_id",
+      "indexdef": "CREATE INDEX idx_notifications_user_id ON public.notifications USING btree (user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "indexname": "notifications_pkey",
+      "indexdef": "CREATE UNIQUE INDEX notifications_pkey ON public.notifications USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "player_skill_assignments",
+      "indexname": "idx_player_skill_assignments_player_id",
+      "indexdef": "CREATE INDEX idx_player_skill_assignments_player_id ON public.player_skill_assignments USING btree (player_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "player_skill_assignments",
+      "indexname": "idx_player_skill_assignments_skill_id",
+      "indexdef": "CREATE INDEX idx_player_skill_assignments_skill_id ON public.player_skill_assignments USING btree (skill_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "player_skill_assignments",
+      "indexname": "player_skill_assignments_pkey",
+      "indexdef": "CREATE UNIQUE INDEX player_skill_assignments_pkey ON public.player_skill_assignments USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "player_skill_assignments",
+      "indexname": "player_skill_assignments_player_id_skill_id_key",
+      "indexdef": "CREATE UNIQUE INDEX player_skill_assignments_player_id_skill_id_key ON public.player_skill_assignments USING btree (player_id, skill_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "player_skill_values",
+      "indexname": "idx_player_skill_values_skill_id",
+      "indexdef": "CREATE INDEX idx_player_skill_values_skill_id ON public.player_skill_values USING btree (skill_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "player_skill_values",
+      "indexname": "player_skill_values_pkey",
+      "indexdef": "CREATE UNIQUE INDEX player_skill_values_pkey ON public.player_skill_values USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "player_skill_values",
+      "indexname": "player_skill_values_skill_id_value_name_key",
+      "indexdef": "CREATE UNIQUE INDEX player_skill_values_skill_id_value_name_key ON public.player_skill_values USING btree (skill_id, value_name)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "player_skills",
+      "indexname": "player_skills_pkey",
+      "indexdef": "CREATE UNIQUE INDEX player_skills_pkey ON public.player_skills USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "player_skills",
+      "indexname": "player_skills_skill_name_key",
+      "indexdef": "CREATE UNIQUE INDEX player_skills_skill_name_key ON public.player_skills USING btree (skill_name)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "player_tags",
+      "indexname": "player_tags_pkey",
+      "indexdef": "CREATE UNIQUE INDEX player_tags_pkey ON public.player_tags USING btree (player_id, tag_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "players",
+      "indexname": "idx_players_created_by",
+      "indexdef": "CREATE INDEX idx_players_created_by ON public.players USING btree (created_by)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "players",
+      "indexname": "idx_players_status",
+      "indexdef": "CREATE INDEX idx_players_status ON public.players USING btree (status)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "players",
+      "indexname": "idx_players_user_id",
+      "indexdef": "CREATE UNIQUE INDEX idx_players_user_id ON public.players USING btree (user_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "players",
+      "indexname": "players_pkey",
+      "indexdef": "CREATE UNIQUE INDEX players_pkey ON public.players USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tags",
+      "indexname": "tags_name_key",
+      "indexdef": "CREATE UNIQUE INDEX tags_name_key ON public.tags USING btree (name)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tags",
+      "indexname": "tags_pkey",
+      "indexdef": "CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "team_players",
+      "indexname": "team_players_pkey",
+      "indexdef": "CREATE UNIQUE INDEX team_players_pkey ON public.team_players USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "teams",
+      "indexname": "teams_pkey",
+      "indexdef": "CREATE UNIQUE INDEX teams_pkey ON public.teams USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournament_slots",
+      "indexname": "idx_tournament_slots_player_status",
+      "indexdef": "CREATE INDEX idx_tournament_slots_player_status ON public.tournament_slots USING btree (player_id, status)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournament_slots",
+      "indexname": "tournament_slots_pkey",
+      "indexdef": "CREATE UNIQUE INDEX tournament_slots_pkey ON public.tournament_slots USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournament_slots",
+      "indexname": "unique_tournament_player",
+      "indexdef": "CREATE UNIQUE INDEX unique_tournament_player ON public.tournament_slots USING btree (tournament_id, player_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournaments",
+      "indexname": "idx_tournaments_base_price_restrictions",
+      "indexdef": "CREATE INDEX idx_tournaments_base_price_restrictions ON public.tournaments USING gin (base_price_restrictions)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournaments",
+      "indexname": "idx_tournaments_community_restrictions",
+      "indexdef": "CREATE INDEX idx_tournaments_community_restrictions ON public.tournaments USING gin (community_restrictions)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournaments",
+      "indexname": "idx_tournaments_datetime",
+      "indexdef": "CREATE INDEX idx_tournaments_datetime ON public.tournaments USING btree (tournament_date)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournaments",
+      "indexname": "idx_tournaments_format",
+      "indexdef": "CREATE INDEX idx_tournaments_format ON public.tournaments USING btree (format)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournaments",
+      "indexname": "idx_tournaments_host",
+      "indexdef": "CREATE INDEX idx_tournaments_host ON public.tournaments USING btree (host_id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournaments",
+      "indexname": "idx_tournaments_price_range",
+      "indexdef": "CREATE INDEX idx_tournaments_price_range ON public.tournaments USING btree (min_base_price, max_base_price)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournaments",
+      "indexname": "idx_tournaments_selected_teams",
+      "indexdef": "CREATE INDEX idx_tournaments_selected_teams ON public.tournaments USING btree (selected_teams)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "tournaments",
+      "indexname": "tournaments_pkey",
+      "indexdef": "CREATE UNIQUE INDEX tournaments_pkey ON public.tournaments USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "indexname": "idx_users_email",
+      "indexdef": "CREATE UNIQUE INDEX idx_users_email ON public.users USING btree (email)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "indexname": "idx_users_status",
+      "indexdef": "CREATE INDEX idx_users_status ON public.users USING btree (status)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "indexname": "idx_users_username",
+      "indexdef": "CREATE INDEX idx_users_username ON public.users USING btree (username)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "indexname": "users_email_key",
+      "indexdef": "CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "indexname": "users_pkey",
+      "indexdef": "CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "users",
+      "indexname": "users_username_key",
+      "indexdef": "CREATE UNIQUE INDEX users_username_key ON public.users USING btree (username)"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "waitlist",
+      "indexname": "waitlist_pkey",
+      "indexdef": "CREATE UNIQUE INDEX waitlist_pkey ON public.waitlist USING btree (id)"
+    }
+  ]

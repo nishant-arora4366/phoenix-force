@@ -1,0 +1,35 @@
+{
+  "name": "phoenix-force-database-setup",
+  "version": "1.0.0",
+  "description": "Database setup and management tools for Phoenix Force",
+  "main": "fetch-database-info.js",
+  "scripts": {
+    "fetch": "node fetch-database-info.js",
+    "setup": "node setup-project.js",
+    "setup:with-data": "node setup-project.js --with-sample-data",
+    "setup:auto": "node setup-project.js --skip-confirmation",
+    "help": "echo 'Available commands: fetch, setup, setup:with-data, setup:auto'"
+  },
+  "keywords": [
+    "supabase",
+    "database",
+    "setup",
+    "phoenix-force",
+    "cricket",
+    "tournament"
+  ],
+  "author": "Phoenix Force Team",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nishant-arora4366/phoenix-force.git",
+    "directory": "database-setup"
+  }
+}

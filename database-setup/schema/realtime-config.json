@@ -1,0 +1,97 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "api_usage_analytics",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "auction_bids",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "auction_config",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "auction_players",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "auction_teams",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "auctions",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notifications",
+    "realtime_status": "ENABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "player_skill_assignments",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "player_skill_values",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "player_skills",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "player_tags",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "players",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tags",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "team_players",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "teams",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tournament_slots",
+    "realtime_status": "ENABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tournaments",
+    "realtime_status": "ENABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "users",
+    "realtime_status": "DISABLED"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "waitlist",
+    "realtime_status": "DISABLED"
+  }
+]
