@@ -199,8 +199,8 @@ export default function Navbar() {
       })
     }
     
-    // Admin gets auctions access
-    if (user.role === 'admin') {
+    // Admin and Host get auctions access
+    if (user.role === 'admin' || user.role === 'host') {
       allNavigationLinks.push({
         href: '/auctions',
         label: 'Auctions',
@@ -260,8 +260,8 @@ export default function Navbar() {
       })
     }
     
-    // Admin gets auctions access
-    if (user.role === 'admin') {
+    // Admin and Host get auctions access
+    if (user.role === 'admin' || user.role === 'host') {
       desktopQuickLinks.push({
         href: '/auctions',
         label: 'Auctions',

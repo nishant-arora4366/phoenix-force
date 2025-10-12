@@ -1,0 +1,222 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { verifyToken } from '@/src/lib/jwt'
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    // Fetch auctions with tournament information
+    const { data: auctions, error } = await supabase
+      .from('auctions')
+      .select(`
+        *,
+        tournaments!inner(
+          id,
+          name,
+          format,
+          tournament_date
+        )
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching auctions:', error)
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch auctions' },
+        { status: 500 }
+      )
+    }
+
+    // Transform the data to include tournament information
+    const transformedAuctions = auctions?.map((auction: any) => ({
+      ...auction,
+      tournament_name: auction.tournaments?.name,
+      tournament_format: auction.tournaments?.format,
+      tournament_date: auction.tournaments?.tournament_date,
+      // Remove the nested tournaments object
+      tournaments: undefined
+    })) || []
+
+    return NextResponse.json({
+      success: true,
+      auctions: transformedAuctions
+    })
+
+  } catch (error) {
+    console.error('Error in auctions API:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const body = await request.json()
+
+    // Get authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // Verify JWT token
+    const token = authHeader.substring(7)
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid token' },
+        { status: 401 }
+      )
+    }
+
+    // Verify user has permission to create auctions (host or admin)
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('id', decoded.userId)
+      .single()
+
+    if (userError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    if (!['host', 'admin'].includes(user.role)) {
+      return NextResponse.json(
+        { success: false, error: 'Insufficient permissions. Only hosts and admins can create auctions.' },
+        { status: 403 }
+      )
+    }
+
+    // Validate required fields
+    const { tournament_id, max_tokens_per_captain, min_bid_amount, timer_seconds } = body
+
+    if (!tournament_id || !max_tokens_per_captain || !min_bid_amount || !timer_seconds) {
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    // Verify tournament exists and user has permission to create auction for it
+    const { data: tournament, error: tournamentError } = await supabase
+      .from('tournaments')
+      .select('id, host_id, name')
+      .eq('id', tournament_id)
+      .single()
+
+    if (tournamentError || !tournament) {
+      return NextResponse.json(
+        { success: false, error: 'Tournament not found' },
+        { status: 404 }
+      )
+    }
+
+    // Check if user is tournament host or admin
+    if (user.role !== 'admin' && tournament.host_id !== decoded.userId) {
+      return NextResponse.json(
+        { success: false, error: 'You can only create auctions for tournaments you host' },
+        { status: 403 }
+      )
+    }
+
+    // Create new auction with all configuration fields
+    const auctionData = {
+      tournament_id,
+      status: 'draft',
+      timer_seconds,
+      current_bid: min_bid_amount,
+      max_tokens_per_captain,
+      min_bid_amount,
+      use_base_price: body.use_base_price || false,
+      min_increment: body.min_increment || 20,
+      use_fixed_increments: body.use_fixed_increments !== false,
+      player_order_type: body.player_order_type || 'base_price_desc',
+      created_by: decoded.userId,
+      auction_config: {
+        custom_increment_ranges: body.custom_increment_ranges || null,
+        additional_settings: body.additional_settings || {}
+      }
+    }
+
+    console.log('Creating auction with data:', auctionData)
+
+    const { data: auction, error } = await supabase
+      .from('auctions')
+      .insert([auctionData])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating auction:', error)
+      return NextResponse.json(
+        { success: false, error: 'Failed to create auction' },
+        { status: 500 }
+      )
+    }
+
+    // Create auction teams if captains are provided
+    if (body.captains && body.captains.length > 0) {
+      const auctionTeams = body.captains.map((captain: any) => ({
+        auction_id: auction.id,
+        captain_id: captain.player_id,
+        team_name: captain.team_name,
+        remaining_purse: max_tokens_per_captain
+      }))
+
+      const { error: teamsError } = await supabase
+        .from('auction_teams')
+        .insert(auctionTeams)
+
+      if (teamsError) {
+        console.error('Error creating auction teams:', teamsError)
+        // Don't fail the entire operation, just log the error
+      }
+    }
+
+    // Create auction players if selected players are provided
+    if (body.selected_players && body.selected_players.length > 0) {
+      const auctionPlayers = body.selected_players.map((player: any) => ({
+        auction_id: auction.id,
+        player_id: player.id,
+        status: 'available'
+      }))
+
+      const { error: playersError } = await supabase
+        .from('auction_players')
+        .insert(auctionPlayers)
+
+      if (playersError) {
+        console.error('Error creating auction players:', playersError)
+        // Don't fail the entire operation, just log the error
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      auction
+    })
+
+  } catch (error) {
+    console.error('Error in auctions POST API:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

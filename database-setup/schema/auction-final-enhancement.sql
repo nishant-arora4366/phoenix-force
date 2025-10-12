@@ -1,4 +1,4 @@
--- Auction Enhancement Schema
+-- Final Auction Enhancement Schema
 -- Add missing fields to auctions table to support full auction configuration
 
 -- Add new columns to auctions table
@@ -38,14 +38,19 @@ CREATE INDEX IF NOT EXISTS idx_auctions_created_by ON auctions(created_by);
 CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions(status);
 CREATE INDEX IF NOT EXISTS idx_auctions_tournament_id ON auctions(tournament_id);
 
--- Add RLS policies for auctions table
+-- Enable RLS on auctions table
 ALTER TABLE auctions ENABLE ROW LEVEL SECURITY;
 
--- Policy: Users can view all auctions
+-- Drop existing policies if they exist and recreate them
+DROP POLICY IF EXISTS "Users can view all auctions" ON auctions;
+DROP POLICY IF EXISTS "Hosts and Admins can create auctions" ON auctions;
+DROP POLICY IF EXISTS "Auction creators can update their auctions" ON auctions;
+DROP POLICY IF EXISTS "Auction creators can delete their auctions" ON auctions;
+
+-- Create new policies
 CREATE POLICY "Users can view all auctions" ON auctions
   FOR SELECT USING (true);
 
--- Policy: Hosts and Admins can create auctions
 CREATE POLICY "Hosts and Admins can create auctions" ON auctions
   FOR INSERT WITH CHECK (
     EXISTS (
@@ -55,7 +60,6 @@ CREATE POLICY "Hosts and Admins can create auctions" ON auctions
     )
   );
 
--- Policy: Auction creators can update their auctions
 CREATE POLICY "Auction creators can update their auctions" ON auctions
   FOR UPDATE USING (
     created_by = auth.uid() OR
@@ -66,7 +70,6 @@ CREATE POLICY "Auction creators can update their auctions" ON auctions
     )
   );
 
--- Policy: Auction creators can delete their auctions
 CREATE POLICY "Auction creators can delete their auctions" ON auctions
   FOR DELETE USING (
     created_by = auth.uid() OR
@@ -76,55 +79,3 @@ CREATE POLICY "Auction creators can delete their auctions" ON auctions
       AND users.role = 'admin'
     )
   );
-
--- Add RLS policies for auction_teams table
-ALTER TABLE auction_teams ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can view auction teams
-CREATE POLICY "Users can view auction teams" ON auction_teams
-  FOR SELECT USING (true);
-
--- Policy: Hosts and Admins can manage auction teams
-CREATE POLICY "Hosts and Admins can manage auction teams" ON auction_teams
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role IN ('host', 'admin')
-    )
-  );
-
--- Add RLS policies for auction_players table
-ALTER TABLE auction_players ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can view auction players
-CREATE POLICY "Users can view auction players" ON auction_players
-  FOR SELECT USING (true);
-
--- Policy: Hosts and Admins can manage auction players
-CREATE POLICY "Hosts and Admins can manage auction players" ON auction_players
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
-      AND users.role IN ('host', 'admin')
-    )
-  );
-
--- Add RLS policies for auction_bids table
-ALTER TABLE auction_bids ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can view auction bids
-CREATE POLICY "Users can view auction bids" ON auction_bids
-  FOR SELECT USING (true);
-
--- Policy: Authenticated users can create bids
-CREATE POLICY "Authenticated users can create bids" ON auction_bids
-  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-
--- Policy: Users can update their own bids
-CREATE POLICY "Users can update their own bids" ON auction_bids
-  FOR UPDATE USING (bidder_user_id = auth.uid());
-
--- Note: auction_config table doesn't exist in the current schema
--- All auction configuration is stored in the auctions table's auction_config JSONB column
