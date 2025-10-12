@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/src/contexts/AuthContext'
+import { secureSessionManager } from '@/src/lib/secure-session'
 
 export default function Navbar() {
   const { user, signOut } = useAuth()
@@ -36,20 +37,35 @@ export default function Navbar() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user) {
-        try {
-          const response = await fetch('/api/user-profile', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
+        // Get JWT token for API request
+        const token = secureSessionManager.getToken()
+        
+        if (token) {
+          try {
+            const response = await fetch('/api/user-profile', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            })
+            if (response.ok) {
+              const result = await response.json()
+              if (result.success && result.data) {
+                setUserProfile({ photo: result.data.photo })
+              }
+            } else if (response.status === 401) {
+              // Token is invalid, clear profile
+              setUserProfile(null)
+              setProfileImageError(false)
             }
-          })
-          if (response.ok) {
-            const result = await response.json()
-            if (result.success && result.data) {
-              setUserProfile({ photo: result.data.photo })
-            }
+          } catch (error) {
+            console.error('Failed to fetch user profile:', error)
+            setUserProfile(null)
+            setProfileImageError(false)
           }
-        } catch (error) {
-          console.error('Failed to fetch user profile:', error)
+        } else {
+          // No token available
+          setUserProfile(null)
+          setProfileImageError(false)
         }
       } else {
         setUserProfile(null)
@@ -57,7 +73,10 @@ export default function Navbar() {
       }
     }
 
-    fetchUserProfile()
+    // Add a small delay to ensure token is properly set
+    const timeoutId = setTimeout(fetchUserProfile, 100)
+    
+    return () => clearTimeout(timeoutId)
   }, [user])
 
   const handleBackNavigation = () => {
