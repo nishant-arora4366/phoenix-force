@@ -9,6 +9,8 @@ export default function Navbar() {
   const { user, signOut } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [profileImageError, setProfileImageError] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -29,6 +31,34 @@ export default function Navbar() {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isProfileDropdownOpen])
+
+  // Fetch user profile to get profile picture
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        try {
+          const response = await fetch('/api/user-profile', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          })
+          if (response.ok) {
+            const result = await response.json()
+            if (result.success) {
+              setUserProfile(result.data)
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch user profile:', error)
+        }
+      } else {
+        setUserProfile(null)
+        setProfileImageError(false)
+      }
+    }
+
+    fetchUserProfile()
+  }, [user])
 
   const handleBackNavigation = () => {
     // Define logical back navigation paths based on current page
@@ -320,10 +350,21 @@ export default function Navbar() {
                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                     className="flex items-center space-x-3 text-[#DBD0C0] hover:text-[#75020f] px-4 py-2 rounded-lg hover:bg-[#75020f]/10 transition-all duration-300"
                   >
-                    <div className="w-10 h-10 bg-[#75020f] rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">
-                        {getDisplayName().charAt(0).toUpperCase()}
-                      </span>
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#75020f]/30">
+                      {userProfile?.photo && !profileImageError ? (
+                        <img
+                          src={userProfile.photo}
+                          alt={getDisplayName()}
+                          className="w-full h-full object-cover"
+                          onError={() => setProfileImageError(true)}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-[#75020f] flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">
+                            {getDisplayName().charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <span className="hidden sm:block font-medium">{getDisplayName()}</span>
                     <svg className="h-4 w-4 text-[#DBD0C0]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
