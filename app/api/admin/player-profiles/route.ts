@@ -320,7 +320,74 @@ async function patchHandler(
   }
 }
 
+async function postHandler(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
+  try {
+    const adminUserId = user.id
+    
+    // Check if user is admin
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('role, status')
+      .eq('id', adminUserId)
+      .single()
+
+    if (userError || !userData || userData.role !== 'admin' || userData.status !== 'approved') {
+      return NextResponse.json({
+        success: false,
+        error: 'Access denied - Admin role required'
+      }, { status: 403 })
+    }
+
+    const { captains } = await request.json()
+
+    if (!captains || !Array.isArray(captains)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Captains array is required'
+      }, { status: 400 })
+    }
+
+    // Create captain records using service role (bypasses RLS)
+    const playersData = captains.map((captain: any) => ({
+      id: captain.id,
+      display_name: captain.display_name,
+      bio: captain.bio || 'Auction captain',
+      status: captain.status || 'approved',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }));
+
+    const { data: createdPlayers, error } = await supabaseAdmin
+      .from('players')
+      .upsert(playersData, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      return NextResponse.json({
+        success: false,
+        error: error.message
+      }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Captains created successfully',
+      captains: createdPlayers
+    })
+
+  } catch (error: any) {
+    return NextResponse.json({
+      success: false,
+      error: error.message
+    }, { status: 500 })
+  }
+}
+
 // Export the handlers with analytics
 export const GET = withAnalytics(withAuth(getHandler, ['admin']))
+export const POST = withAnalytics(withAuth(postHandler, ['admin']))
 export const PUT = withAnalytics(withAuth(putHandler, ['admin']))
 export const PATCH = withAnalytics(withAuth(patchHandler, ['admin']))

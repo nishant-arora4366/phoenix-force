@@ -13,6 +13,12 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
     throw new Error('No authentication token found')
   }
 
+  // Check if token is expired before making the request
+  if (secureSessionManager.isTokenExpired()) {
+    secureSessionManager.clearUser()
+    throw new Error('Session expired - please sign in again')
+  }
+
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
@@ -27,7 +33,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
   // If token is invalid, clear session
   if (response.status === 401) {
     secureSessionManager.clearUser()
-    throw new Error('Authentication expired')
+    throw new Error('Authentication expired - please sign in again')
   }
 
   return response

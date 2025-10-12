@@ -27,7 +27,7 @@ export default function SignOutOverlay() {
         width: '100vw',
         height: '100vh',
         background: 'linear-gradient(135deg, #19171b 0%, #2b0307 50%, #51080d 100%)',
-        zIndex: 2147483647,
+        zIndex: 2147483645,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -57,7 +57,7 @@ export default function SignOutOverlay() {
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           animation: 'fadeIn 0.3s ease-in-out',
           position: 'relative',
-          zIndex: 2147483647,
+          zIndex: 2147483646,
           minWidth: '300px'
         }}
       >

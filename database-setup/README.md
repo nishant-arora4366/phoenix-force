@@ -1,322 +1,190 @@
 # Phoenix Force Database Setup
 
-This directory contains scripts and tools for setting up and managing the Phoenix Force database.
+This directory contains essential scripts for database setup, backup, and restoration for Phoenix Force.
 
 ## 📁 Files Overview
 
-- `fetch-database-info.js` - Fetches comprehensive database information from Supabase
-- `setup-project.js` - Sets up the project database from scratch
-- `essential-supabase-queries.sql` - SQL queries for capturing Supabase configurations
-- `setup-realtime.sql` - Standalone realtime configuration setup
-- `setup-with-realtime.sql` - Complete database setup with realtime
-- `backup-data.js` - Comprehensive data backup system
+- `backup-data.js` - Data backup system (JSON + SQL formats)
 - `restore-data.js` - Data restoration system
-- `schema/` - Directory containing generated database schema files
-- `data-backup/` - Directory containing data backups (JSON and SQL formats)
-- `README.md` - This documentation file
+- `setup-project.js` - Database setup from scratch
+- `fetch-database-info.js` - Database schema extraction
+- `schema/` - Essential database schema files
+- `data-backup/` - Current data backup (2,707 records from 12 tables)
+- `setup-with-realtime.sql` - Complete database setup with realtime
 
 ## 🚀 Quick Start
 
-### 1. Fetch Current Database Information
-
-To capture the current state of your Supabase database:
+### 1. Install Dependencies
 
 ```bash
 cd database-setup
-node fetch-database-info.js
+npm install
 ```
 
-This will create a `schema/` directory with:
-- `tables.json` - All table schemas
-- `rls-policies.json` - Row Level Security policies
-- `functions.json` - Database functions
-- `foreign-keys.json` - Table relationships
-- `indexes.json` - Database indexes
-- `triggers.json` - Database triggers
-- `complete-schema.sql` - Complete SQL schema
-- `setup-database.sql` - Setup script
-- `DATABASE_DOCUMENTATION.md` - Comprehensive documentation
+### 2. Set Up Environment
 
-### 2. Set Up New Project
-
-To set up a fresh Phoenix Force database:
-
-```bash
-cd database-setup
-node setup-project.js
+Create `.env.local` with your Supabase credentials:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-Options:
-- `--with-sample-data` - Include sample tournaments and players
-- `--skip-confirmation` - Skip confirmation prompts
+### 3. Database Operations
 
-Example:
+#### **Backup Data:**
 ```bash
-node setup-project.js --with-sample-data
-```
-
-### 3. Alternative Setup Methods
-
-#### **Complete Setup with Realtime:**
-```bash
-# Run the complete setup script with realtime configuration
-psql -f setup-with-realtime.sql
-```
-
-#### **Realtime Only Setup:**
-```bash
-# Set up only realtime configuration
-psql -f setup-realtime.sql
-```
-
-### 4. Data Backup and Restoration
-
-#### **Backup Current Data:**
-```bash
-# Create comprehensive backup (JSON + SQL)
+# Full backup (JSON + SQL)
 npm run backup
 
-# Backup only JSON format
+# JSON only
 npm run backup:json
 
-# Backup only SQL format
+# SQL only  
 npm run backup:sql
 ```
 
 #### **Restore Data:**
 ```bash
-# Restore from JSON backup
+# Restore from JSON
 npm run restore:json
 
-# Restore from SQL backup
+# Restore from SQL
 npm run restore:sql
 
 # Restore from complete SQL file
 npm run restore:complete
 
-# Dry run (test without making changes)
+# Test restore (dry run)
 npm run restore:dry-run
 ```
 
-### 5. Docker-Based Operations
-
-#### **Docker Backup:**
+#### **Set Up New Database:**
 ```bash
-# Full backup using Docker
-npm run docker:backup
+# Basic setup
+npm run setup
 
-# JSON only backup
-npm run docker:backup:json
+# With sample data
+npm run setup:with-data
 
-# SQL only backup
-npm run docker:backup:sql
+# Auto setup (no prompts)
+npm run setup:auto
 ```
 
-#### **Docker Restore:**
+#### **Extract Schema:**
 ```bash
-# Restore from JSON backup
-npm run docker:restore:json
-
-# Restore from SQL backup
-npm run docker:restore:sql
-
-# Restore from complete SQL file
-npm run docker:restore:complete
-
-# Dry run restore
-npm run docker:restore:dry-run
+# Capture current database schema
+npm run fetch
 ```
 
-#### **Local Development Environment:**
-```bash
-# Set up complete local environment with PostgreSQL
-npm run docker:setup
-
-# Set up with sample data
-npm run docker:setup:with-data
-
-# Start local PostgreSQL and pgAdmin
-npm run docker:local-db
-
-# Stop local services
-npm run docker:local-db:down
-
-# View logs
-npm run docker:local-db:logs
-```
 
 ## 📋 Prerequisites
 
-1. **Environment Variables**: Ensure your `.env.local` file contains:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-   ```
+- **Node.js**: Version 16 or higher
+- **Supabase Project**: Active project with service role key
+- **Environment Variables**: `.env.local` with Supabase credentials
 
-2. **Node.js Dependencies**: Make sure you have the required packages:
-   ```bash
-   npm install @supabase/supabase-js dotenv
-   ```
 
-3. **Docker** (Optional): For containerized operations and local development
-   - Docker Desktop or Docker Engine
-   - Docker Compose
+## 📊 Current Backup Status
 
-## 🔧 Script Details
+**Backup Date:** 2025-10-11T12:15:44.706Z  
+**Total Tables:** 12  
+**Total Records:** 2,707  
+**Status:** ✅ Complete
 
-### fetch-database-info.js
+### Table Breakdown
 
-This script connects to your Supabase database and extracts:
+| Table | Records | Description |
+|-------|---------|-------------|
+| `users` | 18 | User accounts and authentication |
+| `players` | 248 | Player profiles and information |
+| `tournaments` | 2 | Tournament configurations |
+| `tournament_slots` | 50 | Tournament registration slots |
+| `player_skills` | 5 | Available skill categories |
+| `player_skill_values` | 21 | Skill value definitions |
+| `player_skill_assignments` | 1,000 | Player-skill relationships |
+| `auctions` | 18 | Auction configurations |
+| `auction_teams` | 36 | Team formations in auctions |
+| `auction_players` | 288 | Players in auction system |
+| `notifications` | 21 | User notifications |
+| `api_usage_analytics` | 1,000 | API usage tracking |
 
-- **Tables**: Complete table schemas with column definitions
-- **RLS Policies**: Row Level Security policies for data protection
-- **Functions**: Custom database functions and procedures
-- **Relationships**: Foreign key constraints and table relationships
-- **Indexes**: Database indexes for performance optimization
-- **Triggers**: Database triggers for automated actions
+## 🏗️ Production Deployment
 
-**Usage:**
+### Complete Database Recreation
+
 ```bash
-node fetch-database-info.js
+# 1. Set up schema
+psql -f schema/setup-with-realtime.sql
+
+# 2. Restore data
+psql -f data-backup/complete-data-backup.sql
 ```
 
-### setup-project.js
+### Individual Table Restoration
 
-This script sets up a complete Phoenix Force database including:
-
-- Database schema creation
-- RLS policy setup
-- Function creation
-- Realtime subscription configuration
-- Admin user creation
-- Optional sample data
-
-**Usage:**
 ```bash
-# Basic setup
-node setup-project.js
-
-# With sample data
-node setup-project.js --with-sample-data
-
-# Skip confirmations
-node setup-project.js --skip-confirmation
+# Restore in dependency order
+psql -f data-backup/sql/users.sql
+psql -f data-backup/sql/players.sql
+psql -f data-backup/sql/tournaments.sql
+psql -f data-backup/sql/tournament_slots.sql
+psql -f data-backup/sql/player_skills.sql
+psql -f data-backup/sql/player_skill_values.sql
+psql -f data-backup/sql/player_skill_assignments.sql
+psql -f data-backup/sql/auctions.sql
+psql -f data-backup/sql/auction_teams.sql
+psql -f data-backup/sql/auction_players.sql
+psql -f data-backup/sql/notifications.sql
+psql -f data-backup/sql/api_usage_analytics.sql
 ```
 
-## 📊 Generated Files
+## 🔧 Available Commands
 
-### Schema Files (JSON)
-
-- **tables.json**: Complete table information with columns, types, and constraints
-- **rls-policies.json**: Security policies for data access control
-- **functions.json**: Database functions and stored procedures
-- **foreign-keys.json**: Table relationships and constraints
-- **indexes.json**: Database indexes for query optimization
-- **triggers.json**: Automated database triggers
-- **realtime-config.json**: Table-level realtime status
-- **realtime-publications.json**: Realtime publication configurations
-
-### SQL Files
-
-- **complete-schema.sql**: Full database schema in SQL format
-- **setup-database.sql**: Executable setup script for new installations
-- **setup-with-realtime.sql**: Complete database setup with realtime configuration
-- **setup-realtime.sql**: Standalone realtime configuration setup
-
-### Documentation
-
-- **DATABASE_DOCUMENTATION.md**: Comprehensive database documentation with:
-  - Table descriptions and column details
-  - Foreign key relationships
-  - RLS policy explanations
-  - Function documentation
-
-## 🔒 Security Considerations
-
-- The scripts use the Supabase Service Role Key for full database access
-- RLS policies are automatically set up to secure data access
-- Admin user is created with secure default credentials
-- All sensitive operations require confirmation (unless `--skip-confirmation` is used)
+| Command | Description |
+|---------|-------------|
+| `npm run backup` | Full backup (JSON + SQL) |
+| `npm run backup:json` | JSON format only |
+| `npm run backup:sql` | SQL format only |
+| `npm run restore` | Restore from JSON |
+| `npm run restore:json` | Restore from JSON backup |
+| `npm run restore:sql` | Restore from SQL backup |
+| `npm run restore:complete` | Restore from complete SQL |
+| `npm run restore:dry-run` | Test restore without changes |
+| `npm run setup` | Set up new database |
+| `npm run setup:with-data` | Set up with sample data |
+| `npm run setup:auto` | Auto setup (no prompts) |
+| `npm run fetch` | Extract database schema |
 
 ## 🛠️ Troubleshooting
 
 ### Common Issues
 
 1. **Missing Environment Variables**
-   ```
-   Error: Missing required environment variables
-   ```
-   **Solution**: Ensure `.env.local` exists with correct Supabase credentials
+   - Ensure `.env.local` exists with Supabase credentials
 
 2. **Permission Denied**
-   ```
-   Error: permission denied for table
-   ```
-   **Solution**: Verify your Service Role Key has proper permissions
+   - Verify Service Role Key has proper permissions
 
-3. **Schema Files Not Found**
-   ```
-   Error: No setup file found
-   ```
-   **Solution**: Run `fetch-database-info.js` first to generate schema files
+3. **Backup/Restore Errors**
+   - Check console output for detailed error messages
+   - Use `--dry-run` flag to test operations safely
 
-### Debug Mode
+## 📁 File Structure
 
-For detailed error information, check the console output. The scripts provide comprehensive error messages and warnings.
-
-## 📝 Customization
-
-### Adding Custom Functions
-
-1. Create your function in Supabase
-2. Run `fetch-database-info.js` to capture it
-3. The function will be included in future setups
-
-### Modifying Sample Data
-
-Edit the `addSampleData()` function in `setup-project.js` to customize the sample data that gets created.
-
-### Custom RLS Policies
-
-1. Create policies in Supabase
-2. Run `fetch-database-info.js` to capture them
-3. Policies will be automatically applied in new setups
-
-## 🔄 Workflow
-
-### For Development
-
-1. Make database changes in Supabase
-2. Run `fetch-database-info.js` to capture changes
-3. Commit the updated schema files to version control
-
-### For New Installations
-
-1. Clone the repository
-2. Set up environment variables
-3. Run `setup-project.js` to create the database
-4. Start the application
-
-### For Team Collaboration
-
-1. Share the `schema/` directory with your team
-2. Team members can run `setup-project.js` to get the same database structure
-3. Keep schema files updated in version control
-
-## 📞 Support
-
-If you encounter issues:
-
-1. Check the troubleshooting section above
-2. Verify your Supabase credentials and permissions
-3. Ensure all dependencies are installed
-4. Check the console output for detailed error messages
-
-## 🔄 Version Control
-
-It's recommended to commit the `schema/` directory to version control so that:
-
-- Team members can set up identical database structures
-- Database changes are tracked over time
-- New installations can be set up consistently
-- Database documentation stays up to date
+```
+database-setup/
+├── backup-data.js              # Data backup system
+├── restore-data.js             # Data restoration system
+├── setup-project.js            # Database setup
+├── fetch-database-info.js      # Schema extraction
+├── data-backup/                # Current backup (2,707 records)
+│   ├── complete-data-backup.sql
+│   ├── json/                   # Individual table JSON files
+│   └── sql/                    # Individual table SQL files
+├── schema/                     # Database schema files
+│   ├── complete-schema.sql
+│   ├── tables.json
+│   ├── rls-policies.json
+│   └── ...
+└── setup-with-realtime.sql     # Complete setup script
+```

@@ -16,6 +16,7 @@ class SecureSessionManager {
   private currentUser: SessionUser | null = null
   private currentToken: string | null = null
   private listeners: ((user: SessionUser | null) => void)[] = []
+  private expirationCheckInterval: NodeJS.Timeout | null = null
 
   static getInstance(): SecureSessionManager {
     if (!SecureSessionManager.instance) {
@@ -82,6 +83,160 @@ class SecureSessionManager {
     return this.currentToken
   }
 
+  // Check if token is expired
+  isTokenExpired(): boolean {
+    const token = this.getToken()
+    if (!token) return true
+
+    try {
+      // Decode token without verification (just to read expiration)
+      const base64Url = token.split('.')[1]
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      )
+      const decoded = JSON.parse(jsonPayload)
+      
+      if (!decoded.exp) {
+        console.error('[SecureSession] Token has no expiration')
+        return true
+      }
+      
+      const currentTime = Math.floor(Date.now() / 1000)
+      const isExpired = decoded.exp < currentTime
+      
+      if (isExpired) {
+        console.log(`[SecureSession] Token expired: exp=${decoded.exp}, now=${currentTime}, diff=${currentTime - decoded.exp}s ago`)
+      }
+      
+      return isExpired
+    } catch (error) {
+      console.error('[SecureSession] Error checking token expiration:', error)
+      return true
+    }
+  }
+
+  // Get time until token expires (in milliseconds)
+  getTimeUntilExpiration(): number {
+    const token = this.getToken()
+    if (!token) return 0
+
+    try {
+      const base64Url = token.split('.')[1]
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      )
+      const decoded = JSON.parse(jsonPayload)
+      
+      if (!decoded.exp) return 0
+      
+      const currentTime = Math.floor(Date.now() / 1000)
+      const timeUntilExpiration = (decoded.exp - currentTime) * 1000 // Convert to milliseconds
+      return Math.max(0, timeUntilExpiration)
+    } catch (error) {
+      console.error('Error getting token expiration time:', error)
+      return 0
+    }
+  }
+
+  // Start monitoring token expiration
+  startExpirationMonitoring(onExpired: () => void, onWarning?: (minutesLeft: number) => void, skipInitialWarning: boolean = false) {
+    console.log('[SecureSession] Starting expiration monitoring')
+    
+    // Clear any existing interval
+    this.stopExpirationMonitoring()
+
+    // Check immediately if token is already expired
+    if (this.isTokenExpired()) {
+      console.log('[SecureSession] Token already expired, signing out immediately')
+      onExpired()
+      return
+    }
+
+    // Log initial time remaining
+    const initialTimeLeft = this.getTimeUntilExpiration()
+    const initialMinutesLeft = Math.floor(initialTimeLeft / 60000)
+    const initialSecondsLeft = Math.floor(initialTimeLeft / 1000)
+    
+    // Also log the actual token expiration time for debugging
+    const token = this.getToken()
+    if (token) {
+      try {
+        const base64Url = token.split('.')[1]
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        )
+        const decoded = JSON.parse(jsonPayload)
+        const expDate = new Date(decoded.exp * 1000)
+        const iatDate = new Date(decoded.iat * 1000)
+        console.log(`[SecureSession] Token issued at: ${iatDate.toLocaleString()}`)
+        console.log(`[SecureSession] Token expires at: ${expDate.toLocaleString()}`)
+        console.log(`[SecureSession] Current time: ${new Date().toLocaleString()}`)
+      } catch (e) {
+        console.error('[SecureSession] Error parsing token for debug:', e)
+      }
+    }
+    
+    console.log(`[SecureSession] Token valid for ${initialMinutesLeft} minutes (${initialSecondsLeft} seconds)`)
+
+    let warningShown = false
+
+    // Show warning immediately if less than 5 minutes remaining (unless skipping)
+    if (onWarning && initialMinutesLeft <= 5 && !skipInitialWarning) {
+      const displayMinutes = Math.max(1, initialMinutesLeft) // Show at least "1 minute" even if < 60 seconds
+      console.log(`[SecureSession] Showing immediate warning: ${displayMinutes} minutes left (${initialSecondsLeft} seconds)`)
+      warningShown = true
+      onWarning(displayMinutes)
+    }
+
+    // If less than 1 minute, check every 5 seconds for more responsive sign-out
+    const checkInterval = initialSecondsLeft < 60 ? 5000 : 30000
+    console.log(`[SecureSession] Monitoring started, checking every ${checkInterval / 1000} seconds`)
+
+    // Check periodically
+    this.expirationCheckInterval = setInterval(() => {
+      const timeLeft = this.getTimeUntilExpiration()
+      const minutesLeft = Math.floor(timeLeft / 60000)
+      const secondsLeft = Math.floor(timeLeft / 1000)
+      console.log(`[SecureSession] Check: ${minutesLeft} minutes ${secondsLeft % 60} seconds remaining`)
+      
+      if (this.isTokenExpired()) {
+        console.log('[SecureSession] Token expired, signing out')
+        this.stopExpirationMonitoring()
+        onExpired()
+        return
+      }
+
+      // Show warning if less than 5 minutes remaining
+      if (onWarning && !warningShown) {
+        if (minutesLeft <= 5 && minutesLeft > 0) {
+          console.log(`[SecureSession] Showing warning: ${minutesLeft} minutes left`)
+          warningShown = true
+          onWarning(minutesLeft)
+        }
+      }
+    }, checkInterval)
+  }
+
+  // Stop monitoring token expiration
+  stopExpirationMonitoring() {
+    if (this.expirationCheckInterval) {
+      clearInterval(this.expirationCheckInterval)
+      this.expirationCheckInterval = null
+    }
+  }
+
   // Check if user is authenticated
   isAuthenticated(): boolean {
     const token = this.getToken()
@@ -119,10 +274,48 @@ class SecureSessionManager {
     }
   }
 
+  // Refresh JWT token (extend session)
+  async refreshToken(): Promise<boolean> {
+    const token = this.getToken()
+    const user = this.getUser()
+    
+    if (!token || !user) {
+      console.error('[SecureSession] Cannot refresh: no token or user')
+      return false
+    }
+
+    try {
+      console.log('[SecureSession] Refreshing token...')
+      const response = await fetch('/api/auth/refresh-token', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      const result = await response.json()
+      
+      if (result.success && result.token) {
+        console.log('[SecureSession] Token refreshed successfully')
+        // Update with new token
+        this.setUser(result.user, result.token)
+        return true
+      } else {
+        console.error('[SecureSession] Token refresh failed:', result.error)
+        return false
+      }
+    } catch (error) {
+      console.error('[SecureSession] Error refreshing token:', error)
+      return false
+    }
+  }
+
   // Clear user and token (called on logout)
   clearUser() {
     this.currentUser = null
     this.currentToken = null
+    this.stopExpirationMonitoring()
     if (typeof window !== 'undefined') {
       localStorage.removeItem('phoenix_token')
       localStorage.removeItem('phoenix_user')

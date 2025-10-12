@@ -1,5 +1,5 @@
 -- Data backup for table: tournaments
--- Backup timestamp: 2025-10-11T12:08:27.236Z
+-- Backup timestamp: 2025-10-11T12:15:46.287Z
 -- Record count: 2
 
 -- Disable foreign key checks temporarily

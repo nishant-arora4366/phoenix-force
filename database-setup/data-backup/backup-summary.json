@@ -1,7 +1,7 @@
 {
-  "backup_timestamp": "2025-10-11T12:08:28.772Z",
-  "total_tables": 14,
-  "successful_backups": 14,
+  "backup_timestamp": "2025-10-11T12:15:47.903Z",
+  "total_tables": 12,
+  "successful_backups": 12,
   "failed_backups": 0,
   "total_records": 2707,
   "tables": [
@@ -63,18 +63,6 @@
       "table_name": "auction_players",
       "success": true,
       "record_count": 288,
-      "error": null
-    },
-    {
-      "table_name": "auction_bids",
-      "success": true,
-      "record_count": 0,
-      "error": null
-    },
-    {
-      "table_name": "auction_config",
-      "success": true,
-      "record_count": 0,
       "error": null
     },
     {

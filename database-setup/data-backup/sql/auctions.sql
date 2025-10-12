@@ -1,5 +1,5 @@
 -- Data backup for table: auctions
--- Backup timestamp: 2025-10-11T12:08:27.906Z
+-- Backup timestamp: 2025-10-11T12:15:47.156Z
 -- Record count: 18
 
 -- Disable foreign key checks temporarily

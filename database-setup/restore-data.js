@@ -54,8 +54,6 @@ const RESTORATION_ORDER = [
   'auctions',
   'auction_teams',
   'auction_players',
-  'auction_bids',
-  'auction_config',
   'notifications',
   'api_usage_analytics'
 ];

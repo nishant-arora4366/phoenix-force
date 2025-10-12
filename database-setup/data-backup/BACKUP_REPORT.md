@@ -1,8 +1,8 @@
 # Phoenix Force Database Backup Report
 
-**Backup Date:** 2025-10-11T12:08:28.772Z
-**Total Tables:** 14
-**Successful Backups:** 14
+**Backup Date:** 2025-10-11T12:15:47.903Z
+**Total Tables:** 12
+**Successful Backups:** 12
 **Failed Backups:** 0
 **Total Records:** 2,707
 
@@ -20,8 +20,6 @@
 | auctions | ✅ Success | 18 |
 | auction_teams | ✅ Success | 36 |
 | auction_players | ✅ Success | 288 |
-| auction_bids | ✅ Success | 0 |
-| auction_config | ✅ Success | 0 |
 | notifications | ✅ Success | 21 |
 | api_usage_analytics | ✅ Success | 1,000 |
 
@@ -38,8 +36,6 @@
 - `json/auctions.json` (18 records)
 - `json/auction_teams.json` (36 records)
 - `json/auction_players.json` (288 records)
-- `json/auction_bids.json` (0 records)
-- `json/auction_config.json` (0 records)
 - `json/notifications.json` (21 records)
 - `json/api_usage_analytics.json` (1000 records)
 
@@ -54,8 +50,6 @@
 - `sql/auctions.sql` (18 records)
 - `sql/auction_teams.sql` (36 records)
 - `sql/auction_players.sql` (288 records)
-- `sql/auction_bids.sql` (0 records)
-- `sql/auction_config.sql` (0 records)
 - `sql/notifications.sql` (21 records)
 - `sql/api_usage_analytics.sql` (1000 records)
 

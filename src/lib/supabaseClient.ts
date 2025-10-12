@@ -31,22 +31,16 @@ export const getSupabaseClient = () => {
 export const setSupabaseAuth = (token: string | null) => {
   const client = getSupabaseClient()
   
-  // Force disconnect all channels to clear old auth
-  const channels = client.realtime.channels
-  
-  // Remove all existing channels
-  channels.forEach((channel: any) => {
-    channel.unsubscribe()
-  })
-  
-  // Disconnect the realtime connection
-  client.realtime.disconnect()
-  
-  // Clear the auth token
-  client.realtime.setAuth(null)
-  
-  // Reconnect with anon key (no custom JWT)
-  // The client will automatically reconnect when channels subscribe
+  try {
+    // For realtime, we use anonymous access since our tables are public for SELECT
+    // and write operations are protected via API routes
+    client.realtime.setAuth(null)
+    
+    // Don't disconnect existing channels unnecessarily
+    // Let them continue with anonymous access
+  } catch (error) {
+    console.warn('Error setting realtime auth:', error)
+  }
 }
 
 // Lazy initialization to prevent multiple instances

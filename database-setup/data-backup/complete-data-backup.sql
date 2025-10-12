@@ -1,6 +1,6 @@
 -- Phoenix Force Database Complete Data Backup
--- Generated: 2025-10-11T12:08:28.789Z
--- Total Tables: 14
+-- Generated: 2025-10-11T12:15:47.918Z
+-- Total Tables: 12
 -- Total Records: 2707
 
 -- Disable foreign key checks
@@ -8,7 +8,7 @@ SET session_replication_role = replica;
 
 -- Table: users (18 records)
 -- Data backup for table: users
--- Backup timestamp: 2025-10-11T12:08:28.789Z
+-- Backup timestamp: 2025-10-11T12:15:47.918Z
 -- Record count: 18
 
 -- Disable foreign key checks temporarily
@@ -40,7 +40,7 @@ SET session_replication_role = DEFAULT;
 
 -- Table: players (248 records)
 -- Data backup for table: players
--- Backup timestamp: 2025-10-11T12:08:28.789Z
+-- Backup timestamp: 2025-10-11T12:15:47.918Z
 -- Record count: 248
 
 -- Disable foreign key checks temporarily
@@ -302,7 +302,7 @@ SET session_replication_role = DEFAULT;
 
 -- Table: tournaments (2 records)
 -- Data backup for table: tournaments
--- Backup timestamp: 2025-10-11T12:08:28.790Z
+-- Backup timestamp: 2025-10-11T12:15:47.918Z
 -- Record count: 2
 
 -- Disable foreign key checks temporarily
@@ -318,7 +318,7 @@ SET session_replication_role = DEFAULT;
 
 -- Table: tournament_slots (50 records)
 -- Data backup for table: tournament_slots
--- Backup timestamp: 2025-10-11T12:08:28.790Z
+-- Backup timestamp: 2025-10-11T12:15:47.918Z
 -- Record count: 50
 
 -- Disable foreign key checks temporarily
@@ -382,7 +382,7 @@ SET session_replication_role = DEFAULT;
 
 -- Table: player_skills (5 records)
 -- Data backup for table: player_skills
--- Backup timestamp: 2025-10-11T12:08:28.790Z
+-- Backup timestamp: 2025-10-11T12:15:47.918Z
 -- Record count: 5
 
 -- Disable foreign key checks temporarily
@@ -401,7 +401,7 @@ SET session_replication_role = DEFAULT;
 
 -- Table: player_skill_values (21 records)
 -- Data backup for table: player_skill_values
--- Backup timestamp: 2025-10-11T12:08:28.790Z
+-- Backup timestamp: 2025-10-11T12:15:47.918Z
 -- Record count: 21
 
 -- Disable foreign key checks temporarily
@@ -436,7 +436,7 @@ SET session_replication_role = DEFAULT;
 
 -- Table: player_skill_assignments (1000 records)
 -- Data backup for table: player_skill_assignments
--- Backup timestamp: 2025-10-11T12:08:28.790Z
+-- Backup timestamp: 2025-10-11T12:15:47.918Z
 -- Record count: 1000
 
 -- Disable foreign key checks temporarily
@@ -1450,7 +1450,7 @@ SET session_replication_role = DEFAULT;
 
 -- Table: auctions (18 records)
 -- Data backup for table: auctions
--- Backup timestamp: 2025-10-11T12:08:28.790Z
+-- Backup timestamp: 2025-10-11T12:15:47.919Z
 -- Record count: 18
 
 -- Disable foreign key checks temporarily
@@ -1482,7 +1482,7 @@ SET session_replication_role = DEFAULT;
 
 -- Table: auction_teams (36 records)
 -- Data backup for table: auction_teams
--- Backup timestamp: 2025-10-11T12:08:28.790Z
+-- Backup timestamp: 2025-10-11T12:15:47.919Z
 -- Record count: 36
 
 -- Disable foreign key checks temporarily
@@ -1532,7 +1532,7 @@ SET session_replication_role = DEFAULT;
 
 -- Table: auction_players (288 records)
 -- Data backup for table: auction_players
--- Backup timestamp: 2025-10-11T12:08:28.790Z
+-- Backup timestamp: 2025-10-11T12:15:47.919Z
 -- Record count: 288
 
 -- Disable foreign key checks temporarily
@@ -1832,15 +1832,9 @@ INSERT INTO auction_players (id, auction_id, player_id, status, sold_to, sold_pr
 SET session_replication_role = DEFAULT;
 
 
--- Table: auction_bids (0 records)
--- No data to insert for table auction_bids
-
--- Table: auction_config (0 records)
--- No data to insert for table auction_config
-
 -- Table: notifications (21 records)
 -- Data backup for table: notifications
--- Backup timestamp: 2025-10-11T12:08:28.791Z
+-- Backup timestamp: 2025-10-11T12:15:47.919Z
 -- Record count: 21
 
 -- Disable foreign key checks temporarily
@@ -1875,7 +1869,7 @@ SET session_replication_role = DEFAULT;
 
 -- Table: api_usage_analytics (1000 records)
 -- Data backup for table: api_usage_analytics
--- Backup timestamp: 2025-10-11T12:08:28.791Z
+-- Backup timestamp: 2025-10-11T12:15:47.919Z
 -- Record count: 1000
 
 -- Disable foreign key checks temporarily

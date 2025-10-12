@@ -36,7 +36,7 @@ const args = process.argv.slice(2);
 const format = args.find(arg => arg.startsWith('--format='))?.split('=')[1] || 'both';
 const outputDir = args.find(arg => arg.startsWith('--output='))?.split('=')[1] || 'data-backup';
 
-// Table names to backup (excluding system tables)
+// Table names to backup (excluding system tables and empty tables)
 const TABLES_TO_BACKUP = [
   'users',
   'players',
@@ -48,8 +48,6 @@ const TABLES_TO_BACKUP = [
   'auctions',
   'auction_teams',
   'auction_players',
-  'auction_bids',
-  'auction_config',
   'notifications',
   'api_usage_analytics'
 ];
@@ -293,8 +291,6 @@ async function createMasterSQLFile(backupResults) {
       'auctions',
       'auction_teams',
       'auction_players',
-      'auction_bids',
-      'auction_config',
       'notifications',
       'api_usage_analytics'
     ];
