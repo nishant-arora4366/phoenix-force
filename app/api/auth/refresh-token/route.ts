@@ -25,7 +25,6 @@ export async function POST(request: NextRequest) {
       role: user.role
     })
 
-    console.log(`[RefreshToken] Token refreshed for user: ${user.email}`)
 
     return NextResponse.json({
       success: true,
@@ -41,7 +40,6 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error: any) {
-    console.error('[RefreshToken] Error:', error)
     return NextResponse.json({
       success: false,
       error: error.message || 'Failed to refresh token'

@@ -46,7 +46,6 @@ async function getHandler(
       .order('display_order', { ascending: true })
 
     if (skillsError) {
-      console.error('Error fetching player skills:', skillsError)
       return NextResponse.json({ error: 'Error fetching player skills' }, { status: 500 })
     }
 
@@ -56,7 +55,6 @@ async function getHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in admin player skills API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -102,7 +100,6 @@ async function postHandler(
       .single()
 
     if (skillError) {
-      console.error('Error creating player skill:', skillError)
       return NextResponse.json({ error: 'Error creating player skill' }, { status: 500 })
     }
 
@@ -112,7 +109,6 @@ async function postHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in admin player skills POST API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -159,7 +155,6 @@ async function putHandler(
       .single()
 
     if (skillError) {
-      console.error('Error updating player skill:', skillError)
       return NextResponse.json({ error: 'Error updating player skill' }, { status: 500 })
     }
 
@@ -169,7 +164,6 @@ async function putHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in admin player skills PUT API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -207,7 +201,6 @@ async function deleteHandler(
       .eq('id', skillId)
 
     if (deleteError) {
-      console.error('Error deleting player skill:', deleteError)
       return NextResponse.json({ error: 'Error deleting player skill' }, { status: 500 })
     }
 
@@ -217,7 +210,6 @@ async function deleteHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in admin player skills DELETE API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

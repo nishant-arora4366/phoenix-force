@@ -44,7 +44,6 @@ class SessionManager {
         try {
           this.currentUser = JSON.parse(stored)
         } catch (error) {
-          console.error('Error parsing stored user:', error)
           localStorage.removeItem('phoenix_user')
         }
       }
@@ -66,7 +65,6 @@ class SessionManager {
         return updatedUser
       }
     } catch (error) {
-      console.error('Error refreshing user data:', error)
     }
     
     return this.currentUser
@@ -90,7 +88,6 @@ class SessionManager {
       const userData = JSON.parse(authHeader)
       return userData
     } catch (error) {
-      console.error('Error parsing user from request:', error)
       return null
     }
   }

@@ -19,7 +19,6 @@ async function getHandler(request: NextRequest, user: AuthenticatedUser) {
       .maybeSingle()
     
     if (playerBasicError) {
-      console.error('Error fetching player profile:', playerBasicError)
       return NextResponse.json({ 
         success: false, 
         error: 'Database error while fetching player profile'
@@ -60,7 +59,6 @@ async function getHandler(request: NextRequest, user: AuthenticatedUser) {
       .eq('player_id', playerBasic.id)
     
     if (skillError) {
-      console.error('Error fetching skill assignments:', skillError)
       return NextResponse.json({ 
         success: false, 
         error: 'Database error while fetching skill assignments'
@@ -118,7 +116,6 @@ async function getHandler(request: NextRequest, user: AuthenticatedUser) {
     })
 
   } catch (error: any) {
-    console.error('Error in player profile GET API:', error)
     return NextResponse.json({ 
       success: false, 
       error: 'Internal server error' 
@@ -204,7 +201,6 @@ async function postHandler(request: NextRequest, user: AuthenticatedUser) {
       .single()
 
     if (error) {
-      console.error('Database error:', error)
       return NextResponse.json({
         success: false,
         error: error.message,
@@ -268,7 +264,6 @@ async function postHandler(request: NextRequest, user: AuthenticatedUser) {
                   })
                 
                 if (insertError) {
-                  console.error(`Error inserting multi-select skill ${skillKey}:`, insertError)
                 }
               }
             }
@@ -294,7 +289,6 @@ async function postHandler(request: NextRequest, user: AuthenticatedUser) {
                   })
                 
                 if (insertError) {
-                  console.error(`Error inserting single-select skill ${skillKey}:`, insertError)
                 }
               }
             }
@@ -310,7 +304,6 @@ async function postHandler(request: NextRequest, user: AuthenticatedUser) {
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to create player profile',
@@ -400,7 +393,6 @@ async function putHandler(
       .single()
 
     if (error) {
-      console.error('Database error:', error)
       return NextResponse.json({
         success: false,
         error: error.message,
@@ -505,7 +497,6 @@ async function putHandler(
                   })
                 
                 if (insertError) {
-                  console.error(`Error inserting multi-select skill ${skillKey}:`, insertError)
                 }
               }
             }
@@ -531,7 +522,6 @@ async function putHandler(
                   })
                 
                 if (insertError) {
-                  console.error(`Error inserting single-select skill ${skillKey}:`, insertError)
                 }
               }
             }
@@ -547,7 +537,6 @@ async function putHandler(
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to update player profile',
@@ -619,7 +608,6 @@ async function patchHandler(
         .single()
 
       if (updateError) {
-        console.error('Database error:', updateError)
         return NextResponse.json({
           success: false,
           error: updateError.message,
@@ -726,7 +714,6 @@ async function patchHandler(
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to update player profile',

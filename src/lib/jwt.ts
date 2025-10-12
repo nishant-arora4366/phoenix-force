@@ -51,7 +51,6 @@ export function verifyToken(token: string): DecodedToken | null {
 
     return decoded
   } catch (error) {
-    console.error('JWT verification failed:', error)
     return null
   }
 }

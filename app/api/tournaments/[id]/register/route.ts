@@ -38,10 +38,9 @@ async function validateTournamentRestrictions(playerId: string, tournament: any)
       .eq('player_id', playerId)
 
 
-    if (skillsError) {
-      console.error('Error fetching player skills:', skillsError)
-      return { canRegister: true } // Allow registration if we can't fetch skills
-    }
+      if (skillsError) {
+        return { canRegister: true } // Allow registration if we can't fetch skills
+      }
 
     // Convert skills to a more usable format (same logic as player profile API)
     const playerSkillsMap: { [key: string]: string[] } = {}
@@ -66,20 +65,11 @@ async function validateTournamentRestrictions(playerId: string, tournament: any)
       }
     }
 
-    // Debug logging
-    console.log('Player skills map:', playerSkillsMap)
-    console.log('Tournament restrictions:', {
-      community_restrictions: tournament.community_restrictions,
-      base_price_restrictions: tournament.base_price_restrictions,
-      min_base_price: tournament.min_base_price,
-      max_base_price: tournament.max_base_price
-    })
+    // Debug logging removed
 
     // Check community restrictions
     if (tournament.community_restrictions && tournament.community_restrictions.length > 0) {
       const playerCommunities = playerSkillsMap['Community'] || []
-      console.log('Player communities:', playerCommunities)
-      console.log('Tournament allowed communities:', tournament.community_restrictions)
       
       const hasAllowedCommunity = playerCommunities.some(community => 
         tournament.community_restrictions.includes(community)
@@ -139,10 +129,9 @@ async function validateTournamentRestrictions(playerId: string, tournament: any)
     }
 
     return { canRegister: true }
-  } catch (error) {
-    console.error('Error validating tournament restrictions:', error)
-    return { canRegister: true } // Allow registration if validation fails
-  }
+    } catch (error) {
+      return { canRegister: true } // Allow registration if validation fails
+    }
 }
 
 async function POSTHandler(
@@ -160,9 +149,6 @@ async function POSTHandler(
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
     }
     
-    console.log('User check:', sessionUser)
-    console.log('User status:', sessionUser.status)
-    
     // For now, allow any user to register (remove approval check for testing)
     // if (userResult.data.status !== 'approved') {
     //   return NextResponse.json({ error: 'User not approved for registration' }, { status: 403 })
@@ -179,8 +165,6 @@ async function POSTHandler(
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
     }
 
-    console.log('Tournament status:', tournament.status)
-    console.log('Tournament total_slots:', tournament.total_slots)
     if (tournament.status !== 'registration_open') {
       return NextResponse.json({ error: 'Tournament registration is not open' }, { status: 400 })
     }
@@ -192,8 +176,6 @@ async function POSTHandler(
       .eq('tournament_id', tournamentId)
       .order('requested_at')
 
-    console.log('Existing slots for tournament:', existingSlots?.length || 0)
-    console.log('Slot details:', existingSlots?.map(s => ({ id: s.id, status: s.status, player_id: s.player_id, requested_at: s.requested_at })))
 
     // Check if user already has a player profile
     const { data: player, error: playerError } = await supabase
@@ -203,9 +185,6 @@ async function POSTHandler(
       .single()
 
     if (playerError || !player) {
-      console.error('Player profile error:', playerError)
-      console.error('User ID:', sessionUser.id)
-      console.error('Player found:', !!player)
       return NextResponse.json({ error: 'Player profile not found. Please create a player profile first.' }, { status: 400 })
     }
 
@@ -236,7 +215,6 @@ async function POSTHandler(
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`Registration attempt ${attempt}/${maxRetries}`)
         
         // Get current slots to determine next slot number
         const { data: currentSlots, error: slotsError } = await supabase
@@ -245,7 +223,6 @@ async function POSTHandler(
           .eq('tournament_id', tournamentId)
 
         if (slotsError) {
-          console.error('Failed to get current slots:', slotsError)
           lastError = slotsError
           continue
         }
@@ -253,10 +230,6 @@ async function POSTHandler(
         // Simple FCFS system - all registrations start as pending
         // Waitlist vs main slot is determined by position in frontend, not status in DB
         
-        console.log('Attempting to register:', {
-          currentSlotsCount: currentSlots?.length || 0,
-          tournamentTotalSlots: tournament.total_slots
-        })
         
         // Create new slot entry - all start as pending until host approves
         const { data: slot, error: registerError } = await supabase
@@ -271,7 +244,6 @@ async function POSTHandler(
           .single()
 
         if (registerError) {
-          console.error(`Registration attempt ${attempt} failed:`, registerError)
           lastError = registerError
           
           // Check for specific constraint violations
@@ -282,7 +254,6 @@ async function POSTHandler(
               // Slot conflict - retry with exponential backoff
               if (attempt < maxRetries) {
                 const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 100
-                console.log(`Slot conflict detected, retrying in ${delay}ms...`)
                 await new Promise(resolve => setTimeout(resolve, delay))
                 continue
               } else {
@@ -297,7 +268,6 @@ async function POSTHandler(
           }
         } else {
           // Success!
-          console.log('Registration successful:', slot)
           return NextResponse.json({
             success: true,
             message: `Registered for tournament. Position will be assigned based on registration time.`,
@@ -305,27 +275,22 @@ async function POSTHandler(
           })
         }
       } catch (error) {
-        console.error(`Registration attempt ${attempt} exception:`, error)
         lastError = error
         
         if (attempt < maxRetries) {
           const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 100
-          console.log(`Exception occurred, retrying in ${delay}ms...`)
           await new Promise(resolve => setTimeout(resolve, delay))
         }
       }
     }
 
     // If we get here, all retries failed
-    console.error('All registration attempts failed')
     return NextResponse.json({ 
       error: `Failed to register after multiple attempts: ${lastError?.message || 'Unknown error'}`,
       details: lastError?.message 
     }, { status: 500 })
 
   } catch (error: any) {
-    console.error('Error registering for tournament:', error)
-    console.error('Error details:', error.message, error.stack)
     return NextResponse.json({ error: `Internal server error: ${error.message}` }, { status: 500 })
   }
 }
@@ -386,7 +351,6 @@ async function DELETEHandler(
     })
 
   } catch (error: any) {
-    console.error('Error cancelling tournament registration:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

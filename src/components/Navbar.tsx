@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/src/contexts/AuthContext'
@@ -11,6 +11,24 @@ export default function Navbar() {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false)
+      }
+    }
+
+    if (isProfileDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isProfileDropdownOpen])
 
   const handleBackNavigation = () => {
     // Define logical back navigation paths based on current page
@@ -54,9 +72,6 @@ export default function Navbar() {
       }
       
       // Other pages
-      if (pathname === '/auctions') {
-        return '/tournaments' // Back to tournaments
-      }
       if (pathname === '/tournament-rules') {
         return '/tournaments' // Back to tournaments
       }
@@ -109,15 +124,6 @@ export default function Navbar() {
       )
     },
     {
-      href: '/auctions',
-      label: 'Auctions',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-    {
       href: '/tournament-rules',
       label: 'Tournament Rules',
       icon: (
@@ -157,16 +163,18 @@ export default function Navbar() {
       })
     }
     
-    // All logged-in users get player creation access
-    allNavigationLinks.push({
-      href: '/players/create',
-      label: 'Add Player',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-        </svg>
-      )
-    })
+    // All logged-in users except viewers get player creation access
+    if (user.role !== 'viewer') {
+      allNavigationLinks.push({
+        href: '/players/create',
+        label: 'Add Player',
+        icon: (
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+        )
+      })
+    }
   }
 
   // Quick links for desktop view (essential navigation)
@@ -198,15 +206,6 @@ export default function Navbar() {
         </svg>
       )
     },
-    {
-      href: '/auctions',
-      label: 'Auctions',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    }
   ]
 
   // Add role-based navigation links
@@ -238,16 +237,18 @@ export default function Navbar() {
       })
     }
     
-    // All logged-in users get player creation access
-    desktopQuickLinks.push({
-      href: '/players/create',
-      label: 'Add Player',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-        </svg>
-      )
-    })
+    // All logged-in users except viewers get player creation access
+    if (user.role !== 'viewer') {
+      desktopQuickLinks.push({
+        href: '/players/create',
+        label: 'Add Player',
+        icon: (
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+        )
+      })
+    }
   }
 
   return (
@@ -314,7 +315,7 @@ export default function Navbar() {
 
               {/* Profile Dropdown */}
               {user ? (
-                <div className="relative">
+                <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                     className="flex items-center space-x-3 text-[#DBD0C0] hover:text-[#75020f] px-4 py-2 rounded-lg hover:bg-[#75020f]/10 transition-all duration-300"
@@ -466,14 +467,6 @@ export default function Navbar() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Close dropdown when clicking outside */}
-      {isProfileDropdownOpen && (
-        <div 
-          className="fixed inset-0 z-40"
-          onClick={() => setIsProfileDropdownOpen(false)}
-        />
       )}
     </>
   )

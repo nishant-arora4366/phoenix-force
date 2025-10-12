@@ -23,7 +23,6 @@ async function getUserStats(request: NextRequest, user: AuthenticatedUser) {
       }
     })
   } catch (error) {
-    console.error('Error fetching user stats:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch user activity statistics'

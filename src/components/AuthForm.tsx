@@ -82,10 +82,8 @@ export default function AuthForm({ onAuthChange }: AuthFormProps) {
             }, { onConflict: 'id' })
           
           if (syncError) {
-            console.warn('Failed to sync user:', syncError.message)
           }
         } catch (syncErr) {
-          console.warn('User sync error:', syncErr)
         }
       }
     } catch (error: any) {

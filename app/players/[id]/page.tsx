@@ -64,8 +64,6 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         }
 
         const player = result.data
-        console.log('Player data received:', player)
-        console.log('Player skills:', player.skills)
         
         // Check if current user matches player's user_id and should redirect
         if (currentUser && player.user_id && currentUser.id === player.user_id) {
@@ -76,7 +74,6 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         
         setPlayer(player)
       } catch (error: any) {
-        console.error('Error fetching player:', error)
         setError(error.message)
       } finally {
         setLoading(false)
@@ -139,7 +136,6 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
         router.push('/players')
       }, 1500)
     } catch (error: any) {
-      console.error('Error deleting player:', error)
       
       // Close confirmation modal
       setShowDeleteConfirm(false)

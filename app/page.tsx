@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import AuthForm from '@/src/components/AuthForm'
 import PlayerProfilePrompt from '@/src/components/PlayerProfilePrompt'
@@ -21,6 +21,14 @@ export default function Home() {
   const [statsLoading, setStatsLoading] = useState(true)
   const [upcomingTournaments, setUpcomingTournaments] = useState<any[]>([])
   const [tournamentsLoading, setTournamentsLoading] = useState(true)
+  const isMountedRef = useRef(true)
+
+  // Component cleanup
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   // User session management
   useEffect(() => {
@@ -47,10 +55,10 @@ export default function Home() {
         if (data.success && data.stats) {
           setStats(data.stats)
         } else {
-          console.error('Failed to fetch stats:', data.error)
+          // Failed to fetch stats
         }
       } catch (error) {
-        console.error('Error fetching platform statistics:', error)
+        // Error fetching platform statistics
       } finally {
         setStatsLoading(false)
       }
@@ -99,7 +107,7 @@ export default function Home() {
           setUpcomingTournaments(sortedTournaments.slice(0, 2))
         }
       } catch (error) {
-        console.error('Error fetching upcoming tournaments:', error)
+        // Error fetching upcoming tournaments
       } finally {
         setTournamentsLoading(false)
       }
@@ -118,12 +126,19 @@ export default function Home() {
           table: 'tournament_slots'
         },
         (payload: any) => {
-          console.log('Tournament slots updated:', payload)
-          // Refetch tournaments when slots change
-          fetchUpcomingTournaments()
+          // Refetch tournaments when slots change (only if component is still mounted)
+          if (isMountedRef.current) {
+            fetchUpcomingTournaments()
+          }
         }
       )
-      .subscribe()
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Tournament slots channel subscribed successfully')
+        } else if (status === 'CHANNEL_ERROR') {
+          console.warn('Tournament slots channel subscription error')
+        }
+      })
 
     // Set up real-time subscriptions for tournament status changes
     const tournamentStatusChannel = supabase
@@ -136,17 +151,38 @@ export default function Home() {
           table: 'tournaments'
         },
         (payload: any) => {
-          console.log('Tournament status updated:', payload)
-          // Refetch tournaments when status changes
-          fetchUpcomingTournaments()
+          // Refetch tournaments when status changes (only if component is still mounted)
+          if (isMountedRef.current) {
+            fetchUpcomingTournaments()
+          }
         }
       )
-      .subscribe()
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Tournament status channel subscribed successfully')
+        } else if (status === 'CHANNEL_ERROR') {
+          console.warn('Tournament status channel subscription error')
+        }
+      })
 
-    // Cleanup subscriptions
+    // Cleanup subscriptions with error handling
     return () => {
-      supabase.removeChannel(tournamentSlotsChannel)
-      supabase.removeChannel(tournamentStatusChannel)
+      // Mark component as unmounted
+      isMountedRef.current = false
+      
+      // Add a small delay to allow WebSocket connections to close gracefully
+      setTimeout(() => {
+        try {
+          if (tournamentSlotsChannel) {
+            supabase.removeChannel(tournamentSlotsChannel)
+          }
+          if (tournamentStatusChannel) {
+            supabase.removeChannel(tournamentStatusChannel)
+          }
+        } catch (error) {
+          console.warn('Error removing Supabase channels:', error)
+        }
+      }, 100) // 100ms delay
     }
   }, [])
 
@@ -157,13 +193,11 @@ export default function Home() {
         try {
           const token = secureSessionManager.getToken()
           if (!token) {
-            console.log('No authentication token found')
             setShowPlayerProfilePrompt(true)
             setHasCheckedProfile(true)
             return
           }
           
-          console.log('Checking player profile with JWT token')
           
           const response = await fetch('/api/player-profile', {
             method: 'GET',
@@ -172,39 +206,27 @@ export default function Home() {
             }
           })
           
-          console.log('Player profile check - Response status:', response.status)
           
           if (response.ok) {
             const data = await response.json()
-            console.log('Player profile check - Full response data:', JSON.stringify(data, null, 2))
-            console.log('Player profile check - data.success:', data.success)
-            console.log('Player profile check - data.profile:', data.profile)
-            console.log('Player profile check - data.profile exists:', !!data.profile)
-            console.log('Player profile check - data.profile.id:', data.profile?.id)
-            console.log('Player profile check - data.profile.id exists:', !!data.profile?.id)
             
             // Check if profile actually exists (not null)
             const hasValidProfile = data.success && data.profile !== null && data.profile && data.profile.id
-            console.log('Player profile check - hasValidProfile:', hasValidProfile)
-            console.log('Player profile check - profile is null:', data.profile === null)
-            console.log('Player profile check - profile object:', data.profile)
             
             // Show prompt if user doesn't have a player profile
             if (!hasValidProfile) {
-              console.log('No valid player profile found, showing prompt')
               setShowPlayerProfilePrompt(true)
             } else {
-              console.log('Valid player profile found, NOT showing prompt')
+              // Valid player profile found
             }
             setHasCheckedProfile(true)
           } else {
-            console.log('API failed, showing prompt')
             // If API fails, assume no profile and show prompt
             setShowPlayerProfilePrompt(true)
             setHasCheckedProfile(true)
           }
         } catch (error) {
-          console.error('Error checking player profile:', error)
+          // Error checking player profile
           // On error, show prompt to be safe
           setShowPlayerProfilePrompt(true)
           setHasCheckedProfile(true)

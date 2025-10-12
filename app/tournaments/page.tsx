@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { secureSessionManager } from '@/src/lib/secure-session'
+import { getSupabaseClient } from '@/src/lib/supabaseClient'
 
 interface Tournament {
   id: string
@@ -142,17 +143,20 @@ export default function TournamentsPage() {
   const [playerSkills, setPlayerSkills] = useState<PlayerSkills>({})
   const [isLoadingSkills, setIsLoadingSkills] = useState(false)
 
+  // Track component mount status to prevent state updates after unmount
+  const isMountedRef = useRef(true)
+  
+  // Initialize Supabase client for realtime
+  const supabase = getSupabaseClient()
+
   const { data: tournaments, error, isLoading: tournamentsLoading, mutate } = useSWR<Tournament[]>('/api/tournaments', fetcher)
 
   // Function to fetch player skills for eligibility checking
   const fetchPlayerSkills = async (userToCheck?: any) => {
     const currentUser = userToCheck || user
     if (!currentUser) {
-      console.log('🔍 No user found, skipping player skills fetch')
       return
     }
-    
-    console.log('🔍 Fetching player skills for user:', currentUser.id)
     setIsLoadingSkills(true)
     try {
       const token = secureSessionManager.getToken()
@@ -162,23 +166,15 @@ export default function TournamentsPage() {
         }
       })
       
-      console.log('🔍 Player profile response status:', response.status)
-      
       if (response.ok) {
         const result = await response.json()
-        console.log('🔍 Player profile result:', result)
         
         if (result.success && result.skills) {
-          console.log('🔍 Setting player skills:', result.skills)
           setPlayerSkills(result.skills)
-        } else {
-          console.log('🔍 No skills found in result')
         }
-      } else {
-        console.log('🔍 Failed to fetch player profile:', response.status, response.statusText)
       }
     } catch (error) {
-      console.error('Error fetching player skills:', error)
+      // Error fetching player skills
     } finally {
       setIsLoadingSkills(false)
     }
@@ -186,33 +182,25 @@ export default function TournamentsPage() {
 
   // Function to check if user is eligible for a tournament
   const isUserEligibleForTournament = (tournament: Tournament): boolean => {
-    console.log('🔍 Checking eligibility for tournament:', tournament.name)
-    console.log('   Player skills:', playerSkills)
     
     // If tournament has no restrictions, everyone is eligible
     if (!hasRestrictions(tournament)) {
-      console.log('   ✅ Tournament has no restrictions - eligible for everyone')
       return true
     }
     
     // If user has no player skills, they can't be eligible for restricted tournaments
     if (!playerSkills || Object.keys(playerSkills).length === 0) {
-      console.log('   ❌ No player skills found - not eligible for restricted tournaments')
       return false
     }
     
     // Check community restrictions
     if (tournament.community_restrictions && tournament.community_restrictions.length > 0) {
       const userCommunities = playerSkills['Community'] as string[] || []
-      console.log('   Community restrictions:', tournament.community_restrictions)
-      console.log('   User communities:', userCommunities)
       
       const hasMatchingCommunity = tournament.community_restrictions.some(restriction => 
         userCommunities.includes(restriction)
       )
-      console.log('   Has matching community:', hasMatchingCommunity)
       if (!hasMatchingCommunity) {
-        console.log('   ❌ No matching community found')
         return false
       }
     }
@@ -220,13 +208,9 @@ export default function TournamentsPage() {
     // Check base price restrictions
     if (tournament.base_price_restrictions && tournament.base_price_restrictions.length > 0) {
       const userBasePrice = playerSkills['Base Price'] as string || ''
-      console.log('   Base price restrictions:', tournament.base_price_restrictions)
-      console.log('   User base price:', userBasePrice)
       
       const hasMatchingBasePrice = tournament.base_price_restrictions.includes(userBasePrice)
-      console.log('   Has matching base price:', hasMatchingBasePrice)
       if (!hasMatchingBasePrice) {
-        console.log('   ❌ No matching base price found')
         return false
       }
     }
@@ -235,11 +219,8 @@ export default function TournamentsPage() {
     if (tournament.min_base_price !== null && tournament.min_base_price !== undefined) {
       const userBasePrice = playerSkills['Base Price'] as string || ''
       const userBasePriceValue = parseFloat(userBasePrice.replace(/[^\d.]/g, '')) || 0
-      console.log('   Min base price:', tournament.min_base_price)
-      console.log('   User base price value:', userBasePriceValue)
       
       if (userBasePriceValue < tournament.min_base_price) {
-        console.log('   ❌ User base price below minimum')
         return false
       }
     }
@@ -247,16 +228,12 @@ export default function TournamentsPage() {
     if (tournament.max_base_price !== null && tournament.max_base_price !== undefined) {
       const userBasePrice = playerSkills['Base Price'] as string || ''
       const userBasePriceValue = parseFloat(userBasePrice.replace(/[^\d.]/g, '')) || 0
-      console.log('   Max base price:', tournament.max_base_price)
-      console.log('   User base price value:', userBasePriceValue)
       
       if (userBasePriceValue > tournament.max_base_price) {
-        console.log('   ❌ User base price above maximum')
         return false
       }
     }
     
-    console.log('   ✅ Tournament is eligible')
     return true
   }
 
@@ -292,7 +269,6 @@ export default function TournamentsPage() {
       try {
         // Get user from session manager
         const sessionUser = secureSessionManager.getUser()
-        console.log('🔍 Session user found:', sessionUser)
         setUser(sessionUser)
         
         if (sessionUser) {
@@ -313,14 +289,11 @@ export default function TournamentsPage() {
             setUserProfile(result.data)
             setIsHost(result.data.role === 'host' || result.data.role === 'admin')
             // Fetch player skills for eligibility checking
-            console.log('🔍 About to call fetchPlayerSkills from checkUser')
             fetchPlayerSkills(sessionUser)
           }
         } else {
-          console.log('🔍 No session user found')
         }
       } catch (error) {
-        console.error('Error checking user:', error)
       } finally {
         setIsUserLoading(false)
       }
@@ -349,7 +322,6 @@ export default function TournamentsPage() {
             }
           })
           .catch(error => {
-            console.error('Error fetching user profile:', error)
           })
       } else {
         setUserProfile(null)
@@ -361,6 +333,89 @@ export default function TournamentsPage() {
       unsubscribe()
     }
   }, [])
+
+  // Cleanup effect to track component mount status
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
+  // Realtime subscriptions for tournament updates
+  useEffect(() => {
+    let tournamentsChannel: any = null
+    let slotsChannel: any = null
+
+    try {
+      // Subscribe to tournament changes (status updates, etc.)
+      tournamentsChannel = supabase
+        .channel('tournaments-list-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'tournaments'
+          },
+          (payload: any) => {
+            if (isMountedRef.current) {
+              console.log('Tournament updated:', payload)
+              // Refresh tournaments list when any tournament is updated
+              mutate()
+            }
+          }
+        )
+        .subscribe((status: string, err: any) => {
+          if (err) {
+            console.warn('Tournaments channel subscription error:', err)
+          }
+        })
+
+      // Subscribe to tournament slots changes (player registrations, withdrawals, confirmations)
+      slotsChannel = supabase
+        .channel('tournament-slots-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'tournament_slots'
+          },
+          (payload: any) => {
+            if (isMountedRef.current) {
+              console.log('Tournament slot updated:', payload)
+              // Refresh tournaments list when slots change (affects filled_slots, waitlist_count, etc.)
+              mutate()
+            }
+          }
+        )
+        .subscribe((status: string, err: any) => {
+          if (err) {
+            console.warn('Tournament slots channel subscription error:', err)
+          }
+        })
+
+    } catch (error) {
+      console.warn('Error setting up realtime subscriptions:', error)
+    }
+
+    // Cleanup subscriptions on component unmount
+    return () => {
+      setTimeout(() => {
+        try {
+          if (tournamentsChannel) {
+            supabase.removeChannel(tournamentsChannel)
+          }
+          if (slotsChannel) {
+            supabase.removeChannel(slotsChannel)
+          }
+        } catch (error) {
+          console.warn('Error cleaning up realtime subscriptions:', error)
+        }
+      }, 100)
+    }
+  }, [mutate])
 
   const handleDeleteTournament = async (tournamentId: string) => {
     setIsDeleting(true)
@@ -396,7 +451,6 @@ export default function TournamentsPage() {
         setShowMessageModal(true)
       }
     } catch (error) {
-      console.error('Error deleting tournament:', error)
       setMessageModal({ type: 'error', message: 'Error deleting tournament. Please try again.' })
       setShowMessageModal(true)
     } finally {
@@ -520,7 +574,7 @@ export default function TournamentsPage() {
 
         {/* Filter Buttons */}
         <div className="mb-8">
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-2 md:flex md:flex-wrap gap-3">
             <button
               onClick={() => setActiveFilter('all')}
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${

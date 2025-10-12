@@ -63,7 +63,6 @@ export default function CreatePlayerPage() {
           setMessage('Please sign in to create players')
         }
       } catch (error) {
-        console.error('Error checking user:', error)
         setMessage('Error checking authentication status')
       } finally {
         setIsLoadingUser(false)
@@ -98,16 +97,12 @@ export default function CreatePlayerPage() {
         })
         const result = await response.json()
         
-        console.log('Player skills API response:', result)
         
         if (result.success) {
-          console.log('Setting player skills:', result.skills)
           setPlayerSkills(result.skills || [])
         } else {
-          console.error('Failed to fetch player skills:', result.error)
         }
       } catch (error) {
-        console.error('Error fetching player skills:', error)
       } finally {
         setIsLoadingSkills(false)
       }
@@ -394,7 +389,6 @@ export default function CreatePlayerPage() {
                     {playerSkills.map((skill) => {
                       // Add safety checks
                       if (!skill || !skill.skill_name) {
-                        console.error('Invalid skill object:', skill)
                         return null
                       }
 

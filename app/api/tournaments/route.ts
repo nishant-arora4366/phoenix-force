@@ -53,7 +53,6 @@ async function getHandler(request: NextRequest) {
 
     return NextResponse.json({ success: true, tournaments: tournamentsWithSlots })
   } catch (error: any) {
-    console.error('Error fetching tournaments:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -107,8 +106,6 @@ async function postHandler(
     }
 
     // Debug: Log the tournament_date being received
-    console.log('Received tournament_date:', tournament_date)
-    console.log('Type of tournament_date:', typeof tournament_date)
     
     // Create tournament using service role (bypasses RLS)
     const { data: tournament, error: tournamentError } = await supabaseAdmin
@@ -137,11 +134,9 @@ async function postHandler(
     }
 
     // No need to pre-create slots - they will be created dynamically as players register
-    console.log('Tournament created successfully. Slots will be created dynamically as players register.')
 
     return NextResponse.json({ success: true, tournament })
   } catch (error: any) {
-    console.error('Error creating tournament:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

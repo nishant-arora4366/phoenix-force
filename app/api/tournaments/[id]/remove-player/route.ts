@@ -62,7 +62,6 @@ async function POSTHandler(
       .single()
 
     if (slotError || !slot) {
-      console.error('Slot query error:', slotError)
       return NextResponse.json({ error: 'Slot not found' }, { status: 404 })
     }
 
@@ -77,7 +76,6 @@ async function POSTHandler(
       .eq('id', slotId)
 
     if (deleteError) {
-      console.error('Error deleting slot:', deleteError)
       return NextResponse.json({ error: 'Failed to delete slot' }, { status: 500 })
     }
 
@@ -111,7 +109,6 @@ async function POSTHandler(
     })
 
   } catch (error: any) {
-    console.error('Error removing player from tournament:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

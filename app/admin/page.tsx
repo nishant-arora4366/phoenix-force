@@ -255,7 +255,6 @@ export default function AdminPanel() {
         throw new Error('Failed to fetch users')
       }
     } catch (error) {
-      console.error('Error loading users:', error)
       setMessage('Error loading users')
     }
   }
@@ -286,13 +285,11 @@ export default function AdminPanel() {
       const { success, profiles } = await response.json()
       
       if (success) {
-        console.log('Fetched player profiles:', profiles)
         setPlayerProfiles(profiles || [])
       } else {
         throw new Error('Failed to fetch player profiles')
       }
     } catch (error: any) {
-      console.error('Error fetching player profiles:', error)
       setMessage('Error loading player profiles')
     }
   }
@@ -328,7 +325,6 @@ export default function AdminPanel() {
         throw new Error('Failed to fetch player skills')
       }
     } catch (error: any) {
-      console.error('Error fetching player skills:', error)
       setMessage('Error loading player skills')
     }
   }
@@ -812,7 +808,6 @@ export default function AdminPanel() {
         }
       }
     } catch (error) {
-      console.error('Error loading players:', error)
     }
   }
 
@@ -838,7 +833,6 @@ export default function AdminPanel() {
         }
       }
     } catch (error) {
-      console.error('Error fetching base price values:', error)
     } finally {
       setIsLoadingBasePrices(false)
     }
@@ -971,7 +965,6 @@ export default function AdminPanel() {
         throw new Error('Failed to add player skill')
       }
     } catch (error: any) {
-      console.error('Error adding player skill:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -1016,7 +1009,6 @@ export default function AdminPanel() {
         throw new Error(result.error || 'Failed to update player skill')
       }
     } catch (error: any) {
-      console.error('Error updating player skill:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -1064,7 +1056,6 @@ export default function AdminPanel() {
         throw new Error('Failed to delete player skill')
       }
     } catch (error: any) {
-      console.error('Error deleting player skill:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -1110,7 +1101,6 @@ export default function AdminPanel() {
         throw new Error(result.error || 'Failed to add skill value')
       }
     } catch (error: any) {
-      console.error('Error adding skill value:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -1156,7 +1146,6 @@ export default function AdminPanel() {
         throw new Error(result.error || 'Failed to update skill value')
       }
     } catch (error: any) {
-      console.error('Error updating skill value:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -1202,7 +1191,6 @@ export default function AdminPanel() {
         throw new Error(result.error || 'Failed to delete skill value')
       }
     } catch (error: any) {
-      console.error('Error deleting skill value:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -1262,7 +1250,6 @@ export default function AdminPanel() {
         setUsagePatternsData(patternsData.data)
       }
     } catch (error) {
-      console.error('Error fetching analytics data:', error)
       setMessage('Error loading analytics data')
     } finally {
       setAnalyticsLoading(false)

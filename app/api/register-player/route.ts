@@ -36,7 +36,6 @@ async function postHandler(
     })
 
     if (error) {
-      console.error('RPC Error:', error)
       return NextResponse.json({ 
         success: false, 
         error: error.message, 
@@ -51,7 +50,6 @@ async function postHandler(
     })
     
   } catch (error) {
-    console.error('API Error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to register player',

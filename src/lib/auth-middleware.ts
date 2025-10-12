@@ -49,7 +49,6 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
       .single()
 
     if (error || !user) {
-      console.error('User not found:', error)
       return null
     }
 
@@ -61,11 +60,6 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
     
     if (dbRoleLevel < tokenRoleLevel) {
       // Role was downgraded - return user with updated role but mark as downgraded
-      console.warn('User role was downgraded:', { 
-        tokenRole: decoded.role, 
-        dbRole: user.role,
-        userId: user.id
-      })
       
       // Return user with current database role (not token role)
       return {
@@ -81,11 +75,7 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
     
     // If role was upgraded, update the token data but allow the request
     if (dbRoleLevel > tokenRoleLevel) {
-      console.info('User role was upgraded, allowing request:', { 
-        tokenRole: decoded.role, 
-        dbRole: user.role,
-        userId: user.id
-      })
+      // Role was upgraded - allow the request
     }
 
     return {
@@ -99,7 +89,6 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
     }
 
   } catch (error) {
-    console.error('Authentication error:', error)
     return null
   }
 }

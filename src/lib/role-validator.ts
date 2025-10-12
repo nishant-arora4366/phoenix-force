@@ -64,11 +64,6 @@ class RoleValidator {
 
       if (!response.ok) {
         // Token is invalid or user doesn't exist
-        console.warn('Role validation failed: Invalid token or user not found', {
-          status: response.status,
-          statusText: response.statusText,
-          userId: currentUser.id
-        })
         secureSessionManager.clearUser()
         this.notifyListeners(false)
         return false
@@ -87,24 +82,12 @@ class RoleValidator {
           
           if (dbRoleLevel < tokenRoleLevel) {
             // Role was downgraded - update user data but don't clear session
-            console.warn('Role validation: Role downgraded', {
-              tokenRole: currentUser.role,
-              dbRole: dbUser.role,
-              userId: currentUser.id
-            })
-            
             // Update user data with new role (don't clear session)
             secureSessionManager.setUser(dbUser, token)
             this.notifyListeners(false) // Role downgraded, refresh UI
             return false
           } else {
             // Role was upgraded - this is fine
-            console.info('Role validation: Role upgraded', {
-              tokenRole: currentUser.role,
-              dbRole: dbUser.role,
-              userId: currentUser.id
-            })
-            
             // Update user data with new role
             secureSessionManager.setUser(dbUser, token)
             this.notifyListeners(true) // Role upgraded, refresh UI
@@ -114,12 +97,6 @@ class RoleValidator {
 
         // Check if user status has changed
         if (dbUser.status !== currentUser.status) {
-          console.warn('Role validation failed: Status changed', {
-            tokenStatus: currentUser.status,
-            dbStatus: dbUser.status,
-            userId: currentUser.id
-          })
-          
           // Update user data with new status
           secureSessionManager.setUser(dbUser, token)
           this.notifyListeners(false) // Status changed, may need to refresh UI
@@ -131,13 +108,11 @@ class RoleValidator {
         this.notifyListeners(true)
         return true
       } else {
-        console.warn('Role validation failed: Invalid response')
         secureSessionManager.clearUser()
         this.notifyListeners(false)
         return false
       }
     } catch (error) {
-      console.error('Role validation error:', error)
       // Don't clear user on network errors, just log
       return true
     }

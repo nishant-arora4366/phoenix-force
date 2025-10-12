@@ -21,12 +21,10 @@ export class AuthService {
   static async verifyPassword(password: string, hash: string): Promise<boolean> {
     try {
       if (!password || !hash) {
-        console.error('Invalid arguments for bcrypt.compare:', { password: !!password, hash: !!hash })
         return false
       }
       return await bcrypt.compare(password, hash)
     } catch (error) {
-      console.error('Bcrypt comparison error:', error)
       return false
     }
   }
@@ -38,13 +36,17 @@ export class AuthService {
     username?: string
     firstname?: string
     lastname?: string
+    middlename?: string
   }): Promise<{ success: boolean; error?: string; user?: any }> {
     try {
+      // Normalize email to lowercase for consistency
+      const normalizedEmail = userData.email.toLowerCase().trim()
+
       // Check if user already exists
       const { data: existingUser } = await supabase
         .from('users')
         .select('id')
-        .eq('email', userData.email)
+        .eq('email', normalizedEmail)
         .single()
 
       if (existingUser) {
@@ -58,11 +60,12 @@ export class AuthService {
       const { data: user, error } = await supabase
         .from('users')
         .insert({
-          email: userData.email,
+          email: normalizedEmail,
           password_hash: passwordHash,
           username: userData.username,
           firstname: userData.firstname,
           lastname: userData.lastname,
+          middlename: userData.middlename,
           role: 'viewer',
           status: 'pending'
         })
@@ -80,11 +83,14 @@ export class AuthService {
   // Login user
   static async login(email: string, password: string): Promise<{ success: boolean; error?: string; user?: AuthUser }> {
     try {
+      // Normalize email to lowercase for consistency
+      const normalizedEmail = email.toLowerCase().trim()
+      
       // Get user from database
       const { data: user, error } = await supabase
         .from('users')
         .select('*')
-        .eq('email', email)
+        .eq('email', normalizedEmail)
         .single()
 
       if (error || !user) {

@@ -34,7 +34,6 @@ async function getHandler(
       .order('display_order')
 
     if (error) {
-      console.error('Error fetching skills:', error)
       return NextResponse.json({
         success: false,
         error: 'Failed to fetch skills'
@@ -67,7 +66,6 @@ async function getHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in player skills list API:', error)
     return NextResponse.json({
       success: false,
       error: 'Internal server error'

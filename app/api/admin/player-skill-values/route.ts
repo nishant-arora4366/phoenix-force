@@ -48,7 +48,6 @@ async function POSTHandler(
       .single()
 
     if (valueError) {
-      console.error('Error creating skill value:', valueError)
       return NextResponse.json({ error: 'Error creating skill value' }, { status: 500 })
     }
 
@@ -58,7 +57,6 @@ async function POSTHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in admin player skill values POST API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -102,7 +100,6 @@ async function PUTHandler(
       .single()
 
     if (valueError) {
-      console.error('Error updating skill value:', valueError)
       return NextResponse.json({ error: 'Error updating skill value' }, { status: 500 })
     }
 
@@ -112,7 +109,6 @@ async function PUTHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in admin player skill values PUT API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -147,7 +143,6 @@ async function DELETEHandler(
       .eq('id', valueId)
 
     if (deleteError) {
-      console.error('Error deleting skill value:', deleteError)
       return NextResponse.json({ error: 'Error deleting skill value' }, { status: 500 })
     }
 
@@ -157,7 +152,6 @@ async function DELETEHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in admin player skill values DELETE API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

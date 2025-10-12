@@ -25,7 +25,6 @@ async function getHandler(request: NextRequest) {
       userRole = 'viewer'
     }
 
-    console.log('User role for skill filtering in public players:', userRole)
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
 
@@ -58,7 +57,6 @@ async function getHandler(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Database error:', error)
       return NextResponse.json({
         success: false,
         error: error.message,
@@ -77,7 +75,6 @@ async function getHandler(request: NextRequest) {
           const isAdminManaged = assignment.player_skills?.is_admin_managed
           const viewerCanSee = assignment.player_skills?.viewer_can_see
           
-          console.log('Processing skill in public players:', skillName, 'Admin managed:', isAdminManaged, 'Viewer can see:', viewerCanSee)
           
           // Filter skills based on user role and visibility
           if (skillName) {
@@ -87,7 +84,6 @@ async function getHandler(request: NextRequest) {
             } else {
               // For viewers, only show skills that viewers can see
               if (viewerCanSee !== true) {
-                console.log('Skipping skill for viewer in public players:', skillName)
                 continue
               }
             }
@@ -135,7 +131,6 @@ async function getHandler(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch players',

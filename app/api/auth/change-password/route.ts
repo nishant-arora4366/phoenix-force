@@ -78,7 +78,6 @@ async function postHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in change password:', error.message)
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

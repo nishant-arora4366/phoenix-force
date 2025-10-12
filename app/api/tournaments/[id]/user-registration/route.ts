@@ -44,7 +44,6 @@ async function getHandler(
       .single()
 
     if (registrationError && registrationError.code !== 'PGRST116') {
-      console.error('Error checking registration:', registrationError)
       return NextResponse.json({ 
         success: false, 
         error: 'Failed to check registration status' 
@@ -60,7 +59,6 @@ async function getHandler(
         .single()
 
       if (tournamentError) {
-        console.error('Error fetching tournament:', tournamentError)
         return NextResponse.json({ 
           success: false, 
           error: 'Failed to fetch tournament details' 
@@ -76,7 +74,6 @@ async function getHandler(
         .not('requested_at', 'is', null) // Only get slots with requested_at timestamp
 
       if (allSlotsError) {
-        console.error('Error fetching all slots:', allSlotsError)
         return NextResponse.json({ 
           success: false, 
           error: 'Failed to fetch slot positions' 
@@ -122,7 +119,6 @@ async function getHandler(
     }
 
   } catch (error) {
-    console.error('Error in user-registration API:', error)
     return NextResponse.json({ 
       success: false, 
       error: 'Internal server error' 

@@ -28,12 +28,9 @@ async function getHandler(
       .order('display_order', { ascending: true })
 
     if (skillsError) {
-      console.error('Error fetching player skills:', skillsError)
       return NextResponse.json({ error: 'Error fetching player skills' }, { status: 500 })
     }
 
-    console.log('Raw skills from database:', skills)
-    console.log('Number of skills found:', skills?.length || 0)
 
     // Format the response to match frontend expectations
     const formattedSkills = skills?.map(skill => ({
@@ -54,7 +51,6 @@ async function getHandler(
         })) || []
     })) || []
 
-    console.log('Formatted skills:', formattedSkills)
 
     return NextResponse.json({
       success: true,
@@ -62,7 +58,6 @@ async function getHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in player skills API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

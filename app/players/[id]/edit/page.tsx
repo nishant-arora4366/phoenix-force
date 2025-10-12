@@ -59,9 +59,8 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
         } else {
           setMessage('Please sign in to edit players')
         }
-      } catch (error) {
-        console.error('Error checking user:', error)
-        setMessage('Error checking authentication status')
+        } catch (error) {
+          setMessage('Error checking authentication status')
       } finally {
         setIsLoadingUser(false)
       }
@@ -106,14 +105,9 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
             return skill.viewer_can_see === true
           }) || []
           
-          console.log('All skills from API:', result.skills)
-          console.log('Filtered skills for user:', filteredSkills)
           setPlayerSkills(filteredSkills)
-        } else {
-          console.error('Failed to fetch player skills:', result.error)
         }
       } catch (error) {
-        console.error('Error fetching player skills:', error)
       } finally {
         setIsLoadingSkills(false)
       }
@@ -143,22 +137,14 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
           // Structure: {success: true, data: {skills: {...}}}
           player = result.data
           skills = result.data.skills || {}
-          console.log('Using data structure - player:', player)
-          console.log('Using data structure - skills:', skills)
         } else if (result.profile) {
           // Structure: {success: true, profile: {...}, skills: {...}}
           player = result.profile
           skills = result.skills || {}
-          console.log('Using profile structure - player:', player)
-          console.log('Using profile structure - skills:', skills)
         } else {
           throw new Error('Invalid API response structure')
         }
         
-        console.log('Player data from API:', player)
-        console.log('Player skills from API:', skills)
-        console.log('Skills keys:', Object.keys(skills || {}))
-        console.log('Skills values:', Object.values(skills || {}))
         setFormData({
           display_name: player.display_name || '',
           bio: player.bio || '',
@@ -166,15 +152,7 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
           mobile_number: player.mobile_number || '',
           skills: skills
         })
-        console.log('Form data set to:', {
-          display_name: player.display_name || '',
-          bio: player.bio || '',
-          profile_pic_url: player.profile_pic_url || '',
-          mobile_number: player.mobile_number || '',
-          skills: skills
-        })
       } catch (error: any) {
-        console.error('Error fetching player:', error)
         setMessage(`Error: ${error.message}`)
       }
     }
@@ -450,17 +428,15 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
                     Player Skills & Attributes
                   </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {playerSkills.map((skill) => {
-                    if (!skill || !skill.skill_name) {
-                      console.error('Invalid skill object:', skill)
-                      return null
-                    }
+                    {playerSkills.map((skill) => {
+                      if (!skill || !skill.skill_name) {
+                        return null
+                      }
 
                     const skillKey = skill.skill_name
                     const isMultiSelect = skill.skill_type === 'multiselect'
                     const currentValue = formData.skills[skillKey] || (isMultiSelect ? [] : '')
                     
-                    console.log('Rendering skill:', skill.skill_name, 'Current value:', currentValue, 'Form data skills:', formData.skills)
 
                     return (
                       <div key={skill.id} className="space-y-2">

@@ -23,7 +23,6 @@ async function getHandler(
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Database error:', error)
       return NextResponse.json({
         success: false,
         error: error.message,
@@ -38,7 +37,6 @@ async function getHandler(
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch players',
@@ -112,7 +110,6 @@ async function postHandler(
       .single()
 
     if (error) {
-      console.error('Database error:', error)
       return NextResponse.json({
         success: false,
         error: error.message,
@@ -198,7 +195,6 @@ async function postHandler(
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to create player profile',
@@ -277,7 +273,6 @@ async function putHandler(
       .single()
 
     if (error) {
-      console.error('Database error:', error)
       return NextResponse.json({
         success: false,
         error: error.message,
@@ -334,7 +329,6 @@ async function putHandler(
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to update player profile',

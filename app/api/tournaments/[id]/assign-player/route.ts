@@ -140,7 +140,6 @@ async function POSTHandler(
       `)
 
     if (insertError) {
-      console.error('Error inserting tournament slots:', insertError)
       return NextResponse.json({
         success: false,
         error: 'Failed to assign players to tournament'
@@ -167,7 +166,6 @@ async function POSTHandler(
         .insert(notificationsData)
 
       if (notificationError) {
-        console.error('Error creating notifications:', notificationError)
         // Don't fail the request if notification creation fails
       }
     }
@@ -194,7 +192,6 @@ async function POSTHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in assign-player API:', error)
     return NextResponse.json({
       success: false,
       error: 'Internal server error'

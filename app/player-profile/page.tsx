@@ -14,6 +14,7 @@ interface PlayerFormData {
 }
 
 interface FormErrors {
+  display_name?: string
   mobile_number?: string
   profile_pic_url?: string
   bio?: string
@@ -87,6 +88,12 @@ function PlayerProfileContent() {
     const errors: FormErrors = {}
     let isValid = true
 
+    // Validate display name
+    if (!formData.display_name || !formData.display_name.trim()) {
+      errors.display_name = 'Player display name is required'
+      isValid = false
+    }
+
     // Validate mobile number
     if (!formData.mobile_number.trim()) {
       errors.mobile_number = 'Mobile number is required'
@@ -128,6 +135,20 @@ function PlayerProfileContent() {
       }
     }
 
+    // Validate Batting Style
+    const battingStyleValue = formData.skills['Batting Style']
+    if (!battingStyleValue || battingStyleValue === 'Select Batting Style') {
+      errors['Batting Style'] = 'Batting Style is required'
+      isValid = false
+    }
+
+    // Validate Bowling Style
+    const bowlingStyleValue = formData.skills['Bowling Style']
+    if (!bowlingStyleValue || bowlingStyleValue === 'Select Bowling Style') {
+      errors['Bowling Style'] = 'Bowling Style is required'
+      isValid = false
+    }
+
     setFormErrors(errors)
     return isValid
   }
@@ -144,14 +165,30 @@ function PlayerProfileContent() {
           // Fetch user profile data (includes firstname, lastname)
           const token = secureSessionManager.getToken()
           if (token) {
-            const userProfileResponse = await fetch('/api/user-profile', {
-              headers: {
-                'Authorization': `Bearer ${token}`
+            try {
+              const userProfileResponse = await fetch('/api/user-profile', {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              })
+              const userProfileResult = await userProfileResponse.json()
+              if (userProfileResult.success && userProfileResult.data) {
+                setUserProfile(userProfileResult.data)
+              } else {
+                // Fallback: use current user data if user profile fetch fails
+                console.warn('Failed to fetch user profile, using current user data')
+                setUserProfile({
+                  firstname: currentUser.firstname || '',
+                  lastname: currentUser.lastname || ''
+                })
               }
-            })
-            const userProfileResult = await userProfileResponse.json()
-            if (userProfileResult.success && userProfileResult.data) {
-              setUserProfile(userProfileResult.data)
+            } catch (error) {
+              // Fallback: use current user data if user profile fetch fails
+              console.warn('Error fetching user profile, using current user data:', error)
+              setUserProfile({
+                firstname: currentUser.firstname || '',
+                lastname: currentUser.lastname || ''
+              })
             }
           }
           
@@ -160,7 +197,6 @@ function PlayerProfileContent() {
           setMessage('Please sign in to access your player profile')
         }
       } catch (error) {
-        console.error('Error checking user:', error)
         setMessage('Error checking authentication status')
       } finally {
         setIsLoadingUser(false)
@@ -192,7 +228,6 @@ function PlayerProfileContent() {
         
         const token = secureSessionManager.getToken()
         if (!token) {
-          console.error('No authentication token found')
           return
         }
 
@@ -216,10 +251,8 @@ function PlayerProfileContent() {
           
           setPlayerSkills(filteredSkills)
         } else {
-          console.error('Failed to fetch player skills:', result.error)
         }
       } catch (error) {
-        console.error('Error fetching player skills:', error)
       } finally {
         setIsLoadingSkills(false)
       }
@@ -234,6 +267,19 @@ function PlayerProfileContent() {
       fetchPlayerProfile()
     }
   }, [userProfile])
+
+  // Update display name when userProfile changes
+  useEffect(() => {
+    if (userProfile && !playerProfile) {
+      // Generate display name from user profile (firstname + lastname)
+      const displayName = `${userProfile.firstname || ''} ${userProfile.lastname || ''}`.trim()
+      
+      setFormData(prev => ({
+        ...prev,
+        display_name: displayName
+      }))
+    }
+  }, [userProfile, playerProfile])
 
   const fetchPlayerProfile = async () => {
     try {
@@ -272,20 +318,19 @@ function PlayerProfileContent() {
         } else {
           // User doesn't have a player profile yet
           setPlayerProfile(null)
-          setFormData({
-            display_name: displayName,
+          setFormData(prev => ({
+            ...prev,
+            display_name: displayName || prev.display_name,
             bio: '',
             profile_pic_url: '',
             mobile_number: '',
             skills: {}
-          })
+          }))
         }
       } else {
-        console.error('Failed to fetch player profile:', result.error)
         setPlayerProfile(null)
       }
     } catch (error) {
-      console.error('Error fetching player profile:', error)
     } finally {
       setIsLoadingProfile(false)
     }
@@ -744,12 +789,17 @@ function PlayerProfileContent() {
                       value={formData.display_name}
                       disabled
                       readOnly
-                      className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl bg-[#19171b]/30 backdrop-blur-sm text-[#CEA17A]/70 cursor-not-allowed"
+                      className={`w-full px-4 py-3 border-2 rounded-xl bg-[#19171b]/30 backdrop-blur-sm text-[#CEA17A]/70 cursor-not-allowed ${
+                        formErrors.display_name ? 'border-red-500' : 'border-[#CEA17A]/20'
+                      }`}
                       placeholder="Auto-filled from user profile"
                     />
                     <p className="text-xs text-[#CEA17A]/60">
                       Display name is automatically generated from your first and last name
                     </p>
+                    {formErrors.display_name && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.display_name}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -854,7 +904,6 @@ function PlayerProfileContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {playerSkills.map((skill) => {
                       if (!skill || !skill.skill_name) {
-                        console.error('Invalid skill object:', skill)
                         return null
                       }
 
@@ -868,8 +917,10 @@ function PlayerProfileContent() {
                       return (
                         <div key={skill.id} className="space-y-2">
                           <label htmlFor={skillKey} className="block text-sm font-medium text-[#CEA17A]">
-                            {skill.skill_name} {(skill.is_required || skill.skill_name === 'Community' || skill.skill_name === 'Role') && <span className="text-red-500">*</span>}
-                            {isReadOnly && <span className="text-xs text-[#CEA17A]/60 ml-2">(Admin Managed)</span>}
+                            {skill.skill_name === 'Base Price' 
+                              ? 'Base Price (Admin will set the Base Price)' 
+                              : skill.skill_name
+                            } {(skill.is_required || skill.skill_name === 'Community' || skill.skill_name === 'Role' || skill.skill_name === 'Batting Style' || skill.skill_name === 'Bowling Style') && <span className="text-red-500">*</span>}
                           </label>
                           
                           {isMultiSelect ? (
@@ -947,12 +998,17 @@ function PlayerProfileContent() {
                                     }))
                                   }
                                 }}
-                                required={skill.is_required || skill.skill_name === 'Community' || skill.skill_name === 'Role'}
+                                required={skill.is_required || skill.skill_name === 'Community' || skill.skill_name === 'Role' || skill.skill_name === 'Batting Style' || skill.skill_name === 'Bowling Style'}
                                 className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] ${
                                   formErrors[skillKey] ? 'border-red-500' : 'border-[#CEA17A]/20'
                                 } ${isReadOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
                               >
-                                <option value="">Select {skill.skill_name}</option>
+                                <option value="">
+                                  {skill.skill_name === 'Base Price' 
+                                    ? 'Admin Managed' 
+                                    : `Select ${skill.skill_name}`
+                                  }
+                                </option>
                                 {skill.values && skill.values.map((value) => (
                                   <option key={value.id} value={value.value_name}>
                                     {value.value_name}

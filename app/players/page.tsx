@@ -257,7 +257,6 @@ export default function PlayersPage() {
           setUserRole(null)
         }
       } catch (error) {
-        console.error('Error getting user:', error)
         setUser(null)
         setCurrentUser(null)
         setUserRole(null)
@@ -421,7 +420,6 @@ export default function PlayersPage() {
       // Refresh the players list
       mutate()
     } catch (error: any) {
-      console.error('Error deleting player:', error)
       
       // Close confirmation modal
       setShowDeleteConfirm(false)

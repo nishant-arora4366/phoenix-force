@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body className={`${inter.className} bg-[#19171b]`}>
         <ClientLayout>
           <div className="min-h-screen bg-[#19171b]">

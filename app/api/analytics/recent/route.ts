@@ -70,7 +70,6 @@ async function getRecentActivity(request: NextRequest, user: AuthenticatedUser) 
       }
     })
   } catch (error) {
-    console.error('Error fetching recent activity:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch recent activity'

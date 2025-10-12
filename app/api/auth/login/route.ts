@@ -17,8 +17,11 @@ async function loginHandler(request: NextRequest) {
       )
     }
 
+    // Normalize email to lowercase for consistency
+    const normalizedEmail = email.toLowerCase().trim()
+
     // Login user
-    const result = await AuthService.login(email, password)
+    const result = await AuthService.login(normalizedEmail, password)
 
     if (result.success && result.user) {
       // Check user status and provide appropriate messaging
@@ -55,7 +58,6 @@ async function loginHandler(request: NextRequest) {
       )
     }
   } catch (error: any) {
-    console.error('Login error:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

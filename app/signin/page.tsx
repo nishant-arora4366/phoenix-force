@@ -36,6 +36,19 @@ function SignInContent() {
     setLoading(true)
     setMessage('')
 
+    // Basic validation
+    if (!email.trim() || !password) {
+      setMessage('Please enter both email and password')
+      setLoading(false)
+      return
+    }
+
+    if (email.length > 254) {
+      setMessage('Email address is too long')
+      setLoading(false)
+      return
+    }
+
     try {
       // Use custom login API
       const response = await fetch('/api/auth/login', {
@@ -44,7 +57,7 @@ function SignInContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email,
+          email: email.toLowerCase().trim(), // Normalize email to lowercase
           password,
         }),
       })
@@ -62,7 +75,6 @@ function SignInContent() {
       secureSessionManager.setUser(result.user, result.token)
       
       // Redirect immediately after successful sign in
-      console.log('User signed in successfully, redirecting to:', returnUrl)
       router.push(returnUrl)
     } catch (error: any) {
       setMessage(`Error: ${error.message}`)
@@ -122,10 +134,19 @@ function SignInContent() {
                   className="w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60"
                   placeholder="Enter your password"
                 />
+                <div className="mt-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => setMessage('🔐 Forgot Password?\n\nContact an Administrator to reset your password. Only Administrators can reset passwords until E-mail services are enabled.')}
+                    className="text-sm text-[#CEA17A] hover:text-[#DBD0C0] transition-colors duration-200 underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
               </div>
               
               {message && (
-                <div className={`p-4 rounded-lg text-sm ${
+                <div className={`p-4 rounded-lg text-sm whitespace-pre-line ${
                   message.includes('Error') 
                     ? 'bg-[#75020f]/15 text-[#75020f] border border-[#75020f]/25'
                     : 'bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25'

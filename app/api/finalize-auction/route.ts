@@ -34,7 +34,6 @@ async function POSTHandler(
     })
 
     if (error) {
-      console.error('RPC Error:', error)
       return NextResponse.json({ 
         success: false, 
         error: error.message, 
@@ -49,7 +48,6 @@ async function POSTHandler(
     })
     
   } catch (error) {
-    console.error('API Error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to finalize auction',

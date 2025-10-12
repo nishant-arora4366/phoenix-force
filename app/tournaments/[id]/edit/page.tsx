@@ -104,7 +104,6 @@ export default function EditTournamentPage() {
         }
       }
     } catch (error) {
-      console.error('Error fetching restriction options:', error)
     } finally {
       setIsLoadingRestrictions(false)
     }
@@ -341,7 +340,6 @@ export default function EditTournamentPage() {
         // Fetch restriction options
         fetchRestrictionOptions()
       } catch (error) {
-        console.error('Error fetching tournament:', error)
         setError('Error loading tournament')
       } finally {
         setIsLoading(false)
@@ -400,7 +398,6 @@ export default function EditTournamentPage() {
         setIsSaving(false)
       }
     } catch (error) {
-      console.error('Error updating tournament:', error)
       setError('Error updating tournament')
       setIsSaving(false)
     }

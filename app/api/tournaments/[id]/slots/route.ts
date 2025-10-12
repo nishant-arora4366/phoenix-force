@@ -81,11 +81,9 @@ async function getHandlerPublic(
       .eq('tournament_id', tournamentId)
 
     if (allSlotsError) {
-      console.error('Error fetching all slots:', allSlotsError)
       return NextResponse.json({ error: 'Failed to fetch slots' }, { status: 500 })
     }
 
-    console.log('All slots from database:', allSlotsData?.length || 0)
     
     // Fetch skills for all players in the slots
     const playerIds = allSlotsData
@@ -230,9 +228,6 @@ async function getHandlerPublic(
       })
     }
 
-    console.log('Processed slots:', allSlots.length)
-    console.log('Main slots:', allSlots.filter(s => s.is_main_slot).length)
-    console.log('Waitlist slots:', allSlots.filter(s => !s.is_main_slot).length)
     
     return NextResponse.json({
       success: true,
@@ -248,8 +243,6 @@ async function getHandlerPublic(
     })
 
   } catch (error: any) {
-    console.error('Error fetching tournament slots:', error)
-    console.error('Error details:', error.message, error.stack)
     return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 })
   }
 }
@@ -350,7 +343,6 @@ async function putHandler(
     })
 
   } catch (error: any) {
-    console.error('Error updating tournament slot:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

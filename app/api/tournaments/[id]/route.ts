@@ -32,7 +32,6 @@ async function getHandlerPublic(
 
     return NextResponse.json({ success: true, tournament })
   } catch (error: any) {
-    console.error('Error fetching tournament:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -144,7 +143,6 @@ async function putHandler(
 
     return NextResponse.json({ success: true, tournament: updatedTournament })
   } catch (error: any) {
-    console.error('Error updating tournament:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -200,7 +198,6 @@ async function deleteHandler(
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error('Error deleting tournament:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

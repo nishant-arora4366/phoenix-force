@@ -24,6 +24,7 @@ function SignUpContent() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [errors, setErrors] = useState<FormErrors>({})
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set())
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const router = useRouter()
 
@@ -43,7 +44,21 @@ function SignUpContent() {
     return () => unsubscribe()
   }, [])
 
-  // Email validation
+  // Input sanitization
+  const sanitizeInput = (input: string): string => {
+    return input.trim().replace(/[<>"'&]/g, (match) => {
+      const escapeMap: { [key: string]: string } = {
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        '&': '&amp;'
+      }
+      return escapeMap[match]
+    })
+  }
+
+  // Email validation and normalization
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email)
@@ -51,10 +66,16 @@ function SignUpContent() {
 
   // Password validation
   const validatePassword = (password: string): boolean => {
-    return password.length >= 6
+    return password.length >= 6 && password.length <= 128
   }
 
-  // Real-time validation
+  // Name validation
+  const validateName = (name: string): boolean => {
+    const sanitized = sanitizeInput(name)
+    return sanitized.length >= 1 && sanitized.length <= 50 && /^[a-zA-Z0-9\s\-']+$/.test(sanitized)
+  }
+
+  // Validation function
   const validateField = (field: string, value: string) => {
     const newErrors: FormErrors = { ...errors }
 
@@ -62,6 +83,8 @@ function SignUpContent() {
       case 'firstname':
         if (!value.trim()) {
           newErrors.firstname = 'First name is required'
+        } else if (!validateName(value)) {
+          newErrors.firstname = 'First name must be 1-50 characters and contain only letters, numbers, spaces, hyphens, and apostrophes'
         } else {
           delete newErrors.firstname
         }
@@ -69,6 +92,8 @@ function SignUpContent() {
       case 'lastname':
         if (!value.trim()) {
           newErrors.lastname = 'Last name is required'
+        } else if (!validateName(value)) {
+          newErrors.lastname = 'Last name must be 1-50 characters and contain only letters, numbers, spaces, hyphens, and apostrophes'
         } else {
           delete newErrors.lastname
         }
@@ -76,6 +101,8 @@ function SignUpContent() {
       case 'email':
         if (!value.trim()) {
           newErrors.email = 'Email is required'
+        } else if (value.length > 254) {
+          newErrors.email = 'Email address is too long (maximum 254 characters)'
         } else if (!validateEmail(value)) {
           newErrors.email = 'Please enter a valid email address'
         } else {
@@ -86,15 +113,9 @@ function SignUpContent() {
         if (!value) {
           newErrors.password = 'Password is required'
         } else if (!validatePassword(value)) {
-          newErrors.password = 'Password must be at least 6 characters long'
+          newErrors.password = 'Password must be 6-128 characters long'
         } else {
           delete newErrors.password
-        }
-        // Also check confirm password if it's filled
-        if (confirmPassword && value !== confirmPassword) {
-          newErrors.confirmPassword = 'Passwords do not match'
-        } else if (confirmPassword && value === confirmPassword) {
-          delete newErrors.confirmPassword
         }
         break
       case 'confirmPassword':
@@ -111,6 +132,22 @@ function SignUpContent() {
     setErrors(newErrors)
   }
 
+  // Handle field blur (first time validation)
+  const handleFieldBlur = (field: string, value: string) => {
+    setTouchedFields(prev => new Set(prev).add(field))
+    validateField(field, value)
+  }
+
+  // Handle field change (clear error if field was touched and now valid)
+  const handleFieldChange = (field: string, value: string, setter: (value: string) => void) => {
+    setter(value)
+    
+    // Only validate if field was previously touched (had an error)
+    if (touchedFields.has(field)) {
+      validateField(field, value)
+    }
+  }
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -121,19 +158,25 @@ function SignUpContent() {
 
     if (!firstname.trim()) {
       newErrors.firstname = 'First name is required'
+    } else if (!validateName(firstname)) {
+      newErrors.firstname = 'First name must be 1-50 characters and contain only letters, numbers, spaces, hyphens, and apostrophes'
     }
     if (!lastname.trim()) {
       newErrors.lastname = 'Last name is required'
+    } else if (!validateName(lastname)) {
+      newErrors.lastname = 'Last name must be 1-50 characters and contain only letters, numbers, spaces, hyphens, and apostrophes'
     }
     if (!email.trim()) {
       newErrors.email = 'Email is required'
+    } else if (email.length > 254) {
+      newErrors.email = 'Email address is too long (maximum 254 characters)'
     } else if (!validateEmail(email)) {
       newErrors.email = 'Please enter a valid email address'
     }
     if (!password) {
       newErrors.password = 'Password is required'
     } else if (!validatePassword(password)) {
-      newErrors.password = 'Password must be at least 6 characters long'
+      newErrors.password = 'Password must be 6-128 characters long'
     }
     if (!confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password'
@@ -156,12 +199,12 @@ function SignUpContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email,
+          email: email.toLowerCase().trim(), // Normalize email to lowercase
           password,
-          username: email.split('@')[0], // Auto-generate username from email
-          firstname,
-          middlename: middlename || undefined,
-          lastname
+          username: email.split('@')[0].toLowerCase(), // Auto-generate username from email (lowercase)
+          firstname: sanitizeInput(firstname),
+          middlename: middlename ? sanitizeInput(middlename) : undefined,
+          lastname: sanitizeInput(lastname)
         }),
       })
 
@@ -216,11 +259,8 @@ function SignUpContent() {
                   id="firstname"
                   type="text"
                   value={firstname}
-                  onChange={(e) => {
-                    setFirstname(e.target.value)
-                    validateField('firstname', e.target.value)
-                  }}
-                  onBlur={(e) => validateField('firstname', e.target.value)}
+                  onChange={(e) => handleFieldChange('firstname', e.target.value, setFirstname)}
+                  onBlur={(e) => handleFieldBlur('firstname', e.target.value)}
                   className={`w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60 ${
                     errors.firstname ? 'border-red-500' : 'border-[#CEA17A]/25'
                   }`}
@@ -255,11 +295,8 @@ function SignUpContent() {
                   id="lastname"
                   type="text"
                   value={lastname}
-                  onChange={(e) => {
-                    setLastname(e.target.value)
-                    validateField('lastname', e.target.value)
-                  }}
-                  onBlur={(e) => validateField('lastname', e.target.value)}
+                  onChange={(e) => handleFieldChange('lastname', e.target.value, setLastname)}
+                  onBlur={(e) => handleFieldBlur('lastname', e.target.value)}
                   className={`w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60 ${
                     errors.lastname ? 'border-red-500' : 'border-[#CEA17A]/25'
                   }`}
@@ -279,11 +316,8 @@ function SignUpContent() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    validateField('email', e.target.value)
-                  }}
-                  onBlur={(e) => validateField('email', e.target.value)}
+                  onChange={(e) => handleFieldChange('email', e.target.value, setEmail)}
+                  onBlur={(e) => handleFieldBlur('email', e.target.value)}
                   className={`w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60 ${
                     errors.email ? 'border-red-500' : 'border-[#CEA17A]/25'
                   }`}
@@ -303,11 +337,8 @@ function SignUpContent() {
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    validateField('password', e.target.value)
-                  }}
-                  onBlur={(e) => validateField('password', e.target.value)}
+                  onChange={(e) => handleFieldChange('password', e.target.value, setPassword)}
+                  onBlur={(e) => handleFieldBlur('password', e.target.value)}
                   className={`w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60 ${
                     errors.password ? 'border-red-500' : 'border-[#CEA17A]/25'
                   }`}
@@ -327,11 +358,8 @@ function SignUpContent() {
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value)
-                    validateField('confirmPassword', e.target.value)
-                  }}
-                  onBlur={(e) => validateField('confirmPassword', e.target.value)}
+                  onChange={(e) => handleFieldChange('confirmPassword', e.target.value, setConfirmPassword)}
+                  onBlur={(e) => handleFieldBlur('confirmPassword', e.target.value)}
                   className={`w-full px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border rounded-lg focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50 placeholder-[#CEA17A]/60 ${
                     errors.confirmPassword ? 'border-red-500' : 'border-[#CEA17A]/25'
                   }`}

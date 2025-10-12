@@ -33,7 +33,6 @@ async function getHandler(
     })
 
     if (error) {
-      console.error('RPC Error:', error)
       return NextResponse.json({ 
         success: false, 
         error: error.message, 
@@ -48,7 +47,6 @@ async function getHandler(
     })
     
   } catch (error) {
-    console.error('API Error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to get tournament status',

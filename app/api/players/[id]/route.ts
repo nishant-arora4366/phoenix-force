@@ -25,7 +25,6 @@ async function getHandler(
       userRole = 'viewer'
     }
 
-    console.log('User role for skill filtering:', userRole)
 
     // Fetch specific player with skill assignments using service role (bypasses RLS)
     // GET requests are public - no authentication required for viewing
@@ -58,7 +57,6 @@ async function getHandler(
       .single()
 
     if (error) {
-      console.error('Database error:', error)
       return NextResponse.json({
         success: false,
         error: error.message,
@@ -76,7 +74,6 @@ async function getHandler(
     // Transform the data to match the expected interface
     const skills: { [key: string]: any } = {}
     
-    console.log('Player skill assignments:', player.player_skill_assignments)
     
     if (player.player_skill_assignments) {
       for (const assignment of player.player_skill_assignments) {
@@ -84,7 +81,6 @@ async function getHandler(
         const isAdminManaged = assignment.player_skills?.is_admin_managed
         const viewerCanSee = assignment.player_skills?.viewer_can_see
         
-        console.log('Processing skill:', skillName, 'Type:', assignment.player_skills?.skill_type, 'Admin managed:', isAdminManaged, 'Viewer can see:', viewerCanSee)
         
         // Filter skills based on user role and visibility
         if (skillName) {
@@ -94,7 +90,6 @@ async function getHandler(
           } else {
             // For viewers, only show skills that viewers can see
             if (viewerCanSee !== true) {
-              console.log('Skipping skill for viewer:', skillName)
               continue
             }
           }
@@ -102,19 +97,16 @@ async function getHandler(
           if (assignment.player_skills?.skill_type === 'multiselect') {
             // For multiselect, use the value_array
             skills[skillName] = assignment.value_array || []
-            console.log('Multiselect skill value:', skills[skillName])
           } else {
             // For single select, use the skill_value_id to get the value
             if (assignment.player_skill_values) {
               skills[skillName] = assignment.player_skill_values.value_name
-              console.log('Single select skill value:', skills[skillName])
             }
           }
         }
       }
     }
     
-    console.log('Formatted skills after filtering:', skills)
 
     // Map to the expected interface
     const transformedPlayer = {
@@ -138,7 +130,6 @@ async function getHandler(
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch player',
@@ -245,7 +236,6 @@ async function putHandler(
       .single()
 
     if (error) {
-      console.error('Database error:', error)
       return NextResponse.json({
         success: false,
         error: error.message,
@@ -278,7 +268,6 @@ async function putHandler(
           .single()
 
         if (!skillData) {
-          console.warn(`Skill "${skillName}" not found in database`)
           continue
         }
 
@@ -307,7 +296,6 @@ async function putHandler(
                 })
               
               if (insertError) {
-                console.error(`Error inserting multi-select skill ${skillName}:`, insertError)
               }
             }
           }
@@ -333,7 +321,6 @@ async function putHandler(
                 })
               
               if (insertError) {
-                console.error(`Error inserting single-select skill ${skillName}:`, insertError)
               }
             }
           }
@@ -348,7 +335,6 @@ async function putHandler(
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to update player',
@@ -429,7 +415,6 @@ async function deleteHandler(
       .eq('id', id)
 
     if (error) {
-      console.error('Database error:', error)
       return NextResponse.json({
         success: false,
         error: error.message,
@@ -443,7 +428,6 @@ async function deleteHandler(
     })
     
   } catch (error) {
-    console.error('API error:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to delete player',

@@ -186,7 +186,6 @@ class RealtimeAnalyticsManager {
         this.notifySubscribers(analyticsData)
       }
     } catch (error) {
-      console.error('Error fetching real-time analytics:', error)
     }
   }
 
@@ -198,7 +197,6 @@ class RealtimeAnalyticsManager {
       try {
         callback(data)
       } catch (error) {
-        console.error('Error notifying analytics subscriber:', error)
       }
     })
   }

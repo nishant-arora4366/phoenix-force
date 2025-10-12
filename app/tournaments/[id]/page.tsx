@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { secureSessionManager } from '@/src/lib/secure-session'
@@ -71,6 +71,9 @@ export default function TournamentDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const tournamentId = params.id as string
+  
+  // Track component mount status to prevent state updates after unmount
+  const isMountedRef = useRef(true)
 
   const [tournament, setTournament] = useState<Tournament | null>(null)
   const [user, setUser] = useState<any>(null)
@@ -96,6 +99,8 @@ export default function TournamentDetailsPage() {
   const [notifications, setNotifications] = useState<any[]>([])
   const [waitlistStatus, setWaitlistStatus] = useState<any>(null)
   const [hasPlayerProfile, setHasPlayerProfile] = useState(false)
+  const [playerProfile, setPlayerProfile] = useState<any>(null)
+  const [hasBasePrice, setHasBasePrice] = useState(false)
   const [isUserApproved, setIsUserApproved] = useState(false)
   const [userStatus, setUserStatus] = useState<string>('')
   const [showRegistrationError, setShowRegistrationError] = useState(false)
@@ -161,6 +166,14 @@ export default function TournamentDetailsPage() {
   // Initialize Supabase client for realtime (singleton to avoid multiple instances)
   const supabase = getSupabaseClient()
 
+  // Cleanup effect to track component mount status
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   useEffect(() => {
     const fetchTournamentAndUser = async () => {
       try {
@@ -210,7 +223,6 @@ export default function TournamentDetailsPage() {
             // Fetch user profile (includes player_id if linked)
             const token = secureSessionManager.getToken()
             if (!token) {
-              console.warn('No authentication token available')
               return
             }
 
@@ -221,7 +233,6 @@ export default function TournamentDetailsPage() {
             })
             
             if (!userProfileResponse.ok) {
-              console.error('Failed to fetch user profile:', userProfileResponse.status)
               return
             }
 
@@ -248,12 +259,10 @@ export default function TournamentDetailsPage() {
               await checkUserRegistration()
             }
           } catch (error) {
-            console.error('Error fetching user profile:', error)
             // Continue anyway - slots should still be visible
           }
         }
       } catch (error) {
-        console.error('Error fetching data:', error)
         setError('Error loading tournament')
       } finally {
         setIsLoading(false)
@@ -265,186 +274,252 @@ export default function TournamentDetailsPage() {
     }
   }, [tournamentId])
 
-  // Realtime subscription for tournament slots and notifications
+  // Efficient realtime subscriptions for both admin/player and viewer personas
   useEffect(() => {
     if (!tournamentId) return
 
-    console.log('🔵 [REALTIME] Setting up realtime subscription for tournament:', tournamentId)
-    console.log('🔵 [REALTIME] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log('🔵 [REALTIME] Has JWT token:', !!secureSessionManager.getToken())
-    
-    // Get the supabase client and log its realtime connection state
-    const client = supabase
-    console.log('🔵 [REALTIME] Supabase client realtime state:', {
-      accessToken: client.realtime.accessToken ? 'SET' : 'NOT SET',
-      channels: client.realtime.channels.length,
-      connected: client.realtime.isConnected()
-    })
+    let slotsChannel: any = null
+    let tournamentChannel: any = null
+    let notificationsChannel: any = null
+    let userRegistrationChannel: any = null
 
-    // Subscribe to changes in tournament_slots table for this tournament
-    console.log('🔵 [REALTIME] Creating slots channel...')
-    const slotsChannel = supabase
-      .channel(`tournament-slots-${tournamentId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'tournament_slots',
-          filter: `tournament_id=eq.${tournamentId}`
-        },
-        (payload: any) => {
-          console.log('✅ [REALTIME] INSERT received:', payload)
-          fetchSlots(true)
-          // Only check user registration if user is authenticated
-          const currentUser = secureSessionManager.getUser()
-          if (currentUser) {
-            checkUserRegistration()
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'tournament_slots',
-          filter: `tournament_id=eq.${tournamentId}`
-        },
-        (payload: any) => {
-          console.log('✅ [REALTIME] UPDATE received:', payload)
-          fetchSlots(true)
-          // Only check user registration if user is authenticated
-          const currentUser = secureSessionManager.getUser()
-          if (currentUser) {
-            checkUserRegistration()
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'tournament_slots'
-        },
-        (payload: any) => {
-          console.log('✅ [REALTIME] DELETE received (no filter):', payload)
-          // Since DELETE payload only contains id, we'll refresh for any DELETE
-          // The fetchSlots() will only return slots for the current tournament anyway
-          console.log('🔄 [REALTIME] DELETE event received, refreshing slots...')
-          fetchSlots(true)
-          // Only check user registration if user is authenticated
-          const currentUser = secureSessionManager.getUser()
-          if (currentUser) {
-            checkUserRegistration()
-          }
-        }
-      )
-      .subscribe((status: any, err: any) => {
-        console.log('🟡 [REALTIME] Slots subscription status:', status)
-        if (err) {
-          console.error('❌ [REALTIME] Slots subscription error:', err)
-        }
-        setIsRealtimeConnected(status === 'SUBSCRIBED')
-        
-        // Handle subscription errors - retry if timeout or error
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.warn('⚠️ [REALTIME] Slots subscription failed:', status)
-          console.log('🔍 [REALTIME] Channel state:', {
-            state: slotsChannel.state,
-            topic: slotsChannel.topic,
-            params: slotsChannel.params
-          })
-        } else if (status === 'SUBSCRIBED') {
-          console.log('✅ [REALTIME] Successfully subscribed to slots!')
-        }
-      })
-
-    // Subscribe to tournament status changes
-    console.log('🔵 [REALTIME] Creating tournament channel...')
-    const tournamentChannel = supabase
-      .channel(`tournament-${tournamentId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'tournaments',
-          filter: `id=eq.${tournamentId}`
-        },
-        (payload: any) => {
-          console.log('✅ [REALTIME] Tournament status updated:', payload)
-          // Update local tournament state with new status
-          setTournament(prev => {
-            if (prev && payload.new) {
-              return { ...prev, ...payload.new }
-            }
-            return prev
-          })
-          
-          // Show notification to user about status change
-          if (payload.new && payload.new.status) {
-            const statusText = getStatusText(payload.new.status)
-            setRegistrationMessage(`Tournament status updated to: ${statusText}`)
-            setTimeout(() => setRegistrationMessage(''), 5000)
-          }
-        }
-      )
-      .subscribe((status: any, err: any) => {
-        console.log('🟡 [REALTIME] Tournament subscription status:', status)
-        if (err) {
-          console.error('❌ [REALTIME] Tournament subscription error:', err)
-        }
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ [REALTIME] Successfully subscribed to tournament updates!')
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.warn('⚠️ [REALTIME] Tournament subscription failed:', status)
-          console.log('🔍 [REALTIME] Tournament channel state:', {
-            state: tournamentChannel.state,
-            topic: tournamentChannel.topic,
-            params: tournamentChannel.params
-          })
-        }
-      })
-
-    // Subscribe to notifications for the current user (only if authenticated)
-    let notificationsChannel = null
-    if (user) {
-      notificationsChannel = supabase
-        .channel(`user-notifications-${user.id}`)
+    try {
+      // 1. Subscribe to tournament_slots changes (INSERT, UPDATE, DELETE)
+      slotsChannel = supabase
+        .channel(`tournament-slots-${tournamentId}`)
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`
+            table: 'tournament_slots',
+            filter: `tournament_id=eq.${tournamentId}`
           },
           (payload: any) => {
-            console.log('New notification received:', payload)
-            setNotifications(prev => [payload.new, ...prev])
-            
-            // Show notification to user
-            if (payload.new.type === 'waitlist_promotion') {
-              setRegistrationMessage(`🎉 You have been promoted from the waitlist to a main slot!`)
-              setTimeout(() => setRegistrationMessage(''), 10000)
+            if (isMountedRef.current) {
+              fetchSlots(true)
+              // Check if this is the current user's registration
+              if (user) {
+                checkUserRegistration()
+              }
             }
           }
         )
-        .subscribe()
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tournament_slots',
+            filter: `tournament_id=eq.${tournamentId}`
+          },
+          (payload: any) => {
+            if (isMountedRef.current) {
+              fetchSlots(true)
+              // Check if this is the current user's registration
+              if (user) {
+                checkUserRegistration()
+              }
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'tournament_slots',
+            filter: `tournament_id=eq.${tournamentId}`
+          },
+          (payload: any) => {
+            if (isMountedRef.current) {
+              fetchSlots(true)
+              // Check if this was the current user's registration
+              if (user) {
+                checkUserRegistration()
+              }
+            }
+          }
+        )
+        .subscribe((status: string, err: any) => {
+          if (err) {
+            console.warn('Tournament slots channel subscription error:', err)
+          }
+          if (isMountedRef.current) {
+            setIsRealtimeConnected(status === 'SUBSCRIBED')
+          }
+        })
+
+      // 2. Subscribe to tournament status changes
+      tournamentChannel = supabase
+        .channel(`tournament-${tournamentId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tournaments',
+            filter: `id=eq.${tournamentId}`
+          },
+          (payload: any) => {
+            if (isMountedRef.current) {
+              // Update local tournament state
+              setTournament(prev => {
+                if (prev && payload.new) {
+                  return { ...prev, ...payload.new }
+                }
+                return prev
+              })
+              
+              // Show notification about status change
+              if (payload.new && payload.new.status) {
+                const statusText = getStatusText(payload.new.status)
+                setRegistrationMessage(`Tournament status updated to: ${statusText}`)
+                setTimeout(() => setRegistrationMessage(''), 5000)
+              }
+            }
+          }
+        )
+        .subscribe((status: string, err: any) => {
+          if (err) {
+            console.warn('Tournament status channel subscription error:', err)
+          }
+        })
+
+      // 3. Subscribe to notifications (only for authenticated users)
+      if (user) {
+        notificationsChannel = supabase
+          .channel(`user-notifications-${user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'notifications',
+              filter: `user_id=eq.${user.id}`
+            },
+          (payload: any) => {
+            if (isMountedRef.current) {
+              setNotifications(prev => [payload.new, ...prev])
+              
+              // Show specific notifications
+              if (payload.new.type === 'waitlist_promotion') {
+                setRegistrationMessage(`🎉 You have been promoted from the waitlist to a main slot!`)
+                setTimeout(() => setRegistrationMessage(''), 10000)
+              }
+            }
+          }
+          )
+          .subscribe((status: string, err: any) => {
+            if (err) {
+              console.warn('Notifications channel subscription error:', err)
+            }
+          })
+
+        // 4. Subscribe to current user's specific registration changes
+        userRegistrationChannel = supabase
+          .channel(`user-registration-${user.id}-${tournamentId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'tournament_slots',
+              filter: `tournament_id=eq.${tournamentId}`
+            },
+            (payload: any) => {
+              if (isMountedRef.current) {
+                // ALWAYS refresh slots when any registration change is detected
+                // This ensures the host table updates even if main subscription is closed
+                fetchSlots(true)
+                
+                // Check if this change affects the current user
+                if (payload.new && payload.new.player_id) {
+                  // Get current user's player ID
+                  fetch(`/api/player-profile`, {
+                    headers: {
+                      'Authorization': `Bearer ${secureSessionManager.getToken()}`,
+                    },
+                  })
+                  .then(response => response.json())
+                  .then(playerResult => {
+                    if (playerResult.success && playerResult.profile && 
+                        payload.new.player_id === playerResult.profile.id) {
+                      // Add small delay to ensure DB is fully updated
+                      setTimeout(() => {
+                        if (isMountedRef.current) {
+                          checkUserRegistration()
+                        }
+                      }, 500)
+                    }
+                  })
+                  .catch(error => {
+                    console.warn('Error checking player profile:', error)
+                  })
+                } else if (payload.old && payload.old.player_id) {
+                  // Handle DELETE events (withdrawals)
+                  fetch(`/api/player-profile`, {
+                    headers: {
+                      'Authorization': `Bearer ${secureSessionManager.getToken()}`,
+                    },
+                  })
+                  .then(response => response.json())
+                  .then(playerResult => {
+                    if (playerResult.success && playerResult.profile && 
+                        payload.old.player_id === playerResult.profile.id) {
+                      // Add small delay to ensure DB is fully updated
+                      setTimeout(() => {
+                        if (isMountedRef.current) {
+                          checkUserRegistration()
+                        }
+                      }, 500)
+                    }
+                  })
+                  .catch(error => {
+                    console.warn('Error checking player profile for withdrawal:', error)
+                  })
+                }
+              }
+            }
+          )
+          .subscribe((status: string, err: any) => {
+            if (err) {
+              console.warn('User registration channel subscription error:', err)
+            } else {
+              // Update realtime connection status based on user registration channel
+              if (isMountedRef.current) {
+                setIsRealtimeConnected(status === 'SUBSCRIBED')
+              }
+            }
+          })
+      }
+
+    } catch (error) {
+      console.warn('Error setting up realtime subscriptions:', error)
     }
 
     // Cleanup subscriptions on component unmount
     return () => {
-      console.log('Cleaning up realtime subscriptions')
-      supabase.removeChannel(slotsChannel)
-      supabase.removeChannel(tournamentChannel)
-      if (notificationsChannel) {
-        supabase.removeChannel(notificationsChannel)
-      }
+      setTimeout(() => {
+        try {
+          if (slotsChannel) {
+            supabase.removeChannel(slotsChannel)
+          }
+          if (tournamentChannel) {
+            supabase.removeChannel(tournamentChannel)
+          }
+          if (notificationsChannel) {
+            supabase.removeChannel(notificationsChannel)
+          }
+          if (userRegistrationChannel) {
+            supabase.removeChannel(userRegistrationChannel)
+          }
+        } catch (error) {
+          console.warn('Error cleaning up realtime subscriptions:', error)
+        }
+      }, 100)
     }
-  }, [tournamentId])
+  }, [tournamentId, user])
 
   // Load players and skills when modal opens
   useEffect(() => {
@@ -464,7 +539,6 @@ export default function TournamentDetailsPage() {
   // Subscribe to session changes to handle sign-in/sign-out
   useEffect(() => {
     const unsubscribe = secureSessionManager.subscribe((userData) => {
-      console.log('Session changed:', userData)
       setUser(userData)
       
       // If user signed out, clear user-specific data
@@ -548,7 +622,6 @@ export default function TournamentDetailsPage() {
   // Load all players function - loads all players once without filters
   const loadAllPlayers = async () => {
     if (!tournamentId) {
-      console.error('Tournament ID is not available')
       return
     }
     
@@ -559,9 +632,7 @@ export default function TournamentDetailsPage() {
         tournamentId: tournamentId
       })
 
-      console.log('Fetching all players for tournament:', tournamentId)
       const token = secureSessionManager.getToken()
-      console.log('Token for players search:', token ? 'Present' : 'Missing')
       const headers: any = {}
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
@@ -573,24 +644,19 @@ export default function TournamentDetailsPage() {
       
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Players search API error:', response.status, errorText)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
       const result = await response.json()
-      console.log('Players API response:', result)
       
       if (result.success) {
-        console.log('Loaded players with skills data:', result.players)
         setAllPlayers(result.players || [])
         // Initial filter will be applied by the useEffect
       } else {
-        console.error('Error loading players:', result.error || 'Unknown error')
         setAllPlayers([])
         setFilteredPlayers([])
       }
     } catch (error) {
-      console.error('Error loading players:', error)
       setAllPlayers([])
       setFilteredPlayers([])
     } finally {
@@ -617,19 +683,12 @@ export default function TournamentDetailsPage() {
     // Apply skill filters
     Object.entries(skillFilterValues).forEach(([skillId, values]) => {
       if (values.length > 0) {
-        console.log(`\n=== Applying skill filter ===`)
-        console.log(`Skill ID: ${skillId}`)
-        console.log(`Selected values:`, values)
         
         // Get the skill definition to understand the skill type and get value names
         const skill = availableSkills.find(s => s.id === skillId)
         if (!skill) {
-          console.log(`Skill ${skillId} not found in available skills`)
           return
         }
-        console.log(`Skill name: ${skill.name || skill.skill_name}`)
-        console.log(`Skill type: ${skill.type}`)
-        console.log(`Skill object:`, skill)
         
         // For multiselect skills, keep IDs (don't convert to names) since player.value_array contains IDs
         // For select skills, convert to names for comparison
@@ -638,7 +697,6 @@ export default function TournamentDetailsPage() {
           if (skill.type === 'number' && skill.values) {
             // For number skills, convert ID to the actual numeric value
             const valueObj = skill.values.find((v: any) => v.id === valueId)
-            console.log(`Converting number skill value: ID ${valueId} -> Value ${valueObj ? valueObj.name : valueId}`)
             return valueObj ? valueObj.name : valueId
           } else if (skill.type === 'select' && skill.values) {
             // For select skills, convert to names
@@ -649,12 +707,10 @@ export default function TournamentDetailsPage() {
           return valueId
         })
         
-        console.log(`Selected values for filtering (skill type: ${skill.type}):`, selectedValueNames)
         
         filtered = filtered.filter(player => {
           // Check if player has skills data
           if (!player.skills || !Array.isArray(player.skills)) {
-            console.log(`Player ${player.display_name} has no skills data`)
             return false
           }
 
@@ -662,11 +718,9 @@ export default function TournamentDetailsPage() {
           const skillAssignment = player.skills.find((skill: any) => skill.skill_id === skillId)
           
           if (!skillAssignment) {
-            console.log(`Player ${player.display_name} has no assignment for skill ${skillId}`)
             return false
           }
 
-          console.log(`Player ${player.display_name} skill assignment:`, skillAssignment)
 
           // Check if any of the selected values match the player's skill values
           let matches = false
@@ -677,9 +731,6 @@ export default function TournamentDetailsPage() {
             const minValue = selectedValueNames[0] ? parseFloat(selectedValueNames[0]) : null
             const maxValue = selectedValueNames[1] ? parseFloat(selectedValueNames[1]) : null
             
-            console.log(`Number filter for skill ${skill.skill_name || skill.name}: min=${minValue}, max=${maxValue}`)
-            console.log(`Player skill assignment:`, skillAssignment)
-            console.log(`Available skill values:`, skill.values)
             
             // Get the player's skill value (could be in different fields)
             let playerValue = null
@@ -689,40 +740,32 @@ export default function TournamentDetailsPage() {
               const valueObj = skill.values.find((v: any) => v.id === skillAssignment.skill_value_id)
               if (valueObj) {
                 playerValue = parseFloat(valueObj.name)
-                console.log(`Found player value from skill_value_id: ${playerValue} (from value name: ${valueObj.name})`)
               }
             }
             
             if (playerValue === null && skillAssignment.value_array && Array.isArray(skillAssignment.value_array) && skillAssignment.value_array.length > 0) {
               // For number skills, value_array might contain the actual number
               playerValue = parseFloat(skillAssignment.value_array[0])
-              console.log(`Found player value from value_array: ${playerValue} (from array: ${skillAssignment.value_array})`)
             }
             
             // If still no value, try to parse any string value directly
             if (playerValue === null && skillAssignment.value) {
               playerValue = parseFloat(skillAssignment.value)
-              console.log(`Found player value from value field: ${playerValue}`)
             }
             
-            console.log(`Final player value: ${playerValue}, min: ${minValue}, max: ${maxValue}`)
             
             if (playerValue !== null && !isNaN(playerValue)) {
               matches = true
               if (minValue !== null && playerValue < minValue) {
                 matches = false
-                console.log(`Player value ${playerValue} is below minimum ${minValue}`)
               }
               if (maxValue !== null && playerValue > maxValue) {
                 matches = false
-                console.log(`Player value ${playerValue} is above maximum ${maxValue}`)
               }
             } else {
-              console.log(`No valid player value found for number skill`)
               matches = false
             }
             
-            console.log(`Number range match result: ${matches}`)
           } else {
             // Handle other skill types (select, multiselect, text)
             matches = selectedValueNames.some(selectedValueName => {
@@ -734,13 +777,11 @@ export default function TournamentDetailsPage() {
                 
                 if (skillAssignment.value_array && Array.isArray(skillAssignment.value_array)) {
                   const arrayMatch = skillAssignment.value_array.some((val: any) => String(val) === String(selectedName))
-                  console.log(`Multiselect array check: ${skillAssignment.value_array} includes ${selectedName} (ID: ${selectedValueName}) = ${arrayMatch}`)
                   return arrayMatch
                 }
                 // Also check skill_value_id for backward compatibility (old single-value data)
                 if (skillAssignment.skill_value_id) {
                   const match = String(skillAssignment.skill_value_id) === String(selectedValueName)
-                  console.log(`Multiselect skill_value_id check: ${skillAssignment.skill_value_id} === ${selectedValueName} = ${match}`)
                   return match
                 }
                 return false
@@ -753,12 +794,10 @@ export default function TournamentDetailsPage() {
                   const valueObj = skill.values.find((v: any) => v.id === skillAssignment.skill_value_id)
                   const valueName = valueObj ? valueObj.name : String(skillAssignment.skill_value_id)
                   const match = valueName === selectedValueName
-                  console.log(`Single select match: ${valueName} === ${selectedValueName} = ${match}`)
                   return match
                 }
                 // For other types, compare IDs directly
                 const match = String(skillAssignment.skill_value_id) === String(selectedValueName)
-                console.log(`ID match: ${skillAssignment.skill_value_id} === ${selectedValueName} = ${match}`)
                 return match
               }
               
@@ -766,7 +805,6 @@ export default function TournamentDetailsPage() {
             })
           }
 
-          console.log(`Player ${player.display_name} matches filter: ${matches}`)
           return matches
         })
       }
@@ -791,14 +829,6 @@ export default function TournamentDetailsPage() {
       const result = await response.json()
       
       if (result.success) {
-        console.log('Skills loaded successfully:', result.skills)
-        console.log('Number of skills loaded:', result.skills?.length || 0)
-        console.log('First skill structure:', result.skills?.[0])
-        console.log('First skill values:', result.skills?.[0]?.values)
-        // Log all skill types to understand what values are in the database
-        result.skills.forEach((skill: any) => {
-          console.log(`Skill: ${skill.skill_name}, Type: ${skill.skill_type}`)
-        })
         // Map skill_type to type for frontend convenience
         const mappedSkills = result.skills.map((skill: any) => ({
           ...skill,
@@ -809,18 +839,15 @@ export default function TournamentDetailsPage() {
             name: value.value_name
           }))
         }))
-        console.log('Mapped skills:', mappedSkills)
         setAvailableSkills(mappedSkills)
         // Auto-enable all skills for filtering
         if (result.skills && result.skills.length > 0) {
           setEnabledSkills(result.skills.map((s: any) => s.id))
         }
       } else {
-        console.error('Error loading skills:', result.error)
         setAvailableSkills([])
       }
     } catch (error) {
-      console.error('Error loading skills:', error)
       setAvailableSkills([])
     } finally {
       setIsLoadingSkills(false)
@@ -869,7 +896,6 @@ export default function TournamentDetailsPage() {
         setTimeout(() => setStatusMessage(''), 5000)
       }
     } catch (error) {
-      console.error('Error assigning players:', error)
       setStatusMessage('Error assigning players. Please try again.')
       setTimeout(() => setStatusMessage(''), 5000)
     } finally {
@@ -1065,11 +1091,6 @@ export default function TournamentDetailsPage() {
     setShowStatusModal(false)
     
     try {
-      console.log('Updating tournament status:', {
-        tournamentId: tournament.id,
-        newStatus: selectedNewStatus,
-        currentStatus: tournament.status
-      })
       
       const sessionUser = secureSessionManager.getUser()
       if (!sessionUser) {
@@ -1086,17 +1107,13 @@ export default function TournamentDetailsPage() {
         body: JSON.stringify({ status: selectedNewStatus })
       })
       
-      console.log('Response status:', response.status)
-      console.log('Response ok:', response.ok)
       
       if (!response.ok) {
         const errorData = await response.json()
-        console.error('Error response:', errorData)
         throw new Error(errorData.error || `HTTP ${response.status}: Failed to update tournament status`)
       }
       
       const result = await response.json()
-      console.log('Success response:', result)
       
       // Update local state
       setTournament(prev => prev ? { ...prev, status: selectedNewStatus } : null)
@@ -1106,7 +1123,6 @@ export default function TournamentDetailsPage() {
       setTimeout(() => setStatusMessage(''), 3000)
       
     } catch (error: any) {
-      console.error('Status update error:', error)
       setStatusMessage(`Error: ${error.message}`)
     } finally {
       setIsUpdatingStatus(false)
@@ -1162,15 +1178,21 @@ export default function TournamentDetailsPage() {
       const slotsResponse = await fetch(`/api/tournaments/${tournamentId}/slots`, {
         headers,
       })
+      
       if (slotsResponse.ok) {
         const slotsResult = await slotsResponse.json()
+        
         if (slotsResult.success) {
           setSlots(slotsResult.slots)
           setSlotsStats(slotsResult.stats)
+        } else {
+          console.warn('Slots API returned success: false', slotsResult)
         }
+      } else {
+        console.warn('Slots API response not ok:', slotsResponse.status, slotsResponse.statusText)
       }
     } catch (error) {
-      console.error('Error fetching slots:', error)
+      console.error('Error in fetchSlots:', error)
     } finally {
       if (isRealtimeUpdate) {
         // Add a small delay for visual feedback
@@ -1197,9 +1219,16 @@ export default function TournamentDetailsPage() {
       const playerResult = await playerResponse.json()
       if (!playerResult.success || !playerResult.profile) {
         // User doesn't have a player profile, no need to check registration
+        setPlayerProfile(null)
+        setHasBasePrice(false)
         setUserRegistration(null)
         return
       }
+
+      // Store player profile data and check for base price
+      setPlayerProfile(playerResult.profile)
+      const basePrice = playerResult.skills?.['Base Price']
+      setHasBasePrice(!!basePrice && basePrice !== 'Admin Managed' && basePrice !== '')
 
       // User has a player profile, now check registration status
       const response = await fetch(`/api/tournaments/${tournamentId}/user-registration`, {
@@ -1215,7 +1244,6 @@ export default function TournamentDetailsPage() {
         setUserRegistration(null)
       }
     } catch (error) {
-      console.error('Error checking user registration:', error)
       setUserRegistration(null)
     }
   }
@@ -1244,7 +1272,6 @@ export default function TournamentDetailsPage() {
     try {
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          console.log(`Registration attempt ${attempt}/${maxRetries}`)
           
           if (attempt > 1) {
             setRegistrationMessage(`Retrying registration (attempt ${attempt}/${maxRetries})...`)
@@ -1281,7 +1308,6 @@ export default function TournamentDetailsPage() {
               // Server-side retry failed, but we can try again
               if (attempt < maxRetries) {
                 const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000
-                console.log(`Server retry failed, client retrying in ${delay}ms...`)
                 setRegistrationMessage(`Registration failed, retrying in ${Math.ceil(delay/1000)}s...`)
                 await new Promise(resolve => setTimeout(resolve, delay))
                 continue
@@ -1294,7 +1320,6 @@ export default function TournamentDetailsPage() {
           }
 
           // Success!
-          console.log('Registration successful:', result)
           setRegistrationMessage(result.message)
           
           // Wait for DB to fully update, then refresh both slots and registration status
@@ -1307,12 +1332,10 @@ export default function TournamentDetailsPage() {
           return // Exit the retry loop on success
           
         } catch (err: any) {
-          console.error(`Registration attempt ${attempt} failed:`, err)
           lastError = err
           
           if (attempt < maxRetries) {
             const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000
-            console.log(`Registration failed, retrying in ${delay}ms...`)
             setRegistrationMessage(`Registration failed, retrying in ${Math.ceil(delay/1000)}s...`)
             await new Promise(resolve => setTimeout(resolve, delay))
           }
@@ -1320,7 +1343,6 @@ export default function TournamentDetailsPage() {
       }
 
       // If we get here, all retries failed
-      console.error('All registration attempts failed')
       
       // Provide specific error messages based on the error type
       let errorMessage = 'Registration failed. Please try again.'
@@ -1373,7 +1395,6 @@ export default function TournamentDetailsPage() {
         checkUserRegistration()
       ])
     } catch (err: any) {
-      console.error('Error withdrawing from tournament:', err)
       setRegistrationMessage(`Error: ${err.message}`)
     } finally {
       setIsWithdrawing(false)
@@ -1407,7 +1428,6 @@ export default function TournamentDetailsPage() {
           setRegistrationMessage(`Successfully removed ${playerName} from tournament`)
           // Realtime will update the UI automatically
         } catch (error: any) {
-          console.error('Error removing player from tournament:', error)
           setRegistrationMessage(`Error: ${error.message}`)
         } finally {
           setTimeout(() => setRegistrationMessage(''), 5000)
@@ -1451,7 +1471,6 @@ export default function TournamentDetailsPage() {
         }
       }
     } catch (err: any) {
-      console.error('Error cancelling registration:', err)
       setRegistrationMessage(`Error: ${err.message}`)
     } finally {
       setIsRegistering(false)
@@ -1486,7 +1505,6 @@ export default function TournamentDetailsPage() {
           }
           // Realtime will update the UI automatically
         } catch (err: any) {
-          console.error('Error approving slot:', err)
           setRegistrationMessage(`Error: ${err.message}`)
           setTimeout(() => setRegistrationMessage(''), 5000)
         }
@@ -1522,7 +1540,6 @@ export default function TournamentDetailsPage() {
           }
           // Realtime will update the UI automatically
         } catch (err: any) {
-          console.error('Error rejecting slot:', err)
           setRegistrationMessage(`Error: ${err.message}`)
           setTimeout(() => setRegistrationMessage(''), 5000)
         }
@@ -1717,9 +1734,19 @@ export default function TournamentDetailsPage() {
                               </span>
                             </div>
                             <div className="text-xs mb-3">
-                              <span className={userRegistration.status === 'pending' ? 'text-yellow-400 font-medium' : 'text-green-400 font-medium'}>
-                                {userRegistration.status === 'pending' ? 'Awaiting Host Approval' : 'Confirmed'}
-                              </span>
+                              <div className={userRegistration.status === 'pending' ? 'text-yellow-400 font-medium' : 'text-green-400 font-medium'}>
+                                {userRegistration.status === 'pending' ? (
+                                  <>
+                                    <div className="font-semibold">Slot Reserved!</div>
+                                    <div className="text-xs mt-1">Payment Due - Please Contact Host to Confirm.</div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="font-semibold">Confirmed!</div>
+                                    <div className="text-xs mt-1">Payment Verified: {new Date(userRegistration.confirmed_at).toLocaleDateString()}</div>
+                                  </>
+                                )}
+                              </div>
                             </div>
                             <button
                               onClick={withdrawFromTournament}
@@ -1740,9 +1767,9 @@ export default function TournamentDetailsPage() {
                           <div className="w-full">
                             <button
                               onClick={registerForTournament}
-                              disabled={isRegistering || tournament.status !== 'registration_open' || !isUserApproved || !hasPlayerProfile}
+                              disabled={isRegistering || tournament.status !== 'registration_open' || !isUserApproved || !hasPlayerProfile || !hasBasePrice}
                               className={`w-full px-6 py-2.5 rounded-lg transition-all duration-200 font-medium shadow-lg text-sm ${
-                                tournament.status === 'registration_open' && isUserApproved && hasPlayerProfile
+                                tournament.status === 'registration_open' && isUserApproved && hasPlayerProfile && hasBasePrice
                                   ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30 shadow-green-500/20 hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-500/40 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm' 
                                   : 'bg-[#CEA17A]/10 text-[#CEA17A]/50 border border-[#CEA17A]/20 cursor-not-allowed'
                               }`}
@@ -1752,7 +1779,7 @@ export default function TournamentDetailsPage() {
                                   <div className="w-4 h-4 border-2 border-green-300 border-t-transparent rounded-full animate-spin mr-2"></div>
                                   Registering...
                                 </div>
-                              ) : tournament.status === 'registration_open' && isUserApproved && hasPlayerProfile ? (
+                              ) : tournament.status === 'registration_open' && isUserApproved && hasPlayerProfile && hasBasePrice ? (
                                 'Register Now'
                               ) : tournament.status === 'draft' ? (
                                 <div className="flex items-center justify-center">
@@ -1774,7 +1801,7 @@ export default function TournamentDetailsPage() {
                             </button>
                             
                             {/* Warning Messages */}
-                            {tournament.status === 'registration_open' && (!isUserApproved || !hasPlayerProfile) && (
+                            {tournament.status === 'registration_open' && (!isUserApproved || !hasPlayerProfile || !hasBasePrice) && (
                               <div className="mt-3 bg-[#09171F]/80 border border-yellow-500/20 rounded-lg p-4">
                                 <div className="flex items-start mb-3">
                                   <svg className="w-5 h-5 text-yellow-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1848,6 +1875,38 @@ export default function TournamentDetailsPage() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                               </svg>
                                             </Link>
+                                          )}
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Base Price */}
+                                      <div className={`flex items-start p-2 rounded ${!hasBasePrice ? 'bg-red-500/10 border border-red-500/20' : 'bg-green-500/10 border border-green-500/20'}`}>
+                                        <div className="mr-2 mt-0.5">
+                                          {hasBasePrice ? (
+                                            <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                          ) : (
+                                            <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                          )}
+                                        </div>
+                                        <div className="flex-1">
+                                          <p className={`text-xs font-medium ${hasBasePrice ? 'text-green-300' : 'text-red-300'}`}>
+                                            Base Price Set
+                                          </p>
+                                          <p className={`text-xs ${hasBasePrice ? 'text-green-400/80' : 'text-red-400/80'} mt-0.5`}>
+                                            {hasBasePrice ? (
+                                              <>Base price: <span className="font-semibold">₹{playerProfile?.skills?.['Base Price']}</span> ✓</>
+                                            ) : (
+                                              'Admin needs to set your base price'
+                                            )}
+                                          </p>
+                                          {!hasBasePrice && (
+                                            <p className="text-xs text-red-400/60 mt-1">
+                                              Contact admin to set your base price after profile approval
+                                            </p>
                                           )}
                                         </div>
                                       </div>
@@ -2200,7 +2259,7 @@ export default function TournamentDetailsPage() {
                       {/* Header - Hidden on mobile, shown on desktop */}
                       <div className="hidden md:block bg-[#3E4E5A] px-6 py-4 border-b border-[#CEA17A]/20">
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#DBD0C0]">
-                          <div className="col-span-1">#</div>
+                          <div className="col-span-1">Photo</div>
                           <div className="col-span-4">Player Name</div>
                           <div className="col-span-2">Status</div>
                           <div className="col-span-3">Joined</div>
@@ -2211,47 +2270,63 @@ export default function TournamentDetailsPage() {
                       {/* Playing Roster List */}
                       <div className="divide-y divide-gray-200">
                         {slots.filter(slot => slot.is_main_slot && slot.players).map((slot, index) => (
-                          <div key={slot.id} className={`px-4 md:px-6 py-4 transition-colors ${
-                            isCurrentUserSlot(slot) 
-                              ? 'bg-blue-50 border-l-4 border-blue-400 hover:bg-blue-100' 
-                              : 'hover:bg-[#51080d]'
-                          }`}>
+                          <div 
+                            key={slot.id} 
+                            className={`px-4 md:px-6 py-4 transition-colors cursor-pointer ${
+                              isCurrentUserSlot(slot) 
+                                ? 'bg-blue-50 border-l-4 border-blue-400 hover:bg-blue-100' 
+                                : 'hover:bg-[#51080d]'
+                            }`}
+                            onClick={() => window.open(`/players/${slot.players.id}`, '_blank')}
+                          >
                             {/* Mobile Layout */}
                             <div className="md:hidden">
                               <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                                    {slot.position || index + 1}
-                                  </div>
-                                  <div>
-                                    <div className="font-medium text-[#DBD0C0]">
-                                      {slot.players.users?.firstname && slot.players.users?.lastname 
-                                        ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                        : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                      }
+                                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                  <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                    {slot.players.profile_pic_url ? (
+                                      <img 
+                                        src={slot.players.profile_pic_url} 
+                                        alt={slot.players.display_name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                          const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (nextElement) {
+                                            nextElement.style.display = 'flex';
+                                          }
+                                        }}
+                                      />
+                                    ) : null}
+                                    <div className={`w-full h-full flex items-center justify-center text-sm font-medium text-gray-700 ${slot.players.profile_pic_url ? 'hidden' : 'flex'}`}>
+                                      {(slot.players.display_name || slot.players.users?.firstname || 'U').charAt(0).toUpperCase()}
                                     </div>
-                                    <div className="text-sm text-[#DBD0C0]">{slot.players.display_name}</div>
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-[#DBD0C0] truncate">
+                                      {slot.players.display_name}
+                                    </div>
+                                    <div className="text-sm text-[#DBD0C0]">#{slot.position || index + 1}</div>
                                   </div>
                                 </div>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  slot.status === 'confirmed' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                  {slot.status === 'confirmed' ? 'Approved' : 'Awaiting'}
-                                </span>
                               </div>
                               <div className="space-y-2">
                                 <div className="text-sm text-[#DBD0C0]">
                                   <div>Joined: {formatDateTime(slot.requested_at)}</div>
-                                  {slot.confirmed_at && (
-                                    <div className="text-xs text-gray-500">
-                                      Payment Verified: {formatDateTime(slot.confirmed_at)}
+                                  {user && (
+                                    <div className="mt-1">
+                                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                        slot.status === 'confirmed' 
+                                          ? 'bg-green-100 text-green-800' 
+                                          : 'bg-yellow-100 text-yellow-800'
+                                      }`}>
+                                        {slot.status === 'confirmed' ? 'Confirmed' : 'Awaiting Payment'}
+                                      </span>
                                     </div>
                                   )}
                                 </div>
                                 {isHost && (
-                                  <div className="flex flex-wrap gap-1.5">
+                                  <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
                                     {slot.status === 'pending' ? (
                                       <>
                                         <button
@@ -2283,27 +2358,42 @@ export default function TournamentDetailsPage() {
                             {/* Desktop Layout */}
                             <div className="hidden md:grid grid-cols-12 gap-4 items-center">
                               <div className="col-span-1">
-                                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                                  {slot.position || index + 1}
+                                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                                  {slot.players.profile_pic_url ? (
+                                    <img 
+                                      src={slot.players.profile_pic_url} 
+                                      alt={slot.players.display_name}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                        if (nextElement) {
+                                          nextElement.style.display = 'flex';
+                                        }
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div className={`w-full h-full flex items-center justify-center text-sm font-medium text-gray-700 ${slot.players.profile_pic_url ? 'hidden' : 'flex'}`}>
+                                    {(slot.players.display_name || slot.players.users?.firstname || 'U').charAt(0).toUpperCase()}
+                                  </div>
                                 </div>
                               </div>
                               <div className="col-span-4">
                                 <div className="font-medium text-[#DBD0C0]">
-                                  {slot.players.users?.firstname && slot.players.users?.lastname 
-                                    ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                    : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                  }
+                                  {slot.players.display_name}
                                 </div>
-                                <div className="text-sm text-[#DBD0C0]">{slot.players.display_name}</div>
+                                <div className="text-sm text-[#DBD0C0]">#{slot.position || index + 1}</div>
                               </div>
                               <div className="col-span-2">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  slot.status === 'confirmed' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                  {slot.status === 'confirmed' ? 'Payment Verified' : 'Awaiting Payment Confirmation'}
-                                </span>
+                                {user && (
+                                  <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
+                                    slot.status === 'confirmed' 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
+                                    {slot.status === 'confirmed' ? 'Confirmed' : 'Awaiting Payment'}
+                                  </span>
+                                )}
                               </div>
                               <div className="col-span-3">
                                 <div className="text-sm text-[#DBD0C0]">
@@ -2311,12 +2401,12 @@ export default function TournamentDetailsPage() {
                                 </div>
                                 {slot.confirmed_at && (
                                   <div className="text-xs text-gray-500">
-                                    Payment Verified: {formatDateTime(slot.confirmed_at)}
+                                    Payment Verified: {new Date(slot.confirmed_at).toLocaleDateString()}
                                   </div>
                                 )}
                               </div>
                               {isHost && (
-                                <div className="col-span-2">
+                                <div className="col-span-2" onClick={(e) => e.stopPropagation()}>
                                   {slot.status === 'pending' ? (
                                     <div className="flex space-x-2">
                                       <button
@@ -2419,7 +2509,7 @@ export default function TournamentDetailsPage() {
                       {/* Header - Hidden on mobile, shown on desktop */}
                       <div className="hidden md:block bg-[#3E4E5A] px-6 py-4 border-b border-[#CEA17A]/20">
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#DBD0C0]">
-                          <div className="col-span-1">#</div>
+                          <div className="col-span-1">Photo</div>
                           <div className="col-span-4">Player Name</div>
                           <div className="col-span-2">Status</div>
                           <div className="col-span-3">Joined</div>
@@ -2430,43 +2520,64 @@ export default function TournamentDetailsPage() {
                       {/* Waitlist */}
                       <div className="divide-y divide-gray-200">
                         {slots.filter(slot => !slot.is_main_slot && slot.players).map((slot, index) => (
-                          <div key={slot.id} className={`px-4 md:px-6 py-4 transition-colors ${
-                            isCurrentUserSlot(slot) 
-                              ? 'bg-blue-50 border-l-4 border-blue-400 hover:bg-blue-100' 
-                              : 'hover:bg-[#51080d]'
-                          }`}>
+                          <div 
+                            key={slot.id} 
+                            className={`px-4 md:px-6 py-4 transition-colors cursor-pointer ${
+                              isCurrentUserSlot(slot) 
+                                ? 'bg-blue-50 border-l-4 border-blue-400 hover:bg-blue-100' 
+                                : 'hover:bg-[#51080d]'
+                            }`}
+                            onClick={() => window.open(`/players/${slot.players.id}`, '_blank')}
+                          >
                             {/* Mobile Layout */}
                             <div className="md:hidden">
                               <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-700">
-                                    {slot.waitlist_position || index + 1}
-                                  </div>
-                                  <div>
-                                    <div className="font-medium text-[#DBD0C0]">
-                                      {slot.players.users?.firstname && slot.players.users?.lastname 
-                                        ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                        : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                      }
+                                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                  <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                    {slot.players.profile_pic_url ? (
+                                      <img 
+                                        src={slot.players.profile_pic_url} 
+                                        alt={slot.players.display_name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                          const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (nextElement) {
+                                            nextElement.style.display = 'flex';
+                                          }
+                                        }}
+                                      />
+                                    ) : null}
+                                    <div className={`w-full h-full flex items-center justify-center text-sm font-medium text-gray-700 ${slot.players.profile_pic_url ? 'hidden' : 'flex'}`}>
+                                      {(slot.players.display_name || slot.players.users?.firstname || 'U').charAt(0).toUpperCase()}
                                     </div>
-                                    <div className="text-sm text-[#DBD0C0]">{slot.players.display_name}</div>
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-[#DBD0C0] truncate">
+                                      {slot.players.display_name}
+                                    </div>
+                                    <div className="text-sm text-[#DBD0C0]">#{slot.waitlist_position || index + 1}</div>
                                   </div>
                                 </div>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  Awaiting
-                                </span>
+                                {user && (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium w-24 justify-center flex-shrink-0 ml-2 bg-yellow-100 text-yellow-800">
+                                    Awaiting Payment
+                                  </span>
+                                )}
                               </div>
                               <div className="space-y-2">
                                 <div className="text-sm text-[#DBD0C0]">
                                   Joined: {formatDateTime(slot.requested_at)}
                                 </div>
                                 {isHost && (
-                                  <button
-                                    onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                    className="px-2.5 py-1.5 bg-red-600 text-[#DBD0C0] text-xs rounded-md hover:bg-red-700 transition-colors w-full"
-                                  >
-                                    🗑️ Remove
-                                  </button>
+                                  <div onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                      onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
+                                      className="px-2.5 py-1.5 bg-red-600 text-[#DBD0C0] text-xs rounded-md hover:bg-red-700 transition-colors w-full"
+                                    >
+                                      🗑️ Remove
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -2474,23 +2585,38 @@ export default function TournamentDetailsPage() {
                             {/* Desktop Layout */}
                             <div className="hidden md:grid grid-cols-12 gap-4 items-center">
                               <div className="col-span-1">
-                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-700">
-                                  {slot.waitlist_position || index + 1}
+                                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                                  {slot.players.profile_pic_url ? (
+                                    <img 
+                                      src={slot.players.profile_pic_url} 
+                                      alt={slot.players.display_name}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                        if (nextElement) {
+                                          nextElement.style.display = 'flex';
+                                        }
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div className={`w-full h-full flex items-center justify-center text-sm font-medium text-gray-700 ${slot.players.profile_pic_url ? 'hidden' : 'flex'}`}>
+                                    {(slot.players.display_name || slot.players.users?.firstname || 'U').charAt(0).toUpperCase()}
+                                  </div>
                                 </div>
                               </div>
                               <div className="col-span-4">
                                 <div className="font-medium text-[#DBD0C0]">
-                                  {slot.players.users?.firstname && slot.players.users?.lastname 
-                                    ? `${slot.players.users.firstname} ${slot.players.users.lastname}`
-                                    : slot.players.users?.username || slot.players.users?.email || slot.players.name
-                                  }
+                                  {slot.players.display_name}
                                 </div>
-                                <div className="text-sm text-[#DBD0C0]">{slot.players.display_name}</div>
+                                <div className="text-sm text-[#DBD0C0]">#{slot.waitlist_position || index + 1}</div>
                               </div>
                               <div className="col-span-2">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  Waitlist
-                                </span>
+                                {user && (
+                                  <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium whitespace-nowrap bg-yellow-100 text-yellow-800">
+                                    Awaiting Payment
+                                  </span>
+                                )}
                               </div>
                               <div className="col-span-3">
                                 <div className="text-sm text-[#DBD0C0]">
@@ -2498,7 +2624,7 @@ export default function TournamentDetailsPage() {
                                 </div>
                               </div>
                               {isHost && (
-                                <div className="col-span-2">
+                                <div className="col-span-2" onClick={(e) => e.stopPropagation()}>
                                   <button
                                     onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
                                     className="px-3 py-1 bg-red-600 text-[#DBD0C0] text-xs rounded-lg hover:bg-red-700 transition-colors"

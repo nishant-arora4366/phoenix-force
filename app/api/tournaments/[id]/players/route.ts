@@ -21,7 +21,6 @@ export async function GET(
       .single();
 
     if (tournamentError) {
-      console.error('Error loading tournament:', tournamentError);
       return NextResponse.json({ error: tournamentError.message }, { status: 500 });
     }
 
@@ -36,7 +35,6 @@ export async function GET(
       .limit(tournament.total_slots || 100); // Limit to tournament slots only
 
     if (slotsError) {
-      console.error('Error loading slots:', slotsError);
       return NextResponse.json({ error: slotsError.message }, { status: 500 });
     }
 
@@ -57,7 +55,6 @@ export async function GET(
       .in('id', playerIds);
 
     if (playersError) {
-      console.error('Error loading players:', playersError);
       return NextResponse.json({ error: playersError.message }, { status: 500 });
     }
 
@@ -67,7 +64,6 @@ export async function GET(
       teamCount: tournament.selected_teams
     });
   } catch (error: any) {
-    console.error('Error in players API:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

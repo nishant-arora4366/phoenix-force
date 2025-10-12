@@ -52,7 +52,6 @@ export async function trackAPIUsage(data: APIUsageData): Promise<void> {
       })
   } catch (error) {
     // Silently fail analytics tracking to not affect main functionality
-    console.error('Failed to track API usage:', error)
   }
 }
 
@@ -216,7 +215,6 @@ export function withAnalytics(
         requestSizeBytes: requestSize,
         responseSizeBytes: responseSize
       }).catch(error => {
-        console.error('Analytics tracking failed:', error)
       })
       
       return response
@@ -237,7 +235,6 @@ export function withAnalytics(
         requestSizeBytes: await getRequestSize(request),
         responseSizeBytes: 0
       }).catch(analyticsError => {
-        console.error('Analytics tracking failed:', analyticsError)
       })
       
       throw error
@@ -267,7 +264,6 @@ export async function getAPIUsageStats(
     
     return data
   } catch (error) {
-    console.error('Failed to get API usage stats:', error)
     return []
   }
 }
@@ -294,7 +290,6 @@ export async function getUserActivityStats(
     
     return data
   } catch (error) {
-    console.error('Failed to get user activity stats:', error)
     return []
   }
 }
@@ -321,7 +316,6 @@ export async function getHourlyUsagePatterns(
     
     return data
   } catch (error) {
-    console.error('Failed to get hourly usage patterns:', error)
     return []
   }
 }

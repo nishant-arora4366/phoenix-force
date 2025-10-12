@@ -115,7 +115,6 @@ export async function loadPlayerSkills(): Promise<{
       skillValues: skillValuesResult.data || []
     };
   } catch (error) {
-    console.error('Error loading player skills:', error);
     return { skills: [], skillValues: [] };
   }
 }
@@ -160,7 +159,6 @@ export async function loadPlayerSkillsForPlayers(playerIds: string[]): Promise<R
 
     return playerSkills;
   } catch (error) {
-    console.error('Error loading player skills:', error);
     return {};
   }
 }
@@ -195,7 +193,6 @@ export async function loadPlayersWithSkills(playerIds: string[]): Promise<Player
 
     return playersWithSkills;
   } catch (error) {
-    console.error('Error loading players with skills:', error);
     return [];
   }
 }

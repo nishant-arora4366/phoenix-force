@@ -23,7 +23,6 @@ async function getUsagePatterns(request: NextRequest, user: AuthenticatedUser) {
       }
     })
   } catch (error) {
-    console.error('Error fetching usage patterns:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch usage patterns'

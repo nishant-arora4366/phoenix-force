@@ -53,7 +53,6 @@ async function POSTHandler(
           error: 'You are not registered for this tournament' 
         }, { status: 404 })
       }
-      console.error('Error checking registration:', registrationError)
       return NextResponse.json({ 
         success: false, 
         error: 'Failed to check registration status' 
@@ -74,7 +73,6 @@ async function POSTHandler(
       .eq('id', registration.id)
 
     if (deleteError) {
-      console.error('Error deleting slot:', deleteError)
       return NextResponse.json({ 
         success: false, 
         error: 'Failed to withdraw from tournament' 
@@ -89,7 +87,6 @@ async function POSTHandler(
     })
 
   } catch (error) {
-    console.error('Error in withdraw API:', error)
     return NextResponse.json({ 
       success: false, 
       error: 'Internal server error' 

@@ -117,7 +117,6 @@ export default function UserManagementPage() {
           const response = await fetch(`/api/admin/check-user?userId=${sessionUser.id}`)
           
           if (!response.ok) {
-            console.log('Failed to check user role, redirecting to home')
             router.push('/')
             return
           }
@@ -125,25 +124,19 @@ export default function UserManagementPage() {
           const { success, user: userData } = await response.json()
           
           if (!success || !userData) {
-            console.log('Failed to get user data, redirecting to home')
             router.push('/')
             return
           }
           
           setUserRole(userData.role)
           
-          console.log('User role:', userData.role)
-          console.log('User status:', userData.status)
-          console.log('User data:', userData)
           
           if (userData.role !== 'admin') {
-            console.log('User is not admin, redirecting to home')
             router.push('/')
             return
           }
           
           if (userData.status !== 'approved') {
-            console.log('User is not approved, redirecting to home')
             router.push('/')
             return
           }
@@ -154,7 +147,6 @@ export default function UserManagementPage() {
           router.push('/signin')
         }
       } catch (error) {
-        console.error('Error checking user:', error)
         router.push('/signin')
       } finally {
         setIsLoading(false)
@@ -215,7 +207,6 @@ export default function UserManagementPage() {
         throw new Error('Failed to fetch users')
       }
     } catch (error: any) {
-      console.error('Error fetching users:', error)
       setMessage('Error loading users')
     }
   }
@@ -236,13 +227,11 @@ export default function UserManagementPage() {
       const { success, profiles } = await response.json()
       
       if (success) {
-        console.log('Fetched player profiles:', profiles)
         setPlayerProfiles(profiles || [])
       } else {
         throw new Error('Failed to fetch player profiles')
       }
     } catch (error: any) {
-      console.error('Error fetching player profiles:', error)
       setMessage('Error loading player profiles')
     }
   }
@@ -390,7 +379,6 @@ export default function UserManagementPage() {
         throw new Error(error || 'Failed to update player profile status')
       }
     } catch (error: any) {
-      console.error('Error updating player profile status:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -416,7 +404,6 @@ export default function UserManagementPage() {
         throw new Error('Failed to fetch player skills')
       }
     } catch (error: any) {
-      console.error('Error fetching player skills:', error)
       setMessage('Error loading player skills')
     }
   }
@@ -455,7 +442,6 @@ export default function UserManagementPage() {
         throw new Error('Failed to add player skill')
       }
     } catch (error: any) {
-      console.error('Error adding player skill:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -493,7 +479,6 @@ export default function UserManagementPage() {
         throw new Error(result.error || 'Failed to update player skill')
       }
     } catch (error: any) {
-      console.error('Error updating player skill:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -534,7 +519,6 @@ export default function UserManagementPage() {
         throw new Error('Failed to delete player skill')
       }
     } catch (error: any) {
-      console.error('Error deleting player skill:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -572,7 +556,6 @@ export default function UserManagementPage() {
         throw new Error(result.error || 'Failed to add skill value')
       }
     } catch (error: any) {
-      console.error('Error adding skill value:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -610,7 +593,6 @@ export default function UserManagementPage() {
         throw new Error(result.error || 'Failed to update skill value')
       }
     } catch (error: any) {
-      console.error('Error updating skill value:', error)
       setMessage(`Error: ${error.message}`)
     }
   }
@@ -649,7 +631,6 @@ export default function UserManagementPage() {
         throw new Error(result.error || 'Failed to delete skill value')
       }
     } catch (error: any) {
-      console.error('Error deleting skill value:', error)
       setMessage(`Error: ${error.message}`)
     }
   }

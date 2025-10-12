@@ -56,7 +56,6 @@ export default function Profile() {
             if (!response.ok) {
               // Token might be expired or invalid - clear session and redirect
               if (response.status === 401) {
-                console.error('Authentication failed - session expired')
                 secureSessionManager.clearUser()
                 router.push('/signin?returnUrl=/profile&message=Session expired, please sign in again')
                 return
@@ -69,14 +68,11 @@ export default function Profile() {
             if (result.success) {
               setProfile(result.data)
             } else {
-              console.error('Failed to fetch profile:', result.error)
             }
           } catch (error) {
-            console.error('Error fetching profile:', error)
             // If there's a network error or other issue, still show the page
           }
         } else {
-          console.error('No authentication token found')
           // Clear invalid session and redirect
           secureSessionManager.clearUser()
           router.push('/signin?returnUrl=/profile&message=Please sign in to continue')
@@ -114,7 +110,6 @@ export default function Profile() {
               }
             })
             .catch(error => {
-              console.error('Error fetching user profile:', error)
             })
         }
       } else {

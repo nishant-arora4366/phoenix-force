@@ -62,7 +62,7 @@ class SecureSessionManager {
             // Sync restored JWT with Supabase for realtime
             setSupabaseAuth(storedToken)
           } catch (error) {
-            console.error('Error parsing stored user:', error)
+            // Error parsing stored user
             this.clearUser()
           }
         }
@@ -101,7 +101,7 @@ class SecureSessionManager {
       const decoded = JSON.parse(jsonPayload)
       
       if (!decoded.exp) {
-        console.error('[SecureSession] Token has no expiration')
+        // Token has no expiration
         return true
       }
       
@@ -109,12 +109,11 @@ class SecureSessionManager {
       const isExpired = decoded.exp < currentTime
       
       if (isExpired) {
-        console.log(`[SecureSession] Token expired: exp=${decoded.exp}, now=${currentTime}, diff=${currentTime - decoded.exp}s ago`)
       }
       
       return isExpired
     } catch (error) {
-      console.error('[SecureSession] Error checking token expiration:', error)
+      // Error checking token expiration
       return true
     }
   }
@@ -141,21 +140,19 @@ class SecureSessionManager {
       const timeUntilExpiration = (decoded.exp - currentTime) * 1000 // Convert to milliseconds
       return Math.max(0, timeUntilExpiration)
     } catch (error) {
-      console.error('Error getting token expiration time:', error)
+      // Error getting token expiration time
       return 0
     }
   }
 
   // Start monitoring token expiration
   startExpirationMonitoring(onExpired: () => void, onWarning?: (minutesLeft: number) => void, skipInitialWarning: boolean = false) {
-    console.log('[SecureSession] Starting expiration monitoring')
     
     // Clear any existing interval
     this.stopExpirationMonitoring()
 
     // Check immediately if token is already expired
     if (this.isTokenExpired()) {
-      console.log('[SecureSession] Token already expired, signing out immediately')
       onExpired()
       return
     }
@@ -180,39 +177,32 @@ class SecureSessionManager {
         const decoded = JSON.parse(jsonPayload)
         const expDate = new Date(decoded.exp * 1000)
         const iatDate = new Date(decoded.iat * 1000)
-        console.log(`[SecureSession] Token issued at: ${iatDate.toLocaleString()}`)
-        console.log(`[SecureSession] Token expires at: ${expDate.toLocaleString()}`)
-        console.log(`[SecureSession] Current time: ${new Date().toLocaleString()}`)
+        // Token debug info removed
       } catch (e) {
-        console.error('[SecureSession] Error parsing token for debug:', e)
+        // Error parsing token for debug
       }
     }
     
-    console.log(`[SecureSession] Token valid for ${initialMinutesLeft} minutes (${initialSecondsLeft} seconds)`)
 
     let warningShown = false
 
     // Show warning immediately if less than 5 minutes remaining (unless skipping)
     if (onWarning && initialMinutesLeft <= 5 && !skipInitialWarning) {
       const displayMinutes = Math.max(1, initialMinutesLeft) // Show at least "1 minute" even if < 60 seconds
-      console.log(`[SecureSession] Showing immediate warning: ${displayMinutes} minutes left (${initialSecondsLeft} seconds)`)
       warningShown = true
       onWarning(displayMinutes)
     }
 
     // If less than 1 minute, check every 5 seconds for more responsive sign-out
     const checkInterval = initialSecondsLeft < 60 ? 5000 : 30000
-    console.log(`[SecureSession] Monitoring started, checking every ${checkInterval / 1000} seconds`)
 
     // Check periodically
     this.expirationCheckInterval = setInterval(() => {
       const timeLeft = this.getTimeUntilExpiration()
       const minutesLeft = Math.floor(timeLeft / 60000)
       const secondsLeft = Math.floor(timeLeft / 1000)
-      console.log(`[SecureSession] Check: ${minutesLeft} minutes ${secondsLeft % 60} seconds remaining`)
       
       if (this.isTokenExpired()) {
-        console.log('[SecureSession] Token expired, signing out')
         this.stopExpirationMonitoring()
         onExpired()
         return
@@ -221,7 +211,6 @@ class SecureSessionManager {
       // Show warning if less than 5 minutes remaining
       if (onWarning && !warningShown) {
         if (minutesLeft <= 5 && minutesLeft > 0) {
-          console.log(`[SecureSession] Showing warning: ${minutesLeft} minutes left`)
           warningShown = true
           onWarning(minutesLeft)
         }
@@ -268,7 +257,7 @@ class SecureSessionManager {
         return null
       }
     } catch (error) {
-      console.error('Error refreshing user data:', error)
+      // Error refreshing user data
       this.clearUser()
       return null
     }
@@ -280,12 +269,11 @@ class SecureSessionManager {
     const user = this.getUser()
     
     if (!token || !user) {
-      console.error('[SecureSession] Cannot refresh: no token or user')
+      // Cannot refresh: no token or user
       return false
     }
 
     try {
-      console.log('[SecureSession] Refreshing token...')
       const response = await fetch('/api/auth/refresh-token', {
         method: 'POST',
         headers: {
@@ -297,16 +285,15 @@ class SecureSessionManager {
       const result = await response.json()
       
       if (result.success && result.token) {
-        console.log('[SecureSession] Token refreshed successfully')
         // Update with new token
         this.setUser(result.user, result.token)
         return true
       } else {
-        console.error('[SecureSession] Token refresh failed:', result.error)
+        // Token refresh failed
         return false
       }
     } catch (error) {
-      console.error('[SecureSession] Error refreshing token:', error)
+      // Error refreshing token
       return false
     }
   }

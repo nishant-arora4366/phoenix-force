@@ -23,7 +23,6 @@ async function getUsageStats(request: NextRequest, user: AuthenticatedUser) {
       }
     })
   } catch (error) {
-    console.error('Error fetching usage stats:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch usage statistics'

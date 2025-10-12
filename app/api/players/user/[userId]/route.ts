@@ -24,7 +24,6 @@ async function getHandler(
       .single()
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching player profile:', error)
       return NextResponse.json({ error: 'Error fetching player profile' }, { status: 500 })
     }
 
@@ -42,7 +41,6 @@ async function getHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in player profile API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

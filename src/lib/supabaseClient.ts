@@ -39,7 +39,6 @@ export const setSupabaseAuth = (token: string | null) => {
     // Don't disconnect existing channels unnecessarily
     // Let them continue with anonymous access
   } catch (error) {
-    console.warn('Error setting realtime auth:', error)
   }
 }
 

@@ -72,7 +72,6 @@ async function POSTHandler(
     })
 
   } catch (error: any) {
-    console.error('Reset password error:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

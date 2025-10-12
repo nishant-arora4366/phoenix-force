@@ -40,43 +40,13 @@ async function getHandler(request: NextRequest) {
         .in('status', ['registration_open', 'in_progress'])
     ])
 
-    // Handle errors and log results for debugging
-    if (playersResult.error) {
-      console.error('Error fetching players count:', playersResult.error)
-    } else {
-      console.log('Players query successful, count:', playersResult.count)
-    }
-    
-    if (tournamentsResult.error) {
-      console.error('Error fetching tournaments count:', tournamentsResult.error)
-    } else {
-      console.log('Tournaments query successful, count:', tournamentsResult.count)
-    }
-    
-    if (usersResult.error) {
-      console.error('Error fetching users count:', usersResult.error)
-    } else {
-      console.log('Users query successful, count:', usersResult.count)
-    }
-    
-    if (activeTournamentsResult.error) {
-      console.error('Error fetching active tournaments count:', activeTournamentsResult.error)
-    } else {
-      console.log('Active tournaments query successful, count:', activeTournamentsResult.count)
-    }
+      // Handle errors and extract counts
 
     // Extract counts, defaulting to 0 if there's an error
     const playersCount = playersResult.count || 0
     const tournamentsCount = tournamentsResult.count || 0
     const usersCount = usersResult.count || 0
     const activeTournamentsCount = activeTournamentsResult.count || 0
-
-    console.log('Final stats:', {
-      playersCount,
-      tournamentsCount,
-      usersCount,
-      activeTournamentsCount
-    })
 
     // Calculate additional stats
     const stats = {
@@ -94,9 +64,8 @@ async function getHandler(request: NextRequest) {
       stats
     })
 
-  } catch (error) {
-    console.error('Error fetching platform statistics:', error)
-    return NextResponse.json(
+    } catch (error) {
+      return NextResponse.json(
       { 
         success: false, 
         error: 'Failed to fetch platform statistics',

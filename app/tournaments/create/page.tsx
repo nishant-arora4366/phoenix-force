@@ -83,7 +83,6 @@ export default function CreateTournamentPage() {
           setMessage('Please sign in to create tournaments')
         }
       } catch (error) {
-        console.error('Error checking user:', error)
         setMessage('Error checking authentication status')
       } finally {
         setIsLoadingUser(false)
@@ -136,7 +135,6 @@ export default function CreateTournamentPage() {
           }
         }
       } catch (error) {
-        console.error('Error fetching restriction options:', error)
       } finally {
         setIsLoadingRestrictions(false)
       }
@@ -217,9 +215,6 @@ export default function CreateTournamentPage() {
       const formattedDateTime = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00${timezoneSign}${String(timezoneHours).padStart(2, '0')}:${String(timezoneMinutes).padStart(2, '0')}`
       
       // Debug: Log the datetime being stored
-      console.log('Selected time:', `${hour}:${String(minute).padStart(2, '0')}`)
-      console.log('Formatted datetime:', formattedDateTime)
-      console.log('Timezone offset:', timezoneOffset, 'minutes')
       
       setFormData(prev => ({
         ...prev,

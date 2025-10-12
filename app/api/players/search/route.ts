@@ -98,12 +98,9 @@ async function getHandler(
     // Apply limit
     query = query.limit(limit)
 
-    console.log('Executing players search query with tournamentId:', tournamentId)
     const { data: players, error } = await query
 
     if (error) {
-      console.error('Error fetching players:', error)
-      console.error('Error details:', JSON.stringify(error, null, 2))
       return NextResponse.json({
         success: false,
         error: 'Failed to fetch players',
@@ -182,7 +179,6 @@ async function getHandler(
     })
 
   } catch (error: any) {
-    console.error('Error in players search API:', error)
     return NextResponse.json({
       success: false,
       error: 'Internal server error'

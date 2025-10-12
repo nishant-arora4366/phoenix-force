@@ -55,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }, 2000)
     } catch (error) {
-      console.error('Error signing out:', error)
       setIsSigningOut(false)
       setExpirationWarning(null) // Clear warning on error too
       if (typeof document !== 'undefined') {
@@ -66,13 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const extendSession = async () => {
     setIsRefreshingToken(true)
-    console.log('[AuthContext] Extending session...')
 
     try {
       const success = await secureSessionManager.refreshToken()
 
       if (success) {
-        console.log('[AuthContext] Session extended successfully')
         // Show success message briefly, then clear warning
         setExpirationWarning('Session extended successfully!')
         setTimeout(() => {
@@ -82,21 +79,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Restart monitoring with new token
         secureSessionManager.startExpirationMonitoring(
           () => {
-            console.log('[AuthContext] Token expired - automatically signing out')
             signOut()
           },
           (minutesLeft) => {
-            console.log(`[AuthContext] Warning: ${minutesLeft} minutes left`)
             setExpirationWarning(`Your session will expire in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}. Please save your work.`)
           },
           true // Skip initial warning since we just extended
         )
       } else {
-        console.error('[AuthContext] Failed to extend session')
         setExpirationWarning('Failed to extend session. Please save your work.')
       }
     } catch (error) {
-      console.error('[AuthContext] Error extending session:', error)
       setExpirationWarning('Failed to extend session. Please save your work.')
     } finally {
       setIsRefreshingToken(false)
@@ -104,43 +97,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    console.log('[AuthContext] Initializing...')
     const currentUser = secureSessionManager.getUser()
     setUser(currentUser)
 
     // Start monitoring token expiration if user is logged in
     if (currentUser) {
-      console.log('[AuthContext] User found, starting expiration monitoring')
       secureSessionManager.startExpirationMonitoring(
         () => {
-          console.log('[AuthContext] Token expired - automatically signing out')
           signOut()
         },
         (minutesLeft) => {
-          console.log(`[AuthContext] Warning: ${minutesLeft} minutes left`)
           setExpirationWarning(`Your session will expire in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}. Please save your work.`)
         }
       )
-    } else {
-      console.log('[AuthContext] No user found')
     }
 
     const unsubscribe = secureSessionManager.subscribe((sessionUser) => {
-      console.log('[AuthContext] User changed:', sessionUser ? 'logged in' : 'logged out')
       // Don't update user during sign-out to prevent flashes
       if (!isSigningOut) {
         setUser(sessionUser)
         
         // Start or stop expiration monitoring based on user state
         if (sessionUser) {
-          console.log('[AuthContext] Starting expiration monitoring for new user')
           secureSessionManager.startExpirationMonitoring(
             () => {
-              console.log('[AuthContext] Token expired - automatically signing out')
               signOut()
             },
             (minutesLeft) => {
-              console.log(`[AuthContext] Warning: ${minutesLeft} minutes left`)
               setExpirationWarning(`Your session will expire in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}. Please save your work.`)
             }
           )
@@ -148,7 +131,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Only stop monitoring if not signing out due to expiration
           // (Keep warning visible during expiration sign-out)
           if (!expirationWarning) {
-            console.log('[AuthContext] Stopping expiration monitoring')
             secureSessionManager.stopExpirationMonitoring()
           }
         }
@@ -156,29 +138,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => {
-      console.log('[AuthContext] Cleanup')
       unsubscribe()
       secureSessionManager.stopExpirationMonitoring()
     }
   }, [])
 
-  // Debug: Log when warning changes
+  // Monitor warning state changes
   useEffect(() => {
-    if (expirationWarning) {
-      console.log('[AuthContext] Expiration warning state set:', expirationWarning)
-      console.log('[AuthContext] Warning should be visible now')
-      console.log('[AuthContext] Portal should render:', isMounted, typeof window !== 'undefined')
-    } else {
-      console.log('[AuthContext] Expiration warning cleared')
-    }
+    // Warning state changed
   }, [expirationWarning])
 
   return (
     <AuthContext.Provider value={{ user, isSigningOut, expirationWarning, isRefreshingToken, signOut, extendSession }}>
       {children}
       {expirationWarning && isMounted && typeof window !== 'undefined' && (() => {
-        console.log('[AuthContext] Creating portal for warning:', expirationWarning)
-        console.log('[AuthContext] Document body exists:', !!document.body)
         const messageLower = expirationWarning.toLowerCase()
         const variant = messageLower.includes('success')
           ? 'success'
