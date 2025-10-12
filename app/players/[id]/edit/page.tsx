@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { secureSessionManager } from '@/src/lib/secure-session'
+import ImageUpload from '@/src/components/ImageUpload'
 
 interface PlayerFormData {
   display_name: string
@@ -374,17 +375,20 @@ export default function EditPlayerPage({ params }: { params: Promise<{ id: strin
 
               {/* Profile Picture */}
               <div className="space-y-2">
-                <label htmlFor="profile_pic_url" className="block text-sm font-semibold text-[#CEA17A]">
-                  Profile Picture URL
+                <label className="block text-sm font-semibold text-[#CEA17A]">
+                  Profile Picture
                 </label>
-                <input
-                  type="url"
-                  id="profile_pic_url"
-                  name="profile_pic_url"
-                  value={formData.profile_pic_url}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 border-[#CEA17A]/20 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0]"
-                  placeholder="Enter profile picture URL (optional)"
+                <ImageUpload
+                  currentImageUrl={formData.profile_pic_url}
+                  onImageUploaded={(url) => {
+                    setFormData(prev => ({ ...prev, profile_pic_url: url }));
+                  }}
+                  onImageRemoved={() => {
+                    setFormData(prev => ({ ...prev, profile_pic_url: '' }));
+                    setMessage(''); // Clear any existing messages
+                  }}
+                  disabled={loading}
+                  className="w-full"
                 />
               </div>
 

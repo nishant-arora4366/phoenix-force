@@ -34,9 +34,21 @@ async function getUserProfilePublic(request: NextRequest) {
       }, { status: 500 })
     }
 
+    // Check if user has a linked player profile and get the profile picture
+    const { data: playerProfile } = await supabaseAdmin
+      .from('players')
+      .select('id, profile_pic_url')
+      .eq('user_id', userId)
+      .maybeSingle()
+
     return NextResponse.json({
       success: true,
-      data: profileUser
+      data: {
+        ...profileUser,
+        player_id: playerProfile?.id || null,
+        // Use player profile picture if available, otherwise use user photo
+        photo: playerProfile?.profile_pic_url || profileUser.photo
+      }
     })
 
   } catch (error: any) {
@@ -63,10 +75,10 @@ async function getUserProfile(request: NextRequest, user: AuthenticatedUser) {
       }, { status: 500 })
     }
 
-    // Check if user has a linked player profile
+    // Check if user has a linked player profile and get the profile picture
     const { data: playerProfile } = await supabaseAdmin
       .from('players')
-      .select('id')
+      .select('id, profile_pic_url')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -74,7 +86,9 @@ async function getUserProfile(request: NextRequest, user: AuthenticatedUser) {
       success: true,
       data: {
         ...profileUser,
-        player_id: playerProfile?.id || null
+        player_id: playerProfile?.id || null,
+        // Use player profile picture if available, otherwise use user photo
+        photo: playerProfile?.profile_pic_url || profileUser.photo
       }
     })
 
@@ -129,7 +143,6 @@ async function updateUserProfile(request: NextRequest, user: AuthenticatedUser) 
         firstname: profile.firstname,
         middlename: profile.middlename || null,
         lastname: profile.lastname,
-        photo: profile.photo || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', targetUserId)

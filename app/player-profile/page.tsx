@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { secureSessionManager } from '@/src/lib/secure-session'
+import ImageUpload from '@/src/components/ImageUpload'
 
 interface PlayerFormData {
   id?: string // Optional for new profiles, required for updates
@@ -830,27 +831,28 @@ function PlayerProfileContent() {
 
                 {/* Profile Picture */}
                 <div className="space-y-2">
-                  <label htmlFor="profile_pic_url" className="block text-sm font-semibold text-[#CEA17A]">
-                    Profile Picture URL
+                  <label className="block text-sm font-semibold text-[#CEA17A]">
+                    Profile Picture
                   </label>
-                  <input
-                    type="url"
-                    id="profile_pic_url"
-                    name="profile_pic_url"
-                    value={formData.profile_pic_url}
-                    onChange={handleInputChange}
-                    maxLength={4096}
-                    className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#CEA17A]/20 focus:border-[#CEA17A] transition-all duration-200 bg-[#19171b]/50 backdrop-blur-sm text-[#DBD0C0] ${
-                      formErrors.profile_pic_url ? 'border-red-500' : 'border-[#CEA17A]/20'
-                    }`}
-                    placeholder="Enter profile picture URL (optional)"
+                  <p className="text-xs text-[#CEA17A]/70">
+                    Recommended Ratio - 1x1
+                  </p>
+                  <ImageUpload
+                    currentImageUrl={formData.profile_pic_url}
+                    onImageUploaded={(url) => {
+                      setFormData(prev => ({ ...prev, profile_pic_url: url }));
+                      // Clear any existing error
+                      setFormErrors(prev => ({ ...prev, profile_pic_url: '' }));
+                    }}
+                    onImageRemoved={() => {
+                      setFormData(prev => ({ ...prev, profile_pic_url: '' }));
+                    }}
+                    disabled={loading}
+                    className="w-full"
                   />
                   {formErrors.profile_pic_url && (
                     <p className="text-red-500 text-sm">{formErrors.profile_pic_url}</p>
                   )}
-                  <p className="text-xs text-[#CEA17A]/60">
-                    {formData.profile_pic_url.length}/4096 characters
-                  </p>
                 </div>
 
                 {/* Bio */}
