@@ -199,27 +199,14 @@ export default function Navbar() {
       })
     }
     
-    // Host and Admin get tournament creation access
-    if (user.role === 'host' || user.role === 'admin') {
+    // Admin gets auctions access
+    if (user.role === 'admin') {
       allNavigationLinks.push({
-        href: '/tournaments/create',
-        label: 'Create Tournament',
+        href: '/auctions',
+        label: 'Auctions',
         icon: (
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-        )
-      })
-    }
-    
-    // All logged-in users except viewers get player creation access
-    if (user.role !== 'viewer') {
-      allNavigationLinks.push({
-        href: '/players/create',
-        label: 'Add Player',
-        icon: (
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
           </svg>
         )
       })
@@ -273,27 +260,14 @@ export default function Navbar() {
       })
     }
     
-    // Host and Admin get tournament creation access
-    if (user.role === 'host' || user.role === 'admin') {
+    // Admin gets auctions access
+    if (user.role === 'admin') {
       desktopQuickLinks.push({
-        href: '/tournaments/create',
-        label: 'Create Tournament',
+        href: '/auctions',
+        label: 'Auctions',
         icon: (
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-        )
-      })
-    }
-    
-    // All logged-in users except viewers get player creation access
-    if (user.role !== 'viewer') {
-      desktopQuickLinks.push({
-        href: '/players/create',
-        label: 'Add Player',
-        icon: (
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
           </svg>
         )
       })
@@ -309,7 +283,7 @@ export default function Navbar() {
             {/* Left Side - Hamburger (Mobile) / Logo */}
             <div className="flex items-center space-x-4">
               {/* Hamburger Menu Container - Mobile Only */}
-              <div className="sm:hidden">
+              <div className="">
                 <button
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   className="p-3 rounded-lg text-[#DBD0C0] hover:text-[#75020f] hover:bg-[#75020f]/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#75020f] transition-all duration-300"
