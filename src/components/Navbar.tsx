@@ -32,12 +32,12 @@ export default function Navbar() {
     }
   }, [isProfileDropdownOpen])
 
-  // Fetch player profile to get profile picture
+  // Fetch user profile to get profile picture (same as profile page)
   useEffect(() => {
-    const fetchPlayerProfile = async () => {
+    const fetchUserProfile = async () => {
       if (user) {
         try {
-          const response = await fetch('/api/player-profile', {
+          const response = await fetch('/api/user-profile', {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -45,11 +45,11 @@ export default function Navbar() {
           if (response.ok) {
             const result = await response.json()
             if (result.success && result.data) {
-              setUserProfile({ photo: result.data.profile_pic_url })
+              setUserProfile({ photo: result.data.photo })
             }
           }
         } catch (error) {
-          console.error('Failed to fetch player profile:', error)
+          console.error('Failed to fetch user profile:', error)
         }
       } else {
         setUserProfile(null)
@@ -57,7 +57,7 @@ export default function Navbar() {
       }
     }
 
-    fetchPlayerProfile()
+    fetchUserProfile()
   }, [user])
 
   const handleBackNavigation = () => {
