@@ -309,7 +309,15 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
                       Skills & Attributes
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.entries(player.skills).map(([skillName, skillValue]) => (
+                      {Object.entries(player.skills)
+                        .filter(([skillName]) => {
+                          // Hide Base Price for non-admin/host users
+                          if (skillName === 'Base Price' && !(userRole === 'admin' || userRole === 'host')) {
+                            return false
+                          }
+                          return true
+                        })
+                        .map(([skillName, skillValue]) => (
                         <div key={skillName} className="space-y-1">
                           <label className="block text-xs font-medium text-[#CEA17A]/80">
                             {skillName}
