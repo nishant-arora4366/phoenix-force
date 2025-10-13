@@ -55,6 +55,146 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const auctionId = searchParams.get('id')
+    
+    if (!auctionId) {
+      return NextResponse.json({ error: 'Auction ID is required' }, { status: 400 })
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    // Verify authentication
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
+    const token = authHeader.split(' ')[1]
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    // Check user role
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', decoded.userId)
+      .single()
+
+    if (userError || !user || (user.role !== 'admin' && user.role !== 'host')) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { action, player_id, team_id, sold_price } = body
+
+    if (action === 'sell_player') {
+      // Mark player as sold
+      const { error: updateError } = await supabase
+        .from('auction_players')
+        .update({
+          status: 'sold',
+          sold_to: team_id,
+          sold_price: sold_price,
+          current_player: false
+        })
+        .eq('auction_id', auctionId)
+        .eq('player_id', player_id)
+
+      if (updateError) {
+        console.error('Error selling player:', updateError)
+        return NextResponse.json({ error: 'Failed to sell player' }, { status: 500 })
+      }
+
+      // Update team statistics - first get current values
+      const { data: currentTeam, error: teamFetchError } = await supabase
+        .from('auction_teams')
+        .select('players_count, total_spent, remaining_purse')
+        .eq('auction_id', auctionId)
+        .eq('id', team_id)
+        .single()
+
+      if (teamFetchError) {
+        console.error('Error fetching team data:', teamFetchError)
+        return NextResponse.json({ error: 'Failed to fetch team data' }, { status: 500 })
+      }
+
+      // Update team statistics with calculated values
+      const { error: teamUpdateError } = await supabase
+        .from('auction_teams')
+        .update({
+          players_count: (currentTeam.players_count || 0) + 1,
+          total_spent: (currentTeam.total_spent || 0) + sold_price,
+          remaining_purse: (currentTeam.remaining_purse || 0) - sold_price
+        })
+        .eq('auction_id', auctionId)
+        .eq('id', team_id)
+
+      if (teamUpdateError) {
+        console.error('Error updating team statistics:', teamUpdateError)
+        return NextResponse.json({ error: 'Failed to update team statistics' }, { status: 500 })
+      }
+
+      // Get current player's display order first
+      const { data: currentPlayerData, error: currentPlayerError } = await supabase
+        .from('auction_players')
+        .select('display_order')
+        .eq('auction_id', auctionId)
+        .eq('player_id', player_id)
+        .single()
+
+      let nextPlayer = null
+      if (!currentPlayerError && currentPlayerData) {
+        // Find the next available player
+        const { data: nextPlayerData, error: nextPlayerError } = await supabase
+          .from('auction_players')
+          .select('*')
+          .eq('auction_id', auctionId)
+          .eq('status', 'available')
+          .gt('display_order', currentPlayerData.display_order)
+          .order('display_order', { ascending: true })
+          .limit(1)
+
+        if (!nextPlayerError && nextPlayerData && nextPlayerData.length > 0) {
+          nextPlayer = nextPlayerData[0]
+        }
+      }
+
+      if (nextPlayer) {
+        // Set the next player as current
+        const { error: setCurrentError } = await supabase
+          .from('auction_players')
+          .update({ current_player: true })
+          .eq('auction_id', auctionId)
+          .eq('player_id', nextPlayer.player_id)
+
+        if (setCurrentError) {
+          console.error('Error setting next player as current:', setCurrentError)
+        }
+      }
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Player sold successfully',
+        next_player: nextPlayer
+      })
+    }
+
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+
+  } catch (error) {
+    console.error('Error in PATCH /api/auctions:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient(

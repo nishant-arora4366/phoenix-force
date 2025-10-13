@@ -35,6 +35,8 @@ interface AuctionTeam {
   team_name: string
   total_spent: number
   remaining_purse: number
+  players_count: number
+  required_players: number
   created_at: string
   updated_at: string
 }
@@ -137,10 +139,15 @@ export default function AuctionPage() {
     }
   }
 
-  // Fetch bid history from database
+  // Fetch bid history from database for current player only
   const fetchBidHistory = async () => {
+    if (!currentPlayer) {
+      setRecentBids([])
+      return
+    }
+    
     try {
-      const response = await fetch(`/api/auctions/${auctionId}/bids`)
+      const response = await fetch(`/api/auctions/${auctionId}/bids?player_id=${currentPlayer.player_id}`)
       if (response.ok) {
         const data = await response.json()
         // The API returns the bids array directly, not wrapped in a 'bids' property
@@ -181,7 +188,14 @@ export default function AuctionPage() {
 
   // Calculate next bid amount based on auction configuration
   const calculateNextBid = (currentBid?: number) => {
-    const bid = currentBid || auction?.min_bid_amount || 0
+    // Get current bid from recent bids if not provided
+    let bid = currentBid
+    if (!bid && recentBids && recentBids.length > 0) {
+      const winningBid = recentBids.find(bid => bid.is_winning_bid && !bid.is_undone)
+      bid = winningBid ? winningBid.bid_amount : (auction?.min_bid_amount || 0)
+    }
+    if (!bid) bid = auction?.min_bid_amount || 0
+    
     if (!auction) return bid
 
     if (auction.use_fixed_increments) {
@@ -256,12 +270,7 @@ export default function AuctionPage() {
         // Update auction state locally
         // Update local state - current bid is now managed by auction_bids table
 
-        // Update team's remaining purse locally
-        setAuctionTeams(prev => prev.map(team => 
-          team.id === teamId 
-            ? { ...team, remaining_purse: team.remaining_purse - bidAmount }
-            : team
-        ))
+        // Note: Team purse is not updated during bidding - only when player is sold
 
         // Refresh bid history from database
         await fetchBidHistory()
@@ -307,22 +316,10 @@ export default function AuctionPage() {
       })
 
       if (response.ok) {
-        // Refresh bid history and auction data
+        // Refresh bid history for current player
         await fetchBidHistory()
         
-        // Refresh auction data to get updated current bid
-        const auctionResponse = await fetch(`/api/auctions?id=${auctionId}`)
-        if (auctionResponse.ok) {
-          const auctionData = await auctionResponse.json()
-          setAuction(auctionData.auction)
-        }
-        
-        // Refresh team data to get updated remaining purse
-        const teamsResponse = await fetch(`/api/auctions/${auctionId}/teams`)
-        if (teamsResponse.ok) {
-          const teamsData = await teamsResponse.json()
-          setAuctionTeams(teamsData.teams)
-        }
+        // Note: Team purse is not affected by bid operations - only when players are sold
       } else {
         const errorData = await response.json()
         alert(`Failed to undo bid: ${errorData.error || 'Unknown error'}`)
@@ -348,6 +345,13 @@ export default function AuctionPage() {
         return
       }
 
+      // Get the winning bid details
+      const winningBid = recentBids.find(bid => bid.is_winning_bid && !bid.is_undone)
+      if (!winningBid) {
+        alert('No winning bid found')
+        return
+      }
+
       const response = await fetch(`/api/auctions?id=${auctionId}`, {
         method: 'PATCH',
         headers: {
@@ -355,32 +359,60 @@ export default function AuctionPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          // This would need to be implemented in the API to mark player as sold
-          // For now, we'll just update the current player
+          action: 'sell_player',
+          player_id: currentPlayer.player_id,
+          team_id: winningBid.team_id,
+          sold_price: winningBid.bid_amount
         })
       })
 
       if (response.ok) {
-        // Move to next player after selling
-        const availablePlayers = auctionPlayers
-          .filter(ap => ap.status === 'available')
-          .sort((a, b) => a.display_order - b.display_order)
+        const data = await response.json()
         
-        const currentIndex = availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id)
-        
-        if (currentIndex !== -1 && currentIndex < availablePlayers.length - 1) {
-          const nextAuctionPlayer = availablePlayers[currentIndex + 1]
-          const nextPlayerData = players.find(p => p.id === nextAuctionPlayer.player_id)
+        // Update auction players state to mark current player as sold
+        setAuctionPlayers(prev => prev.map(ap => 
+          ap.player_id === currentPlayer.player_id 
+            ? { ...ap, status: 'sold', sold_to: winningBid.team_id, sold_price: winningBid.bid_amount, current_player: false }
+            : ap
+        ))
+
+        // Update team statistics in local state
+        setAuctionTeams(prev => prev.map(team => 
+          team.id === winningBid.team_id 
+            ? { 
+                ...team, 
+                players_count: (team.players_count || 0) + 1,
+                total_spent: (team.total_spent || 0) + winningBid.bid_amount,
+                remaining_purse: (team.remaining_purse || 0) - winningBid.bid_amount
+              }
+            : team
+        ))
+
+        // Bid history will be fetched automatically by useEffect when currentPlayer changes
+
+        // Handle next player if available
+        if (data.next_player) {
+          const nextPlayerData = players.find(p => p.id === data.next_player.player_id)
           
-          if (nextPlayerData && nextAuctionPlayer) {
+          if (nextPlayerData) {
+            // Set the next player as current
             setCurrentPlayer({
               ...nextPlayerData,
-              ...nextAuctionPlayer
+              ...data.next_player
             })
+
+            // Update auction players to mark next player as current
+            setAuctionPlayers(prev => prev.map(ap => ({
+              ...ap,
+              current_player: ap.player_id === data.next_player.player_id
+            })))
           }
+        } else {
+          // No more players available
+          setCurrentPlayer(null)
         }
         
-        await fetchBidHistory()
+        // State has been updated locally, no need to refetch
       } else {
         const errorData = await response.json()
         alert(`Failed to sell player: ${errorData.error || 'Unknown error'}`)
@@ -486,8 +518,7 @@ export default function AuctionPage() {
             current_player: ap.player_id === nextAuctionPlayer.player_id
           })))
           
-          // Refresh bid history
-          await fetchBidHistory()
+          // Bid history will be fetched automatically by useEffect when currentPlayer changes
         } else {
           const errorData = await response.json()
           alert(`Failed to move to next player: ${errorData.error || 'Unknown error'}`)
@@ -557,8 +588,7 @@ export default function AuctionPage() {
             current_player: ap.player_id === previousAuctionPlayer.player_id
           })))
           
-          // Refresh bid history
-          await fetchBidHistory()
+          // Bid history will be fetched automatically by useEffect when currentPlayer changes
         } else {
           const errorData = await response.json()
           alert(`Failed to move to previous player: ${errorData.error || 'Unknown error'}`)
@@ -746,6 +776,13 @@ export default function AuctionPage() {
       setCurrentPlayer(currentPlayerData)
     }
   }, [auction, players, auctionPlayers])
+
+  // Fetch bid history when current player changes
+  useEffect(() => {
+    if (currentPlayer) {
+      fetchBidHistory()
+    }
+  }, [currentPlayer])
 
   if (isUserLoading || loading) {
     return (

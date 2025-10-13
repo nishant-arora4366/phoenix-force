@@ -13,9 +13,28 @@ export async function GET(
 ) {
   try {
     const { id: auctionId } = await params
+    const { searchParams } = new URL(request.url)
+    const playerId = searchParams.get('player_id')
     
-    // Fetch bids for the auction
-    const { data: bids, error } = await supabase
+    // First, get the auction teams to map team_id to team_name
+    const { data: auctionTeams, error: teamsError } = await supabase
+      .from('auction_teams')
+      .select('id, team_name')
+      .eq('auction_id', auctionId)
+
+    if (teamsError) {
+      console.error('Error fetching auction teams:', teamsError)
+      return NextResponse.json({ error: 'Failed to fetch auction teams' }, { status: 500 })
+    }
+
+    // Create a map of team_id to team_name
+    const teamNameMap = new Map()
+    auctionTeams?.forEach(team => {
+      teamNameMap.set(team.id, team.team_name)
+    })
+
+    // Build the query for bids
+    let query = supabase
       .from('auction_bids')
       .select(`
         id,
@@ -25,20 +44,23 @@ export async function GET(
         bid_amount,
         is_winning_bid,
         is_undone,
-        created_at,
-        auction_teams!inner(
-          id,
-          team_name
-        )
+        created_at
       `)
       .eq('auction_id', auctionId)
       .eq('is_undone', false)
-      .order('created_at', { ascending: false })
+    
+    // Filter by player_id if provided
+    if (playerId) {
+      query = query.eq('player_id', playerId)
+    }
+    
+    const { data: bids, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching bids:', error)
       return NextResponse.json({ error: 'Failed to fetch bids' }, { status: 500 })
     }
+
 
     // Transform the data to match frontend expectations
     const transformedBids = bids?.map(bid => ({
@@ -46,7 +68,7 @@ export async function GET(
       auction_id: bid.auction_id,
       player_id: bid.player_id,
       team_id: bid.team_id,
-      team_name: bid.auction_teams[0].team_name,
+      team_name: teamNameMap.get(bid.team_id) || 'Unknown Team',
       bid_amount: bid.bid_amount,
       is_winning_bid: bid.is_winning_bid,
       is_undone: bid.is_undone,
@@ -185,18 +207,7 @@ export async function POST(
       console.error('Error updating previous bids:', updatePreviousBidsError)
     }
 
-    // Update team's remaining purse
-    const { error: updateTeamError } = await supabase
-      .from('auction_teams')
-      .update({ 
-        remaining_purse: team.remaining_purse - bid_amount,
-        total_spent: team.total_spent + bid_amount
-      })
-      .eq('id', team_id)
-
-    if (updateTeamError) {
-      console.error('Error updating team purse:', updateTeamError)
-    }
+    // Note: Team purse is not updated during bidding - only when player is sold
 
     return NextResponse.json({ 
       success: true, 
@@ -248,14 +259,7 @@ export async function DELETE(
     // Get the bid to undo
     const { data: bid, error: bidError } = await supabase
       .from('auction_bids')
-      .select(`
-        *,
-        auction_teams!inner(
-          id,
-          remaining_purse,
-          total_spent
-        )
-      `)
+      .select('*')
       .eq('id', bidId)
       .eq('auction_id', auctionId)
       .eq('is_winning_bid', true)
@@ -263,6 +267,7 @@ export async function DELETE(
       .single()
 
     if (bidError || !bid) {
+      console.error('Bid not found:', bidError)
       return NextResponse.json({ error: 'Bid not found or already undone' }, { status: 404 })
     }
 
@@ -281,18 +286,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Failed to undo bid' }, { status: 500 })
     }
 
-    // Refund the bid amount to the team
-    const { error: refundError } = await supabase
-      .from('auction_teams')
-      .update({ 
-        remaining_purse: bid.auction_teams.remaining_purse + bid.bid_amount,
-        total_spent: bid.auction_teams.total_spent - bid.bid_amount
-      })
-      .eq('id', bid.team_id)
-
-    if (refundError) {
-      console.error('Error refunding bid:', refundError)
-    }
+    // Note: No purse refund needed - team purse is only affected when players are sold
 
     // Find the previous highest bid for this player and make it winning
     const { data: previousBids, error: prevBidsError } = await supabase
