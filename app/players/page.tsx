@@ -532,9 +532,35 @@ export default function PlayersPage() {
           </div>
         </div>
 
-        {/* Search and Sort Row */}
-        <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl p-6 border border-[#CEA17A]/20 shadow-xl mb-4 relative z-20">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        {/* Search and Sort Row - Collapsible on Mobile */}
+        <div className="bg-gradient-to-r from-[#19171b]/40 to-[#2b0307]/40 backdrop-blur-md rounded-2xl border border-[#CEA17A]/20 shadow-xl mb-4 relative z-20">
+          {/* Mobile: Collapsible Header */}
+          <div className="sm:hidden">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#19171b]/20 transition-all duration-200 rounded-t-2xl"
+            >
+              <div className="flex items-center gap-3">
+                <svg className="h-5 w-5 text-[#CEA17A]/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span className="text-[#DBD0C0] font-medium">Search & Filters</span>
+              </div>
+              <svg 
+                className={`w-5 h-5 text-[#CEA17A] transition-transform duration-200 ${showMobileFilters ? 'rotate-180' : ''}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content - Always visible on desktop, collapsible on mobile */}
+          <div className={`${showMobileFilters ? 'block' : 'hidden'} sm:block`}>
+            <div className="p-6 pt-0 sm:pt-6">
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
             {/* Search Bar */}
             <div className="flex-1 w-full sm:w-auto">
                 <div className="relative">
@@ -625,97 +651,39 @@ export default function PlayersPage() {
                 </button>
               </div>
 
-            {/* Filter Checkboxes - Collapsible on Mobile */}
-            <div className="w-full sm:w-auto">
-              {/* Mobile: Collapsible Filter Toggle */}
-              <div className="sm:hidden">
-                <button
-                  onClick={() => setShowMobileFilters(!showMobileFilters)}
-                  className="w-full px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl hover:bg-[#09171F]/70 transition-all duration-200 flex items-center justify-between"
-                >
-                  <span className="text-sm font-medium text-[#CEA17A]">Filters</span>
-                  <svg 
-                    className={`w-4 h-4 text-[#CEA17A] transition-transform duration-200 ${showMobileFilters ? 'rotate-180' : ''}`} 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {/* Mobile: Collapsible Filter Content */}
-                {showMobileFilters && (
-                  <div className="mt-2 space-y-2">
-                    {/* "Created by me" filter - Only for hosts and admins */}
-                    {(userRole === 'host' || userRole === 'admin') && (
-                      <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl">
-                        <input
-                          type="checkbox"
-                          id="createdByMeMobile"
-                          checked={showCreatedByMe}
-                          onChange={(e) => setShowCreatedByMe(e.target.checked)}
-                          className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
-                        />
-                        <label htmlFor="createdByMeMobile" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
-                          Created by me
-                        </label>
-                      </div>
-                    )}
+            {/* Filter Checkboxes */}
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              {/* "Created by me" filter - Only for hosts and admins */}
+              {(userRole === 'host' || userRole === 'admin') && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl flex-1 sm:flex-none">
+                  <input
+                    type="checkbox"
+                    id="createdByMe"
+                    checked={showCreatedByMe}
+                    onChange={(e) => setShowCreatedByMe(e.target.checked)}
+                    className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                  />
+                  <label htmlFor="createdByMe" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
+                    Created by me
+                  </label>
+                </div>
+              )}
 
-                    {/* "Hide Unverified" filter - Only for hosts and admins */}
-                    {(userRole === 'host' || userRole === 'admin') && (
-                      <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl">
-                        <input
-                          type="checkbox"
-                          id="hideUnverifiedMobile"
-                          checked={hideUnverified}
-                          onChange={(e) => setHideUnverified(e.target.checked)}
-                          className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
-                        />
-                        <label htmlFor="hideUnverifiedMobile" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
-                          Hide Unverified
-                        </label>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Desktop: Always Visible Filters */}
-              <div className="hidden sm:flex flex-row gap-2">
-                {/* "Created by me" filter - Only for hosts and admins */}
-                {(userRole === 'host' || userRole === 'admin') && (
-                  <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl">
-                    <input
-                      type="checkbox"
-                      id="createdByMeDesktop"
-                      checked={showCreatedByMe}
-                      onChange={(e) => setShowCreatedByMe(e.target.checked)}
-                      className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
-                    />
-                    <label htmlFor="createdByMeDesktop" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
-                      Created by me
-                    </label>
-                  </div>
-                )}
-
-                {/* "Hide Unverified" filter - Only for hosts and admins */}
-                {(userRole === 'host' || userRole === 'admin') && (
-                  <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl">
-                    <input
-                      type="checkbox"
-                      id="hideUnverifiedDesktop"
-                      checked={hideUnverified}
-                      onChange={(e) => setHideUnverified(e.target.checked)}
-                      className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
-                    />
-                    <label htmlFor="hideUnverifiedDesktop" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
-                      Hide Unverified
-                    </label>
-                  </div>
-                )}
-              </div>
+              {/* "Hide Unverified" filter - Only for hosts and admins */}
+              {(userRole === 'host' || userRole === 'admin') && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl flex-1 sm:flex-none">
+                  <input
+                    type="checkbox"
+                    id="hideUnverified"
+                    checked={hideUnverified}
+                    onChange={(e) => setHideUnverified(e.target.checked)}
+                    className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                  />
+                  <label htmlFor="hideUnverified" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
+                    Hide Unverified
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -756,6 +724,8 @@ export default function PlayersPage() {
                 </svg>
                 Settings
               </button>
+            </div>
+              </div>
             </div>
           </div>
         </div>
