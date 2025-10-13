@@ -396,7 +396,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
                   </div>
                 </div>
               )}
-              {player.skills?.['Base Price'] && (
+              {(userRole === 'admin' || userRole === 'host') && player.skills?.['Base Price'] && (
                 <div className="space-y-1">
                   <label className="block text-xs font-medium text-[#CEA17A]/80">
                     Base Price
