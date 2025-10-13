@@ -93,7 +93,96 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { action, player_id, team_id, sold_price } = body
+    const { action, player_id, team_id, sold_price, status, started_at } = body
+
+    // Handle general auction updates (status changes)
+    if (status) {
+      const updateData: any = { status }
+      
+      // Add started_at if provided (for starting auction)
+      if (started_at) {
+        updateData.started_at = started_at
+      }
+      
+      // Add completed_at if status is completed
+      if (status === 'completed') {
+        updateData.completed_at = new Date().toISOString()
+      }
+
+      const { error: updateError } = await supabase
+        .from('auctions')
+        .update(updateData)
+        .eq('id', auctionId)
+
+      if (updateError) {
+        console.error('Error updating auction status:', updateError)
+        return NextResponse.json({ error: 'Failed to update auction status' }, { status: 500 })
+      }
+
+      // If starting/resuming the auction (status = 'live'), ensure a current player is set
+      if (status === 'live') {
+        // Check if a current player already exists
+        const { data: existingCurrent, error: existingErr } = await supabase
+          .from('auction_players')
+          .select('player_id')
+          .eq('auction_id', auctionId)
+          .eq('current_player', true)
+          .maybeSingle()
+
+        if (existingErr) {
+          console.warn('Error checking existing current player (continuing):', existingErr)
+        }
+
+        if (!existingCurrent) {
+          // Get captain IDs to exclude from selection
+          const { data: teams } = await supabase
+            .from('auction_teams')
+            .select('captain_id')
+            .eq('auction_id', auctionId)
+
+          const captainIds = (teams || []).map(t => t.captain_id).filter(Boolean)
+
+          // Build base query for first available player by display_order
+          let apQuery = supabase
+            .from('auction_players')
+            .select('player_id')
+            .eq('auction_id', auctionId)
+            .eq('status', 'available')
+            .order('display_order', { ascending: true })
+            .limit(1)
+
+          // Exclude captains only if we have any
+          if (captainIds.length > 0) {
+            // Supabase expects a CSV list with quotes for UUIDs
+            const csv = '(' + captainIds.map(id => `'${id}'`).join(',') + ')'
+            apQuery = apQuery.not('player_id', 'in', csv)
+          }
+
+          const { data: firstPlayer, error: firstErr } = await apQuery.maybeSingle()
+
+          if (firstErr) {
+            console.warn('Error selecting first available player:', firstErr)
+          }
+
+          if (firstPlayer) {
+            const { error: setCurrentError } = await supabase
+              .from('auction_players')
+              .update({ current_player: true })
+              .eq('auction_id', auctionId)
+              .eq('player_id', firstPlayer.player_id)
+
+            if (setCurrentError) {
+              console.error('Error setting first player as current:', setCurrentError)
+            }
+          }
+        }
+      }
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Auction status updated successfully' 
+      })
+    }
 
     if (action === 'sell_player') {
       // Mark player as sold
@@ -280,7 +369,6 @@ export async function POST(request: NextRequest) {
       tournament_id,
       status: 'draft',
       timer_seconds,
-      current_bid: min_bid_amount,
       max_tokens_per_captain,
       min_bid_amount,
       use_base_price: body.use_base_price || false,
@@ -311,12 +399,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Create auction teams if captains are provided
+    let auctionTeams: any[] = []
     if (body.captains && body.captains.length > 0) {
-      const auctionTeams = body.captains.map((captain: any) => ({
+      // Calculate required players per team based on selected players
+      const totalPlayers: number = Array.isArray(body.selected_players) ? body.selected_players.length : 0
+      const numTeams: number = body.captains.length
+      const requiredPlayersPerTeam: number = numTeams > 0 ? Math.floor(totalPlayers / numTeams) : 0
+
+      auctionTeams = body.captains.map((captain: any) => ({
         auction_id: auction.id,
         captain_id: captain.player_id,
         team_name: captain.team_name,
-        remaining_purse: max_tokens_per_captain
+        remaining_purse: max_tokens_per_captain,
+        max_tokens: max_tokens_per_captain,
+        total_spent: 0,
+        players_count: 0,
+        required_players: requiredPlayersPerTeam
       }))
 
       const { error: teamsError } = await supabase
@@ -331,11 +429,40 @@ export async function POST(request: NextRequest) {
 
     // Create auction players if selected players are provided
     if (body.selected_players && body.selected_players.length > 0) {
-      const auctionPlayers = body.selected_players.map((player: any) => ({
-        auction_id: auction.id,
-        player_id: player.id,
-        status: 'available'
-      }))
+      // Get captain IDs for auto-assignment
+      const captainIds = body.captains ? body.captains.map((captain: any) => captain.player_id) : []
+      
+      const auctionPlayers = body.selected_players.map((player: any, index: number) => {
+        // Check if this player is a captain
+        const isCaptain = captainIds.includes(player.id)
+        
+        if (isCaptain) {
+          // Find the team this captain belongs to
+          const captainData = body.captains.find((captain: any) => captain.player_id === player.id)
+          const teamData = auctionTeams.find((team: any) => team.captain_id === player.id)
+          
+          return {
+            auction_id: auction.id,
+            player_id: player.id,
+            status: 'sold',
+            sold_to: teamData?.id || null,
+            sold_price: 0,
+            display_order: index + 1,
+            times_skipped: 0,
+            current_player: false
+          }
+        } else {
+          // Regular player - available for auction
+          return {
+            auction_id: auction.id,
+            player_id: player.id,
+            status: 'available',
+            display_order: index + 1,
+            times_skipped: 0,
+            current_player: false
+          }
+        }
+      })
 
       const { error: playersError } = await supabase
         .from('auction_players')
@@ -344,6 +471,33 @@ export async function POST(request: NextRequest) {
       if (playersError) {
         console.error('Error creating auction players:', playersError)
         // Don't fail the entire operation, just log the error
+      }
+
+      // Update team statistics for captains (they are already assigned)
+      if (body.captains && body.captains.length > 0) {
+        const captainTeamUpdates = body.captains.map((captain: any) => {
+          const teamData = auctionTeams.find((team: any) => team.captain_id === captain.player_id)
+          return {
+            id: teamData?.id,
+            players_count: 1, // Captain is already assigned
+            total_spent: 0, // Captain costs 0
+            remaining_purse: max_tokens_per_captain // Full purse available
+          }
+        })
+
+        // Update each team's statistics
+        for (const update of captainTeamUpdates) {
+          if (update.id) {
+            await supabase
+              .from('auction_teams')
+              .update({
+                players_count: update.players_count,
+                total_spent: update.total_spent,
+                remaining_purse: update.remaining_purse
+              })
+              .eq('id', update.id)
+          }
+        }
       }
     }
 

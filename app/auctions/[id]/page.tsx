@@ -103,20 +103,22 @@ export default function AuctionPage() {
     is_undone: boolean
   }>>([])
   const [currentPlayer, setCurrentPlayer] = useState<any>(null)
+  const [uiNotice, setUiNotice] = useState<{ type: 'error' | 'info'; message: string } | null>(null)
 
-  // Get current player from auction_players data
+  // Get current player from auction_players data (exclude captains)
   const getCurrentPlayer = () => {
     if (!auctionPlayers || auctionPlayers.length === 0) {
       return null
     }
+    const captainIds = (auctionTeams || []).map(t => t.captain_id)
     
     // Find the current player from auction_players
-    const currentAuctionPlayer = auctionPlayers.find(ap => ap.current_player === true)
+    const currentAuctionPlayer = auctionPlayers.find(ap => ap.current_player === true && !captainIds.includes(ap.player_id))
     
     if (!currentAuctionPlayer) {
       // If no current player is set, get the first player by display_order
       const firstPlayer = auctionPlayers
-        .filter(ap => ap.status === 'available')
+        .filter(ap => ap.status === 'available' && !captainIds.includes(ap.player_id))
         .sort((a, b) => a.display_order - b.display_order)[0]
       
       if (!firstPlayer) return null
@@ -188,32 +190,37 @@ export default function AuctionPage() {
 
   // Calculate next bid amount based on auction configuration
   const calculateNextBid = (currentBid?: number) => {
-    // Get current bid from recent bids if not provided
-    let bid = currentBid
-    if (!bid && recentBids && recentBids.length > 0) {
-      const winningBid = recentBids.find(bid => bid.is_winning_bid && !bid.is_undone)
-      bid = winningBid ? winningBid.bid_amount : (auction?.min_bid_amount || 0)
+    // If there's no current bid yet, first bid should equal starting bid
+    // starting bid = max(base price, min bid) when use_base_price; else = min bid
+    const minBid = auction?.min_bid_amount || 0
+    const startingBid = currentPlayer && auction?.use_base_price
+      ? Math.max(getPlayerBasePrice(currentPlayer), minBid)
+      : minBid
+
+    // Resolve current bid: prefer provided, else from recent winning bid
+    let bid: number | undefined = currentBid
+    if (bid == null) {
+      const winningBid = recentBids?.find(b => b.is_winning_bid && !b.is_undone)
+      bid = winningBid ? winningBid.bid_amount : undefined
     }
-    if (!bid) bid = auction?.min_bid_amount || 0
-    
+
+    // If still no bid, return starting bid (no increment applied)
+    if (bid == null) return startingBid
+
     if (!auction) return bid
 
+    // Otherwise compute incremented next bid
     if (auction.use_fixed_increments) {
       return bid + auction.min_increment
-    } else {
-      // Use custom increment ranges
-      const customRanges = auction.auction_config?.custom_increment_ranges
-      if (customRanges) {
-        if (bid <= 200) {
-          return bid + (customRanges.range_0_200 || 20)
-        } else if (bid <= 500) {
-          return bid + (customRanges.range_200_500 || 50)
-        } else {
-          return bid + (customRanges.range_500_plus || 100)
-        }
-      }
-      return bid + auction.min_increment
     }
+
+    const customRanges = auction.auction_config?.custom_increment_ranges
+    if (customRanges) {
+      if (bid <= 200) return bid + (customRanges.range_0_200 || 20)
+      if (bid <= 500) return bid + (customRanges.range_200_500 || 50)
+      return bid + (customRanges.range_500_plus || 100)
+    }
+    return bid + auction.min_increment
   }
 
   // Get base price from player skills
@@ -224,30 +231,31 @@ export default function AuctionPage() {
 
   // Get current bid from auction_bids table
   const getCurrentBid = () => {
-    if (!recentBids || recentBids.length === 0) {
-      // If no bids, return min bid or base price
-      if (currentPlayer && auction?.use_base_price) {
-        const basePrice = getPlayerBasePrice(currentPlayer)
-        return Math.max(basePrice, auction.min_bid_amount)
-      }
-      return auction?.min_bid_amount || 0
-    }
+    // If no bids yet for this player, intentionally return null so UI can show "No bids yet"
+    if (!recentBids || recentBids.length === 0) return null
     
-    // Find the latest winning bid
     const winningBid = recentBids.find(bid => bid.is_winning_bid && !bid.is_undone)
-    return winningBid ? winningBid.bid_amount : (auction?.min_bid_amount || 0)
+    return winningBid ? winningBid.bid_amount : null
   }
+
+  const isAuctionLive = auction?.status === 'live'
 
   // Handle placing a bid
   const handlePlaceBid = async (teamId: string, bidAmount: number) => {
     if (!auction || !user) return
+    
+    // Check if auction is in live status
+    if (auction.status !== 'live') {
+      setUiNotice({ type: 'error', message: `Cannot place bids. Auction is currently ${auction.status}. Start the auction to enable bidding.` })
+      return
+    }
     
     setBidLoading(prev => ({ ...prev, [`bid_${teamId}`]: true }))
     
     try {
       const token = secureSessionManager.getToken()
       if (!token) {
-        alert('Authentication required to place bid')
+        setUiNotice({ type: 'error', message: 'Authentication required to place bid' })
         return
       }
 
@@ -276,11 +284,11 @@ export default function AuctionPage() {
         await fetchBidHistory()
       } else {
         const errorData = await response.json()
-        alert(`Failed to place bid: ${errorData.error || 'Unknown error'}`)
+        setUiNotice({ type: 'error', message: `Failed to place bid: ${errorData.error || 'Unknown error'}` })
       }
     } catch (error) {
       console.error('Error placing bid:', error)
-      alert('Failed to place bid. Please try again.')
+      setUiNotice({ type: 'error', message: 'Failed to place bid. Please try again.' })
     } finally {
       setBidLoading(prev => ({ ...prev, [`bid_${teamId}`]: false }))
     }
@@ -290,12 +298,18 @@ export default function AuctionPage() {
   const handleUndoBid = async () => {
     if (!auction || !recentBids || recentBids.length === 0) return
     
+    // Check if auction is in live status
+    if (auction.status !== 'live') {
+      alert(`Cannot undo bid. Auction is currently ${auction.status}. Please start the auction first.`)
+      return
+    }
+    
     setBidLoading(prev => ({ ...prev, undo: true }))
     
     try {
       const token = secureSessionManager.getToken()
       if (!token) {
-        alert('Authentication required to undo bid')
+        setUiNotice({ type: 'error', message: 'Authentication required to undo bid' })
         return
       }
 
@@ -322,11 +336,11 @@ export default function AuctionPage() {
         // Note: Team purse is not affected by bid operations - only when players are sold
       } else {
         const errorData = await response.json()
-        alert(`Failed to undo bid: ${errorData.error || 'Unknown error'}`)
+        setUiNotice({ type: 'error', message: `Failed to undo bid: ${errorData.error || 'Unknown error'}` })
       }
     } catch (error) {
       console.error('Error undoing bid:', error)
-      alert('Failed to undo bid. Please try again.')
+      setUiNotice({ type: 'error', message: 'Failed to undo bid. Please try again.' })
     } finally {
       setBidLoading(prev => ({ ...prev, undo: false }))
     }
@@ -336,12 +350,18 @@ export default function AuctionPage() {
   const handleSellPlayer = async () => {
     if (!auction || !currentPlayer || !recentBids || recentBids.length === 0) return
     
+    // Check if auction is in live status
+    if (auction.status !== 'live') {
+      setUiNotice({ type: 'error', message: `Cannot sell player. Auction is currently ${auction.status}. Start the auction to enable actions.` })
+      return
+    }
+    
     setBidLoading(prev => ({ ...prev, sell: true }))
     
     try {
       const token = secureSessionManager.getToken()
       if (!token) {
-        alert('Authentication required to sell player')
+        setUiNotice({ type: 'error', message: 'Authentication required to sell player' })
         return
       }
 
@@ -656,13 +676,20 @@ export default function AuctionPage() {
           status: newStatus,
           started_at: newStatus === 'live' ? new Date().toISOString() : prev.started_at
         } : null)
+        
+        // If starting the auction, compute/set the current player locally
+        if (newStatus === 'live') {
+          const next = getCurrentPlayer()
+          setCurrentPlayer(next)
+          setUiNotice(null)
+        }
       } else {
         const errorData = await response.json()
-        alert(`Failed to ${auction.status === 'draft' ? 'start' : 'pause/resume'} auction: ${errorData.error || 'Unknown error'}`)
+        setUiNotice({ type: 'error', message: `Failed to ${auction.status === 'draft' ? 'start' : 'pause/resume'} auction: ${errorData.error || 'Unknown error'}` })
       }
     } catch (error) {
       console.error('Error controlling auction:', error)
-      alert('Failed to control auction. Please try again.')
+      setUiNotice({ type: 'error', message: 'Failed to control auction. Please try again.' })
     } finally {
       setActionLoading(prev => ({ ...prev, startPause: false }))
     }
@@ -786,10 +813,19 @@ export default function AuctionPage() {
 
   if (isUserLoading || loading) {
     return (
-      <div className="flex items-center justify-center py-20 bg-[#19171b] min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto mb-4"></div>
-          <p className="text-[#DBD0C0]">Loading auction...</p>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Hero Section Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+        <div className="absolute inset-0" 
+             style={{
+               background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+             }}></div>
+        
+        <div className="relative z-10 flex items-center justify-center py-20 min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto mb-4"></div>
+            <p className="text-[#DBD0C0]">Loading auction...</p>
+          </div>
         </div>
       </div>
     )
@@ -797,20 +833,29 @@ export default function AuctionPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-20 bg-[#19171b] min-h-screen">
-        <div className="text-center">
-          <div className="text-red-400 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-[#DBD0C0] mb-2">Error Loading Auction</h1>
-          <p className="text-[#DBD0C0]/70 mb-6">{error}</p>
-          <Link 
-            href="/auctions"
-            className="inline-flex items-center px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150"
-          >
-            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Auctions
-          </Link>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Hero Section Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+        <div className="absolute inset-0" 
+             style={{
+               background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+             }}></div>
+        
+        <div className="relative z-10 flex items-center justify-center py-20 min-h-screen">
+          <div className="text-center">
+            <div className="text-red-400 text-6xl mb-4">⚠️</div>
+            <h1 className="text-2xl font-bold text-[#DBD0C0] mb-2">Error Loading Auction</h1>
+            <p className="text-[#DBD0C0]/70 mb-6">{error}</p>
+            <Link 
+              href="/auctions"
+              className="inline-flex items-center px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150"
+            >
+              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Auctions
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -818,20 +863,29 @@ export default function AuctionPage() {
 
   if (!auction) {
     return (
-      <div className="flex items-center justify-center py-20 bg-[#19171b] min-h-screen">
-        <div className="text-center">
-          <div className="text-[#CEA17A] text-6xl mb-4">🔍</div>
-          <h1 className="text-2xl font-bold text-[#DBD0C0] mb-2">Auction Not Found</h1>
-          <p className="text-[#DBD0C0]/70 mb-6">The auction you're looking for doesn't exist.</p>
-          <Link 
-            href="/auctions"
-            className="inline-flex items-center px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150"
-          >
-            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Auctions
-          </Link>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Hero Section Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+        <div className="absolute inset-0" 
+             style={{
+               background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+             }}></div>
+        
+        <div className="relative z-10 flex items-center justify-center py-20 min-h-screen">
+          <div className="text-center">
+            <div className="text-[#CEA17A] text-6xl mb-4">🔍</div>
+            <h1 className="text-2xl font-bold text-[#DBD0C0] mb-2">Auction Not Found</h1>
+            <p className="text-[#DBD0C0]/70 mb-6">The auction you're looking for doesn't exist.</p>
+            <Link 
+              href="/auctions"
+              className="inline-flex items-center px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150"
+            >
+              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Auctions
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -863,14 +917,26 @@ export default function AuctionPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[#19171b]">
-        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-[#CEA17A]/10 rotate-45 animate-pulse" style={{animationDelay: '0s'}}></div>
-        <div className="absolute top-1/3 right-1/3 w-4 h-4 bg-[#75020f]/8 rotate-12 animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute bottom-1/3 left-1/5 w-3 h-3 bg-[#CEA17A]/6 rotate-45 animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-2/3 right-1/4 w-2 h-2 bg-[#75020f]/10 rotate-12 animate-pulse" style={{animationDelay: '0.5s'}}></div>
-        <div className="absolute bottom-1/4 left-1/3 w-6 h-6 bg-[#CEA17A]/4 rotate-45 animate-pulse" style={{animationDelay: '3.5s'}}></div>
-        <div className="absolute top-3/4 left-1/2 w-3 h-3 bg-[#75020f]/5 rotate-12 animate-pulse" style={{animationDelay: '1.2s'}}></div>
+      {/* Hero Section Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d]"></div>
+      <div className="absolute inset-0" 
+           style={{
+             background: 'linear-gradient(135deg, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.4) 100%)'
+           }}></div>
+      
+      {/* Animated Grid Lines */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#CEA17A] to-transparent animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-0 left-0 w-px h-full bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent animate-pulse" style={{animationDelay: '1.5s'}}></div>
+      </div>
+      
+      {/* Background Glowing Orbs - Behind Content */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#CEA17A]/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0s'}}></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#75020f]/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#CEA17A]/3 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
       
       <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 min-h-screen flex flex-col">
@@ -1108,7 +1174,17 @@ export default function AuctionPage() {
             <h2 className="text-2xl font-bold text-[#DBD0C0] mb-6">Current Player</h2>
             
             {currentPlayer ? (
-              <div className="space-y-6">
+            <div className="space-y-6">
+              {/* Inline notice for non-live or errors */}
+              {uiNotice && (
+                <div className={`rounded-lg px-4 py-3 border text-sm ${
+                  uiNotice.type === 'error' 
+                    ? 'bg-red-500/10 border-red-400/30 text-red-300' 
+                    : 'bg-blue-500/10 border-blue-400/30 text-blue-300'
+                }`}>
+                  {uiNotice.message}
+                </div>
+              )}
                 {/* Player Photo - Increased Size */}
                 <div className="flex justify-center">
                   <div 
@@ -1196,27 +1272,47 @@ export default function AuctionPage() {
           </div>
 
           {/* Live Bids Card */}
-          <div className="xl:col-span-2 bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10">
-            <h2 className="text-2xl font-bold text-[#DBD0C0] mb-6">Live Bids</h2>
+          <div className="xl:col-span-2 bg-gradient-to-br from-[#1a1a1a]/80 to-[#0f0f0f]/80 rounded-xl p-6 border-2 border-[#CEA17A]/20 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-[#DBD0C0] flex items-center gap-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                Live Bids
+              </h2>
+              <div className="text-sm text-[#DBD0C0]/70 bg-[#19171b]/50 px-3 py-1 rounded-full border border-[#CEA17A]/20">
+                Real-time
+              </div>
+            </div>
             
             {currentPlayer ? (
               <div className="space-y-6">
                 {/* Current Bid Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
-                    <h3 className="text-lg font-semibold text-[#CEA17A] mb-2">Current Bid</h3>
-                    <div className="text-3xl font-bold text-[#DBD0C0]">₹{getCurrentBid()}</div>
-                    {recentBids && recentBids.length > 0 && (
-                      <div className="text-sm text-[#DBD0C0]/70 mt-1">
-                        by {recentBids.find(bid => bid.is_winning_bid && !bid.is_undone)?.team_name || 'No bids yet'}
-                      </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-xl p-4 border-2 border-[#CEA17A]/20 shadow-lg">
+                    <h3 className="text-lg font-semibold text-[#CEA17A] mb-3 flex items-center gap-2">
+                      <span className="inline-block text-base leading-none">🔨</span>
+                      Current Bid
+                    </h3>
+                    {getCurrentBid() === null ? (
+                      <div className="text-sm text-[#DBD0C0]/70 italic">No bids yet</div>
+                    ) : (
+                      <>
+                        <div className="text-3xl font-extrabold text-[#DBD0C0] mb-1">₹{getCurrentBid()}</div>
+                        <div className="text-sm text-[#DBD0C0]/80 font-medium">
+                          by {recentBids.find(bid => bid.is_winning_bid && !bid.is_undone)?.team_name || '—'}
+                        </div>
+                      </>
                     )}
                   </div>
                   
-                  <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
-                    <h3 className="text-lg font-semibold text-[#CEA17A] mb-2">Next Bid</h3>
-                    <div className="text-3xl font-bold text-[#DBD0C0]">₹{calculateNextBid()}</div>
-                    <div className="text-sm text-[#DBD0C0]/70 mt-1">
+                  <div className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-xl p-4 border-2 border-[#CEA17A]/20 shadow-lg">
+                    <h3 className="text-lg font-semibold text-[#CEA17A] mb-3 flex items-center gap-2">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                      Next Bid
+                    </h3>
+                    <div className="text-3xl font-extrabold text-[#DBD0C0] mb-1">₹{calculateNextBid(getCurrentBid() ?? undefined)}</div>
+                    <div className="text-xs text-[#DBD0C0]/70 font-medium">
                       Min increment: ₹{auction?.min_increment || 20}
                     </div>
                   </div>
@@ -1226,7 +1322,12 @@ export default function AuctionPage() {
                 <div className="flex flex-wrap gap-4">
                   <button 
                     onClick={handleSellPlayer}
-                    className="px-6 py-3 bg-green-500/15 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/25 transition-all duration-150 flex items-center"
+                    disabled={!isAuctionLive || bidLoading.sell}
+                    className={`px-6 py-3 rounded-lg transition-all duration-150 flex items-center ${
+                      !isAuctionLive || bidLoading.sell
+                        ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
+                        : 'bg-green-500/15 text-green-400 border border-green-500/30 hover:bg-green-500/25'
+                    }`}
                   >
                     <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1236,8 +1337,12 @@ export default function AuctionPage() {
                   
                   <button 
                     onClick={handleUndoBid}
-                    disabled={!recentBids || recentBids.length === 0}
-                    className="px-6 py-3 bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/25 transition-all duration-150 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!isAuctionLive || !recentBids || recentBids.length === 0 || bidLoading.undo}
+                    className={`px-6 py-3 rounded-lg transition-all duration-150 flex items-center ${
+                      !isAuctionLive || !recentBids || recentBids.length === 0 || bidLoading.undo
+                        ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
+                        : 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/25'
+                    }`}
                   >
                     <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -1248,8 +1353,16 @@ export default function AuctionPage() {
 
                 {/* Captain Bid Buttons */}
                 <div>
-                  <h3 className="text-lg font-semibold text-[#CEA17A] mb-4">Captain Bids</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <h3 className="text-xl font-bold text-[#CEA17A] mb-6 flex items-center gap-2">
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Captain Bids
+                  </h3>
+                  {auctionTeams.length === 0 && (
+                    <div className="text-sm text-[#DBD0C0]/70 mb-3">No teams found for this auction.</div>
+                  )}
+                  <div className="grid grid-cols-1 gap-3">
                     {auctionTeams.map((team) => {
                       const nextBid = calculateNextBid()
                       const canAfford = team.remaining_purse >= nextBid
@@ -1259,23 +1372,25 @@ export default function AuctionPage() {
                         <button
                           key={team.id}
                           onClick={() => handlePlaceBid(team.id, nextBid)}
-                          disabled={!canAfford || bidLoading[`bid_${team.id}`]}
-                          className={`p-4 rounded-lg border transition-all duration-150 flex items-center justify-between ${
-                            isWinning
-                              ? 'bg-green-500/15 text-green-400 border-green-500/30'
+                          disabled={!isAuctionLive || !canAfford || bidLoading[`bid_${team.id}`]}
+                          className={`p-5 rounded-xl border-2 transition-all duration-300 flex items-center justify-between hover:scale-[1.02] ${
+                            !isAuctionLive
+                              ? 'bg-gradient-to-r from-gray-500/10 to-gray-500/5 text-gray-500 border-gray-500/20 cursor-not-allowed'
+                              : isWinning
+                              ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/10 text-green-300 border-green-400/40 shadow-lg shadow-green-500/10'
                               : canAfford
-                              ? 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'
-                              : 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
+                              ? 'bg-gradient-to-r from-[#CEA17A]/15 to-[#CEA17A]/5 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-gradient-to-r hover:from-[#CEA17A]/25 hover:to-[#CEA17A]/15 hover:border-[#CEA17A]/50'
+                              : 'bg-gradient-to-r from-gray-500/10 to-gray-500/5 text-gray-500 border-gray-500/20 cursor-not-allowed'
                           }`}
                         >
                           <div className="text-left">
-                            <div className="font-semibold">{team.team_name}</div>
-                            <div className="text-sm opacity-75">₹{team.remaining_purse} remaining</div>
+                            <div className="font-bold text-lg">{team.team_name}</div>
+                            <div className="text-sm opacity-80 font-medium">₹{team.remaining_purse} remaining</div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-bold">₹{nextBid}</div>
+                          <div className="text-right flex items-center gap-2">
+                            <div className="text-2xl font-black">₹{nextBid}</div>
                             {bidLoading[`bid_${team.id}`] && (
-                              <svg className="animate-spin h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24">
+                              <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
@@ -1289,31 +1404,47 @@ export default function AuctionPage() {
 
                 {/* Recent Bids Section */}
                 <div>
-                  <h3 className="text-lg font-semibold text-[#CEA17A] mb-4">Recent Bids</h3>
-                  <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10 max-h-64 overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-[#CEA17A] flex items-center gap-2">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Recent Bids
+                    </h3>
+                    <div className="text-sm text-[#DBD0C0]/70">
+                      {recentBids?.length || 0} bids
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-xl p-6 border-2 border-[#CEA17A]/20 shadow-2xl max-h-80 overflow-y-auto">
                     {recentBids && recentBids.length > 0 ? (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {getLatestBidsByCaptain().map((bid, index) => (
                           <div
                             key={bid.id}
-                            className={`p-3 rounded-lg border transition-all duration-150 ${
+                            className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-[1.02] ${
                               bid.is_winning_bid && !bid.is_undone
-                                ? 'bg-green-500/15 text-green-400 border-green-500/30 border-l-4 border-l-green-500'
-                                : 'bg-[#19171b]/30 border-[#CEA17A]/10'
+                                ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/10 text-green-300 border-green-400/40 shadow-lg shadow-green-500/10'
+                                : 'bg-gradient-to-r from-[#2a2a2a]/60 to-[#1a1a1a]/60 text-[#DBD0C0] border-[#CEA17A]/20 hover:border-[#CEA17A]/40'
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="font-semibold">{bid.team_name}</div>
+                              <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-[#CEA17A]"></div>
+                                  <div className="font-bold text-lg">{bid.team_name}</div>
+                                </div>
                                 {bid.is_winning_bid && !bid.is_undone && (
-                                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-medium">
-                                    WINNING
+                                  <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs font-bold shadow-lg animate-pulse">
+                                    🏆 WINNING
                                   </span>
                                 )}
                               </div>
                               <div className="text-right">
-                                <div className="font-bold">₹{bid.bid_amount}</div>
-                                <div className="text-xs opacity-75">
+                                <div className="text-2xl font-black text-[#CEA17A] mb-1">
+                                  ₹{bid.bid_amount}
+                                </div>
+                                <div className="text-xs text-[#DBD0C0]/60 font-mono">
                                   {new Date(bid.timestamp).toLocaleString('en-US', {
                                     year: 'numeric',
                                     month: '2-digit',
@@ -1330,8 +1461,10 @@ export default function AuctionPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <div className="text-[#DBD0C0]/50 text-sm">No bids placed yet</div>
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4">🎯</div>
+                        <div className="text-[#DBD0C0]/60 text-lg font-medium">No bids placed yet</div>
+                        <div className="text-[#DBD0C0]/40 text-sm mt-2">Be the first to place a bid!</div>
                       </div>
                     )}
                   </div>

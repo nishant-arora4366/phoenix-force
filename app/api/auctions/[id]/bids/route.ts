@@ -125,6 +125,13 @@ export async function POST(
       return NextResponse.json({ error: 'Auction not found' }, { status: 404 })
     }
 
+    // Check if auction is in live status
+    if (auction.status !== 'live') {
+      return NextResponse.json({ 
+        error: `Cannot place bids. Auction is currently ${auction.status}. Please start the auction first.` 
+      }, { status: 400 })
+    }
+
     // Get current player
     const { data: currentPlayer, error: playerError } = await supabase
       .from('auction_players')
@@ -165,10 +172,41 @@ export async function POST(
       .order('created_at', { ascending: false })
       .limit(1)
 
-    const currentBid = currentBids && currentBids.length > 0 ? currentBids[0].bid_amount : auction.min_bid_amount
+    const hasExistingBid = currentBids && currentBids.length > 0
+    const currentBid = hasExistingBid ? currentBids[0].bid_amount : null
 
-    if (bid_amount <= currentBid) {
-      return NextResponse.json({ error: 'Bid must be higher than current bid' }, { status: 400 })
+    // Determine starting bid for first bid scenario
+    let startingBid = auction.min_bid_amount || 0
+    if (auction.use_base_price) {
+      // Best-effort: try to fetch player's base price; fall back to min if unavailable
+      try {
+        const { data: basePriceRows } = await supabase
+          .from('player_skill_assignments')
+          .select('player_skills(skill_name), player_skill_values(value_name)')
+          .eq('player_id', currentPlayer.player_id)
+          .limit(20)
+        const basePriceRow = (basePriceRows as any[] | null)?.find((r: any) => r.player_skills?.skill_name === 'Base Price')
+        const rawValue = (basePriceRow && (basePriceRow as any).player_skill_values 
+          && (basePriceRow as any).player_skill_values[0]
+          ? (basePriceRow as any).player_skill_values[0].value_name as string
+          : undefined)
+        const parsed = rawValue ? parseInt(rawValue) : NaN
+        if (!isNaN(parsed)) {
+          startingBid = Math.max(startingBid, parsed)
+        }
+      } catch (_) {
+        // ignore and use min bid
+      }
+    }
+
+    if (!hasExistingBid) {
+      if (bid_amount < startingBid) {
+        return NextResponse.json({ error: `First bid must be at least ₹${startingBid}` }, { status: 400 })
+      }
+    } else {
+      if (bid_amount <= (currentBid as number)) {
+        return NextResponse.json({ error: 'Bid must be higher than current bid' }, { status: 400 })
+      }
     }
 
     // Check if team can afford the bid
@@ -254,6 +292,24 @@ export async function DELETE(
 
     if (userError || !user || (user.role !== 'admin' && user.role !== 'host')) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
+    // Get auction details to check status
+    const { data: auction, error: auctionError } = await supabase
+      .from('auctions')
+      .select('status')
+      .eq('id', auctionId)
+      .single()
+
+    if (auctionError || !auction) {
+      return NextResponse.json({ error: 'Auction not found' }, { status: 404 })
+    }
+
+    // Check if auction is in live status
+    if (auction.status !== 'live') {
+      return NextResponse.json({ 
+        error: `Cannot undo bid. Auction is currently ${auction.status}. Please start the auction first.` 
+      }, { status: 400 })
     }
 
     // Get the bid to undo

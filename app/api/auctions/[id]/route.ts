@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { verifyToken } from '@/src/lib/jwt'
 
 export async function GET(
   request: NextRequest,
@@ -142,6 +143,89 @@ export async function GET(
 
   } catch (error) {
     console.error('Error in auction API:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { id: auctionId } = await params
+
+    if (!auctionId) {
+      return NextResponse.json(
+        { success: false, error: 'Auction ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Verify authentication
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
+    const token = authHeader.split(' ')[1]
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    // Check user role
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', decoded.userId)
+      .single()
+
+    if (userError || !user || (user.role !== 'admin' && user.role !== 'host')) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
+    // Check if user is the creator of the auction (for hosts) or admin
+    const { data: auction, error: auctionError } = await supabase
+      .from('auctions')
+      .select('created_by')
+      .eq('id', auctionId)
+      .single()
+
+    if (auctionError) {
+      console.error('Error fetching auction:', auctionError)
+      return NextResponse.json({ error: 'Auction not found' }, { status: 404 })
+    }
+
+    // Hosts can only delete their own auctions, admins can delete any
+    if (user.role === 'host' && auction.created_by !== decoded.userId) {
+      return NextResponse.json({ error: 'You can only delete your own auctions' }, { status: 403 })
+    }
+
+    // Delete the auction (cascade will handle related records)
+    const { error: deleteError } = await supabase
+      .from('auctions')
+      .delete()
+      .eq('id', auctionId)
+
+    if (deleteError) {
+      console.error('Error deleting auction:', deleteError)
+      return NextResponse.json({ error: 'Failed to delete auction' }, { status: 500 })
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Auction deleted successfully' 
+    })
+
+  } catch (error) {
+    console.error('Error in DELETE auction API:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
