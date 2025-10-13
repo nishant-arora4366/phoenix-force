@@ -128,6 +128,21 @@ export async function POST(
       remaining_purse: team.remaining_purse 
     })
 
+    // First, clear any existing current player
+    console.log('🔍 [DEBUG] Clearing any existing current player')
+    const { error: clearCurrentError } = await supabase
+      .from('auction_players')
+      .update({ current_player: false })
+      .eq('auction_id', auctionId)
+      .eq('current_player', true)
+
+    if (clearCurrentError) {
+      console.error('🔍 [DEBUG] Error clearing current player:', clearCurrentError)
+      // Don't fail the entire operation, just log the error
+    } else {
+      console.log('🔍 [DEBUG] Current player cleared successfully')
+    }
+
     // Start a transaction to undo the player assignment
     console.log('🔍 [DEBUG] Starting to undo player assignment for player:', lastSoldPlayer.player_id)
     const { error: undoError } = await supabase
@@ -136,7 +151,7 @@ export async function POST(
         status: 'available',
         sold_to: null,
         sold_price: null,
-        current_player: false
+        current_player: true  // Set this player as current immediately
       })
       .eq('auction_id', auctionId)
       .eq('player_id', lastSoldPlayer.player_id)
@@ -145,7 +160,7 @@ export async function POST(
       console.error('🔍 [DEBUG] Error undoing player assignment:', undoError)
       return NextResponse.json({ error: 'Failed to undo player assignment' }, { status: 500 })
     }
-    console.log('🔍 [DEBUG] Player assignment undone successfully')
+    console.log('🔍 [DEBUG] Player assignment undone and set as current successfully')
 
     // Update team statistics - refund the money and decrease player count
     const refundAmount = lastSoldPlayer.sold_price || 0
@@ -199,20 +214,7 @@ export async function POST(
       console.log('🔍 [DEBUG] Bids marked as undone successfully')
     }
 
-    // Set the undone player as the current player so host can continue from there
-    console.log('🔍 [DEBUG] Setting undone player as current player')
-    const { error: setCurrentError } = await supabase
-      .from('auction_players')
-      .update({ current_player: true })
-      .eq('auction_id', auctionId)
-      .eq('player_id', lastSoldPlayer.player_id)
-
-    if (setCurrentError) {
-      console.error('🔍 [DEBUG] Error setting undone player as current:', setCurrentError)
-      // Don't fail the entire operation, just log the error
-    } else {
-      console.log('🔍 [DEBUG] Player set as current successfully')
-    }
+    // Note: The undone player is already set as current in the undo operation above
 
     console.log('🔍 [DEBUG] Operation completed successfully, returning response')
     return NextResponse.json({ 
