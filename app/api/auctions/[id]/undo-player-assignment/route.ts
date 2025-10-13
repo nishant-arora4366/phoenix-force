@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/src/lib/supabaseClient'
-import { verifyToken } from '@/src/lib/jwt'
+import { supabase } from '@/lib/supabaseClient'
+import { verifyToken } from '@/lib/jwt'
 
 export async function POST(
   request: NextRequest,
