@@ -143,12 +143,13 @@ export default function AuctionPage() {
       const response = await fetch(`/api/auctions/${auctionId}/bids`)
       if (response.ok) {
         const data = await response.json()
-        const formattedBids = data.bids.map((bid: any) => ({
+        // The API returns the bids array directly, not wrapped in a 'bids' property
+        const formattedBids = data.map((bid: any) => ({
           id: bid.id,
           team_id: bid.team_id,
-          team_name: bid.auction_teams?.team_name || 'Unknown Team',
+          team_name: bid.team_name || 'Unknown Team',
           bid_amount: bid.bid_amount,
-          timestamp: bid.created_at,
+          timestamp: bid.timestamp,
           player_id: bid.player_id,
           is_winning_bid: bid.is_winning_bid,
           is_undone: bid.is_undone
