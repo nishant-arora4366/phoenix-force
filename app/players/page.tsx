@@ -220,6 +220,7 @@ export default function PlayersPage() {
   const [visibleSkills, setVisibleSkills] = useState<string[]>([])
   const [showFilterSettings, setShowFilterSettings] = useState(false)
   const [showFilterBar, setShowFilterBar] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [sortBy, setSortBy] = useState('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -624,39 +625,97 @@ export default function PlayersPage() {
                 </button>
               </div>
 
-            {/* Filter Checkboxes - Mobile: One row, Desktop: Separate */}
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              {/* "Created by me" filter - Only for hosts and admins */}
-              {(userRole === 'host' || userRole === 'admin') && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl flex-1 sm:flex-none">
-                  <input
-                    type="checkbox"
-                    id="createdByMe"
-                    checked={showCreatedByMe}
-                    onChange={(e) => setShowCreatedByMe(e.target.checked)}
-                    className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
-                  />
-                  <label htmlFor="createdByMe" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
-                    Created by me
-                  </label>
-                </div>
-              )}
+            {/* Filter Checkboxes - Collapsible on Mobile */}
+            <div className="w-full sm:w-auto">
+              {/* Mobile: Collapsible Filter Toggle */}
+              <div className="sm:hidden">
+                <button
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className="w-full px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl hover:bg-[#09171F]/70 transition-all duration-200 flex items-center justify-between"
+                >
+                  <span className="text-sm font-medium text-[#CEA17A]">Filters</span>
+                  <svg 
+                    className={`w-4 h-4 text-[#CEA17A] transition-transform duration-200 ${showMobileFilters ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {/* Mobile: Collapsible Filter Content */}
+                {showMobileFilters && (
+                  <div className="mt-2 space-y-2">
+                    {/* "Created by me" filter - Only for hosts and admins */}
+                    {(userRole === 'host' || userRole === 'admin') && (
+                      <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl">
+                        <input
+                          type="checkbox"
+                          id="createdByMeMobile"
+                          checked={showCreatedByMe}
+                          onChange={(e) => setShowCreatedByMe(e.target.checked)}
+                          className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                        />
+                        <label htmlFor="createdByMeMobile" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
+                          Created by me
+                        </label>
+                      </div>
+                    )}
 
-              {/* "Hide Unverified" filter - Only for hosts and admins */}
-              {(userRole === 'host' || userRole === 'admin') && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl flex-1 sm:flex-none">
-                  <input
-                    type="checkbox"
-                    id="hideUnverified"
-                    checked={hideUnverified}
-                    onChange={(e) => setHideUnverified(e.target.checked)}
-                    className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
-                  />
-                  <label htmlFor="hideUnverified" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
-                    Hide Unverified
-                  </label>
-                </div>
-              )}
+                    {/* "Hide Unverified" filter - Only for hosts and admins */}
+                    {(userRole === 'host' || userRole === 'admin') && (
+                      <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl">
+                        <input
+                          type="checkbox"
+                          id="hideUnverifiedMobile"
+                          checked={hideUnverified}
+                          onChange={(e) => setHideUnverified(e.target.checked)}
+                          className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                        />
+                        <label htmlFor="hideUnverifiedMobile" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
+                          Hide Unverified
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop: Always Visible Filters */}
+              <div className="hidden sm:flex flex-row gap-2">
+                {/* "Created by me" filter - Only for hosts and admins */}
+                {(userRole === 'host' || userRole === 'admin') && (
+                  <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl">
+                    <input
+                      type="checkbox"
+                      id="createdByMeDesktop"
+                      checked={showCreatedByMe}
+                      onChange={(e) => setShowCreatedByMe(e.target.checked)}
+                      className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                    />
+                    <label htmlFor="createdByMeDesktop" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
+                      Created by me
+                    </label>
+                  </div>
+                )}
+
+                {/* "Hide Unverified" filter - Only for hosts and admins */}
+                {(userRole === 'host' || userRole === 'admin') && (
+                  <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl">
+                    <input
+                      type="checkbox"
+                      id="hideUnverifiedDesktop"
+                      checked={hideUnverified}
+                      onChange={(e) => setHideUnverified(e.target.checked)}
+                      className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                    />
+                    <label htmlFor="hideUnverifiedDesktop" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
+                      Hide Unverified
+                    </label>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Action Buttons */}
@@ -668,6 +727,7 @@ export default function PlayersPage() {
                   setSkillFilters({})
                   setShowCreatedByMe(false)
                   setHideUnverified(true) // Reset to default (hide unverified)
+                  setShowMobileFilters(false) // Reset mobile filter state
                 }}
                 className="w-full sm:w-auto px-4 py-3 bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#3E4E5A]/25 rounded-xl hover:bg-[#3E4E5A]/25 hover:border-[#3E4E5A]/40 transition-all duration-300 shadow-lg backdrop-blur-sm text-sm font-medium"
                 title="Clear all filters"
@@ -1062,6 +1122,7 @@ export default function PlayersPage() {
                   setSearchTerm('')
                   setSkillFilters({})
                   setHideUnverified(true) // Reset to default (hide unverified)
+                  setShowMobileFilters(false) // Reset mobile filter state
                 }}
                 className="bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium px-6 py-2"
               >
