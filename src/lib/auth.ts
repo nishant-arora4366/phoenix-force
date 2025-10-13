@@ -1,5 +1,12 @@
 import { supabase } from './supabaseClient'
+import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
+
+// Create admin client for user registration (bypasses RLS)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export interface AuthUser {
   id: string
@@ -42,8 +49,8 @@ export class AuthService {
       // Normalize email to lowercase for consistency
       const normalizedEmail = userData.email.toLowerCase().trim()
 
-      // Check if user already exists
-      const { data: existingUser } = await supabase
+      // Check if user already exists using admin client (bypasses RLS)
+      const { data: existingUser } = await supabaseAdmin
         .from('users')
         .select('id')
         .eq('email', normalizedEmail)
@@ -56,8 +63,8 @@ export class AuthService {
       // Hash password
       const passwordHash = await this.hashPassword(userData.password)
 
-      // Create user
-      const { data: user, error } = await supabase
+      // Create user using admin client (bypasses RLS)
+      const { data: user, error } = await supabaseAdmin
         .from('users')
         .insert({
           email: normalizedEmail,
@@ -86,8 +93,8 @@ export class AuthService {
       // Normalize email to lowercase for consistency
       const normalizedEmail = email.toLowerCase().trim()
       
-      // Get user from database
-      const { data: user, error } = await supabase
+      // Get user from database using admin client (bypasses RLS)
+      const { data: user, error } = await supabaseAdmin
         .from('users')
         .select('*')
         .eq('email', normalizedEmail)

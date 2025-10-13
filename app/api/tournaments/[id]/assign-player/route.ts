@@ -57,7 +57,7 @@ async function POSTHandler(
         id,
         user_id,
         display_name,
-        users!players_user_id_fkey(id, email, firstname, lastname, username)
+        users!user_id(id, email, firstname, lastname, username)
       `)
       .in('id', playersToAssign)
 
@@ -135,7 +135,7 @@ async function POSTHandler(
         players!tournament_slots_player_id_fkey(
           id,
           display_name,
-          users!players_user_id_fkey(id, email, firstname, lastname, username)
+          users!user_id(id, email, firstname, lastname, username)
         )
       `)
 

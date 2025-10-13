@@ -42,7 +42,7 @@ async function getHandler(
       .from('users')
       .select(`
         *,
-        players!players_user_id_fkey (
+        players!user_id (
           id,
           display_name,
           status,

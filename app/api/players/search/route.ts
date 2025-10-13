@@ -27,7 +27,7 @@ async function getHandler(
         id,
         display_name,
         user_id,
-        users!players_user_id_fkey(
+        users!user_id(
           id,
           email,
           firstname,

@@ -49,7 +49,7 @@ async function getHandler(
       .from('players')
       .select(`
         *,
-        users!players_user_id_fkey (
+        users!user_id (
           id,
           email,
           username,
