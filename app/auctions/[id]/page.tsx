@@ -363,6 +363,66 @@ export default function AuctionPage() {
     }
   }
 
+  const handleUndoPlayerAssignment = async () => {
+    if (!auction || !auctionTeams || auctionTeams.length === 0) return
+    
+    // Check if auction is in live status
+    if (auction.status !== 'live') {
+      alert(`Cannot undo player assignment. Auction is currently ${auction.status}. Please start the auction first.`)
+      return
+    }
+    
+    // Check if any team has players assigned
+    const teamsWithPlayers = auctionTeams.filter(team => team.players_count > 0)
+    if (teamsWithPlayers.length === 0) {
+      alert('No player assignments to undo')
+      return
+    }
+    
+    setActionLoading(prev => ({ ...prev, undoPlayerAssignment: true }))
+    
+    try {
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        setUiNotice({ type: 'error', message: 'Authentication required to undo player assignment' })
+        return
+      }
+
+      const response = await fetch(`/api/auctions/${auctionId}/undo-player-assignment`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        // Refresh all data by refetching auction data and bid history
+        const auctionResponse = await fetch(`/api/auctions/${auctionId}`)
+        if (auctionResponse.ok) {
+          const auctionResult = await auctionResponse.json()
+          if (auctionResult.success) {
+            setAuction(auctionResult.auction)
+            setAuctionTeams(auctionResult.teams || [])
+            setAuctionPlayers(auctionResult.players || [])
+            setPlayers(auctionResult.playerDetails || [])
+          }
+        }
+        await fetchBidHistory()
+        
+        setUiNotice({ type: 'info', message: 'Player assignment undone successfully' })
+      } else {
+        const errorData = await response.json()
+        setUiNotice({ type: 'error', message: `Failed to undo player assignment: ${errorData.error || 'Unknown error'}` })
+      }
+    } catch (error) {
+      console.error('Error undoing player assignment:', error)
+      setUiNotice({ type: 'error', message: 'Failed to undo player assignment. Please try again.' })
+    } finally {
+      setActionLoading(prev => ({ ...prev, undoPlayerAssignment: false }))
+    }
+  }
+
   // Handle selling player
   const handleSellPlayer = async () => {
     if (!auction || !currentPlayer || !recentBids || recentBids.length === 0) return
@@ -1128,7 +1188,7 @@ export default function AuctionPage() {
                         if (isAtEnd && !viewingUnsoldPlayers) {
                           return 'View Unsold Players'
                         } else if (viewingUnsoldPlayers) {
-                          return 'Next Unsold Player'
+                          return 'Next'
                         } else {
                           return 'Next Player'
                         }
@@ -1170,11 +1230,31 @@ export default function AuctionPage() {
                     </>
                   )}
                 </button>
-                <button className="w-full px-4 py-2 bg-red-500/15 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/25 transition-all duration-150 flex items-center justify-center">
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  Undo Player Assignment
+                <button 
+                  onClick={handleUndoPlayerAssignment}
+                  disabled={!auctionTeams || auctionTeams.length === 0 || !auctionTeams.some(team => team.players_count > 0) || actionLoading.undoPlayerAssignment}
+                  className={`w-full px-4 py-2 rounded-lg transition-all duration-150 flex items-center justify-center ${
+                    !auctionTeams || auctionTeams.length === 0 || !auctionTeams.some(team => team.players_count > 0) || actionLoading.undoPlayerAssignment
+                      ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
+                      : 'bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25'
+                  }`}
+                >
+                  {actionLoading.undoPlayerAssignment ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Undoing...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Undo Player Assignment
+                    </>
+                  )}
                 </button>
               </div>
 
