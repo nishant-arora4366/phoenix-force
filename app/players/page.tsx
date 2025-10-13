@@ -219,7 +219,7 @@ export default function PlayersPage() {
   const [availableSkills, setAvailableSkills] = useState<Record<string, string[]>>({})
   const [visibleSkills, setVisibleSkills] = useState<string[]>([])
   const [showFilterSettings, setShowFilterSettings] = useState(false)
-  const [showFilterBar, setShowFilterBar] = useState(true)
+  const [showFilterBar, setShowFilterBar] = useState(false)
   const [sortBy, setSortBy] = useState('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -642,19 +642,21 @@ export default function PlayersPage() {
                 </div>
               )}
 
-              {/* "Hide Unverified" filter - Available to all users */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl flex-1 sm:flex-none">
-                <input
-                  type="checkbox"
-                  id="hideUnverified"
-                  checked={hideUnverified}
-                  onChange={(e) => setHideUnverified(e.target.checked)}
-                  className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
-                />
-                <label htmlFor="hideUnverified" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
-                  Hide Unverified
-                </label>
-              </div>
+              {/* "Hide Unverified" filter - Only for hosts and admins */}
+              {(userRole === 'host' || userRole === 'admin') && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-[#09171F]/50 border border-[#CEA17A]/20 rounded-xl flex-1 sm:flex-none">
+                  <input
+                    type="checkbox"
+                    id="hideUnverified"
+                    checked={hideUnverified}
+                    onChange={(e) => setHideUnverified(e.target.checked)}
+                    className="w-4 h-4 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A] focus:ring-2"
+                  />
+                  <label htmlFor="hideUnverified" className="text-sm font-medium text-[#CEA17A] cursor-pointer">
+                    Hide Unverified
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}

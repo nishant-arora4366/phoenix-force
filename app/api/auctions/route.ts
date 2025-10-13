@@ -404,7 +404,7 @@ export async function POST(request: NextRequest) {
       // Calculate required players per team based on selected players
       const totalPlayers: number = Array.isArray(body.selected_players) ? body.selected_players.length : 0
       const numTeams: number = body.captains.length
-      const requiredPlayersPerTeam: number = numTeams > 0 ? Math.floor(totalPlayers / numTeams) : 0
+      const requiredPlayersPerTeam: number = numTeams > 0 ? (Math.floor(totalPlayers / numTeams)) -1 : 0
 
       auctionTeams = body.captains.map((captain: any) => ({
         auction_id: auction.id,
