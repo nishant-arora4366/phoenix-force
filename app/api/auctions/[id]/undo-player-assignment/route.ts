@@ -100,7 +100,7 @@ export async function POST(
       `)
       .eq('auction_id', auctionId)
       .eq('status', 'sold')
-      .order('sold_at', { ascending: false })
+      .order('display_order', { ascending: false })
       .limit(1)
       .single()
 
@@ -136,7 +136,6 @@ export async function POST(
         status: 'available',
         sold_to: null,
         sold_price: null,
-        sold_at: null,
         current_player: false
       })
       .eq('auction_id', auctionId)
@@ -187,7 +186,6 @@ export async function POST(
       .from('auction_bids')
       .update({
         is_undone: true,
-        undone_at: new Date().toISOString(),
         undone_by: decoded.userId
       })
       .eq('auction_id', auctionId)
