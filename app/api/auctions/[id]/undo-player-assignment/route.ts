@@ -48,6 +48,7 @@ export async function POST(
     }
 
     // Check user role
+    console.log('🔍 [DEBUG] Checking user role for userId:', decoded.userId)
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('role')
@@ -55,10 +56,13 @@ export async function POST(
       .single()
 
     if (userError || !user || (user.role !== 'admin' && user.role !== 'host')) {
+      console.log('🔍 [DEBUG] User role check failed:', { userError, user })
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
+    console.log('🔍 [DEBUG] User role check passed:', user.role)
 
     // Get auction details to check status
+    console.log('🔍 [DEBUG] Checking auction status for auctionId:', auctionId)
     const { data: auction, error: auctionError } = await supabase
       .from('auctions')
       .select('status')
@@ -66,17 +70,21 @@ export async function POST(
       .single()
 
     if (auctionError || !auction) {
+      console.log('🔍 [DEBUG] Auction not found:', { auctionError, auction })
       return NextResponse.json({ error: 'Auction not found' }, { status: 404 })
     }
+    console.log('🔍 [DEBUG] Auction found with status:', auction.status)
 
     // Check if auction is in live status
     if (auction.status !== 'live') {
+      console.log('🔍 [DEBUG] Auction not live, status:', auction.status)
       return NextResponse.json({ 
         error: `Cannot undo player assignment. Auction is currently ${auction.status}. Please start the auction first.` 
       }, { status: 400 })
     }
 
     // Find the most recently sold player (last player assignment)
+    console.log('🔍 [DEBUG] Looking for last sold player in auction:', auctionId)
     const { data: lastSoldPlayer, error: lastSoldError } = await supabase
       .from('auction_players')
       .select(`
@@ -97,13 +105,31 @@ export async function POST(
       .single()
 
     if (lastSoldError || !lastSoldPlayer) {
+      console.log('🔍 [DEBUG] No sold players found:', { lastSoldError, lastSoldPlayer })
       return NextResponse.json({ error: 'No player assignments to undo' }, { status: 404 })
     }
+    console.log('🔍 [DEBUG] Found last sold player:', { 
+      player_id: lastSoldPlayer.player_id, 
+      sold_price: lastSoldPlayer.sold_price,
+      sold_to: lastSoldPlayer.sold_to 
+    })
 
     // Get the team that bought this player
     const team = lastSoldPlayer.auction_teams
+    if (!team) {
+      console.log('🔍 [DEBUG] No team found for sold player')
+      return NextResponse.json({ error: 'Team information not found' }, { status: 500 })
+    }
+    console.log('🔍 [DEBUG] Team found:', { 
+      team_id: team.id, 
+      team_name: team.team_name,
+      players_count: team.players_count,
+      total_spent: team.total_spent,
+      remaining_purse: team.remaining_purse 
+    })
 
     // Start a transaction to undo the player assignment
+    console.log('🔍 [DEBUG] Starting to undo player assignment for player:', lastSoldPlayer.player_id)
     const { error: undoError } = await supabase
       .from('auction_players')
       .update({
@@ -117,27 +143,46 @@ export async function POST(
       .eq('player_id', lastSoldPlayer.player_id)
 
     if (undoError) {
-      console.error('Error undoing player assignment:', undoError)
+      console.error('🔍 [DEBUG] Error undoing player assignment:', undoError)
       return NextResponse.json({ error: 'Failed to undo player assignment' }, { status: 500 })
     }
+    console.log('🔍 [DEBUG] Player assignment undone successfully')
 
     // Update team statistics - refund the money and decrease player count
+    const refundAmount = lastSoldPlayer.sold_price || 0
+    const newPlayersCount = Math.max(0, (team.players_count || 0) - 1)
+    const newTotalSpent = Math.max(0, (team.total_spent || 0) - refundAmount)
+    const newRemainingPurse = (team.remaining_purse || 0) + refundAmount
+    
+    console.log('🔍 [DEBUG] Updating team statistics:', {
+      team_id: team.id,
+      refund_amount: refundAmount,
+      old_players_count: team.players_count,
+      new_players_count: newPlayersCount,
+      old_total_spent: team.total_spent,
+      new_total_spent: newTotalSpent,
+      old_remaining_purse: team.remaining_purse,
+      new_remaining_purse: newRemainingPurse
+    })
+    
     const { error: teamUpdateError } = await supabase
       .from('auction_teams')
       .update({
-        players_count: Math.max(0, (team.players_count || 0) - 1),
-        total_spent: Math.max(0, (team.total_spent || 0) - (lastSoldPlayer.sold_price || 0)),
-        remaining_purse: (team.remaining_purse || 0) + (lastSoldPlayer.sold_price || 0)
+        players_count: newPlayersCount,
+        total_spent: newTotalSpent,
+        remaining_purse: newRemainingPurse
       })
       .eq('auction_id', auctionId)
       .eq('id', team.id)
 
     if (teamUpdateError) {
-      console.error('Error updating team statistics:', teamUpdateError)
+      console.error('🔍 [DEBUG] Error updating team statistics:', teamUpdateError)
       return NextResponse.json({ error: 'Failed to update team statistics' }, { status: 500 })
     }
+    console.log('🔍 [DEBUG] Team statistics updated successfully')
 
     // Mark all bids for this player as undone since the player is no longer sold
+    console.log('🔍 [DEBUG] Marking bids as undone for player:', lastSoldPlayer.player_id)
     const { error: bidsUndoError } = await supabase
       .from('auction_bids')
       .update({
@@ -150,11 +195,14 @@ export async function POST(
       .eq('is_undone', false)
 
     if (bidsUndoError) {
-      console.error('Error undoing bids:', bidsUndoError)
+      console.error('🔍 [DEBUG] Error undoing bids:', bidsUndoError)
       // Don't fail the entire operation, just log the error
+    } else {
+      console.log('🔍 [DEBUG] Bids marked as undone successfully')
     }
 
     // Set the undone player as the current player so host can continue from there
+    console.log('🔍 [DEBUG] Setting undone player as current player')
     const { error: setCurrentError } = await supabase
       .from('auction_players')
       .update({ current_player: true })
@@ -162,10 +210,13 @@ export async function POST(
       .eq('player_id', lastSoldPlayer.player_id)
 
     if (setCurrentError) {
-      console.error('Error setting undone player as current:', setCurrentError)
+      console.error('🔍 [DEBUG] Error setting undone player as current:', setCurrentError)
       // Don't fail the entire operation, just log the error
+    } else {
+      console.log('🔍 [DEBUG] Player set as current successfully')
     }
 
+    console.log('🔍 [DEBUG] Operation completed successfully, returning response')
     return NextResponse.json({ 
       success: true, 
       message: 'Player assignment undone successfully',
