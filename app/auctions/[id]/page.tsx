@@ -1096,15 +1096,13 @@ export default function AuctionPage() {
                   onClick={handleNextPlayer}
                   disabled={!currentPlayer || !auctionPlayers || (() => {
                     const availablePlayers = getAvailablePlayers()
-                    const currentIndex = availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id)
-                    // Disable only if we're at the end AND already viewing unsold players AND no available players
-                    return currentIndex >= availablePlayers.length - 1 && viewingUnsoldPlayers && availablePlayers.length === 0
+                    // Only disable if there are no available players left (all players sold)
+                    return availablePlayers.length === 0
                   })() || actionLoading.nextPlayer}
                   className={`w-full px-4 py-2 border rounded-lg transition-all duration-150 flex items-center justify-center ${
                     !currentPlayer || !auctionPlayers || (() => {
                       const availablePlayers = getAvailablePlayers()
-                      const currentIndex = availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id)
-                      return currentIndex >= availablePlayers.length - 1 && viewingUnsoldPlayers && availablePlayers.length === 0
+                      return availablePlayers.length === 0
                     })() || actionLoading.nextPlayer
                       ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
                       : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'
