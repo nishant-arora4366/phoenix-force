@@ -7,16 +7,37 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  console.log('🔍 [DEBUG] GET method called on undo-player-assignment')
+  const { id: auctionId } = await params
+  return NextResponse.json({ 
+    message: 'Undo player assignment endpoint is working',
+    auctionId: auctionId,
+    method: 'GET'
+  })
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  console.log('🔍 [DEBUG] undo-player-assignment route called at:', new Date().toISOString())
+  console.log('🔍 [DEBUG] Request URL:', request.url)
+  console.log('🔍 [DEBUG] Request method:', request.method)
+  console.log('🔍 [DEBUG] Request headers:', Object.fromEntries(request.headers.entries()))
+  
   try {
     const { id: auctionId } = await params
+    console.log('🔍 [DEBUG] Auction ID from params:', auctionId)
 
     // Verify authentication
     const authHeader = request.headers.get('authorization')
+    console.log('🔍 [DEBUG] Auth header present:', !!authHeader)
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('🔍 [DEBUG] No valid auth header, returning 401')
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
