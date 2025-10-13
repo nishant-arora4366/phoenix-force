@@ -154,9 +154,8 @@ export async function POST(
         refunded_amount: lastSoldPlayer.sold_price
       }
     })
-
   } catch (error) {
-    console.error('Error in POST /api/auctions/[id]/undo-player-assignment:', error)
+    console.error('Error in undo-player-assignment:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
