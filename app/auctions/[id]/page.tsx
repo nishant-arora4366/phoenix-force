@@ -1119,6 +1119,8 @@ export default function AuctionPage() {
                   ) : (
                     <>
                       {(() => {
+                        if (!currentPlayer) return 'Next Player'
+                        
                         const availablePlayers = getAvailablePlayers()
                         const currentIndex = availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id)
                         const isAtEnd = currentIndex >= availablePlayers.length - 1
