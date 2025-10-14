@@ -107,6 +107,12 @@ export default function AuctionPage() {
   const [uiNotice, setUiNotice] = useState<{ type: 'error' | 'info'; message: string } | null>(null)
   const [viewingUnsoldPlayers, setViewingUnsoldPlayers] = useState(false)
   const [showHostActions, setShowHostActions] = useState(false)
+  // Mobile-specific UI state
+  const [mobilePurseTeamId, setMobilePurseTeamId] = useState<string | null>(null)
+  const [showHostActionsMobile, setShowHostActionsMobile] = useState(false)
+  // Extended modal / mobile UI state
+  const [formationTeamModalId, setFormationTeamModalId] = useState<string | null>(null)
+  const [showRemainingPlayersMobile, setShowRemainingPlayersMobile] = useState(false)
 
   // Auto-dismiss UI notice after a short delay
   useEffect(() => {
@@ -1046,6 +1052,23 @@ export default function AuctionPage() {
     }
   }
 
+  // Helper: unified role -> emoji mapping
+  const mapRoleToEmoji = (role: string) => {
+    const r = role.toLowerCase()
+    if (r.includes('batter') || r.includes('batsman')) return '🏏'
+    if (r.includes('bowler')) return '🎾'
+    if (r.includes('wicket')) return '🧤'
+    if (r.includes('all')) return '🎯'
+    return '👤'
+  }
+
+  const getPlayerRoleEmojis = (player: any): string => {
+    if (!player?.skills?.Role) return ''
+    const val = player.skills.Role
+    if (Array.isArray(val)) return val.map(mapRoleToEmoji).join('')
+    return mapRoleToEmoji(String(val))
+  }
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Hero Section Background */}
@@ -1070,7 +1093,8 @@ export default function AuctionPage() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#CEA17A]/3 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
       
-      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 min-h-screen flex flex-col">
+  {/* Desktop / Tablet layout (md and up) */}
+  <div className="hidden md:flex relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 min-h-screen flex-col">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 space-y-4 sm:space-y-0 flex-shrink-0">
           <div className="flex items-center space-x-4">
@@ -1976,7 +2000,250 @@ export default function AuctionPage() {
         </div>
       </div>
 
+      {/* Mobile layout (below md) */}
+      <div className="md:hidden relative z-10 w-full px-3 pt-4 pb-24 min-h-screen flex flex-col">
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2 min-w-0">
+            <Link href="/auctions" className="p-2 rounded-lg bg-[#CEA17A]/10 text-[#CEA17A] flex-shrink-0" aria-label="Back">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            </Link>
+            <h1 className="text-lg font-bold text-[#DBD0C0] truncate">{auction.tournament_name || 'Auction'}</h1>
+          </div>
+          <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${getStatusColor(auction.status)}`}>{getStatusText(auction.status)}</span>
+        </div>
+
+        {/* Mobile Player & Bid snapshot (compressed height) */}
+        <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-3 mb-3 flex gap-3">
+          <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-[#CEA17A]/20" onClick={() => currentPlayer && handlePhotoClick(currentPlayer.profile_pic_url || '', currentPlayer.display_name)}>
+            {currentPlayer?.profile_pic_url ? (
+              <img src={currentPlayer.profile_pic_url} alt={currentPlayer.display_name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-[#CEA17A]/10 text-2xl font-bold text-[#CEA17A]">{currentPlayer?.display_name?.charAt(0) || '👤'}</div>
+            )}
+          </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <h2 className="text-sm font-semibold text-[#DBD0C0] leading-tight truncate">{currentPlayer?.display_name || 'No Player'}</h2>
+            {currentPlayer && <div className="text-[10px] text-[#DBD0C0]/60 mb-1">Base ₹{getPlayerBasePrice(currentPlayer)} • {recentBids?.length || 0} bids</div>}
+            <div className="grid grid-cols-2 gap-1 mt-auto">
+              <div className="bg-[#2a2a2a]/60 rounded-md p-1.5 border border-[#CEA17A]/10 flex flex-col justify-center">
+                <div className="text-[9px] text-[#CEA17A] font-medium">Current</div>
+                <div className="text-[#DBD0C0] text-sm font-bold leading-none">{getCurrentBid() === null ? '—' : `₹${getCurrentBid()}`}</div>
+              </div>
+              <div className="bg-[#2a2a2a]/60 rounded-md p-1.5 border border-[#CEA17A]/10 flex flex-col justify-center">
+                <div className="text-[9px] text-[#CEA17A] font-medium">Next</div>
+                <div className="text-[#DBD0C0] text-sm font-bold leading-none">₹{calculateNextBid(getCurrentBid() ?? undefined)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Removed separate navigation row to consolidate controls at bottom */}
+
+        {/* Captain Bid Buttons (compact list) */}
+        <div className="mb-6">
+          <h3 className="text-base font-semibold text-[#DBD0C0] mb-2">Captain Bids</h3>
+          <div className="space-y-1.5">
+            {auctionTeams.map(team => {
+              const nextBid = calculateNextBid()
+              const canAfford = team.remaining_purse >= nextBid
+              const isWinning = recentBids?.find(b => b.is_winning_bid && !b.is_undone)?.team_id === team.id
+              const captainPlayer = players.find(p => p.id === team.captain_id)
+              const captainName = captainPlayer?.display_name || 'Unknown Captain'
+              const remainingSlots = Math.max(0, (team.required_players) - team.players_count)
+              const maxPossibleBid = team.remaining_purse - ((remainingSlots - 1) * (auction?.min_bid_amount || 40))
+              const balanceAfter = team.remaining_purse - nextBid
+              return (
+                <div key={team.id} className="flex items-center gap-2 bg-[#1a1a1a]/60 border border-[#CEA17A]/15 rounded-md px-2 py-1.5">
+                  <div className="flex flex-col flex-1 min-w-0 leading-tight">
+                    <div className="text-[#DBD0C0] text-[13px] font-semibold truncate flex items-center gap-1">{captainName}{isWinning && <span className='w-1.5 h-1.5 bg-green-500 rounded-full' />}</div>
+                    <div className="text-[9px] text-[#DBD0C0]/60 flex flex-wrap items-center gap-1">
+                      <button onClick={() => setMobilePurseTeamId(team.id)} className="text-[#CEA17A] underline decoration-dotted">purse</button>
+                      <span>|</span>
+                      <span>₹{team.remaining_purse}</span>
+                      <span>|</span>
+                      <span>max ₹{Math.max(0, maxPossibleBid)}</span>
+                      <span>|</span>
+                      <span className={balanceAfter >= 0 ? 'text-green-400' : 'text-red-400'}>after ₹{balanceAfter}</span>
+                    </div>
+                  </div>
+                  <button onClick={() => handlePlaceBid(team.id, nextBid)} disabled={!isAuctionLive || !canAfford || bidLoading[`bid_${team.id}`]} className={`px-2.5 py-1.5 rounded-md text-[11px] font-semibold border transition-all whitespace-nowrap ${!isAuctionLive ? 'border-gray-600 text-gray-500' : isWinning ? 'border-green-500 text-green-400 bg-green-500/10' : canAfford ? 'border-[#CEA17A]/50 text-[#CEA17A] bg-[#CEA17A]/10 active:scale-95' : 'border-gray-600 text-gray-500'}`}>{bidLoading[`bid_${team.id}`] ? '...' : `₹${nextBid}`}</button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Teams grid 2x2 */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-base font-semibold text-[#DBD0C0]">Teams</h3>
+            <button type="button" onClick={() => setShowRemainingPlayersMobile(true)} className="px-2 py-1 rounded-md border border-[#CEA17A]/30 bg-[#CEA17A]/10 text-[#CEA17A] text-[10px] font-medium">Remaining</button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {auctionTeams.map(team => {
+              const teamPlayers = auctionPlayers.filter(ap => ap.sold_to === team.id || ap.player_id === team.captain_id)
+              return (
+                <button type="button" onClick={() => setFormationTeamModalId(team.id)} key={team.id} className="bg-[#1a1a1a]/60 border border-[#CEA17A]/15 rounded-lg p-2 flex flex-col text-left active:scale-95 transition">
+                  <div className="text-[#CEA17A] font-semibold text-[11px] mb-0.5 truncate">{team.team_name}</div>
+                  <div className="text-[9px] text-[#DBD0C0]/60 mb-1">{teamPlayers.length}/{team.required_players} • ₹{team.remaining_purse}</div>
+                  <div className="flex -space-x-2 overflow-hidden">
+                    {teamPlayers.slice(0,4).map(tp => {
+                      const pl = players.find(p => p.id === tp.player_id)
+                      return (
+                        <div key={tp.id} className="w-7 h-7 rounded-full border border-[#CEA17A]/40 overflow-hidden bg-[#CEA17A]/10 flex items-center justify-center text-[8px] text-[#CEA17A]">
+                          {pl?.profile_pic_url ? <img src={pl.profile_pic_url} className="w-full h-full object-cover" /> : (pl?.display_name?.charAt(0) || '•')}
+                        </div>
+                      )
+                    })}
+                    {teamPlayers.length > 4 && <div className="w-7 h-7 rounded-full border border-[#CEA17A]/40 flex items-center justify-center bg-[#1a1a1a]/70 text-[8px] text-[#CEA17A]">+{teamPlayers.length - 4}</div>}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Floating consolidated actions */}
+        {currentPlayer && (
+          <div className="fixed bottom-3 left-3 right-3 grid grid-cols-4 gap-2 z-40">
+            <button onClick={handlePreviousPlayer} disabled={!currentPlayer || getAvailablePlayers().findIndex(ap => ap.player_id === currentPlayer?.player_id) <= 0} className="py-3 rounded-xl bg-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 text-xs font-medium disabled:opacity-30">Prev</button>
+            <button onClick={handleNextPlayer} disabled={!currentPlayer || getAvailablePlayers().length === 0} className="py-3 rounded-xl bg-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 text-xs font-medium disabled:opacity-30">Next</button>
+            <button onClick={handleSellPlayer} disabled={!isAuctionLive || !recentBids?.some(b => b.is_winning_bid && !b.is_undone)} className="py-3 rounded-xl bg-green-600/20 text-green-300 border border-green-400/30 text-xs font-medium disabled:opacity-30">Sell</button>
+            <button onClick={handleUndoBid} disabled={!isAuctionLive || !recentBids?.length} className="py-3 rounded-xl bg-yellow-600/20 text-yellow-300 border border-yellow-400/30 text-xs font-medium disabled:opacity-30">Undo</button>
+          </div>
+        )}
+
+        {/* Purse modal */}
+        {mobilePurseTeamId && (() => {
+          const team = auctionTeams.find(t => t.id === mobilePurseTeamId)
+          if (!team) return null
+          const remainingSlots = Math.max(0, team.required_players - team.players_count)
+          const maxPossibleBid = team.remaining_purse - ((remainingSlots - 1) * (auction?.min_bid_amount || 40))
+          return (
+            <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
+              <div className="absolute inset-0 bg-black/70" onClick={() => setMobilePurseTeamId(null)} />
+              <div className="absolute bottom-0 left-0 right-0 p-5 bg-[#121212] border-t border-[#CEA17A]/20 rounded-t-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[#CEA17A] font-semibold text-sm">Team Purse</h4>
+                  <button onClick={() => setMobilePurseTeamId(null)} className="text-[#CEA17A] p-2" aria-label="Close"><svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+                <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-lg p-4 space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-[#DBD0C0]/60">Team</span><span className="text-[#DBD0C0] font-medium">{team.team_name}</span></div>
+                  <div className="flex justify-between"><span className="text-[#DBD0C0]/60">Remaining</span><span className="text-[#CEA17A] font-semibold">₹{team.remaining_purse}</span></div>
+                  <div className="flex justify-between"><span className="text-[#DBD0C0]/60">Players</span><span className="text-[#DBD0C0]">{team.players_count}/{team.required_players}</span></div>
+                  <div className="flex justify-between"><span className="text-[#DBD0C0]/60">Max Bid</span><span className="text-[#DBD0C0] font-medium">₹{Math.max(0, maxPossibleBid)}</span></div>
+                </div>
+                <button onClick={() => setMobilePurseTeamId(null)} className="w-full py-3 rounded-lg bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 text-sm font-medium">Close</button>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* Host actions sheet */}
+        {showHostActionsMobile && (
+          <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
+            <div className="absolute inset-0 bg-black/70" onClick={() => setShowHostActionsMobile(false)} />
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-[#121212] border-t border-[#CEA17A]/20 rounded-t-2xl space-y-3 max-h-[60vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-[#DBD0C0] font-semibold">Host Controls</h4>
+                <button onClick={() => setShowHostActionsMobile(false)} className="text-[#CEA17A] p-2" aria-label="Close"><svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg></button>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-[12px]">
+                {(auction.status === 'draft' || auction.status === 'live' || auction.status === 'paused') && (
+                  <button onClick={handleStartPauseAuction} className="px-3 py-3 rounded-lg bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30">{auction.status === 'draft' ? 'Start Auction' : auction.status === 'live' ? 'Pause Auction' : 'Resume Auction'}</button>
+                )}
+                <button className="px-3 py-3 rounded-lg bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30">Change Config</button>
+                <button className="px-3 py-3 rounded-lg bg-yellow-500/15 text-yellow-400 border border-yellow-500/30">Reset Auction</button>
+                <button className="px-3 py-3 rounded-lg bg-green-500/15 text-green-400 border border-green-500/30">Mark Complete</button>
+                <button className="px-3 py-3 rounded-lg bg-red-500/15 text-red-400 border border-red-500/30">Cancel Auction</button>
+                <button onClick={handleUndoPlayerAssignment} disabled={!auctionTeams.some(t => t.players_count > 0)} className="px-3 py-3 rounded-lg bg-yellow-600/15 text-yellow-400 border border-yellow-600/30 disabled:opacity-30">Undo Sell</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Photo Preview Dialog */}
+      {/* Team Formation Modal (mobile & desktop) */}
+      {formationTeamModalId && (() => {
+        const team = auctionTeams.find(t => t.id === formationTeamModalId)
+        if (!team) return null
+        const teamPlayers = auctionPlayers.filter(ap => ap.sold_to === team.id || ap.player_id === team.captain_id)
+        return (
+          <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
+            <div className="absolute inset-0 bg-black/70" onClick={() => setFormationTeamModalId(null)} />
+            <div className="absolute top-10 bottom-10 left-4 right-4 bg-[#121212] border border-[#CEA17A]/30 rounded-2xl p-5 flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[#CEA17A] font-semibold text-lg">{team.team_name} Players</h3>
+                <button onClick={() => setFormationTeamModalId(null)} className="text-[#CEA17A] p-2" aria-label="Close"><svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg></button>
+              </div>
+              <div className="grid grid-cols-12 gap-3 px-3 py-2 bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-lg text-xs font-semibold text-[#CEA17A] mb-3">
+                <div className="col-span-6">Player</div>
+                <div className="col-span-3 text-center">Role</div>
+                <div className="col-span-3 text-center">Price</div>
+              </div>
+              <div className="flex-1 overflow-y-auto rounded-lg border border-[#CEA17A]/20">
+                {teamPlayers.length ? teamPlayers.map((ap, idx) => {
+                  const pl = players.find(p => p.id === ap.player_id)
+                  if (!pl) return null
+                  const isCaptain = ap.player_id === team.captain_id
+                  return (
+                    <div key={ap.id} className={`grid grid-cols-12 gap-3 px-3 py-2 items-center text-sm ${idx % 2 === 0 ? 'bg-[#1a1a1a]/40' : 'bg-[#1a1a1a]/20'}`}> 
+                      <div className="col-span-6 flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-full overflow-hidden border border-[#CEA17A]/30 flex-shrink-0 bg-[#CEA17A]/10 flex items-center justify-center text-[10px] text-[#CEA17A]">{pl.profile_pic_url ? <img src={pl.profile_pic_url} className="w-full h-full object-cover"/> : pl.display_name.charAt(0)}</div>
+                        <div className="truncate text-[#DBD0C0] text-xs font-medium">{pl.display_name}{isCaptain && <span className="text-[#CEA17A] ml-1">(C)</span>}</div>
+                      </div>
+                      <div className="col-span-3 text-center text-lg">{getPlayerRoleEmojis(pl)}</div>
+                      <div className="col-span-3 text-center text-[#CEA17A] text-xs font-semibold">₹{isCaptain ? 0 : (ap.sold_price || 0)}</div>
+                    </div>
+                  )
+                }) : (
+                  <div className="p-6 text-center text-[#DBD0C0]/60 text-sm">No players yet</div>
+                )}
+              </div>
+              <button onClick={() => setFormationTeamModalId(null)} className="mt-4 w-full py-3 rounded-lg bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 text-sm font-medium">Close</button>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Remaining Players Modal (mobile) */}
+      {showRemainingPlayersMobile && (
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/70" onClick={() => setShowRemainingPlayersMobile(false)} />
+          <div className="absolute top-14 bottom-14 left-4 right-4 bg-[#121212] border border-[#CEA17A]/30 rounded-2xl p-5 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[#CEA17A] font-semibold text-lg">Remaining Players</h3>
+              <button onClick={() => setShowRemainingPlayersMobile(false)} className="text-[#CEA17A] p-2" aria-label="Close"><svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div className="grid grid-cols-12 gap-3 px-3 py-2 bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-lg text-xs font-semibold text-[#CEA17A] mb-3">
+              <div className="col-span-6">Player</div>
+              <div className="col-span-3 text-center">Role</div>
+              <div className="col-span-3 text-center">Base</div>
+            </div>
+            <div className="flex-1 overflow-y-auto rounded-lg border border-[#CEA17A]/20">
+              {getAvailablePlayers().length ? getAvailablePlayers().map((ap, idx) => {
+                const pl = players.find(p => p.id === ap.player_id)
+                if (!pl) return null
+                return (
+                  <div key={ap.id} className={`grid grid-cols-12 gap-3 px-3 py-2 items-center text-sm ${idx % 2 === 0 ? 'bg-[#1a1a1a]/40' : 'bg-[#1a1a1a]/20'}`}>
+                    <div className="col-span-6 flex items-center gap-2 min-w-0">
+                      <div className="w-7 h-7 rounded-full overflow-hidden border border-[#CEA17A]/30 flex-shrink-0 bg-[#CEA17A]/10 flex items-center justify-center text-[10px] text-[#CEA17A]">{pl.profile_pic_url ? <img src={pl.profile_pic_url} className="w-full h-full object-cover"/> : pl.display_name.charAt(0)}</div>
+                      <div className="truncate text-[#DBD0C0] text-xs font-medium">{pl.display_name}</div>
+                    </div>
+                    <div className="col-span-3 text-center text-lg">{getPlayerRoleEmojis(pl)}</div>
+                    <div className="col-span-3 text-center text-[#CEA17A] text-xs font-semibold">₹{pl.skills?.['Base Price'] || 0}</div>
+                  </div>
+                )
+              }) : (
+                <div className="p-6 text-center text-[#DBD0C0]/60 text-sm">No remaining players</div>
+              )}
+            </div>
+            <button onClick={() => setShowRemainingPlayersMobile(false)} className="mt-4 w-full py-3 rounded-lg bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 text-sm font-medium">Close</button>
+          </div>
+        </div>
+      )}
       {photoPreview.isOpen && (
         <div 
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
