@@ -73,6 +73,7 @@ export async function GET(
         .select(`
           id,
           display_name,
+          bio,
           profile_pic_url,
           user_id,
           player_skill_assignments (
@@ -115,6 +116,7 @@ export async function GET(
           return {
             id: player.id,
             display_name: player.display_name,
+            bio: player.bio,
             profile_pic_url: player.profile_pic_url,
             user_id: player.user_id,
             skills

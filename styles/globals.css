@@ -289,6 +289,40 @@ input[data-autocompleted] {
   animation: text-glow 3s ease-in-out infinite;
 }
 
+@keyframes timerCountdown {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+
+.animate-timer-countdown {
+  animation: timerCountdown var(--timer-duration, 30s) linear infinite;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 10s linear infinite;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
 
 /* Smooth scrolling */
 html {

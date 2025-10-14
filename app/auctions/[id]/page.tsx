@@ -58,6 +58,7 @@ interface AuctionPlayer {
 interface Player {
   id: string
   display_name: string
+  bio?: string
   profile_pic_url?: string
   user_id?: string
   skills?: { [skillName: string]: string | string[] }
@@ -105,6 +106,14 @@ export default function AuctionPage() {
   const [currentPlayer, setCurrentPlayer] = useState<any>(null)
   const [uiNotice, setUiNotice] = useState<{ type: 'error' | 'info'; message: string } | null>(null)
   const [viewingUnsoldPlayers, setViewingUnsoldPlayers] = useState(false)
+  const [showHostActions, setShowHostActions] = useState(false)
+
+  // Auto-dismiss UI notice after a short delay
+  useEffect(() => {
+    if (!uiNotice) return
+    const timeoutId = setTimeout(() => setUiNotice(null), 3500)
+    return () => clearTimeout(timeoutId)
+  }, [uiNotice])
 
   // Helper function to get available players (excluding captains)
   const getAvailablePlayers = () => {
@@ -321,7 +330,7 @@ export default function AuctionPage() {
       return
     }
     
-    setBidLoading(prev => ({ ...prev, undo: true }))
+    setActionLoading(prev => ({ ...prev, undoBid: true }))
     
     try {
       const token = secureSessionManager.getToken()
@@ -359,7 +368,7 @@ export default function AuctionPage() {
       console.error('Error undoing bid:', error)
       setUiNotice({ type: 'error', message: 'Failed to undo bid. Please try again.' })
     } finally {
-      setBidLoading(prev => ({ ...prev, undo: false }))
+      setActionLoading(prev => ({ ...prev, undoBid: false }))
     }
   }
 
@@ -433,7 +442,7 @@ export default function AuctionPage() {
       return
     }
     
-    setBidLoading(prev => ({ ...prev, sell: true }))
+    setActionLoading(prev => ({ ...prev, sellPlayer: true }))
     
     try {
       const token = secureSessionManager.getToken()
@@ -501,7 +510,7 @@ export default function AuctionPage() {
               ...data.next_player
             })
 
-            // Update auction players to mark next player as current
+            // Update auction players state to mark next player as current
             setAuctionPlayers(prev => prev.map(ap => ({
               ...ap,
               current_player: ap.player_id === data.next_player.player_id
@@ -521,7 +530,7 @@ export default function AuctionPage() {
       console.error('Error selling player:', error)
       alert('Failed to sell player. Please try again.')
     } finally {
-      setBidLoading(prev => ({ ...prev, sell: false }))
+      setActionLoading(prev => ({ ...prev, sellPlayer: false }))
     }
   }
 
@@ -1065,6 +1074,13 @@ export default function AuctionPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 space-y-4 sm:space-y-0 flex-shrink-0">
           <div className="flex items-center space-x-4">
+            
+            <div className="pb-6">
+              <h1 className="text-4xl font-bold text-[#DBD0C0]">
+                {auction.tournament_name || 'Auction'}
+              </h1>
+            </div>
+            <div className="h-6 w-px bg-[#CEA17A]/20"></div>
             <Link 
               href="/auctions"
               className="inline-flex items-center px-3 py-2 text-[#CEA17A] hover:text-[#CEA17A]/80 transition-colors"
@@ -1074,16 +1090,8 @@ export default function AuctionPage() {
               </svg>
               Back to Auctions
             </Link>
-            <div className="h-6 w-px bg-[#CEA17A]/20"></div>
-            <div>
-              <h1 className="text-4xl font-bold text-[#DBD0C0]">
-                {auction.tournament_name || 'Auction'}
-              </h1>
-              <p className="text-[#CEA17A] mt-2">
-                Auction Details and Management
-              </p>
-            </div>
           </div>
+          
           
           <div className="flex items-center space-x-4">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(auction.status)}`}>
@@ -1097,188 +1105,32 @@ export default function AuctionPage() {
         {/* Host Actions - Only show for hosts and admins */}
         {userProfile && (userProfile.role === 'host' || userProfile.role === 'admin') && (
           <div className="bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10 mb-8">
-            <h2 className="text-2xl font-bold text-[#DBD0C0] mb-6">Host Actions</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {/* Player Navigation */}
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-[#CEA17A] mb-3">Player Navigation</h3>
-                {currentPlayer && auctionPlayers && (() => {
-                  const availablePlayers = getAvailablePlayers()
-                  const currentPlayerIndex = availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id)
-                  const currentPosition = currentPlayerIndex + 1
-                  const totalAvailable = availablePlayers.length
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-[#DBD0C0]">Auction Controls</h2>
+                <button 
+                onClick={() => setShowHostActions(v => !v)}
+                className="px-3 py-1 rounded-md border border-[#CEA17A]/30 text-[#CEA17A] bg-[#CEA17A]/10 hover:bg-[#CEA17A]/20 transition"
+                aria-expanded={showHostActions}
+                aria-controls="host-actions-body"
+              >
+                {showHostActions ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7"/></svg>
                   
-                  return (
-                    <div className="text-sm text-[#DBD0C0]/70 mb-2">
-                      Player {currentPosition} of {totalAvailable}
-                      {viewingUnsoldPlayers && (
-                        <div className="text-xs text-orange-400 mt-1">
-                          Viewing Unsold Players
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()}
-                <button 
-                  onClick={handlePreviousPlayer}
-                  disabled={!currentPlayer || !auctionPlayers || (() => {
-                    const availablePlayers = getAvailablePlayers()
-                    return availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id) <= 0
-                  })() || actionLoading.previousPlayer}
-                  className={`w-full px-4 py-2 border rounded-lg transition-all duration-150 flex items-center justify-center ${
-                    !currentPlayer || !auctionPlayers || (() => {
-                      const availablePlayers = getAvailablePlayers()
-                      return availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id) <= 0
-                    })() || actionLoading.previousPlayer
-                      ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
-                      : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'
-                  }`}
-                >
-                  {actionLoading.previousPlayer ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                      Previous Player
-                    </>
-                  )}
-                </button>
-                <button 
-                  onClick={handleNextPlayer}
-                  disabled={!currentPlayer || !auctionPlayers || (() => {
-                    const availablePlayers = getAvailablePlayers()
-                    // Only disable if there are no available players left (all players sold)
-                    return availablePlayers.length === 0
-                  })() || actionLoading.nextPlayer}
-                  className={`w-full px-4 py-2 border rounded-lg transition-all duration-150 flex items-center justify-center ${
-                    !currentPlayer || !auctionPlayers || (() => {
-                      const availablePlayers = getAvailablePlayers()
-                      return availablePlayers.length === 0
-                    })() || actionLoading.nextPlayer
-                      ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
-                      : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'
-                  }`}
-                >
-                  {actionLoading.nextPlayer ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      {(() => {
-                        if (!currentPlayer) return 'Next Player'
-                        
-                        const availablePlayers = getAvailablePlayers()
-                        const currentIndex = availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id)
-                        const isAtEnd = currentIndex >= availablePlayers.length - 1
-                        
-                        if (isAtEnd && !viewingUnsoldPlayers) {
-                          return 'View Unsold Players'
-                        } else if (viewingUnsoldPlayers) {
-                          return 'Next'
-                        } else {
-                          return 'Next Player'
-                        }
-                      })()}
-                      <svg className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+                    
+                  </span>
                   )}
                 </button>
               </div>
-
-              {/* Bid Management */}
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-[#CEA17A] mb-3">Bid Management</h3>
-                <button 
-                  onClick={handleUndoBid}
-                  disabled={!recentBids || recentBids.length === 0 || !recentBids.some(bid => bid.is_winning_bid && !bid.is_undone) || bidLoading.undo}
-                  className={`w-full px-4 py-2 rounded-lg transition-all duration-150 flex items-center justify-center ${
-                    !recentBids || recentBids.length === 0 || !recentBids.some(bid => bid.is_winning_bid && !bid.is_undone) || bidLoading.undo
-                      ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
-                      : 'bg-orange-500/15 text-orange-400 border border-orange-500/30 hover:bg-orange-500/25'
-                  }`}
-                >
-                  {bidLoading.undo ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Undoing...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                      </svg>
-                      Undo Bid
-                    </>
-                  )}
-                </button>
-                <button 
-                  onClick={handleUndoPlayerAssignment}
-                  disabled={!auctionTeams || auctionTeams.length === 0 || !auctionTeams.some(team => team.players_count > 0) || actionLoading.undoPlayerAssignment}
-                  className={`w-full px-4 py-2 rounded-lg transition-all duration-150 flex items-center justify-center ${
-                    !auctionTeams || auctionTeams.length === 0 || !auctionTeams.some(team => team.players_count > 0) || actionLoading.undoPlayerAssignment
-                      ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
-                      : 'bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25'
-                  }`}
-                >
-                  {actionLoading.undoPlayerAssignment ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Undoing...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      Undo Player Assignment
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Timer Control */}
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-[#CEA17A] mb-3">Timer Control</h3>
-                <button className="w-full px-4 py-2 bg-green-500/15 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/25 transition-all duration-150 flex items-center justify-center">
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-6a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Play/Pause Timer
-                </button>
-                <button className="w-full px-4 py-2 bg-blue-500/15 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/25 transition-all duration-150 flex items-center justify-center">
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Change Auction Config
-                </button>
-              </div>
-
-              {/* Auction Controls */}
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-[#CEA17A] mb-3">Auction Controls</h3>
+            {/* Single-row horizontal scroll container for action buttons */}
+            {showHostActions && (
+            <div id="host-actions-body" className="space-y-3">
+              {/* Responsive grid ensures equal-sized buttons spanning full card width */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 {(auction.status === 'draft' || auction.status === 'live' || auction.status === 'paused') && (
                   <button 
                     onClick={handleStartPauseAuction}
@@ -1286,12 +1138,9 @@ export default function AuctionPage() {
                     className={`w-full px-4 py-2 border rounded-lg transition-all duration-150 flex items-center justify-center ${
                       actionLoading.startPause
                         ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
-                        : auction.status === 'draft' 
-                        ? 'bg-green-500/15 text-green-400 border-green-500/30 hover:bg-green-500/25'
-                        : auction.status === 'live'
-                        ? 'bg-orange-500/15 text-orange-400 border-orange-500/30 hover:bg-orange-500/25'
-                        : 'bg-blue-500/15 text-blue-400 border-blue-500/30 hover:bg-blue-500/25'
+                        : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'
                     }`}
+                    
                   >
                     {actionLoading.startPause ? (
                       <>
@@ -1325,54 +1174,69 @@ export default function AuctionPage() {
                     )}
                   </button>
                 )}
+
+                {/* Change Auction Config (moved up, nav-style) */}
+                <button className="w-full px-4 py-2 border rounded-lg transition-all duration-150 flex items-center justify-center bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25">
+                  <svg className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.94-2a1 1 0 0 0 .09-2l-2.12-.18a7.07 7.07 0 0 0-.39-1l1.51-1.53a1 1 0 0 0-1.42-1.42l-1.53 1.51c-.32-.18-.66-.32-1-.39l-.18-2.12a1 1 0 0 0-2-.09l-.18 2.12c-.34.07-.68.21-1 .39l-1.53-1.51a1 1 0 1 0-1.42 1.42l1.51 1.53c-.18.32-.32.66-.39 1l-2.12.18a1 1 0 0 0-.09 2l2.12.18c.07.34.21.68.39 1l-1.51 1.53a1 1 0 1 0 1.42 1.42l1.53-1.51c.32.18.66.32 1 .39l.18 2.12a1 1 0 0 0 2 .09l.18-2.12c.34-.07.68-.21 1-.39l1.53 1.51a1 1 0 0 0 1.42-1.42l-1.51-1.53c.18-.32.32-.66.39-1l2.12-.18z" />
+                  </svg>
+                  Change Config
+                </button>
+
+                {/* Reset Auction */}
                 <button className="w-full px-4 py-2 bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/25 transition-all duration-150 flex items-center justify-center">
                   <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   Reset Auction
                 </button>
-                <button className="w-full px-4 py-2 bg-red-500/15 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/25 transition-all duration-150 flex items-center justify-center">
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  Cancel Auction
-                </button>
+
+                {/* Mark as Complete (moved before cancel) */}
                 <button className="w-full px-4 py-2 bg-green-500/15 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/25 transition-all duration-150 flex items-center justify-center">
                   <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Mark as Complete
                 </button>
+
+                {/* Cancel Auction */}
+                <button className="w-full px-4 py-2 bg-red-500/15 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/25 transition-all duration-150 flex items-center justify-center">
+                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Cancel Auction
+                </button>
               </div>
             </div>
+            )}
           </div>
         )}
 
         {/* Current Player and Live Bids Section */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
           {/* Current Player Card */}
           <div className="xl:col-span-1 bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10">
-            <h2 className="text-2xl font-bold text-[#DBD0C0] mb-6">Current Player</h2>
             
             {currentPlayer ? (
             <div className="space-y-6">
-              {/* Inline notice for non-live or errors */}
-              {uiNotice && (
-                <div className={`rounded-lg px-4 py-3 border text-sm ${
-                  uiNotice.type === 'error' 
-                    ? 'bg-red-500/10 border-red-400/30 text-red-300' 
-                    : 'bg-blue-500/10 border-blue-400/30 text-blue-300'
-                }`}>
-                  {uiNotice.message}
-                </div>
-              )}
+              
+
+              {/* Player Navigation moved to Live Bids */}
+
                 {/* Player Photo - Increased Size */}
                 <div className="flex justify-center">
                   <div 
                     className="relative w-64 h-64 rounded-xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-105 shadow-lg"
                     onClick={() => handlePhotoClick(currentPlayer.profile_pic_url || '', currentPlayer.display_name)}
                   >
-                    {currentPlayer.profile_pic_url ? (
+                    {(actionLoading.nextPlayer || actionLoading.previousPlayer) ? (
+                      <div className="w-full h-full bg-gradient-to-br from-[#CEA17A]/20 to-[#CEA17A]/10 flex items-center justify-center">
+                        <svg className="animate-spin h-12 w-12 text-[#CEA17A]" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 2 5.373 2 12h2zm2 5.291A7.962 7.962 0 014 12H2c0 3.042 1.135 5.824 3 7.938l1-0.647z"/>
+                        </svg>
+                      </div>
+                    ) : currentPlayer.profile_pic_url ? (
                       <img
                         src={currentPlayer.profile_pic_url}
                         alt={currentPlayer.display_name}
@@ -1385,46 +1249,77 @@ export default function AuctionPage() {
                         </div>
                       </div>
                     )}
+                    {!(actionLoading.nextPlayer || actionLoading.previousPlayer) && (
                     <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                       <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                       </svg>
                     </div>
-                  </div>
-                </div>
-
-                {/* Player Info */}
-                <div>
-                  <h3 className="text-2xl font-bold text-[#DBD0C0] mb-2 text-center">{currentPlayer.display_name}</h3>
-                  <div className="flex items-center justify-center gap-4 text-sm text-[#DBD0C0]/70">
-                    <span>Player #{(() => {
-                      // Calculate position among available players (excluding captains)
-                      const availablePlayers = getAvailablePlayers()
-                      const currentPlayerIndex = availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id)
-                      return currentPlayerIndex + 1
-                    })()}</span>
-                    <span>•</span>
-                    <span className="capitalize">{currentPlayer.status}</span>
-                    {currentPlayer.sold_price && (
-                      <>
-                        <span>•</span>
-                        <span className="text-[#CEA17A] font-semibold">Sold for ₹{currentPlayer.sold_price}</span>
-                      </>
                     )}
                   </div>
                 </div>
 
-                {/* Player Skills */}
-                {currentPlayer.skills && Object.keys(currentPlayer.skills).length > 0 ? (
+                {/* Player Name and Info */}
+                <div className="text-center">
+                  {(actionLoading.nextPlayer || actionLoading.previousPlayer) ? (
+                    <div className="flex items-center justify-center">
+                      <svg className="animate-spin h-6 w-6 text-[#CEA17A] mr-2" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 2 5.373 2 12h2zm2 5.291A7.962 7.962 0 014 12H2c0 3.042 1.135 5.824 3 7.938l1-0.647z"/>
+                      </svg>
+                      <span className="text-[#CEA17A]">Loading...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="text-xl font-bold text-[#DBD0C0]">{currentPlayer.display_name}</h3>
+                      <div className="text-sm text-[#DBD0C0]/70 mt-1 text-center">
+                        {(() => {
+                          const availablePlayers = getAvailablePlayers()
+                          const currentPlayerIndex = availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id)
+                          const currentPosition = currentPlayerIndex + 1
+                          const totalAvailable = availablePlayers.length
+                          return `Player ${currentPosition} of ${totalAvailable}`
+                        })()}
+                        {viewingUnsoldPlayers && (
+                          <div className="text-xs text-orange-400 mt-1">Viewing Unsold Players</div>
+                    )}
+                  </div>
+                      {currentPlayer.sold_price && (
+                        <div className="text-center text-sm text-[#CEA17A] font-semibold mt-2">
+                          Sold for ₹{currentPlayer.sold_price}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Player Profile */}
                   <div>
-                    <h4 className="text-lg font-semibold text-[#CEA17A] mb-4">Player Skills</h4>
+                  <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
+                    {(actionLoading.nextPlayer || actionLoading.previousPlayer) ? (
+                      <div className="flex items-center justify-center py-8">
+                        <svg className="animate-spin h-8 w-8 text-[#CEA17A] mr-3" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 2 5.373 2 12h2zm2 5.291A7.962 7.962 0 014 12H2c0 3.042 1.135 5.824 3 7.938l1-0.647z"/>
+                        </svg>
+                        <span className="text-[#CEA17A]">Loading player details...</span>
+                      </div>
+                    ) : (
                     <div className="space-y-3">
-                      {Object.entries(currentPlayer.skills).map(([skillName, skillValue]) => (
-                        <div key={skillName} className="bg-[#19171b]/50 rounded-lg p-3 border border-[#CEA17A]/10">
-                          <div className="text-sm font-medium text-[#CEA17A] mb-1">{skillName}</div>
-                          <div className="text-[#DBD0C0]">
-                            {Array.isArray(skillValue) ? (
-                              <div className="flex flex-wrap gap-1">
+                      {[
+                        'Role',
+                        'Batting Style', 
+                        'Bowling Style',
+                        'Base Price'
+                      ].map((skillName) => {
+                        const skillValue = currentPlayer.skills?.[skillName]
+                        return (
+                          <div key={skillName} className="flex items-start justify-between">
+                            <div className="text-sm font-medium text-[#CEA17A] flex-shrink-0">{skillName}:</div>
+                            <div className="text-[#DBD0C0] text-sm text-right flex-1 ml-3">
+                              {skillValue ? (
+                                Array.isArray(skillValue) ? (
+                                  <div className="flex flex-wrap gap-1 justify-end">
                                 {skillValue.map((value, index) => (
                                   <span 
                                     key={index}
@@ -1435,18 +1330,33 @@ export default function AuctionPage() {
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-sm">{String(skillValue)}</span>
+                                  <span>{String(skillValue)}</span>
+                                )
+                              ) : (
+                                <span className="text-[#DBD0C0]/40 italic">—</span>
                             )}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                        )
+                      })}
+                      
+                      {/* Bio field from player object */}
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-medium text-[#CEA17A] flex-shrink-0">Bio:</div>
+                        <div className="text-[#DBD0C0] text-sm text-right flex-1 ml-3 overflow-hidden">
+                          {currentPlayer.bio ? (
+                            <div className="whitespace-nowrap overflow-x-auto scrollbar-hide">
+                              <span className="inline-block animate-scroll">{currentPlayer.bio}</span>
                   </div>
                 ) : (
-                  <div className="text-center py-4">
-                    <div className="text-[#DBD0C0]/50 text-sm">No skills information available</div>
+                            <span className="text-[#DBD0C0]/40 italic">—</span>
+                )}
+                        </div>
+                      </div>
                   </div>
                 )}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center py-12">
@@ -1458,289 +1368,284 @@ export default function AuctionPage() {
           </div>
 
           {/* Live Bids Card */}
-          <div className="xl:col-span-2 bg-gradient-to-br from-[#1a1a1a]/80 to-[#0f0f0f]/80 rounded-xl p-6 border-2 border-[#CEA17A]/20 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="xl:col-span-3 bg-gradient-to-br from-[#1a1a1a]/80 to-[#0f0f0f]/80 rounded-xl p-6 border-2 border-[#CEA17A]/20 shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between mb-6 flex-shrink-0">
               <h2 className="text-2xl font-bold text-[#DBD0C0] flex items-center gap-3">
                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                 Live Bids
               </h2>
-              <div className="text-sm text-[#DBD0C0]/70 bg-[#19171b]/50 px-3 py-1 rounded-full border border-[#CEA17A]/20">
-                Real-time
               </div>
-            </div>
+            {/* Container that evenly spaces the bidding controls block and captain bids table */}
+            <div className="flex-1 flex flex-col justify-between min-h-0">
             
             {currentPlayer ? (
-              <div className="space-y-6">
-                {/* Current Bid Info */}
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-xl p-4 border-2 border-[#CEA17A]/20 shadow-lg">
-                    <h3 className="text-lg font-semibold text-[#CEA17A] mb-3 flex items-center gap-2">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+                  {/* Left: Current/Next Bid cards side by side */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 h-full">
+                    <div className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-lg p-3 border border-[#CEA17A]/20 shadow">
+                      <h3 className="text-base font-semibold text-[#CEA17A] mb-2 flex items-center gap-2">
                       <span className="inline-block text-base leading-none">🔨</span>
                       Current Bid
                     </h3>
                     {getCurrentBid() === null ? (
-                      <div className="text-sm text-[#DBD0C0]/70 italic">No bids yet</div>
+                        <div className="text-xs text-[#DBD0C0]/70 italic">No bids yet</div>
                     ) : (
                       <>
-                        <div className="text-3xl font-extrabold text-[#DBD0C0] mb-1">₹{getCurrentBid()}</div>
-                        <div className="text-sm text-[#DBD0C0]/80 font-medium">
+                          <div className="text-2xl font-extrabold text-[#DBD0C0] mb-0.5">₹{getCurrentBid()}</div>
+                          <div className="text-xs text-[#DBD0C0]/80 font-medium">
                           by {recentBids.find(bid => bid.is_winning_bid && !bid.is_undone)?.team_name || '—'}
                         </div>
                       </>
                     )}
                   </div>
-                  
-                  <div className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-xl p-4 border-2 border-[#CEA17A]/20 shadow-lg">
-                    <h3 className="text-lg font-semibold text-[#CEA17A] mb-3 flex items-center gap-2">
+                    <div className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-lg p-3 border border-[#CEA17A]/20 shadow">
+                      <h3 className="text-base font-semibold text-[#CEA17A] mb-2 flex items-center gap-2">
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                       </svg>
                       Next Bid
                     </h3>
-                    <div className="text-3xl font-extrabold text-[#DBD0C0] mb-1">₹{calculateNextBid(getCurrentBid() ?? undefined)}</div>
-                    <div className="text-xs text-[#DBD0C0]/70 font-medium">
-                      Min increment: ₹{auction?.min_increment || 20}
-                    </div>
+                      <div className="text-2xl font-extrabold text-[#DBD0C0] mb-0.5">₹{calculateNextBid(getCurrentBid() ?? undefined)}</div>
+                      <div className="text-[10px] text-[#DBD0C0]/70 font-medium">Min increment: ₹{auction?.min_increment || 20}</div>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-4">
+                  {/* Right: Action buttons stacked to match left height */}
+                  <div className="h-full flex flex-col justify-between">
+                    {/* Row 1: primary actions */}
+                    <div className="grid grid-cols-3 gap-3">
                   <button 
                     onClick={handleSellPlayer}
-                    disabled={!isAuctionLive || bidLoading.sell || !recentBids || recentBids.length === 0 || !recentBids.some(bid => bid.is_winning_bid && !bid.is_undone)}
-                    className={`px-6 py-3 rounded-lg transition-all duration-150 flex items-center ${
-                      !isAuctionLive || bidLoading.sell || !recentBids || recentBids.length === 0 || !recentBids.some(bid => bid.is_winning_bid && !bid.is_undone)
+                        disabled={!isAuctionLive || actionLoading.sellPlayer || !recentBids || recentBids.length === 0 || !recentBids.some(bid => bid.is_winning_bid && !bid.is_undone)}
+                        className={`px-6 h-12 rounded-lg transition-all duration-150 flex items-center justify-center ${
+                            !isAuctionLive || actionLoading.sellPlayer || !recentBids || recentBids.length === 0 || !recentBids.some(bid => bid.is_winning_bid && !bid.is_undone)
                         ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
                         : 'bg-green-500/15 text-green-400 border border-green-500/30 hover:bg-green-500/25'
                     }`}
                   >
-                    <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Sell Player
+                    {actionLoading.sellPlayer ? (
+                      <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 2 5.373 2 12h2zm2 5.291A7.962 7.962 0 014 12H2c0 3.042 1.135 5.824 3 7.938l1-0.647z"/>
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                    {actionLoading.sellPlayer ? 'Selling...' : 'Sell Player'}
                   </button>
-                  
                   <button 
                     onClick={handleUndoBid}
-                    disabled={!isAuctionLive || !recentBids || recentBids.length === 0 || bidLoading.undo}
-                    className={`px-6 py-3 rounded-lg transition-all duration-150 flex items-center ${
-                      !isAuctionLive || !recentBids || recentBids.length === 0 || bidLoading.undo
+                    disabled={!isAuctionLive || !recentBids || recentBids.length === 0 || actionLoading.undoBid}
+                        className={`px-6 h-12 rounded-lg transition-all duration-150 flex items-center justify-center ${
+                      !isAuctionLive || !recentBids || recentBids.length === 0 || actionLoading.undoBid
                         ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
                         : 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/25'
                     }`}
                   >
-                    <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                    </svg>
-                    Undo Bid
+                    {actionLoading.undoBid ? (
+                      <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 2 5.373 2 12h2zm2 5.291A7.962 7.962 0 014 12H2c0 3.042 1.135 5.824 3 7.938l1-0.647z"/>
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      </svg>
+                    )}
+                    {actionLoading.undoBid ? 'Undoing...' : 'Undo Bid'}
                   </button>
-                </div>
-
-                {/* Captain Bids Section */}
-                <div>
-                  <h3 className="text-xl font-bold text-[#CEA17A] mb-6 flex items-center gap-2">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    Captain Bids
-                  </h3>
-                  {auctionTeams.length === 0 && (
-                    <div className="text-sm text-[#DBD0C0]/70 mb-3">No teams found for this auction.</div>
-                  )}
-                  <div className="grid grid-cols-1 gap-4">
-                    {auctionTeams.map((team) => {
-                      const nextBid = calculateNextBid()
-                      const canAfford = team.remaining_purse >= nextBid
-                      const isWinning = recentBids?.find(bid => bid.is_winning_bid && !bid.is_undone)?.team_id === team.id
-                      
-                      // Calculate remaining slots (required players + 1 captain - current players)
-                      const remainingSlots = Math.max(0, (team.required_players) - team.players_count)
-                      
-                      // Calculate max possible bid (remaining purse - remaining slots * min bid)
-                      const maxPossibleBid = team.remaining_purse - ((remainingSlots -1) * (auction?.min_bid_amount || 40))
-                      
-                      // Calculate balance after current bid
-                      const balanceAfterBid = team.remaining_purse - nextBid
-                      
-                      return (
-                        <div key={team.id} className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-xl p-6 border-2 border-[#CEA17A]/20 shadow-lg">
-                          <div className="mb-4">
-                            <h4 className="text-lg font-bold text-[#CEA17A] mb-2">{team.team_name}</h4>
-                            <div className="text-sm text-[#DBD0C0]/70">
-                              Players: {team.players_count}/{team.required_players} • Remaining slots: {remainingSlots}
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                            {/* Card 1: Place Bid Button */}
-                            <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-lg p-4 border border-[#CEA17A]/20">
-                              <h5 className="text-sm font-semibold text-[#CEA17A] mb-2">Place Bid</h5>
                               <button
-                                onClick={() => handlePlaceBid(team.id, nextBid)}
-                                disabled={!isAuctionLive || !canAfford || bidLoading[`bid_${team.id}`]}
-                                className={`w-full py-3 px-4 rounded-lg font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${
-                                  !isAuctionLive
+                        onClick={handleUndoPlayerAssignment}
+                        disabled={!isAuctionLive || !auctionTeams || auctionTeams.length === 0 || !auctionTeams.some(team => team.players_count > 0) || actionLoading.undoPlayerAssignment}
+                        className={`px-6 h-12 rounded-lg transition-all duration-150 flex items-center justify-center ${
+                            !isAuctionLive || !auctionTeams || auctionTeams.length === 0 || !auctionTeams.some(team => team.players_count > 0) || actionLoading.undoPlayerAssignment
                                     ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
-                                    : isWinning
-                                    ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/10 text-green-300 border border-green-400/40'
-                                    : canAfford
-                                    ? 'bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 hover:bg-gradient-to-r hover:from-[#CEA17A]/30 hover:to-[#CEA17A]/20'
-                                    : 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
-                                }`}
-                              >
-                                ₹{nextBid}
-                                {bidLoading[`bid_${team.id}`] && (
-                                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                              : 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/25'
+                          }`}
+                      >
+                        {actionLoading.undoPlayerAssignment ? (
+                          <>
+                            <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                   </svg>
+                            Undoing...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Undo Sell
+                          </>
                                 )}
                               </button>
                             </div>
                             
-                            {/* Card 2: Remaining Purse */}
-                            <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-lg p-4 border border-[#CEA17A]/20">
-                              <h5 className="text-sm font-semibold text-[#CEA17A] mb-2">Remaining Purse</h5>
-                              <div className="text-2xl font-bold text-[#DBD0C0]">₹{team.remaining_purse}</div>
-                              <div className="text-xs text-[#DBD0C0]/70 mt-1">
-                                Total: ₹{team.remaining_purse + team.total_spent} • Spent: ₹{team.total_spent}
-                              </div>
-                            </div>
-                            
-                            {/* Card 3: Max Possible Bid */}
-                            <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-lg p-4 border border-[#CEA17A]/20">
-                              <h5 className="text-sm font-semibold text-[#CEA17A] mb-2">Max Possible Bid</h5>
-                              <div className="text-2xl font-bold text-[#DBD0C0]">₹{Math.max(0, maxPossibleBid)}</div>
-                              <div className="text-xs text-[#DBD0C0]/70 mt-1">
-                                Reserve: ₹{(remainingSlots -1) * (auction?.min_bid_amount || 40)} for {remainingSlots -1} slots
-                              </div>
-                            </div>
-                            
-                            {/* Card 4: Balance After Current Bid */}
-                            <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-lg p-4 border border-[#CEA17A]/20">
-                              <h5 className="text-sm font-semibold text-[#CEA17A] mb-2">Balance After Bid</h5>
-                              <div className={`text-2xl font-bold ${balanceAfterBid >= 0 ? 'text-[#DBD0C0]' : 'text-red-400'}`}>
-                                ₹{balanceAfterBid}
-                              </div>
-                              <div className="text-xs text-[#DBD0C0]/70 mt-1">
-                                After bidding ₹{nextBid}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {isWinning && (
-                            <div className="mt-3 p-3 bg-gradient-to-r from-green-500/20 to-emerald-500/10 rounded-lg border border-green-400/40">
-                              <div className="flex items-center gap-2 text-green-300">
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    {/* Row 2: navigation */}
+                    <div className="grid grid-cols-2 gap-0 mt-3">
+                      <button 
+                        onClick={handlePreviousPlayer}
+                        disabled={!currentPlayer || !auctionPlayers || (() => {
+                          const availablePlayers = getAvailablePlayers()
+                          return availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id) <= 0
+                        })() || actionLoading.previousPlayer}
+                        className={`w-full h-12 border rounded-l-lg transition-all duration-150 flex items-center justify-center ${
+                           !currentPlayer || !auctionPlayers || (() => {
+                             const availablePlayers = getAvailablePlayers()
+                             return availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id) <= 0
+                           })() || actionLoading.previousPlayer
+                             ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
+                             : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'
+                         }`}
+                      >
+                        {actionLoading.previousPlayer ? (
+                          <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 2 5.373 2 12h2zm2 5.291A7.962 7.962 0 014 12H2c0 3.042 1.135 5.824 3 7.938l1-0.647z"/>
                                 </svg>
-                                <span className="font-semibold">Currently Winning</span>
+                        ) : (
+                          <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        )}
+                        {actionLoading.previousPlayer ? 'Loading...' : 'Previous'}
+                      </button>
+                      <button 
+                        onClick={handleNextPlayer}
+                        disabled={!currentPlayer || !auctionPlayers || (() => {
+                          const availablePlayers = getAvailablePlayers()
+                          return availablePlayers.length === 0
+                        })() || actionLoading.nextPlayer}
+                        className={`w-full h-12 border rounded-r-lg transition-all duration-150 flex items-center justify-center ${
+                           !currentPlayer || !auctionPlayers || (() => {
+                             const availablePlayers = getAvailablePlayers()
+                             return availablePlayers.length === 0
+                           })() || actionLoading.nextPlayer
+                             ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
+                             : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'
+                         }`}
+                      >
+                        {actionLoading.nextPlayer ? 'Loading...' : 'Next'}
+                        {actionLoading.nextPlayer ? (
+                          <svg className="animate-spin h-4 w-4 ml-2" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 2 5.373 2 12h2zm2 5.291A7.962 7.962 0 014 12H2c0 3.042 1.135 5.824 3 7.938l1-0.647z"/>
+                          </svg>
+                        ) : (
+                          <svg className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        )}
+                      </button>
                               </div>
                             </div>
-                          )}
                         </div>
-                      )
-                    })}
                   </div>
-                </div>
-
-                {/* Recent Bids Section */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-[#CEA17A] flex items-center gap-2">
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Recent Bids
-                    </h3>
-                    <div className="text-sm text-[#DBD0C0]/70">
-                      {recentBids?.length || 0} bids
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-xl p-6 border-2 border-[#CEA17A]/20 shadow-2xl max-h-80 overflow-y-auto">
-                    {recentBids && recentBids.length > 0 ? (
-                      <div className="space-y-3">
-                        {getLatestBidsByCaptain().map((bid, index) => (
-                          <div
-                            key={bid.id}
-                            className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-[1.02] ${
-                              bid.is_winning_bid && !bid.is_undone
-                                ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/10 text-green-300 border-green-400/40 shadow-lg shadow-green-500/10'
-                                : 'bg-gradient-to-r from-[#2a2a2a]/60 to-[#1a1a1a]/60 text-[#DBD0C0] border-[#CEA17A]/20 hover:border-[#CEA17A]/40'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-[#CEA17A]"></div>
-                                  <div className="font-bold text-lg">{bid.team_name}</div>
-                                </div>
-                                {bid.is_winning_bid && !bid.is_undone && (
-                                  <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs font-bold shadow-lg animate-pulse">
-                                    🏆 WINNING
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <div className="text-2xl font-black text-[#CEA17A] mb-1">
-                                  ₹{bid.bid_amount}
-                                </div>
-                                <div className="text-xs text-[#DBD0C0]/60 font-mono">
-                                  {new Date(bid.timestamp).toLocaleString('en-US', {
-                                    year: 'numeric',
-                                    month: '2-digit',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    second: '2-digit',
-                                    hour12: true
-                                  })}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12">
-                        <div className="text-6xl mb-4">🎯</div>
-                        <div className="text-[#DBD0C0]/60 text-lg font-medium">No bids placed yet</div>
-                        <div className="text-[#DBD0C0]/40 text-sm mt-2">Be the first to place a bid!</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
             ) : (
               <div className="text-center py-12">
                 <div className="text-[#CEA17A] text-6xl mb-4">💰</div>
                 <h3 className="text-xl font-semibold text-[#DBD0C0] mb-2">No Active Bidding</h3>
                 <p className="text-[#DBD0C0]/70">Start the auction to begin bidding on players</p>
-              </div>
+                </div>
             )}
+
+            {/* Captain Bids section - bottom area */}
+            <div className="mt-6 flex-shrink-0">
+              <h3 className="text-2xl font-bold text-[#DBD0C0] mb-4 flex items-center gap-3">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                Captain Bids
+                    </h3>
+              <div className="relative rounded-xl border-2 border-[#CEA17A]/20 shadow-lg bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80">
+                {/* Horizontal scroll container */}
+                <div className="overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-[#CEA17A]/30 scrollbar-track-transparent">
+                  {/* Min width ensures columns don't squeeze and cause overflow outside parent */}
+                  <div className="min-w-[960px]">
+                    {/* Header */}
+                    <div className="grid grid-cols-12 gap-4 p-4 bg-[#1a1a1a]/50 border-b border-[#CEA17A]/20 text-base font-semibold text-[#CEA17A] sticky top-0 z-10">
+                      <div className="col-span-3">Team</div>
+                      <div className="col-span-2">Place Bid</div>
+                      <div className="col-span-2 text-center">Remaining</div>
+                      <div className="col-span-2 text-center">Max Possible</div>
+                      <div className="col-span-2 text-center">Balance After</div>
+                      <div className="col-span-1 text-center">Status</div>
+                    </div>
+                    {/* Body with its own vertical scroll */}
+                    <div className="max-h-72 overflow-y-auto overflow-x-hidden">
+                      {auctionTeams.map((team, index) => {
+                        const nextBid = calculateNextBid()
+                        const canAfford = team.remaining_purse >= nextBid
+                        const isWinning = recentBids?.find(bid => bid.is_winning_bid && !bid.is_undone)?.team_id === team.id
+                        const remainingSlots = Math.max(0, (team.required_players) - team.players_count)
+                        const maxPossibleBid = team.remaining_purse - ((remainingSlots -1) * (auction?.min_bid_amount || 40))
+                        const balanceAfterBid = team.remaining_purse - nextBid
+                        const captainPlayer = players.find(p => p.id === team.captain_id)
+                        const captainName = captainPlayer?.display_name || 'Unknown Captain'
+                        return (
+                          <div key={team.id} className={`grid grid-cols-12 gap-4 p-3 items-center text-sm md:text-base ${index % 2 === 0 ? 'bg-[#1a1a1a]/20' : 'bg-[#1a1a1a]/10'}`}>
+                            <div className="col-span-3">
+                              <div className="font-semibold text-[#DBD0C0] text-base md:text-lg leading-snug">{captainName}</div>
+                              <div className="text-[11px] md:text-xs text-[#DBD0C0]/70 font-medium">{team.players_count}/{team.required_players} • {remainingSlots} left</div>
+                  </div>
+                            <div className="col-span-2">
+                               <button
+                                 onClick={() => handlePlaceBid(team.id, nextBid)}
+                                 disabled={!isAuctionLive || !canAfford || bidLoading[`bid_${team.id}`]}
+                                 className={`w-full py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
+                                   !isAuctionLive ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
+                                   : bidLoading[`bid_${team.id}`] ? 'bg-green-500/20 text-green-300 border border-green-400/40'
+                                   : canAfford ? 'bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 hover:bg-[#CEA17A]/30'
+                                   : 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
+                                 }`}
+                               >
+                                {bidLoading[`bid_${team.id}`] ? (
+                                  <span className="inline-flex items-center justify-center">
+                                    <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 2 5.373 2 12h2zm2 5.291A7.962 7.962 0 014 12H2c0 3.042 1.135 5.824 3 7.938l1-0.647z"/>
+                                    </svg>
+                                    Placing...
+                                  </span>
+                                ) : (
+                                  <>₹{nextBid}</>
+                                )}
+                              </button>
+                              </div>
+                            <div className="col-span-2 text-[#DBD0C0] text-base font-semibold text-center">₹{team.remaining_purse}</div>
+                            <div className="col-span-2 text-[#DBD0C0] text-base font-semibold text-center">₹{Math.max(0, maxPossibleBid)}</div>
+                            <div className={`col-span-2 text-base font-semibold text-center ${balanceAfterBid >= 0 ? 'text-[#DBD0C0]' : 'text-red-400'}`}>₹{balanceAfterBid}</div>
+                            <div className="col-span-1 flex justify-center">
+                              {isWinning ? <div className="w-3 h-3 bg-green-500 rounded-full"/> : canAfford ? <div className="w-3 h-3 bg-[#CEA17A] rounded-full"/> : <div className="w-3 h-3 bg-gray-500 rounded-full"/>}
+                                </div>
+                          </div>
+                        )
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                      </div>
+
+                      </div>
           </div>
         </div>
 
         {/* Team Formation */}
         <div className="bg-gradient-to-br from-[#1a1a1a]/80 to-[#0f0f0f]/80 rounded-xl p-6 border-2 border-[#CEA17A]/20 shadow-2xl mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-[#DBD0C0] flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-[#DBD0C0] mb-6 flex items-center gap-3">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               Team Formation
             </h2>
-            <div className="text-sm text-[#DBD0C0]/70 bg-[#19171b]/50 px-3 py-1 rounded-full border border-[#CEA17A]/20">
-              {auctionTeams.length} Teams
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {auctionTeams.map((team) => {
               // Get players for this team (both sold players and captain)
-              // Note: sold_to field contains team_id (even though schema suggests it should be player_id)
               const soldPlayers = auctionPlayers?.filter(ap => ap.sold_to === team.id) || []
               const captainPlayer = auctionPlayers?.find(ap => ap.player_id === team.captain_id) || null
               
@@ -1748,24 +1653,34 @@ export default function AuctionPage() {
               const teamPlayers = captainPlayer ? [captainPlayer, ...soldPlayers] : soldPlayers
               
               return (
-                <div key={team.id} className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-xl p-6 border-2 border-[#CEA17A]/20 shadow-lg">
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-[#CEA17A] mb-2">{team.team_name}</h3>
-                    <div className="text-sm text-[#DBD0C0]/70">
-                      Players: {teamPlayers.length}/{team.required_players} • Purse: ₹{team.remaining_purse}
+                <div key={team.id} className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-xl border-2 border-[#CEA17A]/20 shadow-lg overflow-hidden">
+                  {/* Team Header */}
+                  <div className="p-3 bg-[#1a1a1a]/50 border-b border-[#CEA17A]/20">
+                    <h4 className="text-lg font-bold text-[#CEA17A]">{team.team_name}</h4>
                     </div>
+                  
+                  {/* Table Header */}
+                  <div className="grid grid-cols-12 gap-2 p-2 bg-[#1a1a1a]/30 border-b border-[#CEA17A]/10 text-sm font-semibold text-[#CEA17A]">
+                    <div className="col-span-6">Player</div>
+                    <div className="col-span-2 text-center">Role</div>
+                    <div className="col-span-4 text-center">Price</div>
                   </div>
                   
-                  <div className="space-y-3">
-                    {teamPlayers.length > 0 ? (
-                      teamPlayers.map((auctionPlayer) => {
-                        const player = players.find(p => p.id === auctionPlayer.player_id)
-                        if (!player) return null
+                  {/* Player Rows - Fixed slots based on team size */}
+                  <div>
+                    {Array.from({ length: team.required_players }, (_, index) => {
+                      // Find if there's a player for this slot
+                      const auctionPlayer = teamPlayers[index]
+                      const player = auctionPlayer ? players.find(p => p.id === auctionPlayer.player_id) : null
+                      const isCaptain = auctionPlayer && auctionPlayer.player_id === team.captain_id
                         
                         return (
-                          <div key={auctionPlayer.player_id} className="bg-gradient-to-r from-[#1a1a1a] to-[#0f0f0f] rounded-lg p-4 border border-[#CEA17A]/20 flex items-center gap-4">
-                            {/* Player Photo */}
-                            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#CEA17A]/30 flex-shrink-0">
+                        <div key={index} className={`grid grid-cols-12 gap-2 p-2 items-center ${index % 2 === 0 ? 'bg-[#1a1a1a]/10' : 'bg-[#1a1a1a]/5'}`}>
+                          <div className="col-span-6">
+                            <div className="flex items-center gap-1">
+                              {player ? (
+                                <>
+                                  <div className="w-6 h-6 rounded-full overflow-hidden border border-[#CEA17A]/30 flex-shrink-0">
                               {player.profile_pic_url ? (
                                 <img 
                                   src={player.profile_pic_url} 
@@ -1774,113 +1689,250 @@ export default function AuctionPage() {
                                 />
                               ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-[#CEA17A]/20 to-[#CEA17A]/10 flex items-center justify-center">
-                                  <div className="text-lg text-[#CEA17A] font-bold">
+                                        <div className="text-[10px] text-[#CEA17A]">
                                     {player.display_name?.charAt(0)?.toUpperCase() || '👤'}
                                   </div>
                                 </div>
                               )}
                             </div>
-                            
-                            {/* Player Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="font-bold text-[#DBD0C0] text-sm truncate">{player.display_name}</div>
-                              <div className="flex items-center gap-2 mt-1">
-                                {/* Role Emojis */}
-                                <div className="flex items-center gap-1">
+                                  <div className="font-semibold text-[#DBD0C0] text-sm md:text-base truncate leading-snug">
+                                    {player.display_name}
+                                    {isCaptain && <span className="text-[#CEA17A] ml-1">(C)</span>}
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="w-6 h-6 rounded-full border border-[#CEA17A]/20 flex-shrink-0 bg-[#1a1a1a]/30 flex items-center justify-center">
+                                    <div className="text-[8px] text-[#CEA17A]/40">—</div>
+                                  </div>
+                                  <div className="text-[#DBD0C0]/40 text-xs italic">
+                                    Slot {index + 1}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="col-span-2 text-center">
+                            {player ? (
+                              <div className="text-lg">
                                   {player.skills?.Role && (
-                                    <div className="flex items-center gap-1">
-                                      {Array.isArray(player.skills.Role) ? (
-                                        player.skills.Role.map((role, index) => (
-                                          <span key={index} className="text-xs bg-[#CEA17A]/20 text-[#CEA17A] px-2 py-1 rounded">
+                                  Array.isArray(player.skills.Role) ? (
+                                    player.skills.Role.map((role, roleIndex) => (
+                                      <span key={roleIndex}>
                                             {role === 'Batsman' || role === 'Batter' ? '🏏' : 
-                                             role === 'Bowler' ? '⚾' : 
+                                         role === 'Bowler' ? '🎾' : 
                                              role === 'All Rounder' ? '🎯' : 
                                              role === 'Wicket Keeper' ? '🧤' : '👤'}
                                           </span>
                                         ))
                                       ) : (
-                                        <span className="text-xs bg-[#CEA17A]/20 text-[#CEA17A] px-2 py-1 rounded">
+                                    <span>
                                           {player.skills.Role === 'Batsman' || player.skills.Role === 'Batter' ? '🏏' : 
-                                           player.skills.Role === 'Bowler' ? '⚾' : 
+                                       player.skills.Role === 'Bowler' ? '🎾' : 
                                            player.skills.Role === 'All Rounder' ? '🎯' : 
                                            player.skills.Role === 'Wicket Keeper' ? '🧤' : '👤'}
                                         </span>
+                                  )
                                       )}
                                     </div>
-                                  )}
-                                  {player.skills?.["Batting Style"] && (
-                                    <span className="text-xs bg-[#CEA17A]/10 text-[#CEA17A]/80 px-2 py-1 rounded">
-                                      {player.skills["Batting Style"]}
-                                    </span>
-                                  )}
-                                  {player.skills?.["Bowling Style"] && (
-                                    <span className="text-xs bg-[#CEA17A]/10 text-[#CEA17A]/80 px-2 py-1 rounded">
-                                      {player.skills["Bowling Style"]}
-                                    </span>
+                            ) : (
+                              <div className="text-[#CEA17A]/20 text-lg">—</div>
+                            )}
+                          </div>
+                          <div className="col-span-4 text-center text-[#CEA17A] font-bold text-sm md:text-base">
+                            {player ? (
+                              `₹${isCaptain ? 0 : (auctionPlayer.sold_price || 0)}`
+                            ) : (
+                              <span className="text-[#CEA17A]/20">—</span>
                                   )}
                                 </div>
-                              </div>
-                            </div>
-                            
-                            {/* Price */}
-                            <div className="text-right flex-shrink-0">
-                              <div className="text-lg font-bold text-[#CEA17A]">
-                                ₹{auctionPlayer.player_id === team.captain_id ? 0 : (auctionPlayer.sold_price || 0)}
-                              </div>
-                              <div className="text-xs text-[#DBD0C0]/60">
-                                {auctionPlayer.player_id === team.captain_id ? 'Captain' : 'Purchased'}
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })
-                    ) : (
-                      <div className="text-center py-8">
-                        <div className="text-4xl mb-2">👥</div>
-                        <div className="text-[#DBD0C0]/60 text-sm">No players yet</div>
-                        <div className="text-[#DBD0C0]/40 text-xs mt-1">Waiting for auction to start</div>
-                      </div>
-                    )}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )
             })}
+                              </div>
+                            </div>
+                            
+        {/* Recent Bids */}
+        <div className="bg-gradient-to-br from-[#1a1a1a]/80 to-[#0f0f0f]/80 rounded-xl p-6 border-2 border-[#CEA17A]/20 shadow-2xl mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-[#DBD0C0] flex items-center gap-3">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Recent Bids
+            </h2>
+            <div className="text-sm text-[#DBD0C0]/70 bg-[#19171b]/50 px-3 py-1 rounded-full border border-[#CEA17A]/20">
+              {recentBids?.length || 0} bids
+                              </div>
+                              </div>
+          
+          <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-xl border-2 border-[#CEA17A]/20 shadow-2xl overflow-hidden max-h-80">
+            {recentBids && recentBids.length > 0 ? (
+              <div className="overflow-y-auto">
+                <div className="grid grid-cols-12 gap-4 p-4 bg-[#1a1a1a]/60 border-b border-[#CEA17A]/20 text-sm font-semibold text-[#CEA17A]">
+                  <div className="col-span-5">Team</div>
+                  <div className="col-span-3">Amount</div>
+                  <div className="col-span-3">Time</div>
+                  <div className="col-span-1 text-center">Win</div>
+                            </div>
+                {getLatestBidsByCaptain().map((bid, index) => (
+                  <div key={bid.id} className={`grid grid-cols-12 gap-4 p-4 items-center ${index % 2 === 0 ? 'bg-[#2a2a2a]/30' : 'bg-[#1a1a1a]/30'} hover:bg-[#CEA17A]/5 transition-colors`}>
+                    <div className="col-span-5 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#CEA17A]"></div>
+                      <div className="font-semibold text-[#DBD0C0] truncate">{bid.team_name}</div>
+                          </div>
+                    <div className="col-span-3 text-[#CEA17A] font-bold">₹{bid.bid_amount}</div>
+                    <div className="col-span-3 text-xs text-[#DBD0C0]/60 font-mono">
+                      {new Date(bid.timestamp).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+                      </div>
+                    <div className="col-span-1 flex justify-center">
+                      {bid.is_winning_bid && !bid.is_undone ? (
+                        <span className="px-2 py-0.5 bg-green-600/30 text-green-300 rounded text-[10px] font-bold">WIN</span>
+                      ) : (
+                        <span className="text-[10px] text-[#DBD0C0]/40">—</span>
+                    )}
+                  </div>
+                </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🎯</div>
+                <div className="text-[#DBD0C0]/60 text-lg font-medium">No bids placed yet</div>
+                <div className="text-[#DBD0C0]/40 text-sm mt-2">Be the first to place a bid!</div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Auction Overview */}
+
+
+
+        {/* Players */}
         <div className="bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10 mb-8">
-          <h2 className="text-2xl font-bold text-[#DBD0C0] mb-6">Auction Overview</h2>
+          <h2 className="text-2xl font-bold text-[#DBD0C0] mb-6">Players ({auctionPlayers.length})</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
-              <h3 className="text-sm font-medium text-[#CEA17A] mb-2">Tournament</h3>
-              <p className="text-lg font-semibold text-[#DBD0C0]">{auction.tournament_name}</p>
-              <p className="text-sm text-[#DBD0C0]/70">{auction.tournament_format}</p>
+          <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-xl border-2 border-[#CEA17A]/20 shadow-2xl overflow-hidden">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 gap-4 p-4 bg-[#1a1a1a]/60 border-b border-[#CEA17A]/20 text-sm font-semibold text-[#CEA17A]">
+              <div className="col-span-4">Player</div>
+              <div className="col-span-2 text-center">Role</div>
+              <div className="col-span-2 text-center">Base Price</div>
+              <div className="col-span-2 text-center">Status</div>
+              <div className="col-span-2 text-center">Sold Price</div>
             </div>
             
-            <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
-              <h3 className="text-sm font-medium text-[#CEA17A] mb-2">Teams</h3>
-              <p className="text-2xl font-bold text-[#DBD0C0]">{auctionTeams.length}</p>
-              <p className="text-sm text-[#DBD0C0]/70">Participating</p>
-            </div>
-            
-            <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
-              <h3 className="text-sm font-medium text-[#CEA17A] mb-2">Players</h3>
-              <p className="text-2xl font-bold text-[#DBD0C0]">{auctionPlayers.length}</p>
-              <p className="text-sm text-[#DBD0C0]/70">Available</p>
-            </div>
-            
-            <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
-              <h3 className="text-sm font-medium text-[#CEA17A] mb-2">Min Bid</h3>
-              <p className="text-2xl font-bold text-[#DBD0C0]">₹{auction.min_bid_amount}</p>
-              <p className="text-sm text-[#DBD0C0]/70">Starting Price</p>
+            {/* Table Body */}
+            <div className="max-h-96 overflow-y-auto">
+              {(() => {
+                // Sort players: unsold first, then alphabetically
+                const sortedPlayers = [...players].sort((a, b) => {
+                  const auctionPlayerA = auctionPlayers.find(ap => ap.player_id === a.id)
+                  const auctionPlayerB = auctionPlayers.find(ap => ap.player_id === b.id)
+                  
+                  // First sort by status: available first, then sold
+                  const statusA = auctionPlayerA?.status || 'unknown'
+                  const statusB = auctionPlayerB?.status || 'unknown'
+                  
+                  if (statusA === 'available' && statusB !== 'available') return -1
+                  if (statusA !== 'available' && statusB === 'available') return 1
+                  
+                  // Then sort alphabetically by display name
+                  return a.display_name.localeCompare(b.display_name)
+                })
+                
+                return sortedPlayers.map((player, index) => {
+                  const auctionPlayer = auctionPlayers.find(ap => ap.player_id === player.id)
+                  const role = player.skills?.Role;
+                  const basePrice = player.skills?.["Base Price"];
+                  
+                  // Get role emoji
+                  const getRoleEmoji = (role: string | string[] | undefined) => {
+                    if (!role) return "❓";
+                    const roleStr = Array.isArray(role) ? role.join(', ') : role;
+                    if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🎯";
+                    if (roleStr.toLowerCase().includes('batter')) return "🏏";
+                    if (roleStr.toLowerCase().includes('bowler')) return "🎾";
+                    if (roleStr.toLowerCase().includes('wicket')) return "🧤";
+                    if (roleStr.toLowerCase().includes('all')) return "🎯";
+                    return "❓";
+                  };
+
+                  return (
+                    <div key={player.id} className={`grid grid-cols-12 gap-4 p-4 items-center ${index % 2 === 0 ? 'bg-[#1a1a1a]/20' : 'bg-[#1a1a1a]/10'}`}>
+                      {/* Player */}
+                      <div className="col-span-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                            {player.profile_pic_url ? (
+                              <img
+                                src={player.profile_pic_url}
+                                alt={player.display_name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const parent = target.parentElement;
+                                  if (parent) {
+                                    parent.innerHTML = `<div class="w-full h-full bg-[#CEA17A]/20 flex items-center justify-center"><span class="text-[#CEA17A] font-bold text-xs">${player.display_name.charAt(0).toUpperCase()}</span></div>`;
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-[#CEA17A]/20 flex items-center justify-center">
+                                <span className="text-[#CEA17A] font-bold text-xs">
+                                  {player.display_name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-grow min-w-0">
+                            <h3 className="text-[#DBD0C0] font-medium truncate text-sm">{player.display_name}</h3>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Role */}
+                      <div className="col-span-2 text-center">
+                        <div className="text-lg">
+                          {getRoleEmoji(role)}
+                        </div>
+                      </div>
+                      
+                      {/* Base Price */}
+                      <div className="col-span-2 text-center text-[#CEA17A] font-semibold text-sm">
+                        {basePrice ? `₹${basePrice}` : '—'}
+                      </div>
+                      
+                      {/* Status */}
+                      <div className="col-span-2 text-center">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          auctionPlayer?.status === 'available' ? 'bg-green-400/10 text-green-400' :
+                          auctionPlayer?.status === 'sold' ? 'bg-blue-400/10 text-blue-400' :
+                          'bg-gray-400/10 text-gray-400'
+                        }`}>
+                          {auctionPlayer?.status || 'Unknown'}
+                        </span>
+                      </div>
+                      
+                      {/* Sold Price */}
+                      <div className="col-span-2 text-center text-[#CEA17A] font-semibold text-sm">
+                        {auctionPlayer?.sold_price ? `₹${auctionPlayer.sold_price}` : '—'}
+                      </div>
+                    </div>
+                  );
+                })
+              })()}
             </div>
           </div>
         </div>
 
         {/* Auction Configuration */}
-        <div className="bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10 mb-8">
+        <div className="bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10">
           <h2 className="text-2xl font-bold text-[#DBD0C0] mb-6">Auction Configuration</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1921,117 +1973,6 @@ export default function AuctionPage() {
             </div>
           </div>
         </div>
-
-        {/* Teams */}
-        <div className="bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10 mb-8">
-          <h2 className="text-2xl font-bold text-[#DBD0C0] mb-6">Teams ({auctionTeams.length})</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {auctionTeams.map((team) => (
-              <div key={team.id} className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
-                <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">{team.team_name}</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-[#DBD0C0]/70">Remaining Purse:</span>
-                    <span className="text-[#CEA17A] font-semibold">₹{team.remaining_purse}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#DBD0C0]/70">Total Spent:</span>
-                    <span className="text-[#DBD0C0]">₹{team.total_spent}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Players */}
-        <div className="bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10">
-          <h2 className="text-2xl font-bold text-[#DBD0C0] mb-6">Players ({auctionPlayers.length})</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {players.map((player) => {
-              const auctionPlayer = auctionPlayers.find(ap => ap.player_id === player.id)
-              const role = player.skills?.Role;
-              const basePrice = player.skills?.["Base Price"];
-              const battingStyle = player.skills?.["Batting Style"];
-              const bowlingStyle = player.skills?.["Bowling Style"];
-              
-              // Get role emoji
-              const getRoleEmoji = (role: string | string[] | undefined) => {
-                if (!role) return "❓";
-                const roleStr = Array.isArray(role) ? role.join(', ') : role;
-                if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🏏⚾";
-                if (roleStr.toLowerCase().includes('batter')) return "🏏";
-                if (roleStr.toLowerCase().includes('bowler')) return "⚾";
-                if (roleStr.toLowerCase().includes('wicket')) return "🧤";
-                if (roleStr.toLowerCase().includes('all')) return "🌟";
-                return "❓";
-              };
-
-              return (
-                <div key={player.id} className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                      {player.profile_pic_url ? (
-                        <img
-                          src={player.profile_pic_url}
-                          alt={player.display_name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `<div class="w-full h-full bg-[#CEA17A]/20 flex items-center justify-center"><span class="text-[#CEA17A] font-bold text-sm">${player.display_name.charAt(0).toUpperCase()}</span></div>`;
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-[#CEA17A]/20 flex items-center justify-center">
-                          <span className="text-[#CEA17A] font-bold text-sm">
-                            {player.display_name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <h3 className="text-[#DBD0C0] font-medium truncate">{player.display_name}</h3>
-                      <div className="flex items-center space-x-2 text-xs text-[#DBD0C0]/70">
-                        <span>{getRoleEmoji(role)}</span>
-                        {basePrice && <span>₹{basePrice}</span>}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1 text-xs text-[#DBD0C0]/70">
-                    {battingStyle && <div>Bat: {battingStyle}</div>}
-                    {bowlingStyle && <div>Bowl: {bowlingStyle}</div>}
-                  </div>
-                  
-                  <div className="mt-3 pt-3 border-t border-[#CEA17A]/10">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-[#DBD0C0]/70">Status:</span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        auctionPlayer?.status === 'available' ? 'bg-green-400/10 text-green-400' :
-                        auctionPlayer?.status === 'sold' ? 'bg-blue-400/10 text-blue-400' :
-                        'bg-gray-400/10 text-gray-400'
-                      }`}>
-                        {auctionPlayer?.status || 'Unknown'}
-                      </span>
-                    </div>
-                    {auctionPlayer?.sold_price && (
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="text-xs text-[#DBD0C0]/70">Sold for:</span>
-                        <span className="text-xs text-[#CEA17A] font-semibold">₹{auctionPlayer.sold_price}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
         </div>
       </div>
 
@@ -2067,6 +2008,41 @@ export default function AuctionPage() {
               <h3 className="text-white text-xl font-semibold text-center">
                 {photoPreview.alt}
               </h3>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global toast notification */}
+      {uiNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className={`pointer-events-auto min-w-[260px] max-w-sm rounded-lg px-5 py-4 border shadow-2xl backdrop-blur bg-[#121212]/90 ${
+            uiNotice.type === 'error'
+              ? 'border-red-400/30 text-red-200'
+              : 'border-blue-400/30 text-blue-200'
+          }`}>
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5">
+                {uiNotice.type === 'error' ? (
+                  <svg className="h-5 w-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M4.93 4.93l14.14 14.14M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
+                  </svg>
+                )}
+              </div>
+              <div className="text-sm leading-5 flex-1">{uiNotice.message}</div>
+              <button
+                onClick={() => setUiNotice(null)}
+                className="ml-2 inline-flex items-center justify-center rounded-md p-1 hover:bg-white/10 transition-colors"
+                aria-label="Dismiss notification"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>

@@ -1855,9 +1855,7 @@ export default function TournamentDetailsPage() {
                                           )}
                                         </div>
                                         <div className="flex-1">
-                                          <p className={`text-xs font-medium ${hasPlayerProfile ? 'text-green-300' : 'text-orange-300'}`}>
-                                            Player Profile
-                                          </p>
+                                         
                                           <p className={`text-xs ${hasPlayerProfile ? 'text-green-400/80' : 'text-orange-400/80'} mt-0.5`}>
                                             {hasPlayerProfile ? (
                                               'Profile created ✓'
