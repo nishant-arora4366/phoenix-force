@@ -2061,8 +2061,7 @@ export default function AuctionPage() {
                   <div className="flex flex-col flex-1 min-w-0 leading-tight">
                     <div className="text-[#DBD0C0] text-[13px] font-semibold truncate flex items-center gap-1">{captainName}{isWinning && <span className='w-1.5 h-1.5 bg-green-500 rounded-full' />}</div>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                      <button onClick={() => setMobilePurseTeamId(team.id)} className="text-[9px] font-medium text-[#CEA17A] hover:text-[#CEA17A]/80 transition-colors">Purse</button>
-                      <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
+                      
                       <span className="text-[9px] text-[#DBD0C0]/70">Remaining <span className="text-[#DBD0C0] font-semibold">₹{team.remaining_purse}</span></span>
                       <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
                       <span className="text-[9px] text-[#DBD0C0]/70">Max <span className="text-[#DBD0C0] font-semibold">₹{Math.max(0, maxPossibleBid)}</span></span>

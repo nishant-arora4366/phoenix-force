@@ -354,6 +354,70 @@ html {
   scrollbar-color: rgba(206,161,122,0.4) transparent;
 }
 
+/* ================= Modern Effect Utilities ================= */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  0% { opacity: 0; transform: scale(.94); }
+  60% { opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes pulse-glow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(206,161,122,0.25); }
+  50% { box-shadow: 0 0 0 6px rgba(206,161,122,0); }
+}
+@keyframes slide-in-right {
+  from { opacity:0; transform: translateX(12px); }
+  to { opacity:1; transform: translateX(0); }
+}
+@keyframes slide-up-soft {
+  from { opacity:0; transform: translateY(12px); }
+  to { opacity:1; transform: translateY(0); }
+}
+
+.animate-fade-in { animation: fade-in .35s ease-out both; }
+.animate-scale-in { animation: scale-in .4s cubic-bezier(.22,.96,.34,1) both; }
+.animate-slide-right { animation: slide-in-right .45s cubic-bezier(.22,.96,.34,1) both; }
+.animate-slide-up-soft { animation: slide-up-soft .5s cubic-bezier(.22,.96,.34,1) both; }
+.animate-pulse-glow { animation: pulse-glow 2.8s ease-in-out infinite; }
+
+/* Layered glass + glow cards */
+.glass-card {
+  background: linear-gradient(145deg, rgba(26,26,26,0.85), rgba(10,10,10,0.75));
+  border: 1px solid rgba(206,161,122,0.18);
+  backdrop-filter: blur(6px) saturate(130%);
+  box-shadow: 0 4px 18px -4px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+.glass-card:hover { border-color: rgba(206,161,122,0.4); box-shadow: 0 6px 24px -6px rgba(0,0,0,0.7), 0 0 0 1px rgba(206,161,122,0.25) inset; }
+.glass-card:active { transform: translateY(2px); }
+
+/* Interactive subtle lift */
+.lift-sm { transition: transform .25s ease, box-shadow .25s ease; }
+.lift-sm:hover { transform: translateY(-3px); }
+.lift-sm:active { transform: translateY(0); }
+
+/* Focus ring */
+.focus-ring { outline: none; position: relative; }
+.focus-ring:focus-visible { box-shadow: 0 0 0 2px #19171b, 0 0 0 4px rgba(206,161,122,0.55); }
+
+/* Divider glow */
+.divider-glow { height:1px; background: linear-gradient(90deg, transparent, rgba(206,161,122,0.4), transparent); }
+
+/* Button modern */
+.btn-modern { position:relative; overflow:hidden; }
+.btn-modern::before { content:""; position:absolute; inset:0; background:linear-gradient(120deg, rgba(206,161,122,0.15), transparent 60%); opacity:0; transition:opacity .3s; }
+.btn-modern:hover::before { opacity:1; }
+.btn-modern:active { transform: translateY(1px); }
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in, .animate-scale-in, .animate-slide-right, .animate-slide-up-soft { animation: none !important; }
+  .lift-sm, .glass-card, .btn-modern { transition-duration: .01ms !important; }
+}
+
 /* Hide scrollbar utility */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* Internet Explorer 10+ */
