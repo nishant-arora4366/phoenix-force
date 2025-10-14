@@ -329,22 +329,29 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - modern, subtle overlay */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #19171b;
+  background: transparent;
+  margin: 4px 0; /* shorter thumb */
 }
-
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #75020f, #51080d);
-  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(206,161,122,0.25) 0%, rgba(117,2,15,0.35) 100%);
+  border-radius: 20px;
+  border: 2px solid rgba(17,17,17,0.6); /* creates pill and reduces visual weight */
+  box-shadow: 0 2px 4px -1px rgba(0,0,0,0.6), 0 0 0 1px rgba(206,161,122,0.10) inset;
+  backdrop-filter: blur(2px);
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #51080d, #2b0307);
+  background: linear-gradient(180deg, rgba(206,161,122,0.45) 0%, rgba(117,2,15,0.55) 100%);
+}
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(206,161,122,0.4) transparent;
 }
 
 /* Hide scrollbar utility */

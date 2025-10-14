@@ -1636,7 +1636,10 @@ export default function AuctionPage() {
                                     Placing...
                                   </span>
                                 ) : (
-                                  <>₹{nextBid}</>
+                                  <span className="inline-flex items-center justify-center gap-1 text-[12px]">
+                                    <span className="font-medium">Place Bid</span>
+                                    <span className="font-bold">₹{nextBid}</span>
+                                  </span>
                                 )}
                               </button>
                               </div>
@@ -2057,34 +2060,37 @@ export default function AuctionPage() {
                 <div key={team.id} className="flex items-center gap-2 bg-[#1a1a1a]/60 border border-[#CEA17A]/15 rounded-md px-2 py-1.5">
                   <div className="flex flex-col flex-1 min-w-0 leading-tight">
                     <div className="text-[#DBD0C0] text-[13px] font-semibold truncate flex items-center gap-1">{captainName}{isWinning && <span className='w-1.5 h-1.5 bg-green-500 rounded-full' />}</div>
-                    <div className="text-[9px] text-[#DBD0C0]/60 flex flex-wrap items-center gap-1">
-                      <button onClick={() => setMobilePurseTeamId(team.id)} className="text-[#CEA17A] underline decoration-dotted">purse</button>
-                      <span>|</span>
-                      <span>₹{team.remaining_purse}</span>
-                      <span>|</span>
-                      <span>max ₹{Math.max(0, maxPossibleBid)}</span>
-                      <span>|</span>
-                      <span className={balanceAfter >= 0 ? 'text-green-400' : 'text-red-400'}>after ₹{balanceAfter}</span>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                      <button onClick={() => setMobilePurseTeamId(team.id)} className="text-[9px] font-medium text-[#CEA17A] hover:text-[#CEA17A]/80 transition-colors">Purse</button>
+                      <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
+                      <span className="text-[9px] text-[#DBD0C0]/70">Remaining <span className="text-[#DBD0C0] font-semibold">₹{team.remaining_purse}</span></span>
+                      <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
+                      <span className="text-[9px] text-[#DBD0C0]/70">Max <span className="text-[#DBD0C0] font-semibold">₹{Math.max(0, maxPossibleBid)}</span></span>
+                      <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
+                      <span className={`text-[9px] font-medium ${balanceAfter >= 0 ? 'text-green-400' : 'text-red-400'}`}>After ₹{balanceAfter}</span>
                     </div>
                   </div>
-                  <button onClick={() => handlePlaceBid(team.id, nextBid)} disabled={!isAuctionLive || !canAfford || bidLoading[`bid_${team.id}`]} className={`px-2.5 py-1.5 rounded-md text-[11px] font-semibold border transition-all whitespace-nowrap ${!isAuctionLive ? 'border-gray-600 text-gray-500' : isWinning ? 'border-green-500 text-green-400 bg-green-500/10' : canAfford ? 'border-[#CEA17A]/50 text-[#CEA17A] bg-[#CEA17A]/10 active:scale-95' : 'border-gray-600 text-gray-500'}`}>{bidLoading[`bid_${team.id}`] ? '...' : `₹${nextBid}`}</button>
+                  <button onClick={() => handlePlaceBid(team.id, nextBid)} disabled={!isAuctionLive || !canAfford || bidLoading[`bid_${team.id}`]} className={`px-2.5 py-1.5 rounded-md text-[11px] font-semibold border transition-all whitespace-nowrap ${!isAuctionLive ? 'border-gray-600 text-gray-500' : isWinning ? 'border-green-500 text-green-400 bg-green-500/10' : canAfford ? 'border-[#CEA17A]/50 text-[#CEA17A] bg-[#CEA17A]/10 active:scale-95' : 'border-gray-600 text-gray-500'}`}>{bidLoading[`bid_${team.id}`] ? 'Placing...' : `Place Bid ₹${nextBid}`}</button>
                 </div>
               )
             })}
           </div>
         </div>
 
-        {/* Teams grid 2x2 */}
+        {/* Teams horizontal carousel (restored) */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-base font-semibold text-[#DBD0C0]">Teams</h3>
-            <button type="button" onClick={() => setShowRemainingPlayersMobile(true)} className="px-2 py-1 rounded-md border border-[#CEA17A]/30 bg-[#CEA17A]/10 text-[#CEA17A] text-[10px] font-medium">Remaining</button>
+            <button type="button" onClick={() => setShowRemainingPlayersMobile(true)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[#CEA17A]/30 bg-[#CEA17A]/10 text-[#CEA17A] text-[10px] font-medium">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+              Remaining Players
+            </button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1">
             {auctionTeams.map(team => {
               const teamPlayers = auctionPlayers.filter(ap => ap.sold_to === team.id || ap.player_id === team.captain_id)
               return (
-                <button type="button" onClick={() => setFormationTeamModalId(team.id)} key={team.id} className="bg-[#1a1a1a]/60 border border-[#CEA17A]/15 rounded-lg p-2 flex flex-col text-left active:scale-95 transition">
+                <button type="button" onClick={() => setFormationTeamModalId(team.id)} key={team.id} className="snap-start min-w-[150px] bg-[#1a1a1a]/60 border border-[#CEA17A]/15 rounded-lg p-2 flex flex-col text-left active:scale-95 transition">
                   <div className="text-[#CEA17A] font-semibold text-[11px] mb-0.5 truncate">{team.team_name}</div>
                   <div className="text-[9px] text-[#DBD0C0]/60 mb-1">{teamPlayers.length}/{team.required_players} • ₹{team.remaining_purse}</div>
                   <div className="flex -space-x-2 overflow-hidden">
@@ -2112,6 +2118,16 @@ export default function AuctionPage() {
             <button onClick={handleSellPlayer} disabled={!isAuctionLive || !recentBids?.some(b => b.is_winning_bid && !b.is_undone)} className="py-3 rounded-xl bg-green-600/20 text-green-300 border border-green-400/30 text-xs font-medium disabled:opacity-30">Sell</button>
             <button onClick={handleUndoBid} disabled={!isAuctionLive || !recentBids?.length} className="py-3 rounded-xl bg-yellow-600/20 text-yellow-300 border border-yellow-400/30 text-xs font-medium disabled:opacity-30">Undo</button>
           </div>
+        )}
+        {(userProfile && (userProfile.role === 'host' || userProfile.role === 'admin')) && !showHostActionsMobile && (
+          <button
+            type="button"
+            aria-label="Auction Controls"
+            onClick={() => setShowHostActionsMobile(true)}
+            className="fixed bottom-[70px] left-3 z-40 w-11 h-11 rounded-full bg-[#CEA17A] text-[#1a1a1a] shadow-lg shadow-black/40 flex items-center justify-center active:scale-95 transition"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+          </button>
         )}
 
         {/* Purse modal */}
