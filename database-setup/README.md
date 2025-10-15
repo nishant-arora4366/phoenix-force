@@ -169,6 +169,21 @@ psql -f data-backup/sql/api_usage_analytics.sql
    - Check console output for detailed error messages
    - Use `--dry-run` flag to test operations safely
 
+4. **Missing function place_bid_atomic**
+   - Error sample: `Could not find the function public.place_bid_atomic(p_auction_id, p_bid_amount, p_team_id, p_user_id) in the schema cache`
+   - Fix:
+     1. Ensure you pulled latest repo including `schema/auction-bid-function.sql`.
+     2. Deploy function:
+        ```bash
+        psql "$DATABASE_URL" -f database-setup/schema/auction-bid-function.sql
+        ```
+     3. If still failing in Supabase RPC, refresh the schema cache (Supabase SQL Editor: run a trivial DDL like `COMMENT ON DATABASE postgres IS 'refresh';`).
+     4. Confirm signature with:
+        ```sql
+        select proname, pronargs, proargnames from pg_proc p join pg_namespace n on n.oid=p.pronamespace where proname='place_bid_atomic';
+        ```
+   - The API expects JSON output containing keys `bid` and `current_bid`.
+
 ## 📁 File Structure
 
 ```
@@ -183,6 +198,7 @@ database-setup/
 │   └── sql/                    # Individual table SQL files
 ├── schema/                     # Database schema files
 │   ├── complete-schema.sql
+│   ├── auction-bid-function.sql        # Atomic bid placement (CREATE OR REPLACE FUNCTION)
 │   ├── tables.json
 │   ├── rls-policies.json
 │   └── ...

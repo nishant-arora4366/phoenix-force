@@ -257,7 +257,13 @@ export async function PATCH(request: NextRequest) {
       }
 
       if (nextPlayer) {
-        // Set the next player as current
+        // Defensive: clear any stray current_player flags first (shouldn't normally be needed)
+        await supabase
+          .from('auction_players')
+          .update({ current_player: false })
+          .eq('auction_id', auctionId)
+          .eq('current_player', true)
+
         const { error: setCurrentError } = await supabase
           .from('auction_players')
           .update({ current_player: true })
@@ -399,12 +405,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Create auction teams if captains are provided
+    // NOTE: We MUST select() after insert so we have generated team IDs available
+    // for assigning captain players (sold_to) and later statistics updates.
     let auctionTeams: any[] = []
     if (body.captains && body.captains.length > 0) {
       // Calculate required players per team based on selected players
       const totalPlayers: number = Array.isArray(body.selected_players) ? body.selected_players.length : 0
       const numTeams: number = body.captains.length
-      const requiredPlayersPerTeam: number = numTeams > 0 ? (Math.floor(totalPlayers / numTeams)) -1 : 0
+      // Subtract 1 to account for captain already occupying a slot. Guard against negatives.
+      const requiredPlayersPerTeam: number = numTeams > 0 ? Math.max(0, Math.floor(totalPlayers / numTeams) - 1) : 0
 
       auctionTeams = body.captains.map((captain: any) => ({
         auction_id: auction.id,
@@ -416,14 +425,17 @@ export async function POST(request: NextRequest) {
         players_count: 0,
         required_players: requiredPlayersPerTeam
       }))
-
-      const { error: teamsError } = await supabase
+      // Insert and fetch generated IDs
+      const { data: insertedTeams, error: teamsError } = await supabase
         .from('auction_teams')
         .insert(auctionTeams)
+        .select()
 
       if (teamsError) {
         console.error('Error creating auction teams:', teamsError)
         // Don't fail the entire operation, just log the error
+      } else if (insertedTeams) {
+        auctionTeams = insertedTeams
       }
     }
 
@@ -503,7 +515,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      auction
+      auction,
+      teams: auctionTeams // include team data (with IDs) so client can reflect immediately
     })
 
   } catch (error) {

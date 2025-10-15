@@ -195,6 +195,13 @@ export async function POST(
     }
     console.log('🔍 [DEBUG] Team statistics updated successfully')
 
+    // Fetch player display name for richer response / UI message
+    const { data: playerInfo } = await supabase
+      .from('players')
+      .select('id, display_name')
+      .eq('id', lastSoldPlayer.player_id)
+      .single()
+
     // Mark all bids for this player as undone since the player is no longer sold
     console.log('🔍 [DEBUG] Marking bids as undone for player:', lastSoldPlayer.player_id)
     const { error: bidsUndoError } = await supabase
@@ -219,9 +226,10 @@ export async function POST(
     console.log('🔍 [DEBUG] Operation completed successfully, returning response')
     return NextResponse.json({ 
       success: true, 
-      message: 'Player assignment undone successfully',
+      message: `Player ${playerInfo?.display_name || lastSoldPlayer.player_id} unsold and set as current`,
       data: {
         player_id: lastSoldPlayer.player_id,
+        player_name: playerInfo?.display_name || null,
         team_id: team.id,
         refunded_amount: lastSoldPlayer.sold_price
       }

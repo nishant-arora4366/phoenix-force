@@ -103,155 +103,126 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    // Check user role
+    // Fetch user role
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('role')
       .eq('id', decoded.userId)
       .single()
 
-    if (userError || !user || (user.role !== 'admin' && user.role !== 'host')) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    if (userError || !user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Get auction details
-    const { data: auction, error: auctionError } = await supabase
+    // Authorization rules:
+    // 1. Admin: always
+    // 2. Host: only if host created this auction
+    // 3. Captain (or viewer) who owns the captain player for the team may bid for that team
+    // (role string may be 'viewer' but still linked via players.user_id)
+
+    // Fetch auction creator for host check
+    const { data: auctionRow } = await supabase
       .from('auctions')
-      .select('*')
+      .select('created_by')
       .eq('id', auctionId)
       .single()
 
-    if (auctionError || !auction) {
-      return NextResponse.json({ error: 'Auction not found' }, { status: 404 })
+    let isAuthorized = false
+    if (user.role === 'admin') {
+      isAuthorized = true
+    } else if (user.role === 'host' && auctionRow && auctionRow.created_by === decoded.userId) {
+      isAuthorized = true
+    } else {
+      // Derive captain ownership from team_id->captain_id->players.user_id
+      const { data: teamRecord } = await supabase
+        .from('auction_teams')
+        .select('id, captain_id')
+        .eq('id', team_id)
+        .eq('auction_id', auctionId)
+        .single()
+      if (teamRecord) {
+        const { data: captainPlayer } = await supabase
+          .from('players')
+          .select('id, user_id')
+          .eq('id', teamRecord.captain_id)
+          .single()
+        if (captainPlayer && captainPlayer.user_id === decoded.userId) {
+          isAuthorized = true
+        }
+      }
     }
+    if (!isAuthorized) return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
 
-    // Check if auction is in live status
-    if (auction.status !== 'live') {
-      return NextResponse.json({ 
-        error: `Cannot place bids. Auction is currently ${auction.status}. Please start the auction first.` 
-      }, { status: 400 })
-    }
-
-    // Get current player
-    const { data: currentPlayer, error: playerError } = await supabase
+    // Ensure there is a current player; if not, set the first available (excluding captains) to avoid NO_CURRENT_PLAYER errors on first bid
+    const { data: existingCurrent } = await supabase
       .from('auction_players')
-      .select('*')
+      .select('player_id')
       .eq('auction_id', auctionId)
       .eq('current_player', true)
-      .single()
+      .maybeSingle()
 
-    if (playerError || !currentPlayer) {
-      return NextResponse.json({ error: 'No current player found' }, { status: 400 })
-    }
-
-    // Get team details
-    const { data: team, error: teamError } = await supabase
-      .from('auction_teams')
-      .select('*')
-      .eq('id', team_id)
-      .eq('auction_id', auctionId)
-      .single()
-
-    if (teamError || !team) {
-      return NextResponse.json({ error: 'Team not found' }, { status: 404 })
-    }
-
-    // Validate bid amount
-    if (bid_amount <= 0) {
-      return NextResponse.json({ error: 'Bid amount must be positive' }, { status: 400 })
-    }
-
-    // Get current highest bid for this player
-    const { data: currentBids, error: bidsError } = await supabase
-      .from('auction_bids')
-      .select('bid_amount')
-      .eq('auction_id', auctionId)
-      .eq('player_id', currentPlayer.player_id)
-      .eq('is_winning_bid', true)
-      .eq('is_undone', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
-
-    const hasExistingBid = currentBids && currentBids.length > 0
-    const currentBid = hasExistingBid ? currentBids[0].bid_amount : null
-
-    // Determine starting bid for first bid scenario
-    let startingBid = auction.min_bid_amount || 0
-    if (auction.use_base_price) {
-      // Best-effort: try to fetch player's base price; fall back to min if unavailable
-      try {
-        const { data: basePriceRows } = await supabase
-          .from('player_skill_assignments')
-          .select('player_skills(skill_name), player_skill_values(value_name)')
-          .eq('player_id', currentPlayer.player_id)
-          .limit(20)
-        const basePriceRow = (basePriceRows as any[] | null)?.find((r: any) => r.player_skills?.skill_name === 'Base Price')
-        const rawValue = (basePriceRow && (basePriceRow as any).player_skill_values 
-          && (basePriceRow as any).player_skill_values[0]
-          ? (basePriceRow as any).player_skill_values[0].value_name as string
-          : undefined)
-        const parsed = rawValue ? parseInt(rawValue) : NaN
-        if (!isNaN(parsed)) {
-          startingBid = Math.max(startingBid, parsed)
-        }
-      } catch (_) {
-        // ignore and use min bid
+    if (!existingCurrent) {
+      // Gather captain ids to exclude
+      const { data: capRows } = await supabase
+        .from('auction_teams')
+        .select('captain_id')
+        .eq('auction_id', auctionId)
+      const captainIds = (capRows || []).map(r => r.captain_id).filter(Boolean)
+      let firstQuery = supabase
+        .from('auction_players')
+        .select('player_id')
+        .eq('auction_id', auctionId)
+        .eq('status', 'available')
+        .order('display_order', { ascending: true })
+        .limit(1)
+      if (captainIds.length) {
+        const csv = '(' + captainIds.map(id => `'${id}'`).join(',') + ')'
+        firstQuery = firstQuery.not('player_id', 'in', csv)
+      }
+      const { data: firstAvail } = await firstQuery.maybeSingle()
+      if (firstAvail) {
+        await supabase
+          .from('auction_players')
+          .update({ current_player: true })
+          .eq('auction_id', auctionId)
+          .eq('player_id', firstAvail.player_id)
       }
     }
 
-    if (!hasExistingBid) {
-      if (bid_amount < startingBid) {
-        return NextResponse.json({ error: `First bid must be at least ₹${startingBid}` }, { status: 400 })
-      }
-    } else {
-      if (bid_amount <= (currentBid as number)) {
-        return NextResponse.json({ error: 'Bid must be higher than current bid' }, { status: 400 })
-      }
-    }
-
-    // Check if team can afford the bid
-    if (team.remaining_purse < bid_amount) {
-      return NextResponse.json({ error: 'Insufficient funds' }, { status: 400 })
-    }
-
-    // Start transaction
-    const { data: newBid, error: bidInsertError } = await supabase
-      .from('auction_bids')
-      .insert({
-        auction_id: auctionId,
-        player_id: currentPlayer.player_id,
-        team_id: team_id,
-        bid_amount: bid_amount,
-        is_winning_bid: true,
-        is_undone: false
+    // Delegate concurrency & validation to PostgreSQL function (implemented separately).
+    const { data: rpcResult, error: rpcError } = await supabase
+      .rpc('place_bid_atomic', {
+        p_auction_id: auctionId,
+        p_team_id: team_id,
+        p_bid_amount: bid_amount,
+        p_user_id: decoded.userId
       })
-      .select()
-      .single()
 
-    if (bidInsertError) {
-      console.error('Error inserting bid:', bidInsertError)
-      return NextResponse.json({ error: 'Failed to place bid' }, { status: 500 })
+    if (rpcError) {
+      // Map structured error codes embedded in message: CODE::message
+      const msg = rpcError.message || ''
+      let code = 'UNKNOWN'
+      let detail = msg
+      if (msg.includes('::')) {
+        const [c, d] = msg.split('::')
+        code = c
+        detail = d
+      }
+      const statusMap: Record<string, number> = {
+        BID_OUTDATED: 409,
+        AUCTION_NOT_LIVE: 400,
+        INSUFFICIENT_FUNDS: 400,
+        INVALID_INCREMENT: 400,
+        TEAM_NOT_FOUND: 404,
+        AUCTION_NOT_FOUND: 404,
+        NO_CURRENT_PLAYER: 400,
+        PERMISSION_DENIED: 403
+      }
+      const status = statusMap[code] || 500
+      return NextResponse.json({ success: false, code, error: detail || 'Bid failed' }, { status })
     }
 
-    // Set all previous bids for this player as not winning
-    const { error: updatePreviousBidsError } = await supabase
-      .from('auction_bids')
-      .update({ is_winning_bid: false })
-      .eq('auction_id', auctionId)
-      .eq('player_id', currentPlayer.player_id)
-      .neq('id', newBid.id)
-
-    if (updatePreviousBidsError) {
-      console.error('Error updating previous bids:', updatePreviousBidsError)
-    }
-
-    // Note: Team purse is not updated during bidding - only when player is sold
-
-    return NextResponse.json({ 
-      success: true, 
-      bid: newBid,
-      message: 'Bid placed successfully' 
-    })
+    return NextResponse.json({ success: true, bid: rpcResult?.bid, current_bid: rpcResult?.current_bid, message: 'Bid placed successfully' })
   } catch (error) {
     console.error('Error in POST /api/auctions/[id]/bids:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
