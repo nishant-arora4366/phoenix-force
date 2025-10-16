@@ -3422,16 +3422,10 @@ export default function AuctionPage() {
               </div>
             </div>
             
-            {/* Final Teams - Side by Side Layout for Export */}
-            <div className="space-y-4">
-              <h4 className="text-xl font-semibold text-[#DBD0C0] text-center">Final Teams</h4>
-              <div className={`grid gap-4 ${
-                auctionTeams.length === 1 ? 'grid-cols-1' :
-                auctionTeams.length === 2 ? 'grid-cols-2' :
-                auctionTeams.length === 3 ? 'grid-cols-3' :
-                auctionTeams.length === 4 ? 'grid-cols-2' :
-                'grid-cols-2'
-              }`}>
+            {/* Final Teams - Desktop Layout for Mobile Export */}
+            <div className="space-y-6 w-full">
+              <h4 className="text-lg font-semibold text-[#DBD0C0] text-center">Final Teams</h4>
+              <div className="grid gap-5" style={{ gridTemplateColumns: `repeat(${auctionTeams.length}, 1fr)` }}>
                 {auctionTeams.map(team => {
                   const captain = players.find(p => p.id === team.captain_id)
                   const soldPlayers = auctionPlayers
@@ -3510,20 +3504,18 @@ export default function AuctionPage() {
                       </div>
                       
                       {/* Team Summary */}
-                      <div className="mt-3 pt-3 border-t border-[#CEA17A]/20">
-                        <div className="flex justify-between text-xs">
-                          <div>
-                            <div className="font-semibold text-[#DBD0C0]">{team.players_count}/{team.required_players}</div>
-                            <div className="text-[#DBD0C0]/70">Players</div>
-                          </div>
-                          <div>
-                            <div className="font-semibold text-[#DBD0C0]">₹{team.remaining_purse?.toLocaleString()}</div>
-                            <div className="text-[#DBD0C0]/70">Remaining</div>
-                          </div>
-                          <div>
-                            <div className="font-semibold text-[#DBD0C0]">{((team.total_spent || 0) / (auction?.max_tokens_per_captain || 1) * 100).toFixed(1)}%</div>
-                            <div className="text-[#DBD0C0]/70">Budget Used</div>
-                          </div>
+                      <div className="mt-3 pt-2 border-t border-[#CEA17A]/20 grid grid-cols-3 gap-4 text-center text-sm">
+                        <div>
+                          <div className="font-semibold text-[#DBD0C0]">{1 + soldPlayers.length}</div>
+                          <div className="text-[#DBD0C0]/70">Players</div>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-[#DBD0C0]">₹{team.remaining_purse?.toLocaleString()}</div>
+                          <div className="text-[#DBD0C0]/70">Remaining</div>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-[#DBD0C0]">{((team.total_spent || 0) / (auction?.max_tokens_per_captain || 1) * 100).toFixed(1)}%</div>
+                          <div className="text-[#DBD0C0]/70">Budget Used</div>
                         </div>
                       </div>
                     </div>
