@@ -85,8 +85,6 @@ const getStatusColor = (status: string) => {
   switch (status) {
     case 'draft':
       return 'bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
-    case 'pending':
-      return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
     case 'live':
       return 'bg-green-500/20 text-green-300 border border-green-500/30'
     case 'paused':
@@ -104,8 +102,6 @@ const getStatusText = (status: string) => {
   switch (status) {
     case 'draft':
       return 'Draft'
-    case 'pending':
-      return 'Pending'
     case 'live':
       return 'Live'
     case 'paused':
@@ -132,7 +128,7 @@ export default function AuctionsPage() {
   const [loadingAuctionId, setLoadingAuctionId] = useState<string | null>(null)
   
   // Filter states
-  const [activeFilter, setActiveFilter] = useState<'all' | 'live' | 'draft' | 'pending' | 'completed'>('all')
+  const [activeFilter, setActiveFilter] = useState<'all' | 'live' | 'draft' | 'completed'>('all')
 
   // Track component mount status to prevent state updates after unmount
   const isMountedRef = useRef(true)
@@ -336,8 +332,6 @@ export default function AuctionsPage() {
         return auctions.filter(auction => auction.status === 'live')
       case 'draft':
         return auctions.filter(auction => auction.status === 'draft')
-      case 'pending':
-        return auctions.filter(auction => auction.status === 'pending')
       case 'completed':
         return auctions.filter(auction => auction.status === 'completed')
       default:
@@ -472,16 +466,6 @@ export default function AuctionsPage() {
               Drafts
             </button>
             <button
-              onClick={() => setActiveFilter('pending')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${
-                activeFilter === 'pending'
-                  ? 'bg-orange-500/25 text-orange-300 border border-orange-500/40 shadow-lg shadow-orange-500/10'
-                  : 'bg-[#19171b]/50 text-[#DBD0C0] border border-orange-500/20 hover:bg-orange-500/15 hover:border-orange-500/30'
-              }`}
-            >
-              Pending
-            </button>
-            <button
               onClick={() => setActiveFilter('completed')}
               className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${
                 activeFilter === 'completed'
@@ -498,13 +482,12 @@ export default function AuctionsPage() {
             {activeFilter === 'all' && 'Showing all auctions'}
             {activeFilter === 'live' && 'Showing currently active auctions'}
             {activeFilter === 'draft' && 'Showing draft auctions (Admin/Host only)'}
-            {activeFilter === 'pending' && 'Showing pending auctions'}
             {activeFilter === 'completed' && 'Showing completed auctions'}
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
           <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-6 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
             {/* Luxury Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
@@ -566,26 +549,6 @@ export default function AuctionsPage() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-6 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
-            {/* Luxury Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
-            
-            <div className="relative z-10 flex items-center">
-              <div className="p-2 sm:p-3 bg-[#CEA17A]/20 rounded-lg">
-                <svg className="h-4 w-4 sm:h-6 sm:w-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-[#CEA17A]">Pending</p>
-                <p className="text-2xl font-bold text-[#DBD0C0]">
-                  {auctions?.filter(a => a.status === 'pending').length || 0}
-                </p>
-              </div>
-            </div>
-          </div>
 
           <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-6 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150">
             {/* Luxury Gradient Overlay */}
@@ -650,8 +613,6 @@ export default function AuctionsPage() {
                         ? 'bg-blue-500/15 text-blue-300 border-blue-500/25 shadow-lg shadow-blue-500/10'
                         : auction.status === 'draft'
                         ? 'bg-yellow-500/15 text-yellow-300 border-yellow-500/25 shadow-lg shadow-yellow-500/10'
-                        : auction.status === 'pending'
-                        ? 'bg-orange-500/15 text-orange-300 border-orange-500/25 shadow-lg shadow-orange-500/10'
                         : 'bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30'
                     }`}>
                       {getStatusText(auction.status)}
@@ -819,14 +780,12 @@ export default function AuctionsPage() {
               {activeFilter === 'all' && 'No auctions found'}
               {activeFilter === 'live' && 'No live auctions found'}
               {activeFilter === 'draft' && 'No draft auctions found'}
-              {activeFilter === 'pending' && 'No pending auctions found'}
               {activeFilter === 'completed' && 'No completed auctions found'}
             </h3>
             <p className="text-[#CEA17A] mb-8 max-w-md mx-auto">
               {activeFilter === 'all' && (isHost ? 'Create your first auction to get started with managing player auctions.' : 'Check back later for new auctions to participate in.')}
               {activeFilter === 'live' && 'No auctions are currently live.'}
               {activeFilter === 'draft' && 'No draft auctions are available.'}
-              {activeFilter === 'pending' && 'No pending auctions are available.'}
               {activeFilter === 'completed' && 'No completed auctions are available.'}
             </p>
             {isHost && (
