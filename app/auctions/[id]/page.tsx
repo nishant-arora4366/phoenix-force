@@ -174,6 +174,7 @@ export default function AuctionPage() {
   const inFlightBidRef = useRef(false)
   const lastConflictRef = useRef<number | null>(null)
   const exportRef = useRef<HTMLDivElement>(null)
+  const mobileExportRef = useRef<HTMLDivElement>(null)
   const [lastLatencySample, setLastLatencySample] = useState<{ optimistic: number; confirm: number } | null>(null)
   const [viewingUnsoldPlayers, setViewingUnsoldPlayers] = useState(false)
   const [showHostActions, setShowHostActions] = useState(false)
@@ -1251,19 +1252,23 @@ export default function AuctionPage() {
 
   // Handle exporting auction results as JPEG
   const handleExportAsImage = async () => {
-    if (!exportRef.current) return
+    // Determine if we're on mobile and use appropriate ref
+    const isMobile = window.innerWidth < 768
+    const targetRef = isMobile ? mobileExportRef : exportRef
+    
+    if (!targetRef.current) return
     
     try {
       setActionLoading(prev => ({ ...prev, exportImage: true }))
       
-      const canvas = await html2canvas(exportRef.current, {
+      const canvas = await html2canvas(targetRef.current, {
         backgroundColor: '#0f0f0f',
         scale: 2, // Higher quality
         useCORS: true,
         allowTaint: true,
         logging: false,
-        width: exportRef.current.scrollWidth,
-        height: exportRef.current.scrollHeight
+        width: targetRef.current.scrollWidth,
+        height: targetRef.current.scrollHeight
       })
       
       // Convert canvas to blob
@@ -3226,7 +3231,7 @@ export default function AuctionPage() {
 
         {/* Mobile Auction Completion View */}
         {(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
-          <div ref={exportRef} className="space-y-6">
+          <div className="space-y-6">
             {/* Auction Complete Header */}
             <div className="text-center py-6">
               <div className="text-[#CEA17A] text-6xl mb-4">🏆</div>
@@ -3351,6 +3356,140 @@ export default function AuctionPage() {
                         <div>
                           <div className="font-semibold text-[#DBD0C0]">{((team.total_spent || 0) / (auction?.max_tokens_per_captain || 1) * 100).toFixed(1)}%</div>
                           <div className="text-[#DBD0C0]/70">Budget Used</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hidden Mobile Export Layout - Side by Side Teams */}
+        {(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
+          <div ref={mobileExportRef} className="hidden md:hidden fixed -top-[9999px] left-0 w-screen bg-[#0f0f0f] p-6">
+            {/* Auction Complete Header */}
+            <div className="text-center py-6">
+              <div className="text-[#CEA17A] text-6xl mb-4">🏆</div>
+              <h3 className="text-2xl font-semibold text-[#DBD0C0] mb-2">Auction Complete</h3>
+              <p className="text-[#DBD0C0]/70">All players have been sold</p>
+            </div>
+            
+            {/* Summary Stats */}
+            <div className="grid grid-cols-2 gap-4 p-4 bg-[#0f0f0f]/50 rounded-lg border border-[#CEA17A]/20 mb-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#CEA17A]">{auctionTeams.length}</div>
+                <div className="text-sm text-[#DBD0C0]/70">Teams</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#CEA17A]">{auctionPlayers.filter(ap => ap.status === 'sold' && !auctionTeams.some(team => team.captain_id === ap.player_id)).length}</div>
+                <div className="text-sm text-[#DBD0C0]/70">Players Sold</div>
+              </div>
+            </div>
+            
+            {/* Final Teams - Side by Side Layout for Export */}
+            <div className="space-y-4">
+              <h4 className="text-xl font-semibold text-[#DBD0C0] text-center">Final Teams</h4>
+              <div className={`grid gap-4 ${
+                auctionTeams.length === 1 ? 'grid-cols-1' :
+                auctionTeams.length === 2 ? 'grid-cols-2' :
+                auctionTeams.length === 3 ? 'grid-cols-3' :
+                auctionTeams.length === 4 ? 'grid-cols-2' :
+                'grid-cols-2'
+              }`}>
+                {auctionTeams.map(team => {
+                  const captain = players.find(p => p.id === team.captain_id)
+                  const soldPlayers = auctionPlayers
+                    .filter(ap => ap.sold_to === team.id && ap.status === 'sold' && ap.player_id !== team.captain_id)
+                    .map(ap => players.find(p => p.id === ap.player_id))
+                    .filter(Boolean)
+                  
+                  return (
+                    <div key={team.id} className="bg-[#0f0f0f]/50 rounded-lg border border-[#CEA17A]/20 p-4">
+                      {/* Team Header */}
+                      <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#CEA17A]/20">
+                        <div>
+                          <h5 className="text-lg font-bold text-[#CEA17A]">{team.team_name}</h5>
+                          <p className="text-sm text-[#DBD0C0]/70">Captain: {captain?.display_name}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-[#DBD0C0]">₹{team.total_spent?.toLocaleString()}</div>
+                          <div className="text-sm text-[#DBD0C0]/70">Total Spent</div>
+                        </div>
+                      </div>
+                      
+                      {/* Players List */}
+                      <div className="space-y-2">
+                        {/* Captain */}
+                        <div className="flex items-center p-2 bg-[#CEA17A]/10 rounded border border-[#CEA17A]/30">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full overflow-hidden">
+                              <PlayerImage src={captain?.profile_pic_url} name={captain?.display_name || ''} />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-[#DBD0C0]">{captain?.display_name}</div>
+                              <div className="text-xs text-[#CEA17A]">Captain</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Sold Players */}
+                        {soldPlayers.map(player => {
+                          const auctionPlayer = auctionPlayers.find(ap => ap.player_id === player?.id)
+                          return (
+                            <div key={player?.id} className="flex items-center justify-between p-2 bg-[#1a1a1a]/30 rounded border border-[#CEA17A]/20">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full overflow-hidden">
+                                  <PlayerImage src={player?.profile_pic_url} name={player?.display_name || ''} />
+                                </div>
+                                <div>
+                                  <div className="font-semibold text-[#DBD0C0]">{player?.display_name}</div>
+                                  <div className="text-xs text-[#DBD0C0]/70">
+                                    {player?.skills?.Role ? `${player.skills.Role}` : ''}
+                                    {player?.skills?.Role && player?.skills?.['Batting Style'] ? ' • ' : ''}
+                                    {player?.skills?.['Batting Style'] ? `${player.skills['Batting Style']}` : ''}
+                                    {(player?.skills?.Role || player?.skills?.['Batting Style']) && player?.skills?.['Bowling Style'] ? ' • ' : ''}
+                                    {player?.skills?.['Bowling Style'] ? `${player.skills['Bowling Style']}` : ''}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-sm font-semibold text-[#CEA17A]">₹{auctionPlayer?.sold_price?.toLocaleString()}</div>
+                            </div>
+                          )
+                        })}
+                        
+                        {/* Empty Slots */}
+                        {Array.from({ length: Math.max(0, (team.required_players || 0) - (team.players_count || 0)) }).map((_, index) => (
+                          <div key={`empty-${index}`} className="flex items-center p-2 bg-[#1a1a1a]/10 rounded border border-[#CEA17A]/10">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-[#1a1a1a]/30 border border-[#CEA17A]/20 flex items-center justify-center">
+                                <span className="text-[#CEA17A]/50 text-xs">?</span>
+                              </div>
+                              <div>
+                                <div className="font-semibold text-[#DBD0C0]/50">Empty Slot</div>
+                                <div className="text-xs text-[#DBD0C0]/30">Available</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Team Summary */}
+                      <div className="mt-3 pt-3 border-t border-[#CEA17A]/20">
+                        <div className="flex justify-between text-xs">
+                          <div>
+                            <div className="font-semibold text-[#DBD0C0]">{team.players_count}/{team.required_players}</div>
+                            <div className="text-[#DBD0C0]/70">Players</div>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-[#DBD0C0]">₹{team.remaining_purse?.toLocaleString()}</div>
+                            <div className="text-[#DBD0C0]/70">Remaining</div>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-[#DBD0C0]">{((team.total_spent || 0) / (auction?.max_tokens_per_captain || 1) * 100).toFixed(1)}%</div>
+                            <div className="text-[#DBD0C0]/70">Budget Used</div>
+                          </div>
                         </div>
                       </div>
                     </div>
