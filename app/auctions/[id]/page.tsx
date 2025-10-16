@@ -515,6 +515,13 @@ export default function AuctionPage() {
   }
 
   const isAuctionLive = auction?.status === 'live'
+  // Derived flag: all non-captain players have been sold (no available players left)
+  const allPlayersSold = useMemo(() => {
+    if (!auction) return false
+    if (!isAuctionLive) return false
+    const availableCount = getAvailablePlayers().length
+    return availableCount === 0
+  }, [auction, isAuctionLive, auctionPlayers, auctionTeams, players])
 
   // Handle placing a bid (with retry + perf instrumentation)
   const handlePlaceBid = async (teamId: string, bidAmount: number) => {
@@ -1796,7 +1803,14 @@ export default function AuctionPage() {
                 <p className="text-[#DBD0C0]/70">Waiting for host to start the auction</p>
               </div>
             )}
-            {isAuctionLive && currentPlayer ? (
+            {isAuctionLive && allPlayersSold && (
+              <div className="text-center py-12">
+                <div className="text-[#CEA17A] text-6xl mb-4">🏆</div>
+                <h3 className="text-xl font-semibold text-[#DBD0C0] mb-2">Auction Complete</h3>
+                <p className="text-[#DBD0C0]/70">All players have been sold.</p>
+              </div>
+            )}
+            {isAuctionLive && !allPlayersSold && currentPlayer ? (
             <div className="space-y-6">
               
 
@@ -1970,7 +1984,7 @@ export default function AuctionPage() {
                 </div>
               </div>
             ) : null}
-            {isAuctionLive && !currentPlayer && (
+            {isAuctionLive && !allPlayersSold && !currentPlayer && (
               <div className="text-center py-12">
                 <div className="text-[#CEA17A] text-6xl mb-4">🎯</div>
                 <h3 className="text-xl font-semibold text-[#DBD0C0] mb-2">No Current Player</h3>
@@ -1990,7 +2004,7 @@ export default function AuctionPage() {
             {/* Container that evenly spaces the bidding controls block and captain bids table */}
             <div className="flex-1 flex flex-col justify-between min-h-0">
             
-            {currentPlayer ? (
+            {currentPlayer && !allPlayersSold ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
                   {/* Left: Current/Next Bid cards side by side (span 2) */}
@@ -2023,7 +2037,7 @@ export default function AuctionPage() {
                     </div>
                   </div>
                   {/* Right: Action buttons (only if controller) */}
-                  {isAuctionController && (
+                  {isAuctionController && !allPlayersSold && (
                     <div className="h-full flex flex-col justify-between">
                       {/* Row 1: primary actions */}
                       <div className="grid grid-cols-3 gap-3">
@@ -2732,11 +2746,17 @@ export default function AuctionPage() {
         </div>
 
         {/* Mobile Player & Bid snapshot (expanded with player details) */}
-        {auction.status === 'draft' ? (
+            {auction.status === 'draft' ? (
           <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
             <div className="text-[#CEA17A] text-4xl mb-3">📋</div>
             <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">Auction Not Started</h3>
             <p className="text-[#DBD0C0]/70 text-sm">Host needs to start the auction</p>
+          </div>
+        ) : isAuctionLive && allPlayersSold ? (
+          <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
+            <div className="text-[#CEA17A] text-4xl mb-3">🏆</div>
+            <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">Auction Complete</h3>
+            <p className="text-[#DBD0C0]/70 text-sm">All Players have been Sold.</p>
           </div>
         ) : isAuctionLive && !currentPlayer ? (
           <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
@@ -2811,7 +2831,7 @@ export default function AuctionPage() {
         </div>
           
           {/* Player Details Section */}
-          {currentPlayer && (
+          {currentPlayer && !allPlayersSold && (
             <div className="border-t border-[#CEA17A]/10 pt-3">
               <div className="grid grid-cols-2 gap-2 text-[10px]">
                 {/* Role */}
@@ -3055,11 +3075,11 @@ export default function AuctionPage() {
         </div>
 
         {/* Floating consolidated actions (only for auction controller) */}
-        {isAuctionController && currentPlayer && (
+        {isAuctionController && currentPlayer && !allPlayersSold && (
           <div className="fixed bottom-3 left-3 right-3 grid grid-cols-4 gap-2 z-40">
             <button 
               onClick={handlePreviousPlayer} 
-              disabled={!currentPlayer || getAvailablePlayers().findIndex(ap => ap.player_id === currentPlayer?.player_id) <= 0 || auction?.status === 'draft' || actionLoading.previousPlayer} 
+              disabled={allPlayersSold || !currentPlayer || getAvailablePlayers().findIndex(ap => ap.player_id === currentPlayer?.player_id) <= 0 || auction?.status === 'draft' || actionLoading.previousPlayer} 
               className="py-3 rounded-xl bg-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 text-xs font-medium disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {actionLoading.previousPlayer ? (
@@ -3072,7 +3092,7 @@ export default function AuctionPage() {
             </button>
             <button 
               onClick={handleNextPlayer} 
-              disabled={!currentPlayer || getAvailablePlayers().length === 0 || auction?.status === 'draft' || actionLoading.nextPlayer} 
+              disabled={allPlayersSold || !currentPlayer || getAvailablePlayers().length === 0 || auction?.status === 'draft' || actionLoading.nextPlayer} 
               className="py-3 rounded-xl bg-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 text-xs font-medium disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {actionLoading.nextPlayer ? (
@@ -3085,7 +3105,7 @@ export default function AuctionPage() {
             </button>
             <button 
               onClick={handleSellPlayer} 
-              disabled={!isAuctionLive || !recentBids?.some(b => b.is_winning_bid && !b.is_undone) || actionLoading.sellPlayer} 
+              disabled={allPlayersSold || !isAuctionLive || !recentBids?.some(b => b.is_winning_bid && !b.is_undone) || actionLoading.sellPlayer} 
               className="py-3 rounded-xl bg-green-600/20 text-green-300 border border-green-400/30 text-xs font-medium disabled:opacity-30 flex items-center justify-center gap-1"
             >
               {actionLoading.sellPlayer ? (
@@ -3100,7 +3120,7 @@ export default function AuctionPage() {
                 'Sell'
               )}
             </button>
-            <button onClick={handleUndoBid} disabled={!isAuctionLive || !recentBids?.length} className="py-3 rounded-xl bg-yellow-600/20 text-yellow-300 border border-yellow-400/30 text-xs font-medium disabled:opacity-30">Undo</button>
+            <button onClick={handleUndoBid} disabled={allPlayersSold || !isAuctionLive || !recentBids?.length} className="py-3 rounded-xl bg-yellow-600/20 text-yellow-300 border border-yellow-400/30 text-xs font-medium disabled:opacity-30">Undo</button>
           </div>
         )}
         {isAuctionController && !showHostActionsMobile && (
