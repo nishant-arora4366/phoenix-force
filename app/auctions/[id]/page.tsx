@@ -391,15 +391,10 @@ export default function AuctionPage() {
       const minPerSlot = auction?.min_bid_amount || 40
       const reserveNeeded = slotsAfterPurchase * minPerSlot
       
-      // Account for outstanding bid: if this team already has a bid on the current player,
-      // their effective purse for the next bid calculation should consider the bid replacement
-      const teamCurrentBid = recentBids?.find(bid => 
-        bid.team_id === team.id && bid.is_winning_bid && !bid.is_undone
-      )
-      const outstandingBidAmount = teamCurrentBid ? teamCurrentBid.bid_amount : 0
-      const effectivePurse = team.remaining_purse + outstandingBidAmount
-      
-      const maxPossibleBid = effectivePurse - reserveNeeded
+      // Remaining purse represents the true spendable amount; outstanding bids aren't deducted until sale.
+      const effectivePurse = team.remaining_purse
+      const rawMaxPossible = effectivePurse - reserveNeeded
+      const maxPossibleBid = Math.max(0, rawMaxPossible)
       const canAfford = effectivePurse >= nextBid
       const withinMaxPossible = nextBid <= maxPossibleBid
       const balanceAfterBid = effectivePurse - nextBid
@@ -720,54 +715,17 @@ export default function AuctionPage() {
           captainName: winningCaptain?.display_name || 'Unknown Captain',
           price: winningBid.bid_amount,
         })
-        
-        // Update auction players state to mark current player as sold
-        setAuctionPlayers(prev => prev.map(ap => 
-          ap.player_id === currentPlayer.player_id 
-            ? { ...ap, status: 'sold', sold_to: winningBid.team_id, sold_price: winningBid.bid_amount, current_player: false }
-            : ap
-        ))
-
-        // Reset viewing unsold players state when a player is sold
+        // IMPORTANT: Avoid local optimistic mutation of team purse / players_count here.
+        // We now rely exclusively on realtime updates from the backend to:
+        //  - Mark player as sold
+        //  - Update team remaining_purse, total_spent, players_count
+        //  - Advance current_player to the next available player
+        // This prevents double subtraction (local minus + realtime minus) that caused negative balances.
+        // Any UI dependent on these values will update as soon as the realtime events arrive.
+        // Reset any transient unsold view state; authoritative player set will follow.
         setViewingUnsoldPlayers(false)
-
-        // Update team statistics in local state
-        setAuctionTeams(prev => prev.map(team => 
-          team.id === winningBid.team_id 
-            ? { 
-                ...team, 
-                players_count: (team.players_count || 0) + 1,
-                total_spent: (team.total_spent || 0) + winningBid.bid_amount,
-                remaining_purse: (team.remaining_purse || 0) - winningBid.bid_amount
-              }
-            : team
-        ))
-
-        // Bid history will be fetched automatically by useEffect when currentPlayer changes
-
-        // Handle next player if available
-        if (data.next_player) {
-          const nextPlayerData = players.find(p => p.id === data.next_player.player_id)
-          
-          if (nextPlayerData) {
-            // Set the next player as current
-            setCurrentPlayer({
-              ...nextPlayerData,
-              ...data.next_player
-            })
-
-            // Update auction players state to mark next player as current
-            setAuctionPlayers(prev => prev.map(ap => ({
-              ...ap,
-              current_player: ap.player_id === data.next_player.player_id
-            })))
-          }
-        } else {
-          // No more players available
-          setCurrentPlayer(null)
-        }
-        
-        // State has been updated locally, no need to refetch
+        // Do not manually set currentPlayer; the realtime subscription will emit the next player row (current_player=true)
+        // If there is no next player, realtime will clear current_player flags and our derived getter will resolve null.
       } else {
         const errorData = await response.json()
         alert(`Failed to sell player: ${errorData.error || 'Unknown error'}`)
@@ -1268,7 +1226,7 @@ export default function AuctionPage() {
     const supabase = getSupabaseClient()
 
     const bidsChannel = supabase.channel(`auction-bids-${auction.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_bids', filter: `auction_id=eq.${auction.id}` }, (payload: any) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'auction_bids', filter: `auction_id=eq.${auction.id}` }, (payload: any) => {
         const cp = currentPlayerRef.current
         if (cp && payload.new.player_id === cp.player_id) {
           fetchBidHistory().then(() => {
@@ -1279,6 +1237,22 @@ export default function AuctionPage() {
               setLastLatencySample({ optimistic: Math.round(optimistic), confirm: Math.round(confirm) })
             }
           })
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'auction_bids', filter: `auction_id=eq.${auction.id}` }, (payload: any) => {
+        // Handle undo semantics: is_undone may flip; winning bid flag may move.
+        const cp = currentPlayerRef.current
+        setRecentBids(prev => prev.map(b => b.id === payload.new.id ? { ...b, bid_amount: payload.new.bid_amount, is_winning_bid: payload.new.is_winning_bid, is_undone: payload.new.is_undone } : b))
+        if (cp && payload.new.player_id === cp.player_id) {
+          fetchBidHistory()
+        }
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'auction_bids', filter: `auction_id=eq.${auction.id}` }, (payload: any) => {
+        // Remove deleted bid and refresh list for current player.
+        setRecentBids(prev => prev.filter(b => b.id !== payload.old.id))
+        const cp = currentPlayerRef.current
+        if (cp && payload.old.player_id === cp.player_id) {
+          fetchBidHistory()
         }
       })
       .subscribe()
@@ -1364,25 +1338,8 @@ export default function AuctionPage() {
         }
         // Handle unsell: status transitioned from sold -> available
         if (payload.old && payload.old.status === 'sold' && payload.new.status === 'available') {
-          // Revert team stats locally so UI updates instantly (realtime team row may follow later)
-          const soldPrice = payload.old.sold_price || 0
-          const soldToTeamId = payload.old.sold_to
-          if (soldToTeamId) {
-            setAuctionTeams(prev => prev.map(team => {
-              if (team.id !== soldToTeamId) return team
-              // Decrement players_count (non-captain player). Ensure not below original count.
-              const newPlayersCount = Math.max(0, (team.players_count || 0) - 1)
-              return {
-                ...team,
-                players_count: newPlayersCount,
-                total_spent: Math.max(0, (team.total_spent || 0) - soldPrice),
-                remaining_purse: (team.remaining_purse || 0) + soldPrice
-              }
-            }))
-          }
-          // Clear any lingering bids for that player (already handled above but ensure idempotent)
+          // Clear bids; rely on auction_teams realtime row to reflect purse/players_count changes to avoid double adjustments.
           setRecentBids(prev => prev.filter(b => b.player_id !== payload.new.player_id))
-          // If team became non-complete, bidding eligibility recalculates via memo.
         }
       })
       .subscribe()
