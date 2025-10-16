@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { getSupabaseClient } from '@/src/lib/supabaseClient'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import html2canvas from 'html2canvas'
 import { secureSessionManager } from '@/src/lib/secure-session'
 import { interpretError } from '@/src/lib/error-codes'
 
@@ -154,7 +155,7 @@ export default function AuctionPage() {
     if (token && transitionTokenRef.current && token !== transitionTokenRef.current) return
     // Clear token shortly after to allow new transitions
     setTimeout(() => {
-      transitionTokenRef.current = null
+    transitionTokenRef.current = null
     }, 150)
   }
 
@@ -172,6 +173,7 @@ export default function AuctionPage() {
   const bidPerfRef = useRef<{ send?: number; optimistic?: number; confirm?: number; player_id?: string }>({})
   const inFlightBidRef = useRef(false)
   const lastConflictRef = useRef<number | null>(null)
+  const exportRef = useRef<HTMLDivElement>(null)
   const [lastLatencySample, setLastLatencySample] = useState<{ optimistic: number; confirm: number } | null>(null)
   const [viewingUnsoldPlayers, setViewingUnsoldPlayers] = useState(false)
   const [showHostActions, setShowHostActions] = useState(false)
@@ -940,36 +942,36 @@ export default function AuctionPage() {
       // Check if we're at the end of the list
       if (currentIndex >= availablePlayers.length - 1) {
         // We're at the end - cycle back to the first available player
-        const firstAuctionPlayer = availablePlayers[0]
-        const firstPlayerData = players.find(p => p.id === firstAuctionPlayer.player_id)
-        
-        if (firstPlayerData && firstAuctionPlayer) {
+          const firstAuctionPlayer = availablePlayers[0]
+          const firstPlayerData = players.find(p => p.id === firstAuctionPlayer.player_id)
+          
+          if (firstPlayerData && firstAuctionPlayer) {
           // Always reset the viewingUnsoldPlayers flag when cycling
           setViewingUnsoldPlayers(true)
           
-          // Update database to set new current player
-          const response = await fetch(`/api/auctions/${auctionId}/current-player`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              action: 'set_current',
-              player_id: firstAuctionPlayer.player_id
+            // Update database to set new current player
+            const response = await fetch(`/api/auctions/${auctionId}/current-player`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                action: 'set_current',
+                player_id: firstAuctionPlayer.player_id
+              })
             })
-          })
 
-          if (response.ok) {
-            // State will be updated by the realtime subscription.
-          } else {
-            const errorData = await response.json()
+            if (response.ok) {
+              // State will be updated by the realtime subscription.
+            } else {
+              const errorData = await response.json()
             alert(`Failed to cycle to first unsold player: ${errorData.error || 'Unknown error'}`)
-          }
+            }
         } else {
           alert('No players available to cycle to')
-        }
-        return
+          }
+          return
       }
 
       // Reset bids for current player before moving
@@ -1244,6 +1246,47 @@ export default function AuctionPage() {
       setUiNotice({ type: 'error', message: 'Failed to mark auction as complete. Please try again.' })
     } finally {
       setActionLoading(prev => ({ ...prev, markComplete: false }))
+    }
+  }
+
+  // Handle exporting auction results as JPEG
+  const handleExportAsImage = async () => {
+    if (!exportRef.current) return
+    
+    try {
+      setActionLoading(prev => ({ ...prev, exportImage: true }))
+      
+      const canvas = await html2canvas(exportRef.current, {
+        backgroundColor: '#0f0f0f',
+        scale: 2, // Higher quality
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        width: exportRef.current.scrollWidth,
+        height: exportRef.current.scrollHeight
+      })
+      
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = `${auction?.tournament_name || 'Auction'}_Results_${new Date().toISOString().split('T')[0]}.jpg`
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+          
+          setUiNotice({ type: 'info', message: 'Auction results exported successfully!' })
+        }
+      }, 'image/jpeg', 0.9)
+      
+    } catch (error) {
+      console.error('Error exporting image:', error)
+      setUiNotice({ type: 'error', message: 'Failed to export image. Please try again.' })
+    } finally {
+      setActionLoading(prev => ({ ...prev, exportImage: false }))
     }
   }
 
@@ -1917,9 +1960,9 @@ export default function AuctionPage() {
                     </>
                   ) : (
                     <>
-                      <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                       {auction?.status === 'completed' ? 'Completed' : 'Mark as Complete'}
                     </>
                   )}
@@ -1985,8 +2028,32 @@ export default function AuctionPage() {
                 </div>
 
                 {/* Final Teams Full Width Responsive Grid */}
-                <div className="space-y-6 w-full">
-                  <h4 className="text-lg font-semibold text-[#DBD0C0] text-center">Final Teams</h4>
+                <div ref={exportRef} className="space-y-6 w-full">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-lg font-semibold text-[#DBD0C0]">Final Teams</h4>
+                    <button
+                      onClick={handleExportAsImage}
+                      disabled={actionLoading.exportImage}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {actionLoading.exportImage ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Exporting...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Export as JPEG
+                        </>
+                      )}
+                    </button>
+                  </div>
                   <div className={`grid gap-5 ${
                     auctionTeams.length === 1 ? 'grid-cols-1' :
                     auctionTeams.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
@@ -2017,7 +2084,7 @@ export default function AuctionPage() {
                           {/* Players List */}
                           <div className="space-y-2">
                             {/* Captain */}
-                            <div className="flex items-center justify-between p-2 bg-[#CEA17A]/10 rounded border border-[#CEA17A]/30">
+                            <div className="flex items-center p-2 bg-[#CEA17A]/10 rounded border border-[#CEA17A]/30">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full overflow-hidden">
                                   <PlayerImage src={captain?.profile_pic_url} name={captain?.display_name || ''} />
@@ -2027,7 +2094,6 @@ export default function AuctionPage() {
                                   <div className="text-xs text-[#CEA17A]">Captain</div>
                                 </div>
                               </div>
-                              <div className="text-sm font-semibold text-[#DBD0C0]">₹0</div>
                             </div>
                             
                             {/* Sold Players */}
@@ -2093,7 +2159,7 @@ export default function AuctionPage() {
 
                 {/* Player Photo - Increased Size */}
                 <div className="flex justify-center">
-                  <div
+                  <div 
                     className="relative w-64 h-64 rounded-xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-105 shadow-lg"
                     onClick={() => {
                       // On desktop keep existing preview; on mobile open modal.
@@ -3160,12 +3226,34 @@ export default function AuctionPage() {
 
         {/* Mobile Auction Completion View */}
         {(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
-          <div className="space-y-6">
+          <div ref={exportRef} className="space-y-6">
             {/* Auction Complete Header */}
             <div className="text-center py-6">
               <div className="text-[#CEA17A] text-6xl mb-4">🏆</div>
               <h3 className="text-xl font-semibold text-[#DBD0C0] mb-2">Auction Complete</h3>
               <p className="text-[#DBD0C0]/70">All players have been sold</p>
+              <button
+                onClick={handleExportAsImage}
+                disabled={actionLoading.exportImage}
+                className="mt-4 flex items-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed mx-auto"
+              >
+                {actionLoading.exportImage ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export as JPEG
+                  </>
+                )}
+              </button>
             </div>
             
             {/* Summary Stats */}
@@ -3208,7 +3296,7 @@ export default function AuctionPage() {
                       {/* Players List */}
                       <div className="space-y-2">
                         {/* Captain */}
-                        <div className="flex items-center justify-between p-2 bg-[#CEA17A]/10 rounded border border-[#CEA17A]/30">
+                        <div className="flex items-center p-2 bg-[#CEA17A]/10 rounded border border-[#CEA17A]/30">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full overflow-hidden">
                               <PlayerImage src={captain?.profile_pic_url} name={captain?.display_name || ''} />
@@ -3218,7 +3306,6 @@ export default function AuctionPage() {
                               <div className="text-xs text-[#CEA17A]">Captain</div>
                             </div>
                           </div>
-                          <div className="text-sm font-semibold text-[#DBD0C0]">₹0</div>
                         </div>
                         
                         {/* Sold Players */}
