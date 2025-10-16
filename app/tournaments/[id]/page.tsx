@@ -3242,7 +3242,7 @@ export default function TournamentDetailsPage() {
                 <p className="text-sm text-[#DBD0C0] mb-3">All Tournament Statuses:</p>
                 <div className="space-y-2">
                   {Object.keys(statusDisplayNames)
-                    .filter(status => !['auction_started', 'auction_completed', 'teams_formed'].includes(status))
+                    .filter(status => !['auction_started', 'auction_completed'].includes(status))
                     .map((status) => (
                     <button
                       key={status}
