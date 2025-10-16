@@ -148,6 +148,8 @@ export default function AuctionPage() {
   // Extended modal / mobile UI state
   const [formationTeamModalId, setFormationTeamModalId] = useState<string | null>(null)
   const [showRemainingPlayersMobile, setShowRemainingPlayersMobile] = useState(false)
+  // Stable random ordering reference (for random player_order_type) so bids don't reshuffle order each render/bid.
+  const randomOrderRef = useRef<string[] | null>(null)
 
   // Auto-dismiss sold player info after a delay
   useEffect(() => {
@@ -169,9 +171,29 @@ export default function AuctionPage() {
   // Helper function to get available players (excluding captains)
   const getAvailablePlayers = () => {
     const captainIds = (auctionTeams || []).map(t => t.captain_id)
-    return auctionPlayers
-      .filter(ap => ap.status === 'available' && !captainIds.includes(ap.player_id))
-      .sort((a, b) => a.display_order - b.display_order)
+    let filtered = auctionPlayers.filter(ap => ap.status === 'available' && !captainIds.includes(ap.player_id))
+    const orderType = auction?.player_order_type || 'base_price_desc'
+    if (orderType === 'random') {
+      // Build stable random order once; rebuild only if player set changes (count mismatch)
+      if (!randomOrderRef.current || randomOrderRef.current.length !== filtered.length) {
+        const ids = filtered.map(p => p.player_id)
+        // Fisher-Yates shuffle
+        for (let i = ids.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[ids[i], ids[j]] = [ids[j], ids[i]]
+        }
+        randomOrderRef.current = ids
+      }
+      filtered = [...filtered].sort((a,b)=> (randomOrderRef.current!.indexOf(a.player_id) - randomOrderRef.current!.indexOf(b.player_id)))
+    } else if (orderType === 'base_price_desc' || orderType === 'base_price_asc' || orderType.startsWith('name_')) {
+      // display_order already encoded from creation based on chosen order; rely on display_order
+      filtered = filtered.sort((a,b)=> a.display_order - b.display_order)
+    } else if (orderType === 'original') {
+      filtered = filtered.sort((a,b)=> a.display_order - b.display_order)
+    } else {
+      filtered = filtered.sort((a,b)=> a.display_order - b.display_order)
+    }
+    return filtered
   }
 
   // Helper function to check if we're at the end of the player list
@@ -357,13 +379,10 @@ export default function AuctionPage() {
     
     auctionTeams.forEach(team => {
       // Calculate actual sold players for this team for accuracy
-      const actualSoldPlayersForTeam = auctionPlayers.filter(ap => 
-        ap.sold_to === team.id && ap.status === 'sold'
-      ).length
-      
-      const totalSlots = team.required_players
-      // Use the more accurate count between team.players_count and actualSoldPlayersForTeam
-      const filledSlots = Math.max(team.players_count || 0, actualSoldPlayersForTeam)
+      // Authoritative count: captain + sold non-captain players for team
+      const soldNonCaptainPlayers = auctionPlayers.filter(ap => ap.sold_to === team.id && ap.status === 'sold' && ap.player_id !== team.captain_id).length
+      const totalSlots = team.required_players // includes captain slot
+      const filledSlots = 1 + soldNonCaptainPlayers // 1 for captain
       const availableSlots = Math.max(0, totalSlots - filledSlots)
       const hasOpenSlot = availableSlots > 0
       
@@ -386,7 +405,6 @@ export default function AuctionPage() {
       const balanceAfterBid = effectivePurse - nextBid
       
       status[team.id] = {
-        actualSoldPlayersForTeam,
         filledSlots,
         availableSlots,
         hasOpenSlot,
@@ -427,12 +445,9 @@ export default function AuctionPage() {
     }
     
     // Calculate remaining slots and reserve needed - use accurate sold player count
-    const actualSoldPlayersForTeam = auctionPlayers.filter(ap => 
-      ap.sold_to === team.id && ap.status === 'sold'
-    ).length
-    const totalSlots = team.required_players
-    // Use the more accurate count between team.players_count and actualSoldPlayersForTeam
-    const filledSlots = Math.max(team.players_count || 0, actualSoldPlayersForTeam)
+    const soldNonCaptainPlayers = auctionPlayers.filter(ap => ap.sold_to === team.id && ap.status === 'sold' && ap.player_id !== team.captain_id).length
+    const totalSlots = team.required_players // includes captain
+    const filledSlots = 1 + soldNonCaptainPlayers
     const availableSlots = Math.max(0, totalSlots - filledSlots)
     const remainingSlotsAfterPurchase = Math.max(0, availableSlots - 1)
     const minPerSlot = auction?.min_bid_amount || 40
@@ -513,10 +528,10 @@ export default function AuctionPage() {
               { 
                 label: 'Bid Next', 
                 onClick: () => { 
-                  // Re-calculate the next valid bid based on the fresh state and place it.
-                  const current = getCurrentBid(); 
-                  const next = calculateNextBid(current ?? undefined); 
-                  handlePlaceBid(teamId, next) 
+                  // Use the precomputed nextRequiredBid to avoid race with evolving winning bid.
+                  if (nextRequiredBid != null) {
+                    handlePlaceBid(teamId, nextRequiredBid)
+                  }
                 } 
               },
               { label: 'Dismiss', onClick: () => {} }
@@ -1232,11 +1247,9 @@ export default function AuctionPage() {
           setCurrentPlayer({ ...pl, ...cpRow })
         }
       }
-    } else if (!currentPlayer) {
-      // Initial load fallback ONLY (do not override during transitions)
-      const first = auctionPlayers
-        .filter(ap => ap.status === 'available' && !captainIds.includes(ap.player_id))
-        .sort((a, b) => a.display_order - b.display_order)[0]
+    } else if (!currentPlayer && auction.status === 'draft') {
+      // Only preselect a player before auction goes live. Once live, server sets current_player flags.
+      const first = getAvailablePlayers()[0]
       if (first) {
         const pl = players.find(p => p.id === first.player_id)
         if (pl) setCurrentPlayer({ ...pl, ...first })
@@ -1314,6 +1327,14 @@ export default function AuctionPage() {
             })
           }
         }
+        // Clear stale bids if a previously sold player becomes available again (undo assignment)
+        if (payload.old && payload.old.status === 'sold' && payload.new.status === 'available') {
+          setRecentBids(prev => prev.filter(b => b.player_id !== payload.new.player_id))
+          if (currentPlayerRef.current && currentPlayerRef.current.player_id === payload.new.player_id) {
+            // Immediately refetch to ensure clean slate (server may have purged bids)
+            fetchBidHistory(payload.new.player_id)
+          }
+        }
 
         if (payload.new.current_player) {
           const pl = playersRef.current.find(p => p.id === payload.new.player_id)
@@ -1340,6 +1361,28 @@ export default function AuctionPage() {
               }
             }, 120)
           }
+        }
+        // Handle unsell: status transitioned from sold -> available
+        if (payload.old && payload.old.status === 'sold' && payload.new.status === 'available') {
+          // Revert team stats locally so UI updates instantly (realtime team row may follow later)
+          const soldPrice = payload.old.sold_price || 0
+          const soldToTeamId = payload.old.sold_to
+          if (soldToTeamId) {
+            setAuctionTeams(prev => prev.map(team => {
+              if (team.id !== soldToTeamId) return team
+              // Decrement players_count (non-captain player). Ensure not below original count.
+              const newPlayersCount = Math.max(0, (team.players_count || 0) - 1)
+              return {
+                ...team,
+                players_count: newPlayersCount,
+                total_spent: Math.max(0, (team.total_spent || 0) - soldPrice),
+                remaining_purse: (team.remaining_purse || 0) + soldPrice
+              }
+            }))
+          }
+          // Clear any lingering bids for that player (already handled above but ensure idempotent)
+          setRecentBids(prev => prev.filter(b => b.player_id !== payload.new.player_id))
+          // If team became non-complete, bidding eligibility recalculates via memo.
         }
       })
       .subscribe()
@@ -2223,8 +2266,10 @@ export default function AuctionPage() {
                               ) }
                             </div>
                             <div className="col-span-2 text-[#DBD0C0] text-base font-semibold text-center">₹{team.remaining_purse}</div>
-                            <div className="col-span-2 text-[#DBD0C0] text-base font-semibold text-center" title={`Max possible bid preserves min ₹${minPerSlot} for each remaining slot`}>₹{Math.max(0, maxPossibleBid)}</div>
-                            <div className={`col-span-2 text-base font-semibold text-center ${balanceAfterBid >= 0 ? 'text-[#DBD0C0]' : 'text-red-400'}`}>₹{balanceAfterBid}</div>
+                            <div className="col-span-2 text-[#DBD0C0] text-base font-semibold text-center" title={`Max possible bid preserves min ₹${minPerSlot} for each remaining slot`}>
+                              {hasOpenSlot ? `₹${Math.max(0, maxPossibleBid)}` : '—'}
+                            </div>
+                            <div className={`col-span-2 text-base font-semibold text-center ${balanceAfterBid >= 0 ? 'text-[#DBD0C0]' : 'text-red-400'}`}>{hasOpenSlot ? `₹${Math.max(0, balanceAfterBid)}` : '—'}</div>
                             <div className="col-span-1 flex justify-center">
                               {isWinning ? <div className="w-3 h-3 bg-green-500 rounded-full"/> : canAfford ? <div className="w-3 h-3 bg-[#CEA17A] rounded-full"/> : <div className="w-3 h-3 bg-gray-500 rounded-full"/>}
                                 </div>
@@ -2782,9 +2827,9 @@ export default function AuctionPage() {
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
                       <button onClick={() => setMobilePurseTeamId(team.id)} className="text-[9px] font-medium text-[#CEA17A] hover:text-[#CEA17A]/80 transition-colors">Remaining <span className="text-[#DBD0C0] font-semibold">₹{team.remaining_purse}</span></button>
                       <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
-                      <span className="text-[9px] text-[#DBD0C0]/70">Max <span className="text-[#DBD0C0] font-semibold">₹{Math.max(0, maxPossibleBid)}</span></span>
+                      <span className="text-[9px] text-[#DBD0C0]/70">Max <span className="text-[#DBD0C0] font-semibold">{availableSlots > 0 ? `₹${Math.max(0, maxPossibleBid)}` : '—'}</span></span>
                       <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
-                      <span className={`text-[9px] font-medium ${balanceAfter >= 0 ? 'text-green-400' : 'text-red-400'}`}>After ₹{balanceAfter}</span>
+                      <span className={`text-[9px] font-medium ${balanceAfter >= 0 ? 'text-green-400' : 'text-red-400'}`}>After {availableSlots > 0 ? `₹${Math.max(0, balanceAfter)}` : '—'}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 relative">
@@ -3344,13 +3389,13 @@ export default function AuctionPage() {
        {soldPlayerInfo && (
          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in-down">
            <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-2 border-[#CEA17A]/30 rounded-2xl p-12 shadow-2xl text-center max-w-2xl mx-4">
-             <div className="text-8xl mb-6">💰</div>
+             {/* <div className="text-8xl mb-6">💰</div> */}
              <h2 className="text-3xl md:text-4xl font-bold text-[#CEA17A] mb-4">Sold!</h2>
              <p className="text-xl md:text-2xl text-[#DBD0C0] mb-3">
                <span className="font-bold text-white">{soldPlayerInfo.playerName}</span>
              </p>
              <p className="text-base md:text-lg text-[#DBD0C0]/80 mb-4">
-               Sold to <span className="font-semibold text-white">{soldPlayerInfo.captainName}</span>
+                to <span className="font-semibold text-white">{soldPlayerInfo.captainName}</span>
              </p>
              <p className="text-2xl md:text-3xl font-bold text-green-400">
                ₹{soldPlayerInfo.price}

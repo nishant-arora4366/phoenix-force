@@ -448,10 +448,48 @@ export async function POST(request: NextRequest) {
 
     // Create auction players if selected players are provided
     if (body.selected_players && body.selected_players.length > 0) {
+      // Normalize order type
+      const orderType: string = body.player_order_type || auctionData.player_order_type || 'base_price_desc'
+      // We expect each selected_player to include skills if base price ordering is needed.
+      let orderedPlayers = [...body.selected_players]
+      const getBasePrice = (p: any) => {
+        const raw = p.skills?.['Base Price']
+        if (raw == null) return 0
+        if (Array.isArray(raw)) return parseInt(raw[0]) || 0
+        const num = parseInt(raw)
+        return isNaN(num) ? 0 : num
+      }
+      switch (orderType) {
+        case 'base_price_desc':
+          console.log('[AUCTION CREATE] Ordering players by base price desc')
+          orderedPlayers.sort((a,b)=> getBasePrice(b) - getBasePrice(a))
+          break
+        case 'base_price_asc':
+          console.log('[AUCTION CREATE] Ordering players by base price asc')
+          orderedPlayers.sort((a,b)=> getBasePrice(a) - getBasePrice(b))
+          break
+        case 'name_asc':
+          console.log('[AUCTION CREATE] Ordering players by name asc')
+          orderedPlayers.sort((a,b)=> (a.display_name||'').localeCompare(b.display_name||''))
+          break
+        case 'name_desc':
+          console.log('[AUCTION CREATE] Ordering players by name desc')
+          orderedPlayers.sort((a,b)=> (b.display_name||'').localeCompare(a.display_name||''))
+          break
+        case 'random':
+          console.log('[AUCTION CREATE] Ordering players randomly')
+          orderedPlayers.sort(()=> Math.random()-0.5)
+          break
+        case 'original':
+        default:
+          // keep original order (already in body.selected_players)
+          break
+      }
+
       // Get captain IDs for auto-assignment
       const captainIds = body.captains ? body.captains.map((captain: any) => captain.player_id) : []
       
-      const auctionPlayers = body.selected_players.map((player: any, index: number) => {
+      const auctionPlayers = orderedPlayers.map((player: any, index: number) => {
         // Check if this player is a captain
         const isCaptain = captainIds.includes(player.id)
         
@@ -466,7 +504,7 @@ export async function POST(request: NextRequest) {
             status: 'sold',
             sold_to: teamData?.id || null,
             sold_price: 0,
-            display_order: index + 1,
+            display_order: index + 1, // Final mapped order after sorting
             times_skipped: 0,
             current_player: false
           }

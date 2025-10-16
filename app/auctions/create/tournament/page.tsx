@@ -740,6 +740,76 @@ export default function TournamentAuctionCreatePage() {
           </div>
         )}
 
+        {/* Desktop / Larger Screen Step Navigation (sticky top) */}
+        {selectedTournament && (
+          <div className="hidden sm:flex sticky top-0 z-40 bg-[#19171b]/80 backdrop-blur-md border border-[#CEA17A]/20 rounded-xl px-6 py-4 mb-6 items-center justify-between shadow-lg">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={goBack}
+                className="flex items-center px-3 py-2 bg-[#CEA17A]/10 hover:bg-[#CEA17A]/20 text-[#CEA17A] rounded-lg text-sm font-medium transition"
+              >
+                <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                {currentStep === 1 ? 'Tournaments' : 'Back'}
+              </button>
+              <div className="text-[#DBD0C0] font-semibold text-sm">
+                Step {currentStep} of 4
+              </div>
+              <div className="flex items-center gap-2">
+                {[1,2,3,4].map(step => (
+                  <div
+                    key={step}
+                    className={`h-2 w-8 rounded-full transition-all ${step < currentStep ? 'bg-[#CEA17A]' : step === currentStep ? 'bg-[#CEA17A]/70' : 'bg-[#CEA17A]/20'}`}
+                    title={`Step ${step}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {currentStep === 1 && (
+                <button
+                  onClick={handleStep1Next}
+                  disabled={tournamentPlayers.length % (selectedTournament.selected_teams || 1) !== 0}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border border-[#CEA17A]/30 transition ${
+                    tournamentPlayers.length % (selectedTournament.selected_teams || 1) !== 0
+                      ? 'bg-[#CEA17A]/10 text-[#CEA17A]/40 cursor-not-allowed'
+                      : 'bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25'
+                  }`}
+                >Next</button>
+              )}
+              {currentStep === 2 && (
+                <button
+                  onClick={handleStep2Next}
+                  disabled={auctionConfig.captains.length !== selectedTournament.selected_teams}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border border-[#CEA17A]/30 transition ${
+                    auctionConfig.captains.length !== selectedTournament.selected_teams
+                      ? 'bg-[#CEA17A]/10 text-[#CEA17A]/40 cursor-not-allowed'
+                      : 'bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25'
+                  }`}
+                >Next</button>
+              )}
+              {currentStep === 3 && (
+                <button
+                  onClick={handleStep3Next}
+                  className="px-4 py-2 rounded-lg text-sm font-medium border border-[#CEA17A]/30 bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25 transition"
+                >Next</button>
+              )}
+              {currentStep === 4 && (
+                <button
+                  onClick={saveAuctionDraft}
+                  disabled={creatingAuction === selectedTournament.id}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold border border-[#CEA17A]/40 transition ${
+                    creatingAuction === selectedTournament.id
+                      ? 'bg-[#CEA17A]/25 text-[#CEA17A]/70 cursor-wait'
+                      : 'bg-[#CEA17A]/30 text-[#19171b] hover:bg-[#CEA17A]/40'
+                  }`}
+                >{creatingAuction === selectedTournament.id ? 'Creating…' : 'Create Auction'}</button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Multi-Step Form or Tournament Selection */}
         <div className={`flex-grow flex flex-col ${selectedTournament ? 'pb-20 sm:pb-0' : ''}`}>
         {!selectedTournament ? (
