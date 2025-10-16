@@ -1029,7 +1029,7 @@ export default function TournamentDetailsPage() {
       case 'auction_completed':
         return 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
       case 'teams_formed':
-        return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+        return 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
       case 'completed':
         return 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
       default:
@@ -1050,7 +1050,7 @@ export default function TournamentDetailsPage() {
       case 'auction_completed':
         return 'Auction Completed'
       case 'teams_formed':
-        return 'Registration Closed'
+        return 'Teams Formed'
       case 'completed':
         return 'Completed'
       default:
