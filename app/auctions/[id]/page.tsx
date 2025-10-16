@@ -122,6 +122,25 @@ export default function AuctionPage() {
   // Central interaction lock: when true, all critical actions (navigation, sell, undo, bidding) should be disabled.
   const isInteractionLocked = Object.values(actionLoading).some(v => v)
 
+  // Re-added core auction runtime states lost in previous edit
+  const [currentPlayer, setCurrentPlayer] = useState<any | null>(null)
+  const [recentBids, setRecentBids] = useState<any[]>([])
+  // Track whether navigation (next/previous player) is in progress to avoid race conditions
+  const navigationInProgressRef = useRef(false)
+  // Random order refs (for player_order_type === 'random')
+  const randomOrderRef = useRef<string[] | null>(null)
+  const randomOrderInitializedRef = useRef(false)
+
+  // Helper: derive a player's base price (fallback 0)
+  const getPlayerBasePrice = (player: any) => {
+    if (!player) return 0
+    // Attempt to find auctionPlayer record for more authoritative base price if present
+    const auctionPlayerRecord = auctionPlayers.find(ap => ap.player_id === player.id)
+    // Some schemas might store base price on auction_player; fallback to player.base_price if exists
+    // @ts-ignore - allow dynamic access
+    return auctionPlayerRecord?.base_price || player.base_price || 0
+  }
+
   // Helpers to begin/end a guarded player transition (avoid duplicate spinners & racey unlocks)
   const transitionTokenRef = useRef<number | null>(null)
   const beginPlayerTransition = (reason?: string) => {
@@ -133,29 +152,23 @@ export default function AuctionPage() {
   const endPlayerTransition = (token?: number) => {
     // If a token is supplied ensure it matches; else allow unconditional end after a short debounce to smooth UI
     if (token && transitionTokenRef.current && token !== transitionTokenRef.current) return
-    transitionTokenRef.current = null
-    // Small timeout to let inbound realtime updates settle before hiding overlay
-    setTimeout(() => {}, 120)
+    // Clear token shortly after to allow new transitions
+    setTimeout(() => {
+      transitionTokenRef.current = null
+    }, 150)
   }
-  // Per-team transient bid input (no prefilled ladder). null means unopened.
+
+  // Per-team transient bid input state
   const [selectedBidAmounts, setSelectedBidAmounts] = useState<Record<string, number | null>>({})
   const [openBidPopover, setOpenBidPopover] = useState<string | null>(null)
-  const [recentBids, setRecentBids] = useState<Array<{
-    id: string
-    team_id: string
-    team_name: string
-    bid_amount: number
-    timestamp: string
-    player_id: string
-    is_winning_bid: boolean
-    is_undone: boolean
-  }>>([])
-  const [currentPlayer, setCurrentPlayer] = useState<any>(null)
+  // UI notices & toasts
   const [uiNotice, setUiNotice] = useState<{ type: 'error' | 'info' | 'warning'; message: string } | null>(null)
   const [toasts, setToasts] = useState<Array<{ id: string; title: string; message: string; severity: 'info'|'warning'|'error'; actions?: Array<{label: string; onClick: () => void}> }>>([])
-  const addToast = useCallback((t: Omit<(typeof toasts)[number], 'id'>) => { setToasts(prev => [...prev, { id: Math.random().toString(36).slice(2), ...t }]) }, [])
-  const autoRetryRef = useRef<number>(0)
+  const addToast = useCallback((t: Omit<(typeof toasts)[number], 'id'>) => {
+    setToasts(prev => [...prev, { id: Math.random().toString(36).slice(2), ...t }])
+  }, [])
   const removeToast = useCallback((id: string) => setToasts(prev => prev.filter(to => to.id !== id)), [])
+  // Performance / concurrency tracking refs
   const bidPerfRef = useRef<{ send?: number; optimistic?: number; confirm?: number; player_id?: string }>({})
   const inFlightBidRef = useRef(false)
   const lastConflictRef = useRef<number | null>(null)
@@ -165,22 +178,15 @@ export default function AuctionPage() {
   // Mobile-specific UI state
   const [mobilePurseTeamId, setMobilePurseTeamId] = useState<string | null>(null)
   const [showHostActionsMobile, setShowHostActionsMobile] = useState(false)
-  // Extended modal / mobile UI state
   const [formationTeamModalId, setFormationTeamModalId] = useState<string | null>(null)
   const [showRemainingPlayersMobile, setShowRemainingPlayersMobile] = useState(false)
-  // Stable random ordering reference (for random player_order_type) so bids don't reshuffle order each render/bid.
-  const randomOrderRef = useRef<string[] | null>(null)
-  // Track if random order has been initialized to prevent re-initialization
-  const randomOrderInitializedRef = useRef(false)
-  // Track ongoing player navigation to prevent auto-recovery interference
-  const navigationInProgressRef = useRef(false)
   // Track recently notified sales to prevent duplicate notifications
   const recentlyNotifiedSalesRef = useRef<Set<string>>(new Set())
 
-  // Auto-dismiss sold player info after a delay
+  // Auto-dismiss sold player notification (short duration)
   useEffect(() => {
     if (soldPlayerInfo) {
-      const timer = setTimeout(() => setSoldPlayerInfo(null), 500) // 1 second
+      const timer = setTimeout(() => setSoldPlayerInfo(null), 1000) // 1s per updated requirement
       return () => clearTimeout(timer)
     }
   }, [soldPlayerInfo])
@@ -192,56 +198,38 @@ export default function AuctionPage() {
     return () => clearTimeout(timeoutId)
   }, [uiNotice])
 
-  // Ensure we have a current player when auction is live
+  // Ensure we have a current player when auction is live (auto-fix missing current_player flag)
   useEffect(() => {
     if (!auction || !auctionPlayers || !players) return
     if (auction.status !== 'live') return
-    // Don't auto-fix if navigation is in progress
-    if (navigationInProgressRef.current) return
-    
+    if (navigationInProgressRef.current) return // don't interfere while navigating
+
     const captainIds = (auctionTeams || []).map(t => t.captain_id)
     const hasCurrentPlayer = auctionPlayers.some(ap => ap.current_player === true && !captainIds.includes(ap.player_id))
     const hasAvailablePlayers = auctionPlayers.some(ap => ap.status === 'available' && !captainIds.includes(ap.player_id))
-    
-    // Only auto-fix after a delay to allow ongoing operations to complete
+
     if (!hasCurrentPlayer && hasAvailablePlayers) {
       const timeoutId = setTimeout(() => {
-        // Double-check conditions after delay
         if (navigationInProgressRef.current) return
-        
-        const stillNoCurrentPlayer = !auctionPlayers.some(ap => ap.current_player === true && !captainIds.includes(ap.player_id))
-        if (!stillNoCurrentPlayer) return
-        
+        const stillNoCurrent = !auctionPlayers.some(ap => ap.current_player === true && !captainIds.includes(ap.player_id))
+        if (!stillNoCurrent) return
         const firstAvailable = auctionPlayers
           .filter(ap => ap.status === 'available' && !captainIds.includes(ap.player_id))
           .sort((a, b) => a.display_order - b.display_order)[0]
-        
         if (firstAvailable) {
-          const autoSetCurrent = async () => {
-            try {
-              const token = secureSessionManager.getToken()
-              if (token) {
-                console.log('Auto-fixing missing current player after delay, setting:', firstAvailable.player_id)
-                await fetch(`/api/auctions/${auctionId}/current-player`, {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                    action: 'set_current',
-                    player_id: firstAvailable.player_id
-                  })
-                })
-              }
-            } catch (error) {
-              console.warn('Failed to auto-fix current player:', error)
-            }
+          const token = secureSessionManager.getToken()
+          if (token) {
+            fetch(`/api/auctions/${auctionId}/current-player`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ action: 'set_current', player_id: firstAvailable.player_id })
+            }).catch(err => console.warn('Auto-fix current player failed:', err))
           }
-          autoSetCurrent()
         }
-      }, 1000) // 1 second delay to allow navigation to complete
-      
+      }, 1000)
       return () => clearTimeout(timeoutId)
     }
   }, [auction?.status, auctionPlayers, auctionTeams, players, auctionId])
@@ -432,13 +420,13 @@ export default function AuctionPage() {
   // Get latest bids by each captain
   const getLatestBidsByCaptain = useCallback(() => {
     if (!recentBids.length) return []
-    const latestBidsByTeam = recentBids.reduce((acc, bid) => {
+    const latestBidsByTeam = recentBids.reduce((acc: Record<string, any>, bid: any) => {
       if (!acc[bid.team_id] || new Date(bid.timestamp) > new Date(acc[bid.team_id].timestamp)) {
         acc[bid.team_id] = bid
       }
       return acc
-    }, {} as Record<string, typeof recentBids[0]>)
-    return Object.values(latestBidsByTeam).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    }, {} as Record<string, any>)
+    return (Object.values(latestBidsByTeam) as any[]).sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   }, [recentBids])
   const latestBidsMemo = useMemo(() => getLatestBidsByCaptain(), [getLatestBidsByCaptain])
 
@@ -604,11 +592,6 @@ export default function AuctionPage() {
     return { valid: true, reason: '' }
   }
 
-  // Get base price from player skills
-  const getPlayerBasePrice = (player: any) => {
-    if (!player?.skills?.['Base Price']) return 0
-    return parseInt(player.skills['Base Price']) || 0
-  }
 
   // Get current bid from auction_bids table
   const getCurrentBid = () => {
@@ -2097,96 +2080,7 @@ export default function AuctionPage() {
                     })}
                   </div>
                   
-                  {/* Desktop: Full width grid */}
-                  <div className="hidden md:grid gap-4" style={{
-                    gridTemplateColumns: `repeat(${auctionTeams.length}, 1fr)`
-                  }}>
-                    {auctionTeams.map(team => {
-                      const captain = players.find(p => p.id === team.captain_id)
-                      const soldPlayers = auctionPlayers
-                        .filter(ap => ap.sold_to === team.id && ap.status === 'sold' && ap.player_id !== team.captain_id)
-                        .map(ap => players.find(p => p.id === ap.player_id))
-                        .filter(Boolean)
-                      
-                      return (
-                        <div key={team.id} className="bg-[#0f0f0f]/50 rounded-lg border border-[#CEA17A]/20 p-4">
-                          {/* Team Header */}
-                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#CEA17A]/20">
-                            <div>
-                              <h5 className="text-lg font-bold text-[#CEA17A]">{team.team_name}</h5>
-                              <p className="text-sm text-[#DBD0C0]/70">Captain: {captain?.display_name}</p>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-lg font-bold text-[#DBD0C0]">₹{team.total_spent?.toLocaleString()}</div>
-                              <div className="text-sm text-[#DBD0C0]/70">Total Spent</div>
-                            </div>
-                          </div>
-                          
-                          {/* Players List */}
-                          <div className="space-y-2">
-                            {/* Captain */}
-                            <div className="flex items-center justify-between p-2 bg-[#CEA17A]/10 rounded border border-[#CEA17A]/30">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full overflow-hidden">
-                                  <PlayerImage src={captain?.profile_pic_url} name={captain?.display_name || ''} />
-                                </div>
-                                <div>
-                                  <div className="font-semibold text-[#DBD0C0]">{captain?.display_name}</div>
-                                  <div className="text-xs text-[#CEA17A]">Captain</div>
-                                </div>
-                              </div>
-                              <div className="text-sm font-semibold text-[#DBD0C0]">₹0</div>
-                            </div>
-                            
-                            {/* Sold Players */}
-                            {soldPlayers.map(player => {
-                              const auctionPlayer = auctionPlayers.find(ap => ap.player_id === player?.id)
-                              return (
-                                <div key={player?.id} className="flex items-center justify-between p-2 bg-[#1a1a1a]/50 rounded border border-[#CEA17A]/10">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full overflow-hidden">
-                                      <PlayerImage src={player?.profile_pic_url} name={player?.display_name || ''} />
-                                    </div>
-                                    <div className="font-semibold text-[#DBD0C0]">{player?.display_name}</div>
-                                  </div>
-                                  <div className="text-sm font-semibold text-green-400">₹{auctionPlayer?.sold_price?.toLocaleString()}</div>
-                                </div>
-                              )
-                            })}
-                            
-                            {/* Empty slots if any */}
-                            {Array.from({ length: Math.max(0, (team.required_players || 0) - 1 - soldPlayers.length) }).map((_, idx) => (
-                              <div key={`empty-${idx}`} className="flex items-center justify-between p-2 bg-[#1a1a1a]/30 rounded border border-[#CEA17A]/10 opacity-50">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 rounded-full bg-[#CEA17A]/20 flex items-center justify-center">
-                                    <span className="text-[#CEA17A] text-xs">—</span>
-                                  </div>
-                                  <div className="text-[#DBD0C0]/50">Empty Slot</div>
-                                </div>
-                                <div className="text-sm text-[#DBD0C0]/50">—</div>
-                              </div>
-                            ))}
-                          </div>
-                          
-                          {/* Team Summary */}
-                          <div className="mt-3 pt-2 border-t border-[#CEA17A]/20 grid grid-cols-3 gap-4 text-center text-sm">
-                            <div>
-                              <div className="font-semibold text-[#DBD0C0]">{1 + soldPlayers.length}</div>
-                              <div className="text-[#DBD0C0]/70">Players</div>
-                            </div>
-                            <div>
-                              <div className="font-semibold text-[#DBD0C0]">₹{team.remaining_purse?.toLocaleString()}</div>
-                              <div className="text-[#DBD0C0]/70">Remaining</div>
-                            </div>
-                            <div>
-                              <div className="font-semibold text-[#DBD0C0]">{((team.total_spent || 0) / (auction?.max_tokens_per_captain || 1) * 100).toFixed(1)}%</div>
-                              <div className="text-[#DBD0C0]/70">Budget Used</div>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                  {/* Removed duplicated desktop-only grid; unified grid above handles all breakpoints */}
                 </div>
               </div>
             )}
@@ -3136,26 +3030,22 @@ export default function AuctionPage() {
           <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${getStatusColor(auction.status)}`}>{getStatusText(auction.status)}</span>
         </div>
 
-        {/* Mobile Player & Bid snapshot (expanded with player details) */}
+        {/* Mobile Player & Bid snapshot (expanded with player details) - Hidden when auction is completed */}
+        {!(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
+          <>
             {auction.status === 'draft' ? (
-          <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
-            <div className="text-[#CEA17A] text-4xl mb-3">📋</div>
-            <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">Auction Not Started</h3>
-            <p className="text-[#DBD0C0]/70 text-sm">Host needs to start the auction</p>
-          </div>
-        ) : isAuctionLive && allPlayersSold ? (
-          <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
-            <div className="text-[#CEA17A] text-4xl mb-3">🏆</div>
-            <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">Auction Complete</h3>
-            <p className="text-[#DBD0C0]/70 text-sm">All Players have been Sold.</p>
-          </div>
-        ) : isAuctionLive && !currentPlayer ? (
-          <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
-            <div className="text-[#CEA17A] text-4xl mb-3">🎯</div>
-            <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">No Current Player</h3>
-            <p className="text-[#DBD0C0]/70 text-sm">Host hasn't selected a player yet</p>
-          </div>
-        ) : (
+              <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
+                <div className="text-[#CEA17A] text-4xl mb-3">📋</div>
+                <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">Auction Not Started</h3>
+                <p className="text-[#DBD0C0]/70 text-sm">Host needs to start the auction</p>
+              </div>
+            ) : isAuctionLive && !currentPlayer ? (
+              <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
+                <div className="text-[#CEA17A] text-4xl mb-3">🎯</div>
+                <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">No Current Player</h3>
+                <p className="text-[#DBD0C0]/70 text-sm">Host hasn't selected a player yet</p>
+              </div>
+            ) : (
           <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-3 mb-3 relative">
             {/* Loading overlay for player transitions */}
             {(actionLoading.nextPlayer || actionLoading.previousPlayer) && (
@@ -3265,10 +3155,129 @@ export default function AuctionPage() {
           )}
         </div>
         )}
+        </>
+        )}
+
+        {/* Mobile Auction Completion View */}
+        {(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
+          <div className="space-y-6">
+            {/* Auction Complete Header */}
+            <div className="text-center py-6">
+              <div className="text-[#CEA17A] text-6xl mb-4">🏆</div>
+              <h3 className="text-xl font-semibold text-[#DBD0C0] mb-2">Auction Complete</h3>
+              <p className="text-[#DBD0C0]/70">All players have been sold</p>
+            </div>
+            
+            {/* Summary Stats */}
+            <div className="grid grid-cols-2 gap-4 p-4 bg-[#0f0f0f]/50 rounded-lg border border-[#CEA17A]/20">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#CEA17A]">{auctionTeams.length}</div>
+                <div className="text-sm text-[#DBD0C0]/70">Teams</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#CEA17A]">{auctionPlayers.filter(ap => ap.status === 'sold').length}</div>
+                <div className="text-sm text-[#DBD0C0]/70">Players Sold</div>
+              </div>
+            </div>
+            
+            {/* Final Team Standings - Mobile: Vertical Stack */}
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold text-[#DBD0C0] text-center">Final Teams</h4>
+              <div className="space-y-3">
+                {auctionTeams.map(team => {
+                  const captain = players.find(p => p.id === team.captain_id)
+                  const soldPlayers = auctionPlayers
+                    .filter(ap => ap.sold_to === team.id && ap.status === 'sold' && ap.player_id !== team.captain_id)
+                    .map(ap => players.find(p => p.id === ap.player_id))
+                    .filter(Boolean)
+                  
+                  return (
+                    <div key={team.id} className="bg-[#0f0f0f]/50 rounded-lg border border-[#CEA17A]/20 p-4">
+                      {/* Team Header */}
+                      <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#CEA17A]/20">
+                        <div>
+                          <h5 className="text-lg font-bold text-[#CEA17A]">{team.team_name}</h5>
+                          <p className="text-sm text-[#DBD0C0]/70">Captain: {captain?.display_name}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-[#DBD0C0]">₹{team.total_spent?.toLocaleString()}</div>
+                          <div className="text-sm text-[#DBD0C0]/70">Total Spent</div>
+                        </div>
+                      </div>
+                      
+                      {/* Players List */}
+                      <div className="space-y-2">
+                        {/* Captain */}
+                        <div className="flex items-center justify-between p-2 bg-[#CEA17A]/10 rounded border border-[#CEA17A]/30">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full overflow-hidden">
+                              <PlayerImage src={captain?.profile_pic_url} name={captain?.display_name || ''} />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-[#DBD0C0]">{captain?.display_name}</div>
+                              <div className="text-xs text-[#CEA17A]">Captain</div>
+                            </div>
+                          </div>
+                          <div className="text-sm font-semibold text-[#DBD0C0]">₹0</div>
+                        </div>
+                        
+                        {/* Sold Players */}
+                        {soldPlayers.map(player => {
+                          const auctionPlayer = auctionPlayers.find(ap => ap.player_id === player?.id)
+                          return (
+                            <div key={player?.id} className="flex items-center justify-between p-2 bg-[#1a1a1a]/50 rounded border border-[#CEA17A]/10">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full overflow-hidden">
+                                  <PlayerImage src={player?.profile_pic_url} name={player?.display_name || ''} />
+                                </div>
+                                <div className="font-semibold text-[#DBD0C0]">{player?.display_name}</div>
+                              </div>
+                              <div className="text-sm font-semibold text-green-400">₹{auctionPlayer?.sold_price?.toLocaleString()}</div>
+                            </div>
+                          )
+                        })}
+                        
+                        {/* Empty slots if any */}
+                        {Array.from({ length: Math.max(0, (team.required_players || 0) - 1 - soldPlayers.length) }).map((_, idx) => (
+                          <div key={`empty-${idx}`} className="flex items-center justify-between p-2 bg-[#1a1a1a]/30 rounded border border-[#CEA17A]/10 opacity-50">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-[#CEA17A]/20 flex items-center justify-center">
+                                <span className="text-[#CEA17A] text-xs">—</span>
+                              </div>
+                              <div className="text-[#DBD0C0]/50">Empty Slot</div>
+                            </div>
+                            <div className="text-sm text-[#DBD0C0]/50">—</div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Team Summary */}
+                      <div className="mt-3 pt-2 border-t border-[#CEA17A]/20 grid grid-cols-3 gap-4 text-center text-sm">
+                        <div>
+                          <div className="font-semibold text-[#DBD0C0]">{1 + soldPlayers.length}</div>
+                          <div className="text-[#DBD0C0]/70">Players</div>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-[#DBD0C0]">₹{team.remaining_purse?.toLocaleString()}</div>
+                          <div className="text-[#DBD0C0]/70">Remaining</div>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-[#DBD0C0]">{((team.total_spent || 0) / (auction?.max_tokens_per_captain || 1) * 100).toFixed(1)}%</div>
+                          <div className="text-[#DBD0C0]/70">Budget Used</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Removed separate navigation row to consolidate controls at bottom */}
 
-        {/* Captain Bid Buttons (compact list) */}
+        {/* Captain Bid Buttons (compact list) - Hidden when auction is completed */}
+        {!(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
         <div className="mb-6">
           <h3 className="text-base font-semibold text-[#DBD0C0] mb-2">Captain Bids</h3>
           <div className="space-y-1.5">
@@ -3420,8 +3429,10 @@ export default function AuctionPage() {
             })}
           </div>
         </div>
+        )}
 
-        {/* Teams horizontal carousel (restored) */}
+        {/* Teams horizontal carousel (restored) - Hidden when auction is completed */}
+        {!(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-base font-semibold text-[#DBD0C0]">Teams</h3>
@@ -3464,6 +3475,7 @@ export default function AuctionPage() {
             })}
           </div>
         </div>
+        )}
 
         {/* Floating consolidated actions (only for auction controller) */}
         {isAuctionController && currentPlayer && !allPlayersSold && (
