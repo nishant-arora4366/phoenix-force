@@ -403,14 +403,14 @@ export default function Home() {
                               : tournament.status === 'completed'
                               ? 'bg-red-500/15 text-red-300 border-red-500/25 shadow-lg shadow-red-500/10'
                               : tournament.status === 'teams_formed'
-                              ? 'bg-yellow-500/15 text-yellow-300 border-yellow-500/25 shadow-lg shadow-yellow-500/10'
+                              ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/25 shadow-lg shadow-indigo-500/10'
                               : tournament.status === 'in_progress'
                               ? 'bg-red-500/15 text-red-300 border-red-500/25 shadow-lg shadow-red-500/10'
                               : 'bg-yellow-500/15 text-yellow-300 border-yellow-500/25 shadow-lg shadow-yellow-500/10'
                           }`}>
                             {tournament.status === 'registration_open' ? 'Open' : 
                              tournament.status === 'completed' ? 'Closed' :
-                             tournament.status === 'teams_formed' ? 'Registration Closed' :
+                             tournament.status === 'teams_formed' ? 'Teams Formed' :
                              tournament.status === 'in_progress' ? 'Closed' : 'Opening Soon'}
                           </span>
                         </div>
