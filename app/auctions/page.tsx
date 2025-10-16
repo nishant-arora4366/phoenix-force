@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { secureSessionManager } from '@/src/lib/secure-session'
 import { getSupabaseClient } from '@/src/lib/supabaseClient'
 
@@ -137,6 +138,15 @@ export default function AuctionsPage() {
   const supabase = getSupabaseClient()
 
   const { data: auctions, error, isLoading: auctionsLoading, mutate } = useSWR<Auction[]>('/api/auctions', fetcher)
+  
+  // Get URL search parameters for tournament filtering
+  const searchParams = useSearchParams()
+  const tournamentId = searchParams.get('tournament')
+
+  // Filter auctions by tournament if tournament parameter is provided
+  const filteredAuctions = tournamentId 
+    ? auctions?.filter(auction => auction.tournament_id === tournamentId) || []
+    : auctions || []
 
   // Check user authentication and role
   useEffect(() => {
@@ -329,13 +339,13 @@ export default function AuctionsPage() {
     
     switch (activeFilter) {
       case 'live':
-        return auctions.filter(auction => auction.status === 'live')
+        return filteredAuctions.filter(auction => auction.status === 'live')
       case 'draft':
-        return auctions.filter(auction => auction.status === 'draft')
+        return filteredAuctions.filter(auction => auction.status === 'draft')
       case 'completed':
-        return auctions.filter(auction => auction.status === 'completed')
+        return filteredAuctions.filter(auction => auction.status === 'completed')
       default:
-        return auctions
+        return filteredAuctions
     }
   }
 
@@ -418,6 +428,19 @@ export default function AuctionsPage() {
             <p className="text-[#CEA17A] mt-2">
               Manage and participate in player auctions
             </p>
+            {tournamentId && (
+              <div className="mt-4 p-3 bg-[#CEA17A]/10 border border-[#CEA17A]/20 rounded-lg">
+                <p className="text-sm text-[#CEA17A]">
+                  <span className="font-medium">Filtered by Tournament:</span> Showing auctions for this tournament only
+                </p>
+                <Link 
+                  href="/auctions" 
+                  className="text-xs text-[#CEA17A]/70 hover:text-[#CEA17A] underline mt-1 inline-block"
+                >
+                  View all auctions
+                </Link>
+              </div>
+            )}
           </div>
           {isHost && (
             <Link
@@ -502,7 +525,7 @@ export default function AuctionsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-[#CEA17A]">Total</p>
-                <p className="text-2xl font-bold text-[#DBD0C0]">{auctions?.length || 0}</p>
+                <p className="text-2xl font-bold text-[#DBD0C0]">{filteredAuctions?.length || 0}</p>
               </div>
             </div>
           </div>
@@ -522,7 +545,7 @@ export default function AuctionsPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-[#CEA17A]">Live</p>
                 <p className="text-2xl font-bold text-[#DBD0C0]">
-                  {auctions?.filter(a => a.status === 'live').length || 0}
+                  {filteredAuctions?.filter(a => a.status === 'live').length || 0}
                 </p>
               </div>
             </div>
@@ -543,7 +566,7 @@ export default function AuctionsPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-[#CEA17A]">Drafts</p>
                 <p className="text-2xl font-bold text-[#DBD0C0]">
-                  {auctions?.filter(a => a.status === 'draft').length || 0}
+                  {filteredAuctions?.filter(a => a.status === 'draft').length || 0}
                 </p>
               </div>
             </div>
@@ -565,7 +588,7 @@ export default function AuctionsPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-[#CEA17A]">Completed</p>
                 <p className="text-2xl font-bold text-[#DBD0C0]">
-                  {auctions?.filter(a => a.status === 'completed').length || 0}
+                  {filteredAuctions?.filter(a => a.status === 'completed').length || 0}
                 </p>
               </div>
             </div>

@@ -2218,17 +2218,17 @@ export default function TournamentDetailsPage() {
 
                 {/* Show Formed Teams Card - When tournament is completed */}
                 {(tournament.status === 'teams_formed' || tournament.status === 'completed') && (
-                  <div className="bg-gradient-to-br from-[#09171F]/80 to-[#09171F]/60 border border-[#CEA17A]/30 rounded-xl p-6 backdrop-blur-sm shadow-lg shadow-[#CEA17A]/10 mb-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
-                          <svg className="w-6 h-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="bg-gradient-to-br from-[#09171F]/80 to-[#09171F]/60 border border-[#CEA17A]/30 rounded-xl p-4 sm:p-6 backdrop-blur-sm shadow-lg shadow-[#CEA17A]/10 mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex items-start sm:items-center space-x-3 sm:space-x-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#CEA17A]/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                           </svg>
                         </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-[#DBD0C0] mb-1">Teams Formed</h3>
-                          <p className="text-sm text-[#DBD0C0]/70">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base sm:text-lg font-semibold text-[#DBD0C0] mb-1">Teams Formed</h3>
+                          <p className="text-xs sm:text-sm text-[#DBD0C0]/70 leading-relaxed">
                             {tournament.status === 'teams_formed' 
                               ? 'Teams have been formed from the auction. View the final team compositions.'
                               : 'Tournament completed! View the final team results and auction details.'
@@ -2237,8 +2237,8 @@ export default function TournamentDetailsPage() {
                         </div>
                       </div>
                       <Link
-                        href={`/auctions`}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium"
+                        href={`/auctions?tournament=${tournament.id}`}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium text-sm sm:text-base w-full sm:w-auto"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
