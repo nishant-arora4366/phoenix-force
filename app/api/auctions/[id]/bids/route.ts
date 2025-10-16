@@ -162,12 +162,15 @@ export async function POST(
       .maybeSingle()
 
     if (!existingCurrent) {
+      console.log(`[BID ${auctionId}] No current player found during bid, setting fallback...`)
+      
       // Gather captain ids to exclude
       const { data: capRows } = await supabase
         .from('auction_teams')
         .select('captain_id')
         .eq('auction_id', auctionId)
       const captainIds = (capRows || []).map(r => r.captain_id).filter(Boolean)
+      
       let firstQuery = supabase
         .from('auction_players')
         .select('player_id')
@@ -176,16 +179,24 @@ export async function POST(
         .order('display_order', { ascending: true })
         .limit(1)
       if (captainIds.length) {
-        const csv = '(' + captainIds.map(id => `'${id}'`).join(',') + ')'
-        firstQuery = firstQuery.not('player_id', 'in', csv)
+        firstQuery = firstQuery.not('player_id', 'in', `(${captainIds.map(id => `"${id}"`).join(',')})`)
       }
-      const { data: firstAvail } = await firstQuery.maybeSingle()
-      if (firstAvail) {
-        await supabase
+      const { data: firstAvail, error: queryErr } = await firstQuery.maybeSingle()
+      
+      if (queryErr) {
+        console.error(`[BID ${auctionId}] Error finding first available player:`, queryErr)
+      } else if (firstAvail) {
+        console.log(`[BID ${auctionId}] Setting fallback current player:`, firstAvail.player_id)
+        const { error: setErr } = await supabase
           .from('auction_players')
           .update({ current_player: true })
           .eq('auction_id', auctionId)
           .eq('player_id', firstAvail.player_id)
+        if (setErr) {
+          console.error(`[BID ${auctionId}] Error setting fallback current player:`, setErr)
+        }
+      } else {
+        console.log(`[BID ${auctionId}] No available players found for fallback`)
       }
     }
 

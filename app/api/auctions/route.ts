@@ -119,62 +119,69 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to update auction status' }, { status: 500 })
       }
 
-      // If starting/resuming the auction (status = 'live'), ensure a current player is set
+      // If transitioning to live (start or resume) ensure a current player exists.
+      // This prevents first bid failures (NO_CURRENT_PLAYER) and aligns with bids route safeguard.
       if (status === 'live') {
-        // Check if a current player already exists
-        const { data: existingCurrent, error: existingErr } = await supabase
-          .from('auction_players')
-          .select('player_id')
-          .eq('auction_id', auctionId)
-          .eq('current_player', true)
-          .maybeSingle()
-
-        if (existingErr) {
-          console.warn('Error checking existing current player (continuing):', existingErr)
-        }
-
-        if (!existingCurrent) {
-          // Get captain IDs to exclude from selection
-          const { data: teams } = await supabase
-            .from('auction_teams')
-            .select('captain_id')
+        try {
+          // First, clear any stray current_player flags to avoid multiple current players
+          await supabase
+            .from('auction_players')
+            .update({ current_player: false })
             .eq('auction_id', auctionId)
+            .eq('current_player', true)
 
-          const captainIds = (teams || []).map(t => t.captain_id).filter(Boolean)
-
-          // Build base query for first available player by display_order
-          let apQuery = supabase
+          const { data: existingCurrent } = await supabase
             .from('auction_players')
             .select('player_id')
             .eq('auction_id', auctionId)
-            .eq('status', 'available')
-            .order('display_order', { ascending: true })
-            .limit(1)
+            .eq('current_player', true)
+            .maybeSingle()
 
-          // Exclude captains only if we have any
-          if (captainIds.length > 0) {
-            // Supabase expects a CSV list with quotes for UUIDs
-            const csv = '(' + captainIds.map(id => `'${id}'`).join(',') + ')'
-            apQuery = apQuery.not('player_id', 'in', csv)
-          }
-
-          const { data: firstPlayer, error: firstErr } = await apQuery.maybeSingle()
-
-          if (firstErr) {
-            console.warn('Error selecting first available player:', firstErr)
-          }
-
-          if (firstPlayer) {
-            const { error: setCurrentError } = await supabase
-              .from('auction_players')
-              .update({ current_player: true })
+          if (!existingCurrent) {
+            console.log(`[AUCTION ${auctionId}] No current player found, setting first available...`)
+            
+            // Fetch captain ids to exclude from first selection.
+            const { data: teamRows } = await supabase
+              .from('auction_teams')
+              .select('captain_id')
               .eq('auction_id', auctionId)
-              .eq('player_id', firstPlayer.player_id)
+            const captainIds = (teamRows || []).map(r => r.captain_id).filter(Boolean)
+            console.log(`[AUCTION ${auctionId}] Excluding captains:`, captainIds)
 
-            if (setCurrentError) {
-              console.error('Error setting first player as current:', setCurrentError)
+            let firstQuery = supabase
+              .from('auction_players')
+              .select('player_id, display_order')
+              .eq('auction_id', auctionId)
+              .eq('status', 'available')
+              .order('display_order', { ascending: true })
+              .limit(1)
+            if (captainIds.length) {
+              firstQuery = firstQuery.not('player_id', 'in', `(${captainIds.map(id => `"${id}"`).join(',')})`)
             }
+            const { data: firstAvail, error: queryErr } = await firstQuery.maybeSingle()
+            
+            if (queryErr) {
+              console.error(`[AUCTION ${auctionId}] Error finding first available player:`, queryErr)
+            } else if (firstAvail) {
+              console.log(`[AUCTION ${auctionId}] Setting current player:`, firstAvail.player_id)
+              const { error: setCurrentErr } = await supabase
+                .from('auction_players')
+                .update({ current_player: true })
+                .eq('auction_id', auctionId)
+                .eq('player_id', firstAvail.player_id)
+              if (setCurrentErr) {
+                console.error(`[AUCTION ${auctionId}] Error setting current player:`, setCurrentErr)
+              } else {
+                console.log(`[AUCTION ${auctionId}] Successfully set current player:`, firstAvail.player_id)
+              }
+            } else {
+              console.log(`[AUCTION ${auctionId}] No available players found to set as current`)
+            }
+          } else {
+            console.log(`[AUCTION ${auctionId}] Current player already exists:`, existingCurrent.player_id)
           }
+        } catch (liveInitErr) {
+          console.error(`[AUCTION ${auctionId}] Live transition current player init failed:`, liveInitErr)
         }
       }
 
@@ -410,10 +417,10 @@ export async function POST(request: NextRequest) {
     let auctionTeams: any[] = []
     if (body.captains && body.captains.length > 0) {
       // Calculate required players per team based on selected players
+      // Total players includes captains, so each team gets totalPlayers/numTeams slots
       const totalPlayers: number = Array.isArray(body.selected_players) ? body.selected_players.length : 0
       const numTeams: number = body.captains.length
-      // Subtract 1 to account for captain already occupying a slot. Guard against negatives.
-      const requiredPlayersPerTeam: number = numTeams > 0 ? Math.max(0, Math.floor(totalPlayers / numTeams) - 1) : 0
+      const requiredPlayersPerTeam: number = numTeams > 0 ? Math.floor(totalPlayers / numTeams) : 0
 
       auctionTeams = body.captains.map((captain: any) => ({
         auction_id: auction.id,

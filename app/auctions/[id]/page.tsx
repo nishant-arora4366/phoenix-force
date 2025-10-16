@@ -97,6 +97,7 @@ export default function AuctionPage() {
   const [bidLoading, setBidLoading] = useState<{[key: string]: boolean}>({})
   const [isGlobalBidLoading, setIsGlobalBidLoading] = useState(false)
   const [isPlayerTransitioning, setIsPlayerTransitioning] = useState(false)
+  const [soldPlayerInfo, setSoldPlayerInfo] = useState<{ playerName: string; teamName: string; captainName: string; price: number } | null>(null)
   // Central interaction lock: when true, all critical actions (navigation, sell, undo, bidding) should be disabled.
   const isInteractionLocked = isPlayerTransitioning || isGlobalBidLoading || Object.values(actionLoading).some(v => v)
 
@@ -147,6 +148,16 @@ export default function AuctionPage() {
   // Extended modal / mobile UI state
   const [formationTeamModalId, setFormationTeamModalId] = useState<string | null>(null)
   const [showRemainingPlayersMobile, setShowRemainingPlayersMobile] = useState(false)
+
+  // Auto-dismiss sold player info after a delay
+  useEffect(() => {
+    if (soldPlayerInfo) {
+      const timer = setTimeout(() => {
+        setSoldPlayerInfo(null)
+      }, 3000) // 3 seconds
+      return () => clearTimeout(timer)
+    }
+  }, [soldPlayerInfo])
 
   // Auto-dismiss UI notice after a short delay
   useEffect(() => {
@@ -263,6 +274,8 @@ export default function AuctionPage() {
   useEffect(() => { playersRef.current = players }, [players])
   const auctionPlayersRef = useRef(auctionPlayers)
   useEffect(() => { auctionPlayersRef.current = auctionPlayers }, [auctionPlayers])
+  const auctionTeamsRef = useRef(auctionTeams)
+  useEffect(() => { auctionTeamsRef.current = auctionTeams }, [auctionTeams])
   const currentPlayerRef = useRef(currentPlayer)
   useEffect(() => { currentPlayerRef.current = currentPlayer }, [currentPlayer])
 
@@ -314,34 +327,60 @@ export default function AuctionPage() {
     return auction.min_increment
   }
 
+  // Generate next 10 bids based on increment logic
+  const generateNextBids = (count: number = 10) => {
+    if (!auction) return []
+    
+    const currentBid = getCurrentBid()
+    const startingBid = currentBid == null ? getPlayerBasePrice(currentPlayer) : currentBid
+    const nextBid = calculateNextBid(currentBid ?? undefined)
+    
+    const bids = []
+    let currentAmount = nextBid
+    
+    for (let i = 0; i < count; i++) {
+      bids.push(currentAmount)
+      currentAmount += getIncrementForBid(currentAmount)
+    }
+    
+    return bids
+  }
+
   // Validate a user-entered bid for a team against increments, affordability and slot reservation.
   const validateCustomBid = (team: AuctionTeam, rawAmount: number | null) => {
     if (!auction || !currentPlayer) return { valid: false, reason: 'Auction/player unavailable' }
     if (rawAmount == null || isNaN(rawAmount)) return { valid: false, reason: 'Enter amount' }
     const amount = Math.floor(rawAmount)
     if (amount <= 0) return { valid: false, reason: 'Bid must be > 0' }
+    
+    // Check if auction is live
+    if (auction.status !== 'live') return { valid: false, reason: `Auction is ${auction.status}` }
+    
     // Determine reference (current winning bid or starting).
     const current = getCurrentBid()
     const startingBid = calculateNextBid(current == null ? undefined : current) // next required bid
     if (amount < startingBid) return { valid: false, reason: `Min allowed ₹${startingBid}` }
+    
     // Increment chain validation: ensure difference from base matches dynamic increments progression.
     // We simulate stepping from startingBid until >= amount.
     let probe = startingBid
     while (probe < amount) {
       probe += getIncrementForBid(probe)
-      if (probe > amount) return { valid: false, reason: 'Invalid increment' }
+      if (probe > amount) return { valid: false, reason: `Invalid increment. Next valid: ₹${probe}` }
     }
-    // Slots & reserve constraint
-    const totalSlotsIncludingCaptain = team.required_players
-    const filledSlotsIncludingCaptain = (team.players_count || 0) + 1
-    const remainingSlotsExcludingCurrent = Math.max(0, totalSlotsIncludingCaptain - filledSlotsIncludingCaptain)
-    if (remainingSlotsExcludingCurrent <= 0) return { valid: false, reason: 'No slots left' }
-    const remainingSlotsAfterPurchase = Math.max(0, remainingSlotsExcludingCurrent - 1)
-    const minPerSlot = auction.min_bid_amount || 40
+    
+    // Calculate remaining slots and reserve needed
+    const totalSlots = team.required_players
+    const filledSlots = team.players_count || 0
+    const availableSlots = Math.max(0, totalSlots - filledSlots)
+    const remainingSlotsAfterPurchase = Math.max(0, availableSlots - 1)
+    const minPerSlot = auction?.min_bid_amount || 40
     const reserveNeeded = remainingSlotsAfterPurchase * minPerSlot
     const maxPossibleBid = team.remaining_purse - reserveNeeded
-    if (amount > maxPossibleBid) return { valid: false, reason: `Exceeds max possible ₹${maxPossibleBid}` }
+    
     if (amount > team.remaining_purse) return { valid: false, reason: 'Insufficient purse' }
+    if (amount > maxPossibleBid) return { valid: false, reason: `Exceeds max possible ₹${maxPossibleBid}` }
+    
     return { valid: true, reason: '' }
   }
 
@@ -393,6 +432,8 @@ export default function AuctionPage() {
         bidPerfRef.current.optimistic = performance.now()
         // Reset conflict tracking on success
         lastConflictRef.current = null
+        // Clear custom bid input for this team after successful bid
+        setSelectedBidAmounts(prev => ({ ...prev, [teamId]: null }))
       } else {
         const errorData = await response.json().catch(()=>({}))
         const code = errorData.code as string | undefined
@@ -583,6 +624,14 @@ export default function AuctionPage() {
 
       if (response.ok) {
         const data = await response.json()
+        const winningTeam = auctionTeams.find(t => t.id === winningBid.team_id)
+        const winningCaptain = winningTeam ? players.find(p => p.id === winningTeam.captain_id) : null
+        setSoldPlayerInfo({
+          playerName: currentPlayer.display_name,
+          teamName: winningTeam?.team_name || 'a team',
+          captainName: winningCaptain?.display_name || 'Unknown Captain',
+          price: winningBid.bid_amount,
+        })
         
         // Update auction players state to mark current player as sold
         setAuctionPlayers(prev => prev.map(ap => 
@@ -890,10 +939,9 @@ export default function AuctionPage() {
           started_at: newStatus === 'live' ? new Date().toISOString() : prev.started_at
         } : null)
         
-        // If starting the auction, compute/set the current player locally
+        // When transitioning to live we now rely exclusively on backend auto-assignment
+        // and realtime updates to set current player; avoid local speculative assignment.
         if (newStatus === 'live') {
-          const next = getCurrentPlayer()
-          setCurrentPlayer(next)
           setUiNotice(null)
         }
       } else {
@@ -984,13 +1032,37 @@ export default function AuctionPage() {
       try {
         // Fetch auction details
         const auctionResponse = await fetch(`/api/auctions/${auctionId}`)
+        
         if (!auctionResponse.ok) {
-          throw new Error('Failed to fetch auction')
+          let errorMessage = 'Failed to fetch auction'
+          
+          // Provide specific error messages based on status codes
+          switch (auctionResponse.status) {
+            case 404:
+              errorMessage = 'Auction not found. This auction may have been deleted or the link is incorrect.'
+              break
+            case 403:
+              errorMessage = 'Access denied. You do not have permission to view this auction.'
+              break
+            case 401:
+              errorMessage = 'Authentication required. Please sign in to view this auction.'
+              break
+            case 500:
+              errorMessage = 'Server error. Please try again later or contact support.'
+              break
+            default:
+              errorMessage = `Failed to load auction (Error ${auctionResponse.status}). Please try again.`
+          }
+          
+          // Set error directly instead of throwing to avoid console errors
+          setError(errorMessage)
+          return
         }
         
         const auctionResult = await auctionResponse.json()
         if (!auctionResult.success) {
-          throw new Error(auctionResult.error || 'Failed to fetch auction')
+          setError(auctionResult.error || 'Failed to fetch auction data')
+          return
         }
         
         setAuction(auctionResult.auction)
@@ -999,8 +1071,22 @@ export default function AuctionPage() {
         setPlayers(auctionResult.playerDetails || [])
         
       } catch (error) {
-        console.error('Error fetching auction data:', error)
-        setError(error instanceof Error ? error.message : 'Failed to load auction')
+        // Only log unexpected errors, not handled HTTP errors
+        if (error instanceof Error) {
+          // Handle network errors
+          if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            setError('Network error. Please check your internet connection and try again.')
+          } else if (error.message.includes('Failed to fetch')) {
+            setError('Unable to connect to the server. Please check your internet connection and try again.')
+          } else {
+            // Only log unexpected errors
+            console.error('Unexpected error fetching auction data:', error)
+            setError('An unexpected error occurred. Please try again.')
+          }
+        } else {
+          console.error('Unexpected error type:', error)
+          setError('An unexpected error occurred. Please try again.')
+        }
       } finally {
         setLoading(false)
       }
@@ -1085,6 +1171,23 @@ export default function AuctionPage() {
             updated[idx] = { ...updated[idx], ...payload.new }
             return updated
         })
+
+        // Check if a player was just sold (status changed to 'sold')
+        if (payload.new.status === 'sold' && payload.old && payload.old.status !== 'sold') {
+          const soldPlayer = playersRef.current.find(p => p.id === payload.new.player_id)
+          const soldToTeam = auctionTeamsRef.current.find(t => t.id === payload.new.sold_to)
+          const captain = soldToTeam ? playersRef.current.find(p => p.id === soldToTeam.captain_id) : null
+          
+          if (soldPlayer) {
+            setSoldPlayerInfo({
+              playerName: soldPlayer.display_name,
+              teamName: soldToTeam?.team_name || 'Unknown Team',
+              captainName: captain?.display_name || 'Unknown Captain',
+              price: payload.new.sold_price || 0,
+            })
+          }
+        }
+
         if (payload.new.current_player) {
           const pl = playersRef.current.find(p => p.id === payload.new.player_id)
           if (pl) {
@@ -1162,6 +1265,12 @@ export default function AuctionPage() {
   }
 
   if (error) {
+    const handleRetry = () => {
+      setError(null)
+      setLoading(true)
+      // The useEffect will automatically retry when error is cleared
+    }
+
     return (
       <div className="min-h-screen relative overflow-hidden">
         {/* Hero Section Background */}
@@ -1172,19 +1281,45 @@ export default function AuctionPage() {
              }}></div>
         
         <div className="relative z-10 flex items-center justify-center py-20 min-h-screen">
-          <div className="text-center">
+          <div className="text-center max-w-md mx-auto px-4">
             <div className="text-red-400 text-6xl mb-4">⚠️</div>
             <h1 className="text-2xl font-bold text-[#DBD0C0] mb-2">Error Loading Auction</h1>
-            <p className="text-[#DBD0C0]/70 mb-6">{error}</p>
-            <Link 
-              href="/auctions"
-              className="inline-flex items-center px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150"
-            >
-              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Auctions
-            </Link>
+            <p className="text-[#DBD0C0]/70 mb-6 text-sm leading-relaxed">{error}</p>
+            
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={handleRetry}
+                disabled={loading}
+                className="inline-flex items-center px-4 py-2 bg-[#75020f]/20 text-[#CEA17A] border border-[#75020f]/30 rounded-lg hover:bg-[#75020f]/30 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Retrying...
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Try Again
+                  </>
+                )}
+              </button>
+              
+              <Link 
+                href="/auctions"
+                className="inline-flex items-center px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150"
+              >
+                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Auctions
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -1249,7 +1384,7 @@ export default function AuctionPage() {
   const mapRoleToEmoji = (role: string) => {
     const r = role.toLowerCase()
     if (r.includes('batter') || r.includes('batsman')) return '🏏'
-    if (r.includes('bowler')) return '🎾'
+    if (r.includes('bowler')) return '⚾'
     if (r.includes('wicket')) return '🧤'
     if (r.includes('all')) return '🎯'
     return '👤'
@@ -1712,8 +1847,8 @@ export default function AuctionPage() {
                       <div className="grid grid-cols-2 gap-0 mt-3">
                         <button
                           onClick={handlePreviousPlayer}
-                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id) <= 0 })() || actionLoading.previousPlayer}
-                          className={`w-full h-12 border rounded-l-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id) <= 0 })() || actionLoading.previousPlayer
+                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id) <= 0 })() || actionLoading.previousPlayer || auction?.status === 'draft'}
+                          className={`w-full h-12 border rounded-l-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id) <= 0 })() || actionLoading.previousPlayer || auction?.status === 'draft'
                             ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
                             : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'}`}
                         >
@@ -1731,8 +1866,8 @@ export default function AuctionPage() {
                         </button>
                         <button
                           onClick={handleNextPlayer}
-                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length === 0 })() || actionLoading.nextPlayer}
-                          className={`w-full h-12 border rounded-r-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length === 0 })() || actionLoading.nextPlayer
+                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length === 0 })() || actionLoading.nextPlayer || auction?.status === 'draft'}
+                          className={`w-full h-12 border rounded-r-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length === 0 })() || actionLoading.nextPlayer || auction?.status === 'draft'
                             ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
                             : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'}`}
                         >
@@ -1785,21 +1920,31 @@ export default function AuctionPage() {
                     </div>
                     {/* Body with its own vertical scroll */}
                     <div className="max-h-72 overflow-y-auto overflow-x-hidden">
-                      {auctionTeams.map((team, index) => {
+                      {auctionTeams
+                        .sort((a, b) => {
+                          const captainA = players.find(p => p.id === a.captain_id)
+                          const captainB = players.find(p => p.id === b.captain_id)
+                          const nameA = captainA?.display_name || 'Unknown Captain'
+                          const nameB = captainB?.display_name || 'Unknown Captain'
+                          return nameA.localeCompare(nameB)
+                        })
+                        .map((team, index) => {
                         const nextBid = calculateNextBid()
                         const canAfford = team.remaining_purse >= nextBid
                         const isWinning = recentBids?.find(bid => bid.is_winning_bid && !bid.is_undone)?.team_id === team.id
-                        // players_count already includes captain (set to 1 at creation). required_players includes captain.
-                        const totalSlotsIncludingCaptain = team.required_players
-                        const filledSlotsIncludingCaptain = (team.players_count || 0)
-                        const remainingSlotsExcludingCurrent = Math.max(0, totalSlotsIncludingCaptain - filledSlotsIncludingCaptain)
-                        // If we win current player, slots after purchase reduce by 1
-                        const remainingSlotsAfterPurchase = Math.max(0, remainingSlotsExcludingCurrent - 1)
+                        
+                        // Simplified slot calculations: required_players includes captain, players_count includes captain
+                        const totalSlots = team.required_players
+                        const filledSlots = team.players_count || 0
+                        const availableSlots = Math.max(0, totalSlots - filledSlots)
+                        const hasOpenSlot = availableSlots > 0
+                        
+                        // Reserve calculation: keep minimum bid amount for each remaining slot after this purchase
+                        const slotsAfterPurchase = Math.max(0, availableSlots - 1)
                         const minPerSlot = auction?.min_bid_amount || 40
-                        const reserveNeeded = remainingSlotsAfterPurchase * minPerSlot
+                        const reserveNeeded = slotsAfterPurchase * minPerSlot
                         const maxPossibleBid = team.remaining_purse - reserveNeeded
                         const balanceAfterBid = team.remaining_purse - nextBid
-                        const hasOpenSlot = remainingSlotsExcludingCurrent > 0
                         const withinMaxPossible = nextBid <= maxPossibleBid
                         const auctionCreatorId = auction?.created_by
                         const isAdmin = userProfile?.role === 'admin'
@@ -1823,7 +1968,7 @@ export default function AuctionPage() {
                           <div key={team.id} className={`grid grid-cols-12 gap-4 p-3 items-center text-sm md:text-base ${index % 2 === 0 ? 'bg-[#1a1a1a]/20' : 'bg-[#1a1a1a]/10'}`}>
                             <div className="col-span-3">
                               <div className="font-semibold text-[#DBD0C0] text-base md:text-lg leading-snug">{captainName}</div>
-                              <div className="text-[11px] md:text-xs text-[#DBD0C0]/70 font-medium">{team.players_count}/{team.required_players} • {remainingSlotsExcludingCurrent} left</div>
+                              <div className="text-[11px] md:text-xs text-[#DBD0C0]/70 font-medium">{team.players_count}/{team.required_players} • {availableSlots} left</div>
                   </div>
                             <div className="col-span-2 relative">
                               { (isAuctionController || isUserCaptainForTeam) ? (
@@ -1865,19 +2010,66 @@ export default function AuctionPage() {
                                     </button>
                                   </div>
                                   {openBidPopover === team.id && (
-                                    <div className="absolute z-20 mt-1 w-60 rounded-md bg-[#1a1a1a] border border-[#CEA17A]/30 shadow-xl p-3 animate-fade-in">
-                                      <div className="flex flex-col gap-2">
-                                        <input
-                                          type="number"
-                                          min={0}
-                                          placeholder={`Min ₹${calculateNextBid(getCurrentBid() ?? undefined)}`}
-                                          value={entered ?? ''}
-                                          onChange={(e)=>{
-                                            const val = e.target.value === '' ? null : parseInt(e.target.value)
-                                            setSelectedBidAmounts(prev=>({...prev,[team.id]: val}))
-                                          }}
-                                          className="w-full bg-[#0f0f0f]/60 border border-[#CEA17A]/30 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#CEA17A]"
-                                        />
+                                    <>
+                                      {/* Backdrop */}
+                                      <div 
+                                        className="fixed inset-0 z-40 bg-black/20" 
+                                        onClick={() => setOpenBidPopover(null)}
+                                      />
+                                      {/* Popover */}
+                                      <div className="fixed z-50 w-60 rounded-md bg-[#1a1a1a] border border-[#CEA17A]/30 shadow-xl p-3 animate-fade-in" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+                                        <div className="flex items-center justify-between mb-2">
+                                          <div className="text-[12px] text-[#CEA17A] font-medium">Quick Bids - {auctionTeams.find(t => t.id === team.id)?.team_name}</div>
+                                          <button 
+                                            onClick={() => setOpenBidPopover(null)}
+                                            className="text-[#CEA17A]/60 hover:text-[#CEA17A] text-lg leading-none"
+                                          >
+                                            ×
+                                          </button>
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                        {/* Next 10 bids options */}
+                                        <div className="mb-2">
+                                          <div className="text-[10px] text-[#CEA17A] font-medium mb-1">Quick Bids:</div>
+                                          <div className="grid grid-cols-2 gap-1 max-h-24 overflow-y-auto">
+                                            {generateNextBids(10).map((bidAmount, index) => (
+                                              <button
+                                                key={bidAmount}
+                                                onClick={() => {
+                                                  setSelectedBidAmounts(prev => ({ ...prev, [team.id]: bidAmount }))
+                                                }}
+                                                className={`text-[9px] py-1 px-2 rounded border transition-all ${
+                                                  entered === bidAmount 
+                                                    ? 'bg-[#CEA17A]/20 text-[#CEA17A] border-[#CEA17A]/40' 
+                                                    : 'bg-[#0f0f0f]/40 text-[#DBD0C0] border-[#CEA17A]/20 hover:bg-[#CEA17A]/10'
+                                                }`}
+                                              >
+                                                ₹{bidAmount}
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Custom input */}
+                                        <div className="border-t border-[#CEA17A]/10 pt-2">
+                                          <div className="text-[10px] text-[#CEA17A] font-medium mb-1">Custom Amount:</div>
+                                          <input
+                                            type="number"
+                                            min={0}
+                                            placeholder={`Min ₹${calculateNextBid(getCurrentBid() ?? undefined)}`}
+                                            value={entered ?? ''}
+                                            onChange={(e)=>{
+                                              const val = e.target.value === '' ? null : parseInt(e.target.value)
+                                              setSelectedBidAmounts(prev=>({...prev,[team.id]: val}))
+                                            }}
+                                            className={`w-full bg-[#0f0f0f]/60 border rounded px-2 py-1 text-xs text-[#DBD0C0] focus:outline-none focus:ring-1 ${
+                                              entered != null && !customValid 
+                                                ? 'border-red-400/50 focus:ring-red-400' 
+                                                : 'border-[#CEA17A]/30 focus:ring-[#CEA17A]'
+                                            }`}
+                                          />
+                                        </div>
+                                        
                                         <div className="flex items-center justify-between text-[10px] text-[#DBD0C0]/60">
                                           <span>Max Possible:</span>
                                           <span className="text-[#CEA17A]">₹{Math.max(0, team.remaining_purse - Math.max(0, (team.required_players - (team.players_count||0) -1)) * (auction?.min_bid_amount||40))}</span>
@@ -1898,6 +2090,7 @@ export default function AuctionPage() {
                                         </div>
                                       </div>
                                     </div>
+                                    </>
                                   )}
                                 </div>
                               ) : (
@@ -1932,12 +2125,22 @@ export default function AuctionPage() {
               Team Formation
             </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {auctionTeams.map((team) => {
-              // Get players for this team (both sold players and captain)
-              const soldPlayers = auctionPlayers?.filter(ap => ap.sold_to === team.id) || []
+            {auctionTeams
+              .sort((a, b) => {
+                const captainA = players.find(p => p.id === a.captain_id)
+                const captainB = players.find(p => p.id === b.captain_id)
+                const nameA = captainA?.display_name || 'Unknown Captain'
+                const nameB = captainB?.display_name || 'Unknown Captain'
+                return nameA.localeCompare(nameB)
+              })
+              .map((team) => {
+              // Get all players for this team, ensuring captain is not duplicated
+              const soldPlayers = auctionPlayers?.filter(ap => 
+                ap.sold_to === team.id && ap.player_id !== team.captain_id
+              ) || []
               const captainPlayer = auctionPlayers?.find(ap => ap.player_id === team.captain_id) || null
               
-              // Combine captain and sold players
+              // Combine captain (first) with sold players, ensuring no duplicates
               const teamPlayers = captainPlayer ? [captainPlayer, ...soldPlayers] : soldPlayers
               
               return (
@@ -2008,7 +2211,7 @@ export default function AuctionPage() {
                                     player.skills.Role.map((role, roleIndex) => (
                                       <span key={roleIndex}>
                                             {role === 'Batsman' || role === 'Batter' ? '🏏' : 
-                                         role === 'Bowler' ? '🎾' : 
+                                         role === 'Bowler' ? '⚾' : 
                                              role === 'All Rounder' ? '🎯' : 
                                              role === 'Wicket Keeper' ? '🧤' : '👤'}
                                           </span>
@@ -2016,7 +2219,7 @@ export default function AuctionPage() {
                                       ) : (
                                     <span>
                                           {player.skills.Role === 'Batsman' || player.skills.Role === 'Batter' ? '🏏' : 
-                                       player.skills.Role === 'Bowler' ? '🎾' : 
+                                       player.skills.Role === 'Bowler' ? '⚾' : 
                                            player.skills.Role === 'All Rounder' ? '🎯' : 
                                            player.skills.Role === 'Wicket Keeper' ? '🧤' : '👤'}
                                         </span>
@@ -2144,7 +2347,7 @@ export default function AuctionPage() {
                     const roleStr = Array.isArray(role) ? role.join(', ') : role;
                     if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🎯";
                     if (roleStr.toLowerCase().includes('batter')) return "🏏";
-                    if (roleStr.toLowerCase().includes('bowler')) return "🎾";
+                    if (roleStr.toLowerCase().includes('bowler')) return "⚾";
                     if (roleStr.toLowerCase().includes('wicket')) return "🧤";
                     if (roleStr.toLowerCase().includes('all')) return "🎯";
                     return "❓";
@@ -2277,29 +2480,114 @@ export default function AuctionPage() {
           <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${getStatusColor(auction.status)}`}>{getStatusText(auction.status)}</span>
         </div>
 
-        {/* Mobile Player & Bid snapshot (compressed height) */}
-        <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-3 mb-3 flex gap-3">
-          <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-[#CEA17A]/20" onClick={() => currentPlayer && handlePhotoClick(currentPlayer.profile_pic_url || '', currentPlayer.display_name)}>
-            {currentPlayer?.profile_pic_url ? (
-              <img src={currentPlayer.profile_pic_url} alt={currentPlayer.display_name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-[#CEA17A]/10 text-2xl font-bold text-[#CEA17A]">{currentPlayer?.display_name?.charAt(0) || '👤'}</div>
-            )}
-          </div>
-          <div className="flex flex-col flex-1 min-w-0">
-            <h2 className="text-sm font-semibold text-[#DBD0C0] leading-tight truncate">{currentPlayer?.display_name || 'No Player'}</h2>
-            {currentPlayer && <div className="text-[10px] text-[#DBD0C0]/60 mb-1">Base ₹{getPlayerBasePrice(currentPlayer)} • {recentBids?.length || 0} bids</div>}
-            <div className="grid grid-cols-2 gap-1 mt-auto">
-              <div className="bg-[#2a2a2a]/60 rounded-md p-1.5 border border-[#CEA17A]/10 flex flex-col justify-center">
-                <div className="text-[9px] text-[#CEA17A] font-medium">Current</div>
-                <div className="text-[#DBD0C0] text-sm font-bold leading-none">{getCurrentBid() === null ? '—' : `₹${getCurrentBid()}`}</div>
+        {/* Mobile Player & Bid snapshot (expanded with player details) */}
+        <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-3 mb-3 relative">
+          {/* Loading overlay for player transitions */}
+          {(actionLoading.nextPlayer || actionLoading.previousPlayer) && (
+            <div className="absolute inset-0 bg-[#1a1a1a]/80 rounded-xl flex items-center justify-center z-10">
+              <div className="flex items-center gap-2 text-[#CEA17A]">
+                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="text-sm font-medium">Loading player...</span>
               </div>
-              <div className="bg-[#2a2a2a]/60 rounded-md p-1.5 border border-[#CEA17A]/10 flex flex-col justify-center">
-                <div className="text-[9px] text-[#CEA17A] font-medium">Next</div>
-                <div className="text-[#DBD0C0] text-sm font-bold leading-none">₹{calculateNextBid(getCurrentBid() ?? undefined)}</div>
+            </div>
+          )}
+          <div className="flex gap-3 mb-3">
+            <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-[#CEA17A]/20" onClick={() => currentPlayer && handlePhotoClick(currentPlayer.profile_pic_url || '', currentPlayer.display_name)}>
+              {currentPlayer?.profile_pic_url ? (
+                <img 
+                  src={currentPlayer.profile_pic_url} 
+                  alt={currentPlayer.display_name} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const imgElement = e.currentTarget as HTMLImageElement;
+                    imgElement.style.display = 'none';
+                    const fallbackElement = imgElement.nextElementSibling as HTMLElement;
+                    if (fallbackElement) {
+                      fallbackElement.style.display = 'flex';
+                    }
+                  }}
+                />
+              ) : null}
+              <div 
+                className={`w-full h-full flex items-center justify-center bg-[#CEA17A]/10 text-2xl font-bold text-[#CEA17A] ${currentPlayer?.profile_pic_url ? 'hidden' : ''}`}
+                style={{ display: currentPlayer?.profile_pic_url ? 'none' : 'flex' }}
+              >
+                {currentPlayer?.display_name?.charAt(0) || '👤'}
+              </div>
+            </div>
+            <div className="flex flex-col flex-1 min-w-0">
+              <h2 className="text-sm font-semibold text-[#DBD0C0] leading-tight truncate">{currentPlayer?.display_name || 'No Player'}</h2>
+              {/* Bio */}
+              {currentPlayer?.bio && (
+                <div className="text-[#DBD0C0] text-[9px] leading-tight mt-1 truncate">
+                  {currentPlayer.bio}
+                </div>
+              )}
+              <div className="mt-auto">
+                <div className="bg-[#2a2a2a]/60 rounded-md p-1.5 border border-[#CEA17A]/10 flex flex-col justify-center">
+                  <div className="text-[9px] text-[#CEA17A] font-medium">Current</div>
+                  <div className="text-[#DBD0C0] text-sm font-bold leading-none">
+                    {getCurrentBid() === null ? '—' : (() => {
+                      const winningBid = recentBids?.find(b => b.is_winning_bid && !b.is_undone)
+                      if (winningBid) {
+                        const winningTeam = auctionTeams.find(t => t.id === winningBid.team_id)
+                        const winningCaptain = winningTeam ? players.find(p => p.id === winningTeam.captain_id) : null
+                        const captainName = winningCaptain?.display_name || 'Unknown Captain'
+                        return `₹${getCurrentBid()} by ${captainName}`
+                      }
+                      return `₹${getCurrentBid()}`
+                    })()}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+          
+          {/* Player Details Section */}
+          {currentPlayer && (
+            <div className="border-t border-[#CEA17A]/10 pt-3">
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                {/* Role */}
+                <div className="flex items-start gap-1">
+                  <span className="text-[#CEA17A] font-medium w-8 flex-shrink-0">Role:</span>
+                  <span className="text-[#DBD0C0] truncate">
+                    {currentPlayer.skills?.Role ? (
+                      Array.isArray(currentPlayer.skills.Role) ? 
+                        currentPlayer.skills.Role.join(', ') : 
+                        String(currentPlayer.skills.Role)
+                    ) : '—'}
+                  </span>
+                </div>
+                
+                {/* Batting Style */}
+                <div className="flex items-start gap-1">
+                  <span className="text-[#CEA17A] font-medium w-12 flex-shrink-0">Batting:</span>
+                  <span className="text-[#DBD0C0] truncate">
+                    {currentPlayer.skills?.['Batting Style'] ? 
+                      String(currentPlayer.skills['Batting Style']) : '—'}
+                  </span>
+                </div>
+                
+                {/* Bowling Style */}
+                <div className="flex items-start gap-1">
+                  <span className="text-[#CEA17A] font-medium w-12 flex-shrink-0">Bowling:</span>
+                  <span className="text-[#DBD0C0] truncate">
+                    {currentPlayer.skills?.['Bowling Style'] ? 
+                      String(currentPlayer.skills['Bowling Style']) : '—'}
+                  </span>
+                </div>
+                
+                {/* Base Price */}
+                <div className="flex items-start gap-1">
+                  <span className="text-[#CEA17A] font-medium w-8 flex-shrink-0">Base:</span>
+                  <span className="text-[#DBD0C0] font-semibold">₹{getPlayerBasePrice(currentPlayer)}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Removed separate navigation row to consolidate controls at bottom */}
@@ -2308,21 +2596,33 @@ export default function AuctionPage() {
         <div className="mb-6">
           <h3 className="text-base font-semibold text-[#DBD0C0] mb-2">Captain Bids</h3>
           <div className="space-y-1.5">
-            {auctionTeams.map((team, index) => {
+            {auctionTeams
+              .sort((a, b) => {
+                const captainA = players.find(p => p.id === a.captain_id)
+                const captainB = players.find(p => p.id === b.captain_id)
+                const nameA = captainA?.display_name || 'Unknown Captain'
+                const nameB = captainB?.display_name || 'Unknown Captain'
+                return nameA.localeCompare(nameB)
+              })
+              .map((team, index) => {
               const nextBid = calculateNextBid()
               const canAfford = team.remaining_purse >= nextBid
               const isWinning = recentBids?.find(b => b.is_winning_bid && !b.is_undone)?.team_id === team.id
               const captainPlayer = players.find(p => p.id === team.captain_id)
               const captainName = captainPlayer?.display_name || 'Unknown Captain'
-              const totalSlotsIncludingCaptain = team.required_players
-              const filledSlotsIncludingCaptain = (team.players_count || 0) + 1
-              const remainingSlotsExcludingCurrent = Math.max(0, totalSlotsIncludingCaptain - filledSlotsIncludingCaptain)
-              const remainingSlotsAfterPurchase = Math.max(0, remainingSlotsExcludingCurrent - 1)
+              
+              // Simplified slot calculations: required_players includes captain, players_count includes captain
+              const totalSlots = team.required_players
+              const filledSlots = team.players_count || 0
+              const availableSlots = Math.max(0, totalSlots - filledSlots)
+              const hasOpenSlot = availableSlots > 0
+              
+              // Reserve calculation: keep minimum bid amount for each remaining slot after this purchase
+              const slotsAfterPurchase = Math.max(0, availableSlots - 1)
               const minPerSlot = auction?.min_bid_amount || 40
-              const reserveNeeded = remainingSlotsAfterPurchase * minPerSlot
+              const reserveNeeded = slotsAfterPurchase * minPerSlot
               const maxPossibleBid = team.remaining_purse - reserveNeeded
               const balanceAfter = team.remaining_purse - nextBid
-              const hasOpenSlot = remainingSlotsExcludingCurrent > 0
               const withinMaxPossible = nextBid <= maxPossibleBid
               const isEligible = isAuctionLive && hasOpenSlot && canAfford && withinMaxPossible
               const auctionCreatorId = auction?.created_by
@@ -2333,17 +2633,17 @@ export default function AuctionPage() {
               const isUserCaptainForTeam = !!captainPlayerRecord && captainPlayerRecord.user_id && captainPlayerRecord.user_id === user?.id
               const canUserBidOnThisTeam = isAuctionController || isUserCaptainForTeam
               const selected = selectedBidAmounts[team.id]
-              const finalEligible = isAuctionLive && hasOpenSlot && canAfford && withinMaxPossible && canUserBidOnThisTeam && !isGlobalBidLoading
+              // Validate custom bid for mobile
+              const { valid: customValid, reason: customReason } = validateCustomBid(team, selected ?? null)
+              const hasCustom = selected != null
+              const customIsOk = !hasCustom || customValid
+              const finalEligible = isAuctionLive && hasOpenSlot && canAfford && withinMaxPossible && canUserBidOnThisTeam && !isGlobalBidLoading && customIsOk
               return (
                 <div key={team.id} className="flex items-center gap-2 bg-[#1a1a1a]/60 border border-[#CEA17A]/15 rounded-md px-2 py-1.5">
                   <div className="flex flex-col flex-1 min-w-0 leading-tight">
                     <div className="text-[#DBD0C0] text-[13px] font-semibold truncate flex items-center gap-1">{captainName}{isWinning && <span className='w-1.5 h-1.5 bg-green-500 rounded-full' />}</div>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                      <button onClick={() => setMobilePurseTeamId(team.id)} className="text-[9px] font-medium text-[#CEA17A] hover:text-[#CEA17A]/80 transition-colors">Purse</button>
-                      <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
-                      <span className="text-[9px] text-[#DBD0C0]/70">Remaining <span className="text-[#DBD0C0] font-semibold">₹{team.remaining_purse}</span></span>
-                      <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
-                      <span className="text-[9px] text-[#DBD0C0]/70">Slots <span className="text-[#DBD0C0] font-semibold">{remainingSlotsExcludingCurrent}</span></span>
+                      <button onClick={() => setMobilePurseTeamId(team.id)} className="text-[9px] font-medium text-[#CEA17A] hover:text-[#CEA17A]/80 transition-colors">Remaining <span className="text-[#DBD0C0] font-semibold">₹{team.remaining_purse}</span></button>
                       <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
                       <span className="text-[9px] text-[#DBD0C0]/70">Max <span className="text-[#DBD0C0] font-semibold">₹{Math.max(0, maxPossibleBid)}</span></span>
                       <span className="w-1 h-1 rounded-full bg-[#CEA17A]/40" />
@@ -2387,17 +2687,53 @@ export default function AuctionPage() {
                     </div>
                     {openBidPopover === `m-${team.id}` && (
                       <div className="absolute z-30 top-full right-0 mt-1 w-48 bg-[#1a1a1a] border border-[#CEA17A]/30 rounded-md p-2 shadow-xl">
-                        <input
-                          type="number"
-                          min={0}
-                          value={selected ?? ''}
-                          placeholder={`Min ₹${calculateNextBid(getCurrentBid() ?? undefined)}`}
-                          onChange={(e)=>{
-                            const val = e.target.value === '' ? null : parseInt(e.target.value)
-                            setSelectedBidAmounts(prev=>({...prev,[team.id]: val}))
-                          }}
-                          className="w-full mb-2 bg-[#0f0f0f]/60 border border-[#CEA17A]/30 rounded px-2 py-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-[#CEA17A]"
-                        />
+                        {/* Next 10 bids options */}
+                        <div className="mb-2">
+                          <div className="text-[9px] text-[#CEA17A] font-medium mb-1">Quick Bids:</div>
+                          <div className="grid grid-cols-2 gap-1 max-h-20 overflow-y-auto">
+                            {generateNextBids(10).map((bidAmount, index) => (
+                              <button
+                                key={bidAmount}
+                                onClick={() => {
+                                  setSelectedBidAmounts(prev => ({ ...prev, [team.id]: bidAmount }))
+                                }}
+                                className={`text-[8px] py-0.5 px-1 rounded border transition-all ${
+                                  selected === bidAmount 
+                                    ? 'bg-[#CEA17A]/20 text-[#CEA17A] border-[#CEA17A]/40' 
+                                    : 'bg-[#0f0f0f]/40 text-[#DBD0C0] border-[#CEA17A]/20 hover:bg-[#CEA17A]/10'
+                                }`}
+                              >
+                                ₹{bidAmount}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Custom input */}
+                        <div className="border-t border-[#CEA17A]/10 pt-2">
+                          <div className="text-[9px] text-[#CEA17A] font-medium mb-1">Custom:</div>
+                          <input
+                            type="number"
+                            min={0}
+                            value={selected ?? ''}
+                            placeholder={`Min ₹${calculateNextBid(getCurrentBid() ?? undefined)}`}
+                            onChange={(e)=>{
+                              const val = e.target.value === '' ? null : parseInt(e.target.value)
+                              setSelectedBidAmounts(prev=>({...prev,[team.id]: val}))
+                            }}
+                            className={`w-full mb-2 bg-[#0f0f0f]/60 border rounded px-2 py-1 text-[10px] text-[#DBD0C0] focus:outline-none focus:ring-1 ${
+                              selected != null && !customValid 
+                                ? 'border-red-400/50 focus:ring-red-400' 
+                                : 'border-[#CEA17A]/30 focus:ring-[#CEA17A]'
+                            }`}
+                          />
+                        </div>
+                        
+                        {/* Validation error message */}
+                        {!customValid && selected != null && (
+                          <div className="text-[9px] text-red-400 font-medium mb-1">{customReason}</div>
+                        )}
+                        
                         <div className="flex gap-1">
                           <button onClick={()=>{setOpenBidPopover(null); setSelectedBidAmounts(p=>({...p,[team.id]: null}))}} className="flex-1 py-1 text-[10px] rounded border border-gray-600 text-gray-400">Clear</button>
                           <button onClick={()=>{ if (finalEligible && selected) { setOpenBidPopover(null); handlePlaceBid(team.id, selected) } }} disabled={!finalEligible || !selected} className={`flex-1 py-1 text-[10px] rounded border font-semibold ${finalEligible && selected ? 'bg-green-500/20 text-green-300 border-green-400/40' : 'border-gray-600 text-gray-500'}`}>Place</button>
@@ -2417,11 +2753,22 @@ export default function AuctionPage() {
             <h3 className="text-base font-semibold text-[#DBD0C0]">Teams</h3>
             <button type="button" onClick={() => setShowRemainingPlayersMobile(true)} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[#CEA17A]/30 bg-[#CEA17A]/10 text-[#CEA17A] text-[10px] font-medium">
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-              Remaining Players
+              Remaining Players ({(() => {
+                const availablePlayers = getAvailablePlayers()
+                return availablePlayers.length
+              })()})
             </button>
           </div>
           <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1">
-            {auctionTeams.map(team => {
+            {auctionTeams
+              .sort((a, b) => {
+                const captainA = players.find(p => p.id === a.captain_id)
+                const captainB = players.find(p => p.id === b.captain_id)
+                const nameA = captainA?.display_name || 'Unknown Captain'
+                const nameB = captainB?.display_name || 'Unknown Captain'
+                return nameA.localeCompare(nameB)
+              })
+              .map(team => {
               const teamPlayers = auctionPlayers.filter(ap => ap.sold_to === team.id || ap.player_id === team.captain_id)
               return (
                 <button type="button" onClick={() => setFormationTeamModalId(team.id)} key={team.id} className="snap-start min-w-[150px] bg-[#1a1a1a]/60 border border-[#CEA17A]/15 rounded-lg p-2 flex flex-col text-left active:scale-95 transition">
@@ -2447,9 +2794,49 @@ export default function AuctionPage() {
         {/* Floating consolidated actions (only for auction controller) */}
         {isAuctionController && currentPlayer && (
           <div className="fixed bottom-3 left-3 right-3 grid grid-cols-4 gap-2 z-40">
-            <button onClick={handlePreviousPlayer} disabled={!currentPlayer || getAvailablePlayers().findIndex(ap => ap.player_id === currentPlayer?.player_id) <= 0} className="py-3 rounded-xl bg-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 text-xs font-medium disabled:opacity-30">Prev</button>
-            <button onClick={handleNextPlayer} disabled={!currentPlayer || getAvailablePlayers().length === 0} className="py-3 rounded-xl bg-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 text-xs font-medium disabled:opacity-30">Next</button>
-            <button onClick={handleSellPlayer} disabled={!isAuctionLive || !recentBids?.some(b => b.is_winning_bid && !b.is_undone)} className="py-3 rounded-xl bg-green-600/20 text-green-300 border border-green-400/30 text-xs font-medium disabled:opacity-30">Sell</button>
+            <button 
+              onClick={handlePreviousPlayer} 
+              disabled={!currentPlayer || getAvailablePlayers().findIndex(ap => ap.player_id === currentPlayer?.player_id) <= 0 || auction?.status === 'draft' || actionLoading.previousPlayer} 
+              className="py-3 rounded-xl bg-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 text-xs font-medium disabled:opacity-30 flex items-center justify-center gap-2"
+            >
+              {actionLoading.previousPlayer ? (
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : null}
+              Prev
+            </button>
+            <button 
+              onClick={handleNextPlayer} 
+              disabled={!currentPlayer || getAvailablePlayers().length === 0 || auction?.status === 'draft' || actionLoading.nextPlayer} 
+              className="py-3 rounded-xl bg-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 text-xs font-medium disabled:opacity-30 flex items-center justify-center gap-2"
+            >
+              {actionLoading.nextPlayer ? (
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : null}
+              Next
+            </button>
+            <button 
+              onClick={handleSellPlayer} 
+              disabled={!isAuctionLive || !recentBids?.some(b => b.is_winning_bid && !b.is_undone) || actionLoading.sellPlayer} 
+              className="py-3 rounded-xl bg-green-600/20 text-green-300 border border-green-400/30 text-xs font-medium disabled:opacity-30 flex items-center justify-center gap-1"
+            >
+              {actionLoading.sellPlayer ? (
+                <>
+                  <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Selling...
+                </>
+              ) : (
+                'Sell'
+              )}
+            </button>
             <button onClick={handleUndoBid} disabled={!isAuctionLive || !recentBids?.length} className="py-3 rounded-xl bg-yellow-600/20 text-yellow-300 border border-yellow-400/30 text-xs font-medium disabled:opacity-30">Undo</button>
           </div>
         )}
@@ -2500,14 +2887,139 @@ export default function AuctionPage() {
                 <button onClick={() => setShowHostActionsMobile(false)} className="text-[#CEA17A] p-2" aria-label="Close"><svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg></button>
               </div>
               <div className="grid grid-cols-2 gap-3 text-[12px]">
+                {/* Row 1: Undo Sell and Pause Auction */}
+                <button 
+                  onClick={async () => {
+                    setActionLoading(prev => ({ ...prev, undoPlayerAssignment: true }))
+                    try {
+                      await handleUndoPlayerAssignment()
+                      setShowHostActionsMobile(false)
+                    } finally {
+                      setActionLoading(prev => ({ ...prev, undoPlayerAssignment: false }))
+                    }
+                  }}
+                  disabled={!auctionTeams.some(t => t.players_count > 0) || actionLoading.undoPlayerAssignment}
+                  className="px-3 py-3 rounded-lg bg-yellow-600/15 text-yellow-400 border border-yellow-600/30 disabled:opacity-30 flex items-center justify-center gap-2"
+                >
+                  {actionLoading.undoPlayerAssignment ? (
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : null}
+                  Undo Sell
+                </button>
                 {(auction.status === 'draft' || auction.status === 'live' || auction.status === 'paused') && (
-                  <button onClick={handleStartPauseAuction} className="px-3 py-3 rounded-lg bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30">{auction.status === 'draft' ? 'Start Auction' : auction.status === 'live' ? 'Pause Auction' : 'Resume Auction'}</button>
+                  <button 
+                    onClick={async () => {
+                      setActionLoading(prev => ({ ...prev, startPauseAuction: true }))
+                      try {
+                        await handleStartPauseAuction()
+                        setShowHostActionsMobile(false)
+                      } finally {
+                        setActionLoading(prev => ({ ...prev, startPauseAuction: false }))
+                      }
+                    }}
+                    disabled={actionLoading.startPauseAuction}
+                    className="px-3 py-3 rounded-lg bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 flex items-center justify-center gap-2"
+                  >
+                    {actionLoading.startPauseAuction ? (
+                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : null}
+                    {auction.status === 'draft' ? 'Start Auction' : auction.status === 'live' ? 'Pause Auction' : 'Resume Auction'}
+                  </button>
                 )}
-                <button className="px-3 py-3 rounded-lg bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30">Change Config</button>
-                <button className="px-3 py-3 rounded-lg bg-yellow-500/15 text-yellow-400 border border-yellow-500/30">Reset Auction</button>
-                <button className="px-3 py-3 rounded-lg bg-green-500/15 text-green-400 border border-green-500/30">Mark Complete</button>
-                <button className="px-3 py-3 rounded-lg bg-red-500/15 text-red-400 border border-red-500/30">Cancel Auction</button>
-                <button onClick={handleUndoPlayerAssignment} disabled={!auctionTeams.some(t => t.players_count > 0)} className="px-3 py-3 rounded-lg bg-yellow-600/15 text-yellow-400 border border-yellow-600/30 disabled:opacity-30">Undo Sell</button>
+                
+                {/* Row 2: Change Config and Reset Auction */}
+                <button 
+                  onClick={async () => {
+                    setActionLoading(prev => ({ ...prev, changeConfig: true }))
+                    try {
+                      // Add change config logic here
+                      setShowHostActionsMobile(false)
+                    } finally {
+                      setActionLoading(prev => ({ ...prev, changeConfig: false }))
+                    }
+                  }}
+                  disabled={actionLoading.changeConfig}
+                  className="px-3 py-3 rounded-lg bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 flex items-center justify-center gap-2"
+                >
+                  {actionLoading.changeConfig ? (
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : null}
+                  Change Config
+                </button>
+                <button 
+                  onClick={async () => {
+                    setActionLoading(prev => ({ ...prev, resetAuction: true }))
+                    try {
+                      // Add reset auction logic here
+                      setShowHostActionsMobile(false)
+                    } finally {
+                      setActionLoading(prev => ({ ...prev, resetAuction: false }))
+                    }
+                  }}
+                  disabled={actionLoading.resetAuction}
+                  className="px-3 py-3 rounded-lg bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 flex items-center justify-center gap-2"
+                >
+                  {actionLoading.resetAuction ? (
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : null}
+                  Reset Auction
+                </button>
+                
+                {/* Row 3: Cancel and Mark Complete */}
+                <button 
+                  onClick={async () => {
+                    setActionLoading(prev => ({ ...prev, cancelAuction: true }))
+                    try {
+                      // Add cancel auction logic here
+                      setShowHostActionsMobile(false)
+                    } finally {
+                      setActionLoading(prev => ({ ...prev, cancelAuction: false }))
+                    }
+                  }}
+                  disabled={actionLoading.cancelAuction}
+                  className="px-3 py-3 rounded-lg bg-red-500/15 text-red-400 border border-red-500/30 flex items-center justify-center gap-2"
+                >
+                  {actionLoading.cancelAuction ? (
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : null}
+                  Cancel Auction
+                </button>
+                <button 
+                  onClick={async () => {
+                    setActionLoading(prev => ({ ...prev, markComplete: true }))
+                    try {
+                      // Add mark complete logic here
+                      setShowHostActionsMobile(false)
+                    } finally {
+                      setActionLoading(prev => ({ ...prev, markComplete: false }))
+                    }
+                  }}
+                  disabled={actionLoading.markComplete}
+                  className="px-3 py-3 rounded-lg bg-green-500/15 text-green-400 border border-green-500/30 flex items-center justify-center gap-2"
+                >
+                  {actionLoading.markComplete ? (
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : null}
+                  Mark Complete
+                </button>
               </div>
             </div>
           </div>
@@ -2688,6 +3200,25 @@ export default function AuctionPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Player Sold Notification */}
+      {soldPlayerInfo && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in-down">
+          <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-2 border-[#CEA17A]/30 rounded-2xl p-8 shadow-2xl text-center max-w-md mx-4">
+             <div className="text-6xl mb-4">💰</div>
+            <h2 className="text-2xl md:text-3xl font-bold text-[#CEA17A] mb-3">Sold!</h2>
+            <p className="text-lg md:text-xl text-[#DBD0C0] mb-2">
+              <span className="font-bold text-white">{soldPlayerInfo.playerName}</span>
+            </p>
+            <p className="text-sm md:text-base text-[#DBD0C0]/80">
+              Sold to <span className="font-semibold text-white">{soldPlayerInfo.captainName}</span>
+            </p>
+            <p className="text-lg md:text-xl font-bold text-green-400 mt-2">
+              ₹{soldPlayerInfo.price}
+            </p>
+          </div>
         </div>
       )}
     </div>
