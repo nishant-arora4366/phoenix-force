@@ -7,6 +7,27 @@ import Link from 'next/link'
 import { secureSessionManager } from '@/src/lib/secure-session'
 import { interpretError } from '@/src/lib/error-codes'
 
+// Reusable player image with graceful fallback
+function PlayerImage({ src, name }: { src?: string | null; name: string }) {
+  const [errored, setErrored] = useState(false)
+  if (!src || errored) {
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-[#CEA17A]/20 to-[#CEA17A]/10 flex items-center justify-center select-none">
+        <span className="text-4xl font-bold text-[#CEA17A]">{name?.charAt(0)?.toUpperCase() || '👤'}</span>
+      </div>
+    )
+  }
+  return (
+    <img
+      src={src}
+      alt={name}
+      className="w-full h-full object-cover"
+      onError={() => setErrored(true)}
+      draggable={false}
+    />
+  )
+}
+
 interface Auction {
   id: string
   tournament_id: string
@@ -98,8 +119,33 @@ export default function AuctionPage() {
   const [isGlobalBidLoading, setIsGlobalBidLoading] = useState(false)
   const [isPlayerTransitioning, setIsPlayerTransitioning] = useState(false)
   const [soldPlayerInfo, setSoldPlayerInfo] = useState<{ playerName: string; teamName: string; captainName: string; price: number } | null>(null)
+  // Mobile current player detail modal state
+  const [mobilePlayerModalOpen, setMobilePlayerModalOpen] = useState(false)
   // Central interaction lock: when true, all critical actions (navigation, sell, undo, bidding) should be disabled.
   const isInteractionLocked = isPlayerTransitioning || isGlobalBidLoading || Object.values(actionLoading).some(v => v)
+
+  // Smooth global action UX (debounced overlay to avoid flickery spinners for very short actions)
+  const [smoothAction, setSmoothAction] = useState<string | null>(null)
+  const [showSmoothLayer, setShowSmoothLayer] = useState(false)
+  const smoothTimerRef = useRef<number | null>(null)
+  const startSmooth = (label: string) => {
+    // Reuse existing label if already showing to prevent thrash
+    if (!smoothAction) {
+      setSmoothAction(label)
+      smoothTimerRef.current = window.setTimeout(() => setShowSmoothLayer(true), 140) // threshold
+    }
+  }
+  const endSmooth = () => {
+    if (smoothTimerRef.current) {
+      clearTimeout(smoothTimerRef.current)
+      smoothTimerRef.current = null
+    }
+    // Slight grace period so realtime confirmation can land before overlay disappears
+    setTimeout(() => {
+      setShowSmoothLayer(false)
+      setSmoothAction(null)
+    }, 160)
+  }
 
   // Helpers to begin/end a guarded player transition (avoid duplicate spinners & racey unlocks)
   const transitionTokenRef = useRef<number | null>(null)
@@ -154,9 +200,7 @@ export default function AuctionPage() {
   // Auto-dismiss sold player info after a delay
   useEffect(() => {
     if (soldPlayerInfo) {
-      const timer = setTimeout(() => {
-        setSoldPlayerInfo(null)
-      }, 3000) // 3 seconds
+      const timer = setTimeout(() => setSoldPlayerInfo(null), 2000) // shorten to 2s
       return () => clearTimeout(timer)
     }
   }, [soldPlayerInfo])
@@ -484,6 +528,7 @@ export default function AuctionPage() {
     if (inFlightBidRef.current) return
     inFlightBidRef.current = true
     setIsGlobalBidLoading(true)
+    startSmooth('Placing Bid')
     setBidLoading(prev => ({ ...prev, [`bid_${teamId}`]: true }))
     try {
       const token = secureSessionManager.getToken()
@@ -543,6 +588,7 @@ export default function AuctionPage() {
       setBidLoading(prev => ({ ...prev, [`bid_${teamId}`]: false }))
       setIsGlobalBidLoading(false)
       inFlightBidRef.current = false
+      endSmooth()
     }
   }
 
@@ -557,6 +603,7 @@ export default function AuctionPage() {
     }
     
     setActionLoading(prev => ({ ...prev, undoBid: true }))
+  startSmooth('Undo Bid')
     
     try {
       const token = secureSessionManager.getToken()
@@ -595,6 +642,7 @@ export default function AuctionPage() {
       setUiNotice({ type: 'error', message: 'Failed to undo bid. Please try again.' })
     } finally {
       setActionLoading(prev => ({ ...prev, undoBid: false }))
+      endSmooth()
     }
   }
 
@@ -617,6 +665,7 @@ export default function AuctionPage() {
     
   setActionLoading(prev => ({ ...prev, undoPlayerAssignment: true }))
   beginPlayerTransition('undo-player-assignment')
+  startSmooth('Undo Sell')
     
     try {
       const token = secureSessionManager.getToken()
@@ -660,6 +709,7 @@ export default function AuctionPage() {
     } finally {
       setActionLoading(prev => ({ ...prev, undoPlayerAssignment: false }))
       endPlayerTransition()
+      endSmooth()
     }
   }
 
@@ -676,6 +726,7 @@ export default function AuctionPage() {
     
   setActionLoading(prev => ({ ...prev, sellPlayer: true }))
   beginPlayerTransition('sell-player')
+  startSmooth('Selling Player')
     
     try {
       const token = secureSessionManager.getToken()
@@ -736,6 +787,7 @@ export default function AuctionPage() {
     } finally {
       setActionLoading(prev => ({ ...prev, sellPlayer: false }))
       endPlayerTransition()
+      endSmooth()
     }
   }
 
@@ -783,6 +835,7 @@ export default function AuctionPage() {
     
     setActionLoading(prev => ({ ...prev, nextPlayer: true }))
     beginPlayerTransition('next-player')
+  startSmooth('Next Player')
     
     try {
       const token = secureSessionManager.getToken()
@@ -890,6 +943,7 @@ export default function AuctionPage() {
       alert('Failed to move to next player. Please try again.')
     } finally {
       setActionLoading(prev => ({ ...prev, nextPlayer: false }))
+      endSmooth()
     }
   }
 
@@ -900,6 +954,7 @@ export default function AuctionPage() {
     
     setActionLoading(prev => ({ ...prev, previousPlayer: true }))
     beginPlayerTransition('previous-player')
+  startSmooth('Previous Player')
     
     try {
       const token = secureSessionManager.getToken()
@@ -971,6 +1026,7 @@ export default function AuctionPage() {
       alert('Failed to move to previous player. Please try again.')
     } finally {
       setActionLoading(prev => ({ ...prev, previousPlayer: false }))
+      endSmooth()
     }
   }
 
@@ -981,6 +1037,7 @@ export default function AuctionPage() {
     
     setActionLoading(prev => ({ ...prev, startPause: true }))
     beginPlayerTransition('start-pause')
+  startSmooth(auction?.status === 'draft' ? 'Starting Auction' : auction?.status === 'live' ? 'Pausing Auction' : 'Resuming Auction')
     
     try {
       const token = secureSessionManager.getToken()
@@ -1046,6 +1103,7 @@ export default function AuctionPage() {
     } finally {
       setActionLoading(prev => ({ ...prev, startPause: false }))
       endPlayerTransition()
+      endSmooth()
     }
   }
 
@@ -1545,6 +1603,37 @@ export default function AuctionPage() {
   <div className="absolute top-0 left-0 w-px h-full bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent motion-safe:animate-pulse" style={{animationDelay: '0.5s'}}></div>
   <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent motion-safe:animate-pulse" style={{animationDelay: '1.5s'}}></div>
       </div>
+
+      {/* Global smooth action overlay (appears only if action lasts > threshold) */}
+      {showSmoothLayer && smoothAction && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-sm bg-black/40 transition-opacity">
+          <div className="px-6 py-4 rounded-xl border border-[#CEA17A]/30 bg-[#1a1a1a]/80 shadow-2xl flex flex-col items-center gap-2 animate-fade-in">
+            <div className="flex items-center gap-3">
+              <svg className="h-6 w-6 animate-spin text-[#CEA17A]" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V2C5.373 2 2 5.373 2 12h2zm2 5.291A7.962 7.962 0 014 12H2c0 3.042 1.135 5.824 3 7.938l1-.647z" />
+              </svg>
+              <span className="text-sm font-semibold text-[#CEA17A] tracking-wide">{smoothAction}</span>
+            </div>
+            {lastLatencySample && (
+              <div className="text-[10px] text-[#DBD0C0]/50 font-mono">
+                opt {lastLatencySample.optimistic}ms / conf {lastLatencySample.confirm}ms
+              </div>
+            )}
+            <div className="text-[9px] uppercase tracking-widest text-[#DBD0C0]/40">Please wait…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Sold notification fixed-size card */}
+      {soldPlayerInfo && (
+        <div className="absolute top-4 right-4 z-40 w-64 h-28 bg-[#1a1a1a]/90 border border-[#CEA17A]/30 rounded-xl shadow-lg flex flex-col justify-center px-4 animate-fade-in">
+          <div className="text-xs tracking-widest text-[#CEA17A]/70 mb-1 font-semibold">PLAYER SOLD</div>
+          <div className="text-sm font-bold text-[#DBD0C0] truncate" title={soldPlayerInfo.playerName}>{soldPlayerInfo.playerName}</div>
+          <div className="text-[11px] text-[#DBD0C0]/70 truncate" title={soldPlayerInfo.teamName}>to {soldPlayerInfo.teamName}</div>
+          <div className="text-[11px] text-[#CEA17A] mt-1">₹{soldPlayerInfo.price}</div>
+        </div>
+      )}
       
       {/* Background Glowing Orbs - Behind Content */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -1699,7 +1788,7 @@ export default function AuctionPage() {
         {/* Current Player and Live Bids Section */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
           {/* Current Player Card */}
-          <div className="xl:col-span-1 bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10">
+          <div className="xl:col-span-1 bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10 transition-opacity duration-200 ease-out">
             {!isAuctionLive && (
               <div className="text-center py-12">
                 <div className="text-[#CEA17A] text-6xl mb-4">🕒</div>
@@ -1715,9 +1804,16 @@ export default function AuctionPage() {
 
                 {/* Player Photo - Increased Size */}
                 <div className="flex justify-center">
-                  <div 
+                  <div
                     className="relative w-64 h-64 rounded-xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-105 shadow-lg"
-                    onClick={() => handlePhotoClick(currentPlayer.profile_pic_url || '', currentPlayer.display_name)}
+                    onClick={() => {
+                      // On desktop keep existing preview; on mobile open modal.
+                      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                        setMobilePlayerModalOpen(true)
+                      } else {
+                        handlePhotoClick(currentPlayer.profile_pic_url || '', currentPlayer.display_name)
+                      }
+                    }}
                   >
                     {(isPlayerTransitioning) ? (
                       <div className="w-full h-full bg-gradient-to-br from-[#CEA17A]/20 to-[#CEA17A]/10 flex items-center justify-center">
@@ -1725,18 +1821,8 @@ export default function AuctionPage() {
                           <div className="w-20 h-20 rounded-full bg-[#CEA17A]/30" />
                         </div>
                       </div>
-                    ) : currentPlayer.profile_pic_url ? (
-                      <img
-                        src={currentPlayer.profile_pic_url}
-                        alt={currentPlayer.display_name}
-                        className="w-full h-full object-cover"
-                      />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#CEA17A]/20 to-[#CEA17A]/10 flex items-center justify-center">
-                        <div className="text-8xl text-[#CEA17A]">
-                          {currentPlayer.display_name?.charAt(0)?.toUpperCase() || '👤'}
-                        </div>
-                      </div>
+                      <PlayerImage src={currentPlayer.profile_pic_url} name={currentPlayer.display_name} />
                     )}
                     {!(actionLoading.nextPlayer || actionLoading.previousPlayer) && (
                     <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
@@ -1781,6 +1867,40 @@ export default function AuctionPage() {
 
                 {/* Player Profile */}
                   <div>
+                  {/* Mobile Player Detail Modal */}
+                  {mobilePlayerModalOpen && currentPlayer && (
+                    <div className="md:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                      <div className="w-11/12 max-w-sm bg-[#1a1a1a] border border-[#CEA17A]/30 rounded-xl p-5 shadow-2xl relative animate-fade-in">
+                        <button
+                          onClick={() => setMobilePlayerModalOpen(false)}
+                          className="absolute top-2 right-2 text-[#CEA17A]/60 hover:text-[#CEA17A]"
+                          aria-label="Close"
+                        >
+                          ✕
+                        </button>
+                        <div className="flex flex-col items-center mb-4">
+                          <div className="w-28 h-28 rounded-lg overflow-hidden mb-3">
+                            <PlayerImage src={currentPlayer.profile_pic_url} name={currentPlayer.display_name} />
+                          </div>
+                          <h2 className="text-xl font-bold text-[#DBD0C0]">{currentPlayer.display_name}</h2>
+                          <div className="text-xs text-[#DBD0C0]/60 mt-1">Base Price: ₹{getPlayerBasePrice(currentPlayer)}</div>
+                        </div>
+                        <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                          {Object.entries(currentPlayer.skills || {}).map(([key,val]) => (
+                            <div key={key} className="flex justify-between text-sm">
+                              <span className="text-[#CEA17A] font-medium">{key}</span>
+                              <span className="text-[#DBD0C0] text-right ml-3 truncate">
+                                {Array.isArray(val) ? val.join(', ') : String(val)}
+                              </span>
+                            </div>
+                          ))}
+                          {currentPlayer.bio && (
+                            <div className="text-xs text-[#DBD0C0]/70 mt-2 leading-relaxed">{currentPlayer.bio}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
                     {isPlayerTransitioning ? (
                       <div className="space-y-4 animate-pulse">
@@ -2114,9 +2234,13 @@ export default function AuctionPage() {
                                           : 'bg-[#CEA17A]/20 text-[#CEA17A] hover:bg-[#CEA17A]/30'
                                       }`}
                                     >
-                                      {(bidLoading[`bid_${team.id}`] || isGlobalBidLoading)
-                                        ? 'Placing...'
-                                        : `Bid ₹${(entered && customValid) ? entered : calculateNextBid(getCurrentBid() ?? undefined)}`}
+                                      {(() => {
+                                        const loadingActive = bidLoading[`bid_${team.id}`] || isGlobalBidLoading
+                                        if (!loadingActive) return `Bid ₹${(entered && customValid) ? entered : calculateNextBid(getCurrentBid() ?? undefined)}`
+                                        // If global smooth overlay showing, suppress repetitive text flicker
+                                        if (showSmoothLayer) return 'Working…'
+                                        return 'Placing...'
+                                      })()}
                                     </button>
                                     <button
                                       onClick={() => {
