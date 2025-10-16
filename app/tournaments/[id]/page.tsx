@@ -35,6 +35,14 @@ interface User {
   role: string
 }
 
+interface Auction {
+  id: string
+  tournament_id: string
+  status: string
+  created_at: string
+  updated_at: string
+}
+
 // Status flow definition - bidirectional with logical transitions
 const statusFlow = {
   'draft': ['registration_open'],
@@ -81,6 +89,7 @@ export default function TournamentDetailsPage() {
   const [hostInfo, setHostInfo] = useState<User | null>(null)
   const [slots, setSlots] = useState<any[]>([])
   const [slotsStats, setSlotsStats] = useState<any>(null)
+  const [completedAuction, setCompletedAuction] = useState<Auction | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [slotsLoading, setSlotsLoading] = useState(true)
   const [isRealtimeUpdating, setIsRealtimeUpdating] = useState(false)
@@ -174,6 +183,26 @@ export default function TournamentDetailsPage() {
     }
   }, [])
 
+  // Fetch completed auction for this tournament
+  const fetchCompletedAuction = async (tournamentId: string) => {
+    try {
+      const response = await fetch('/api/auctions')
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success && result.auctions) {
+          // Find completed auction for this tournament
+          const completedAuction = result.auctions.find((auction: Auction) => 
+            auction.tournament_id === tournamentId && auction.status === 'completed'
+          )
+          setCompletedAuction(completedAuction || null)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching completed auction:', error)
+      setCompletedAuction(null)
+    }
+  }
+
   useEffect(() => {
     const fetchTournamentAndUser = async () => {
       try {
@@ -213,6 +242,9 @@ export default function TournamentDetailsPage() {
             setHostInfo(hostResult.data)
           }
         }
+
+        // Fetch completed auction for this tournament
+        await fetchCompletedAuction(tournamentData.id)
 
         // Fetch tournament slots for everyone (public information)
         await fetchSlots()
@@ -2236,15 +2268,24 @@ export default function TournamentDetailsPage() {
                           </p>
                         </div>
                       </div>
-                      <Link
-                        href={`/auctions?tournament=${tournament.id}`}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium text-sm sm:text-base w-full sm:w-auto"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        View Teams
-                      </Link>
+                      {completedAuction ? (
+                        <Link
+                          href={`/auctions/${completedAuction.id}`}
+                          className="flex items-center justify-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium text-sm sm:text-base w-full sm:w-auto"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          View Teams
+                        </Link>
+                      ) : (
+                        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-500/15 text-gray-400 border border-gray-500/30 rounded-lg cursor-not-allowed font-medium text-sm sm:text-base w-full sm:w-auto">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          No Auction Found
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
