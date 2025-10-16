@@ -1254,22 +1254,54 @@ export default function AuctionPage() {
   const handleExportAsImage = async () => {
     // Determine if we're on mobile and use appropriate ref
     const isMobile = window.innerWidth < 768
-    const targetRef = isMobile ? mobileExportRef : exportRef
+    let targetRef = isMobile ? mobileExportRef : exportRef
     
-    if (!targetRef.current) return
+    console.log('Export debug:', { isMobile, hasTargetRef: !!targetRef.current, windowWidth: window.innerWidth })
+    
+    // Fallback to desktop export if mobile export ref is not available
+    if (!targetRef.current && isMobile) {
+      console.log('Mobile export ref not found, falling back to desktop export')
+      targetRef = exportRef
+    }
+    
+    if (!targetRef.current) {
+      console.error('Target ref not found:', { isMobile, mobileRef: !!mobileExportRef.current, desktopRef: !!exportRef.current })
+      setUiNotice({ type: 'error', message: 'Export layout not found. Please try again.' })
+      return
+    }
     
     try {
       setActionLoading(prev => ({ ...prev, exportImage: true }))
+      
+      // Temporarily make the mobile export layout visible for html2canvas
+      if (isMobile && mobileExportRef.current && targetRef === mobileExportRef) {
+        mobileExportRef.current.style.position = 'fixed'
+        mobileExportRef.current.style.top = '0'
+        mobileExportRef.current.style.left = '0'
+        mobileExportRef.current.style.zIndex = '9999'
+        mobileExportRef.current.style.visibility = 'visible'
+        mobileExportRef.current.style.opacity = '1'
+      }
       
       const canvas = await html2canvas(targetRef.current, {
         backgroundColor: '#0f0f0f',
         scale: 2, // Higher quality
         useCORS: true,
         allowTaint: true,
-        logging: false,
+        logging: true, // Enable logging for debugging
         width: targetRef.current.scrollWidth,
         height: targetRef.current.scrollHeight
       })
+      
+      // Hide the mobile export layout again
+      if (isMobile && mobileExportRef.current && targetRef === mobileExportRef) {
+        mobileExportRef.current.style.position = 'fixed'
+        mobileExportRef.current.style.top = '-9999px'
+        mobileExportRef.current.style.left = '0'
+        mobileExportRef.current.style.zIndex = '-1'
+        mobileExportRef.current.style.visibility = 'hidden'
+        mobileExportRef.current.style.opacity = '0'
+      }
       
       // Convert canvas to blob
       canvas.toBlob((blob) => {
@@ -1284,12 +1316,14 @@ export default function AuctionPage() {
           URL.revokeObjectURL(url)
           
           setUiNotice({ type: 'info', message: 'Auction results exported successfully!' })
+        } else {
+          setUiNotice({ type: 'error', message: 'Failed to generate image. Please try again.' })
         }
       }, 'image/jpeg', 0.9)
       
     } catch (error) {
       console.error('Error exporting image:', error)
-      setUiNotice({ type: 'error', message: 'Failed to export image. Please try again.' })
+      setUiNotice({ type: 'error', message: `Failed to export image: ${error instanceof Error ? error.message : 'Unknown error'}` })
     } finally {
       setActionLoading(prev => ({ ...prev, exportImage: false }))
     }
@@ -3368,7 +3402,7 @@ export default function AuctionPage() {
 
         {/* Hidden Mobile Export Layout - Side by Side Teams */}
         {(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
-          <div ref={mobileExportRef} className="hidden md:hidden fixed -top-[9999px] left-0 w-screen bg-[#0f0f0f] p-6">
+          <div ref={mobileExportRef} className="fixed -top-[9999px] left-0 w-screen bg-[#0f0f0f] p-6 opacity-0 invisible" style={{ zIndex: -1 }}>
             {/* Auction Complete Header */}
             <div className="text-center py-6">
               <div className="text-[#CEA17A] text-6xl mb-4">🏆</div>
