@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -116,7 +116,8 @@ const getStatusText = (status: string) => {
   }
 }
 
-export default function AuctionsPage() {
+// Component that uses useSearchParams - needs to be wrapped in Suspense
+function AuctionsContent() {
   const [user, setUser] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<User | null>(null)
   const [isHost, setIsHost] = useState(false)
@@ -912,5 +913,28 @@ export default function AuctionsPage() {
         </div>
       )}
     </div>
+  )
+}
+
+// Loading component for Suspense fallback
+function AuctionsLoading() {
+  return (
+    <div className="min-h-screen bg-[#19171b]">
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A] mx-auto"></div>
+          <p className="mt-4 text-[#DBD0C0]">Loading auctions...</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Main page component with Suspense wrapper
+export default function AuctionsPage() {
+  return (
+    <Suspense fallback={<AuctionsLoading />}>
+      <AuctionsContent />
+    </Suspense>
   )
 }
