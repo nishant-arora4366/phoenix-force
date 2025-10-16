@@ -249,7 +249,57 @@ export async function DELETE(
     const { searchParams } = new URL(request.url)
     const bidId = searchParams.get('bidId')
 
+    // Check if this is a bid reset request (from navigation)
     if (!bidId) {
+      const body = await request.json().catch(() => ({}))
+      
+      if (body.action === 'reset_player_bids' && body.player_id) {
+        // Handle bid reset for player navigation
+        const authHeader = request.headers.get('authorization')
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+        }
+
+        const token = authHeader.split(' ')[1]
+        const decoded = verifyToken(token)
+        if (!decoded || !decoded.userId) {
+          return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+        }
+
+        // Check user role (only hosts and admins can reset bids)
+        const { data: user, error: userError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', decoded.userId)
+          .single()
+
+        if (userError || !user || (user.role !== 'admin' && user.role !== 'host')) {
+          return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+        }
+
+        // Mark all bids for this player as undone
+        const { error: resetError } = await supabase
+          .from('auction_bids')
+          .update({ 
+            is_undone: true,
+            undone_at: new Date().toISOString(),
+            undone_by: decoded.userId
+          })
+          .eq('auction_id', auctionId)
+          .eq('player_id', body.player_id)
+          .eq('is_undone', false)
+
+        if (resetError) {
+          console.error('Error resetting player bids:', resetError)
+          return NextResponse.json({ error: 'Failed to reset player bids' }, { status: 500 })
+        }
+
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Player bids reset successfully' 
+        })
+      }
+
       return NextResponse.json({ error: 'Bid ID is required' }, { status: 400 })
     }
 

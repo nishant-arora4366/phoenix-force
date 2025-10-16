@@ -83,9 +83,23 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // Find the most recently sold player (last player assignment)
+    // Get captain IDs to exclude from undo operation
+    const { data: captainTeams, error: captainTeamsError } = await supabase
+      .from('auction_teams')
+      .select('captain_id')
+      .eq('auction_id', auctionId)
+
+    if (captainTeamsError) {
+      console.error('🔍 [DEBUG] Error fetching captain IDs:', captainTeamsError)
+      return NextResponse.json({ error: 'Failed to fetch team information' }, { status: 500 })
+    }
+
+    const captainIds = captainTeams?.map(team => team.captain_id).filter(Boolean) || []
+    console.log('🔍 [DEBUG] Captain IDs to exclude:', captainIds)
+
+    // Find the most recently sold player (last player assignment) excluding captains
     console.log('🔍 [DEBUG] Looking for last sold player in auction:', auctionId)
-    const { data: lastSoldPlayer, error: lastSoldError } = await supabase
+    let lastSoldQuery = supabase
       .from('auction_players')
       .select(`
         *,
@@ -102,17 +116,29 @@ export async function POST(
       .eq('status', 'sold')
       .order('display_order', { ascending: false })
       .limit(1)
-      .single()
+
+    // Exclude captains from undo operation
+    if (captainIds.length > 0) {
+      lastSoldQuery = lastSoldQuery.not('player_id', 'in', `(${captainIds.map(id => `"${id}"`).join(',')})`)
+    }
+
+    const { data: lastSoldPlayer, error: lastSoldError } = await lastSoldQuery.single()
 
     if (lastSoldError || !lastSoldPlayer) {
-      console.log('🔍 [DEBUG] No sold players found:', { lastSoldError, lastSoldPlayer })
-      return NextResponse.json({ error: 'No player assignments to undo' }, { status: 404 })
+      console.log('🔍 [DEBUG] No sold players found (excluding captains):', { lastSoldError, lastSoldPlayer })
+      return NextResponse.json({ error: 'No non-captain player assignments to undo' }, { status: 404 })
     }
     console.log('🔍 [DEBUG] Found last sold player:', { 
       player_id: lastSoldPlayer.player_id, 
       sold_price: lastSoldPlayer.sold_price,
       sold_to: lastSoldPlayer.sold_to 
     })
+
+    // Double-check that this player is not a captain (safety check)
+    if (captainIds.includes(lastSoldPlayer.player_id)) {
+      console.log('🔍 [DEBUG] Attempted to undo captain assignment, rejecting')
+      return NextResponse.json({ error: 'Cannot undo captain assignments' }, { status: 400 })
+    }
 
     // Get the team that bought this player
     const team = lastSoldPlayer.auction_teams

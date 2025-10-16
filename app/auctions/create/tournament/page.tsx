@@ -592,131 +592,156 @@ export default function TournamentAuctionCreatePage() {
       </div>
       
       <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 min-h-screen flex flex-col">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 space-y-4 sm:space-y-0 flex-shrink-0">
-          <div>
-            <h1 className="text-4xl font-bold text-[#DBD0C0]">Create Tournament Auction</h1>
-            <p className="text-[#CEA17A] mt-2">
-              Select a tournament to create an auction for player selection
+        {/* Mobile-Optimized Header */}
+        <div className="flex-shrink-0 mb-4 space-y-4">
+          <div className="text-center">
+            <h1 className="text-2xl sm:text-4xl font-bold text-[#DBD0C0]">Tournament Auction</h1>
+            <p className="text-[#CEA17A] mt-2 text-sm sm:text-base">
+              {selectedTournament ? `Step ${currentStep} of 4` : 'Select a tournament to begin'}
             </p>
           </div>
-          <div className="flex space-x-3">
-            {selectedTournament ? (
-              <button
-                onClick={goBack}
-                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 shadow-lg shadow-[#CEA17A]/5 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/10 hover:border-[#CEA17A]/30 transition-all duration-150 font-medium text-sm sm:text-base"
-              >
-                <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span className="hidden sm:inline">{currentStep === 1 ? 'Back to Tournament Selection' : 'Previous Step'}</span>
-                <span className="sm:hidden">{currentStep === 1 ? 'Back' : 'Previous'}</span>
-              </button>
-            ) : (
-              <Link
-                href="/auctions/create"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 shadow-lg shadow-[#CEA17A]/5 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/10 hover:border-[#CEA17A]/30 transition-all duration-150 font-medium text-sm sm:text-base"
-              >
-                <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span className="hidden sm:inline">Back to Create Auction</span>
-                <span className="sm:hidden">Back</span>
-              </Link>
-            )}
-            
-            {/* Debug: Clear localStorage button - only in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <button
-                onClick={clearSavedState}
-                className="px-3 py-1 text-xs bg-red-600/20 text-red-400 border border-red-600/30 rounded hover:bg-red-600/30 transition-all duration-150"
-              >
-                Clear Data
-              </button>
-            )}
-            
-            {/* Next Button - Only show when in steps */}
-            {selectedTournament && currentStep === 1 && (
-              <button
-                onClick={handleStep1Next}
-                disabled={tournamentPlayers.length % (selectedTournament.selected_teams || 1) !== 0}
-                className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg transition-all duration-150 font-medium text-sm sm:text-base ${
-                  tournamentPlayers.length % (selectedTournament.selected_teams || 1) !== 0
-                    ? 'bg-[#CEA17A]/10 text-[#CEA17A]/50 cursor-not-allowed'
-                    : 'bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40'
-                }`}
-              >
-                <span className="hidden sm:inline">Next: Select Captains</span>
-                <span className="sm:hidden">Next</span>
-                <svg className="h-4 w-4 sm:h-5 sm:w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
-            )}
-            
-            {selectedTournament && currentStep === 2 && (
-              <button
-                onClick={handleStep2Next}
-                disabled={auctionConfig.captains.length !== selectedTournament.selected_teams}
-                className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg transition-all duration-150 font-medium text-sm sm:text-base ${
-                  auctionConfig.captains.length !== selectedTournament.selected_teams
-                    ? 'bg-[#CEA17A]/10 text-[#CEA17A]/50 cursor-not-allowed'
-                    : 'bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40'
-                }`}
-              >
-                <span className="hidden sm:inline">Next: Auction Config</span>
-                <span className="sm:hidden">Next</span>
-                <svg className="h-4 w-4 sm:h-5 sm:w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
-            )}
-            
-            {selectedTournament && currentStep === 3 && (
-              <button
-                onClick={handleStep3Next}
-                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg transition-all duration-150 font-medium text-sm sm:text-base bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40"
-              >
-                <span className="hidden sm:inline">Next: Review & Begin</span>
-                <span className="sm:hidden">Next</span>
-                <svg className="h-4 w-4 sm:h-5 sm:w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
-            )}
-            
-            {selectedTournament && currentStep === 4 && (
-              <button
-                onClick={saveAuctionDraft}
-                disabled={creatingAuction === selectedTournament.id}
-                className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg transition-all duration-150 font-medium text-sm sm:text-base ${
-                  creatingAuction === selectedTournament.id
-                    ? 'bg-[#CEA17A]/25 text-[#CEA17A]/70 cursor-wait'
-                    : 'bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40'
-                }`}
-              >
-                {creatingAuction === selectedTournament.id ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#CEA17A] mr-2"></div>
-                    <span className="hidden sm:inline">Creating Auction...</span>
-                    <span className="sm:hidden">Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="hidden sm:inline">Begin Auction</span>
-                    <span className="sm:hidden">Begin</span>
-                    <svg className="h-4 w-4 sm:h-5 sm:w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </>
-                )}
-              </button>
-            )}
+          <div className="flex justify-center">
+            <div className="inline-flex bg-[#19171b]/50 rounded-2xl p-1 border border-[#CEA17A]/20">
+              {selectedTournament ? (
+                <button
+                  onClick={goBack}
+                  className="inline-flex items-center justify-center px-4 py-2 bg-transparent text-[#DBD0C0] hover:bg-[#CEA17A]/10 rounded-xl transition-all duration-150 font-medium text-sm"
+                >
+                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  {currentStep === 1 ? 'Tournaments' : 'Back'}
+                </button>
+              ) : (
+                <Link
+                  href="/auctions/create"
+                  className="inline-flex items-center justify-center px-4 py-2 bg-transparent text-[#DBD0C0] hover:bg-[#CEA17A]/10 rounded-xl transition-all duration-150 font-medium text-sm"
+                >
+                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Create Auction
+                </Link>
+              )}
+              
+              {/* Debug: Clear localStorage button - only in development */}
+              {process.env.NODE_ENV === 'development' && selectedTournament && (
+                <button
+                  onClick={clearSavedState}
+                  className="px-3 py-1 text-xs bg-red-600/20 text-red-400 border border-red-600/30 rounded-xl hover:bg-red-600/30 transition-all duration-150 ml-2"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
+        {/* Mobile Navigation Bar - Fixed at bottom when in steps */}
+        {selectedTournament && (
+          <div className="fixed bottom-0 left-0 right-0 bg-[#19171b]/95 backdrop-blur-sm border-t border-[#CEA17A]/20 p-4 z-50 sm:hidden">
+            <div className="flex items-center justify-between max-w-lg mx-auto">
+              <button
+                onClick={goBack}
+                className="flex items-center px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded-xl hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium text-sm"
+              >
+                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                {currentStep === 1 ? 'Tournaments' : 'Back'}
+              </button>
+              
+              <div className="text-center">
+                <div className="text-xs text-[#CEA17A] font-medium">Step {currentStep} of 4</div>
+                <div className="flex space-x-1 mt-1">
+                  {[1, 2, 3, 4].map((step) => (
+                    <div 
+                      key={step}
+                      className={`w-2 h-2 rounded-full ${
+                        step <= currentStep ? 'bg-[#CEA17A]' : 'bg-[#CEA17A]/20'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              {currentStep === 1 && (
+                <button
+                  onClick={handleStep1Next}
+                  disabled={tournamentPlayers.length % (selectedTournament.selected_teams || 1) !== 0}
+                  className={`flex items-center px-4 py-2 border border-[#CEA17A]/25 rounded-xl transition-all duration-150 font-medium text-sm ${
+                    tournamentPlayers.length % (selectedTournament.selected_teams || 1) !== 0
+                      ? 'bg-[#CEA17A]/10 text-[#CEA17A]/50 cursor-not-allowed'
+                      : 'bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25'
+                  }`}
+                >
+                  Next
+                  <svg className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </button>
+              )}
+              
+              {currentStep === 2 && (
+                <button
+                  onClick={handleStep2Next}
+                  disabled={auctionConfig.captains.length !== selectedTournament.selected_teams}
+                  className={`flex items-center px-4 py-2 border border-[#CEA17A]/25 rounded-xl transition-all duration-150 font-medium text-sm ${
+                    auctionConfig.captains.length !== selectedTournament.selected_teams
+                      ? 'bg-[#CEA17A]/10 text-[#CEA17A]/50 cursor-not-allowed'
+                      : 'bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25'
+                  }`}
+                >
+                  Next
+                  <svg className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </button>
+              )}
+              
+              {currentStep === 3 && (
+                <button
+                  onClick={handleStep3Next}
+                  className="flex items-center px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded-xl hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium text-sm"
+                >
+                  Next
+                  <svg className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </button>
+              )}
+              
+              {currentStep === 4 && (
+                <button
+                  onClick={saveAuctionDraft}
+                  disabled={creatingAuction === selectedTournament.id}
+                  className={`flex items-center px-4 py-2 border border-[#CEA17A]/25 rounded-xl transition-all duration-150 font-medium text-sm ${
+                    creatingAuction === selectedTournament.id
+                      ? 'bg-[#CEA17A]/25 text-[#CEA17A]/70 cursor-wait'
+                      : 'bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25'
+                  }`}
+                >
+                  {creatingAuction === selectedTournament.id ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#CEA17A] mr-2"></div>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      Begin
+                      <svg className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Multi-Step Form or Tournament Selection */}
-        <div className="flex-grow flex flex-col">
+        <div className={`flex-grow flex flex-col ${selectedTournament ? 'pb-20 sm:pb-0' : ''}`}>
         {!selectedTournament ? (
           /* Tournament Selection */
           tournamentsLoading ? (
@@ -724,10 +749,10 @@ export default function TournamentAuctionCreatePage() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CEA17A]"></div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto">
+            <div className="grid grid-cols-1 gap-4 overflow-y-auto pb-20 sm:pb-6 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6">
               {tournaments?.map((tournament) => (
-                <div key={tournament.id} className="bg-[#19171b]/50 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow flex flex-col h-full">
-                  <div className="p-6 flex flex-col h-full">
+                <div key={tournament.id} className="bg-[#19171b]/50 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-150 border border-[#CEA17A]/10 hover:animate-border-glow flex flex-col h-full touch-manipulation">
+                  <div className="p-4 sm:p-6 flex flex-col h-full">
                     {/* Tournament Header */}
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="text-xl font-semibold text-[#DBD0C0] line-clamp-2">
@@ -751,66 +776,60 @@ export default function TournamentAuctionCreatePage() {
                       </span>
                     </div>
 
-                    {/* Tournament Details */}
-                    <div className="space-y-3 flex-grow">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[#CEA17A]">Format:</span>
-                        <span className="font-semibold text-[#DBD0C0]">{tournament.format}</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-[#CEA17A]">Teams:</span>
-                        <span className="font-semibold text-[#DBD0C0]">{tournament.selected_teams}</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-[#CEA17A]">Total Slots:</span>
-                        <span className="font-semibold text-[#DBD0C0]">{tournament.total_slots}</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-[#CEA17A]">Filled Slots:</span>
-                        <span className="font-semibold text-[#DBD0C0]">{tournament.filled_slots || 0}</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-[#CEA17A]">Date:</span>
-                        <span className="font-semibold text-[#DBD0C0]">
-                          {new Date(tournament.tournament_date).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                        </span>
+                    {/* Tournament Details - Mobile Optimized */}
+                    <div className="space-y-2 sm:space-y-3 flex-grow text-sm">
+                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                        <div className="bg-[#19171b]/30 rounded-lg p-2">
+                          <span className="text-[#CEA17A] block text-xs">Format</span>
+                          <span className="font-semibold text-[#DBD0C0] text-sm">{tournament.format}</span>
+                        </div>
+                        <div className="bg-[#19171b]/30 rounded-lg p-2">
+                          <span className="text-[#CEA17A] block text-xs">Teams</span>
+                          <span className="font-semibold text-[#DBD0C0] text-sm">{tournament.selected_teams}</span>
+                        </div>
+                        <div className="bg-[#19171b]/30 rounded-lg p-2">
+                          <span className="text-[#CEA17A] block text-xs">Slots</span>
+                          <span className="font-semibold text-[#DBD0C0] text-sm">{tournament.filled_slots || 0}/{tournament.total_slots}</span>
+                        </div>
+                        <div className="bg-[#19171b]/30 rounded-lg p-2">
+                          <span className="text-[#CEA17A] block text-xs">Date</span>
+                          <span className="font-semibold text-[#DBD0C0] text-sm">
+                            {new Date(tournament.tournament_date).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Venue Information */}
                       {tournament.venue && (
-                        <div className="space-y-1">
-                          <span className="text-[#CEA17A] text-sm">Venue:</span>
-                          <p className="text-sm text-[#DBD0C0] font-medium">{tournament.venue}</p>
+                        <div className="bg-[#19171b]/30 rounded-lg p-2">
+                          <span className="text-[#CEA17A] text-xs block">Venue</span>
+                          <p className="text-sm text-[#DBD0C0] font-medium truncate">{tournament.venue}</p>
                         </div>
                       )}
 
                       {/* Description */}
                       {tournament.description && (
-                        <div className="space-y-1">
-                          <span className="text-[#CEA17A] text-sm">Description:</span>
+                        <div className="bg-[#19171b]/30 rounded-lg p-2">
+                          <span className="text-[#CEA17A] text-xs block">Description</span>
                           <p className="text-sm text-[#DBD0C0] line-clamp-2">{tournament.description}</p>
                         </div>
                       )}
                     </div>
 
-                    {/* Action Button */}
-                    <div className="mt-6">
+                    {/* Action Button - Touch Optimized */}
+                    <div className="mt-4 sm:mt-6">
                       <button
                         onClick={() => handleSelectTournament(tournament)}
-                        className="w-full px-4 py-3 border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg transition-all duration-150 font-medium text-center flex items-center justify-center bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40"
+                        className="w-full px-4 py-4 sm:py-3 border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-xl transition-all duration-150 font-medium text-center flex items-center justify-center bg-[#CEA17A]/15 text-[#CEA17A] hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 active:scale-95 touch-manipulation text-sm sm:text-base"
                       >
-                        <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
-                        Configure Auction
+                        <span className="hidden sm:inline">Configure Auction</span>
+                        <span className="sm:hidden">Start Auction</span>
                       </button>
                     </div>
                   </div>
@@ -821,9 +840,10 @@ export default function TournamentAuctionCreatePage() {
         ) : (
           /* Multi-Step Configuration Form */
           <div className="w-full">
-            {/* Progress Indicator */}
-            <div className="mb-8">
-              <div className="flex items-center justify-center space-x-4">
+            {/* Mobile-Optimized Progress Indicator */}
+            <div className="mb-6">
+              {/* Desktop Progress Bar */}
+              <div className="hidden sm:flex items-center justify-center space-x-4">
                 <div className={`flex items-center ${currentStep >= 1 ? 'text-[#CEA17A]' : 'text-[#3E4E5A]'}`}>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
                     currentStep >= 1 ? 'border-[#CEA17A] bg-[#CEA17A]/20' : 'border-[#3E4E5A]'
@@ -878,6 +898,28 @@ export default function TournamentAuctionCreatePage() {
                   <span className="ml-2 text-sm font-medium">Review</span>
                 </div>
               </div>
+              
+              {/* Mobile Progress Bar */}
+              <div className="sm:hidden">
+                <div className="text-center mb-4">
+                  <h2 className="text-lg font-bold text-[#DBD0C0] mb-2">
+                    {currentStep === 1 && 'Select Players'}
+                    {currentStep === 2 && 'Choose Captains'}
+                    {currentStep === 3 && 'Configure Auction'}
+                    {currentStep === 4 && 'Review & Begin'}
+                  </h2>
+                  <div className="flex justify-center space-x-1">
+                    {[1, 2, 3, 4].map((step) => (
+                      <div 
+                        key={step}
+                        className={`h-1 w-8 rounded-full transition-all duration-300 ${
+                          step <= currentStep ? 'bg-[#CEA17A]' : 'bg-[#CEA17A]/20'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Step Content */}
@@ -929,9 +971,82 @@ export default function TournamentAuctionCreatePage() {
                         </div>
                       </div>
                       
-                      {/* Players Table */}
+                      {/* Players - Mobile Optimized */}
                       <div className="flex-grow overflow-auto" style={{maxHeight: '400px'}}>
-                        <table className="w-full text-sm">
+                        {/* Mobile Card View */}
+                        <div className="block sm:hidden space-y-3">
+                          {getCurrentPagePlayers().map((player, index) => {
+                            const globalIndex = (currentPage - 1) * playersPerPage + index + 1;
+                            const role = player.skills?.Role;
+                            const basePrice = player.skills?.["Base Price"];
+                            const battingStyle = player.skills?.["Batting Style"];
+                            const bowlingStyle = player.skills?.["Bowling Style"];
+                            
+                            const getRoleEmoji = (role: string | string[] | undefined) => {
+                              if (!role) return "❓";
+                              const roleStr = Array.isArray(role) ? role.join(', ') : role;
+                              if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🏏⚾";
+                              if (roleStr.toLowerCase().includes('batter')) return "🏏";
+                              if (roleStr.toLowerCase().includes('bowler')) return "⚾";
+                              if (roleStr.toLowerCase().includes('wicket')) return "🧤";
+                              if (roleStr.toLowerCase().includes('all')) return "🌟";
+                              return "🏏";
+                            };
+                            
+                            return (
+                              <div key={player.id} className="bg-[#19171b]/30 rounded-xl p-4 border border-[#CEA17A]/10">
+                                <div className="flex items-center space-x-3 mb-3">
+                                  <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                                    {player.profile_pic_url ? (
+                                      <img
+                                        src={player.profile_pic_url}
+                                        alt={player.display_name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          const target = e.target as HTMLImageElement;
+                                          target.style.display = 'none';
+                                          const parent = target.parentElement;
+                                          if (parent) {
+                                            parent.innerHTML = `<div class="w-full h-full bg-[#CEA17A]/20 flex items-center justify-center"><span class="text-[#CEA17A] text-sm font-bold">${player.display_name.charAt(0).toUpperCase()}</span></div>`;
+                                          }
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full bg-[#CEA17A]/20 flex items-center justify-center">
+                                        <span className="text-[#CEA17A] text-sm font-bold">
+                                          {player.display_name.charAt(0).toUpperCase()}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex-grow">
+                                    <div className="flex items-center justify-between">
+                                      <h3 className="text-[#DBD0C0] font-medium">{player.display_name}</h3>
+                                      <span className="text-xs text-[#CEA17A] bg-[#CEA17A]/10 px-2 py-1 rounded-full">#{globalIndex}</span>
+                                    </div>
+                                    <div className="flex items-center space-x-3 text-xs text-[#DBD0C0]/70 mt-1">
+                                      <span>{getRoleEmoji(role)}</span>
+                                      {basePrice && <span>₹{basePrice}</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                  <div>
+                                    <span className="text-[#CEA17A] block">Batting</span>
+                                    <span className="text-[#DBD0C0]">{battingStyle || "N/A"}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#CEA17A] block">Bowling</span>
+                                    <span className="text-[#DBD0C0]">{bowlingStyle || "N/A"}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Desktop Table View */}
+                        <table className="hidden sm:table w-full text-sm">
                           <thead className="sticky top-0 bg-[#19171b] z-10">
                             <tr className="border-b border-[#CEA17A]/20">
                               <th className="text-left py-3 px-4 text-[#CEA17A] font-semibold">#</th>
@@ -1009,41 +1124,78 @@ export default function TournamentAuctionCreatePage() {
                         </table>
                       </div>
                       
-                      {/* Pagination */}
+                      {/* Mobile-Optimized Pagination */}
                       {getTotalPages() > 1 && (
-                        <div className="flex justify-center items-center space-x-2 mt-4 pt-4 border-t border-[#CEA17A]/20">
-                          <button
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="px-3 py-2 text-sm bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 rounded-lg hover:bg-[#CEA17A]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
-                          >
-                            Previous
-                          </button>
-                          
-                          {/* Page Numbers */}
-                          <div className="flex space-x-1">
-                            {Array.from({ length: getTotalPages() }, (_, i) => i + 1).map((page) => (
-                              <button
-                                key={page}
-                                onClick={() => handlePageChange(page)}
-                                className={`px-3 py-2 text-sm rounded-lg transition-all duration-150 ${
-                                  currentPage === page
-                                    ? 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
-                                    : 'bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 hover:bg-[#CEA17A]/10'
-                                }`}
-                              >
-                                {page}
-                              </button>
-                            ))}
+                        <div className="mt-4 pt-4 border-t border-[#CEA17A]/20 space-y-3">
+                          {/* Page Info */}
+                          <div className="text-center text-sm text-[#CEA17A]">
+                            Page {currentPage} of {getTotalPages()} ({tournamentPlayers.length} players total)
                           </div>
                           
-                          <button
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === getTotalPages()}
-                            className="px-3 py-2 text-sm bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 rounded-lg hover:bg-[#CEA17A]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
-                          >
-                            Next
-                          </button>
+                          {/* Navigation Buttons */}
+                          <div className="flex justify-center items-center space-x-3">
+                            <button
+                              onClick={() => handlePageChange(currentPage - 1)}
+                              disabled={currentPage === 1}
+                              className="flex items-center px-4 py-2 text-sm bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 rounded-xl hover:bg-[#CEA17A]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 touch-manipulation"
+                            >
+                              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                              </svg>
+                              Previous
+                            </button>
+                            
+                            {/* Compact Page Numbers for Mobile */}
+                            <div className="hidden sm:flex space-x-1">
+                              {Array.from({ length: getTotalPages() }, (_, i) => i + 1).map((page) => (
+                                <button
+                                  key={page}
+                                  onClick={() => handlePageChange(page)}
+                                  className={`px-3 py-2 text-sm rounded-lg transition-all duration-150 ${
+                                    currentPage === page
+                                      ? 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
+                                      : 'bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 hover:bg-[#CEA17A]/10'
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              ))}
+                            </div>
+                            
+                            {/* Mobile Page Numbers - Show only current, prev, next */}
+                            <div className="flex sm:hidden space-x-1">
+                              {currentPage > 1 && (
+                                <button
+                                  onClick={() => handlePageChange(currentPage - 1)}
+                                  className="px-2 py-1 text-xs bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 rounded-lg hover:bg-[#CEA17A]/10"
+                                >
+                                  {currentPage - 1}
+                                </button>
+                              )}
+                              <button className="px-2 py-1 text-xs bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40 rounded-lg">
+                                {currentPage}
+                              </button>
+                              {currentPage < getTotalPages() && (
+                                <button
+                                  onClick={() => handlePageChange(currentPage + 1)}
+                                  className="px-2 py-1 text-xs bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 rounded-lg hover:bg-[#CEA17A]/10"
+                                >
+                                  {currentPage + 1}
+                                </button>
+                              )}
+                            </div>
+                            
+                            <button
+                              onClick={() => handlePageChange(currentPage + 1)}
+                              disabled={currentPage === getTotalPages()}
+                              className="flex items-center px-4 py-2 text-sm bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 rounded-xl hover:bg-[#CEA17A]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 touch-manipulation"
+                            >
+                              Next
+                              <svg className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1058,12 +1210,12 @@ export default function TournamentAuctionCreatePage() {
                 <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4 sm:mb-6 flex-shrink-0">Step 3: Auction Configuration</h2>
                 
                 <div className="flex-grow overflow-y-auto space-y-6">
-                  {/* Max Tokens */}
-                  <div className="bg-[#19171b]/30 rounded-lg p-4 border border-[#CEA17A]/10">
-                    <label className="block text-lg font-semibold text-[#CEA17A] mb-2">
+                  {/* Max Tokens - Mobile Optimized */}
+                  <div className="bg-[#19171b]/30 rounded-xl p-4 border border-[#CEA17A]/10">
+                    <label className="block text-base sm:text-lg font-semibold text-[#CEA17A] mb-2">
                       1. Max Tokens per Captain
                     </label>
-                    <p className="text-sm text-[#DBD0C0]/70 mb-3">
+                    <p className="text-xs sm:text-sm text-[#DBD0C0]/70 mb-3 leading-relaxed">
                       Maximum tokens each captain can use for bidding
                     </p>
                     <input
@@ -1072,17 +1224,17 @@ export default function TournamentAuctionCreatePage() {
                       step="50"
                       value={auctionConfig.max_tokens_per_captain}
                       onChange={(e) => setAuctionConfig((prev: any) => ({ ...prev, max_tokens_per_captain: parseInt(e.target.value) || 2000 }))}
-                      className="w-full px-4 py-3 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] focus:outline-none focus:border-[#CEA17A]/50"
+                      className="w-full px-4 py-4 sm:py-3 bg-[#19171b] border border-[#CEA17A]/30 rounded-xl text-[#DBD0C0] focus:outline-none focus:border-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20 text-base touch-manipulation"
                       placeholder="2000"
                     />
                   </div>
 
-                  {/* Minimum Bid */}
-                  <div className="bg-[#19171b]/30 rounded-lg p-4 border border-[#CEA17A]/10">
-                    <label className="block text-lg font-semibold text-[#CEA17A] mb-2">
+                  {/* Minimum Bid - Mobile Optimized */}
+                  <div className="bg-[#19171b]/30 rounded-xl p-4 border border-[#CEA17A]/10">
+                    <label className="block text-base sm:text-lg font-semibold text-[#CEA17A] mb-2">
                       2. Minimum Bid Amount
                     </label>
-                    <p className="text-sm text-[#DBD0C0]/70 mb-3">
+                    <p className="text-xs sm:text-sm text-[#DBD0C0]/70 mb-3 leading-relaxed">
                       Minimum bid required for any player in the auction
                     </p>
                     <input
@@ -1091,29 +1243,29 @@ export default function TournamentAuctionCreatePage() {
                       step="10"
                       value={auctionConfig.min_bid_amount}
                       onChange={(e) => setAuctionConfig((prev: any) => ({ ...prev, min_bid_amount: parseInt(e.target.value) || 40 }))}
-                      className="w-full px-4 py-3 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] focus:outline-none focus:border-[#CEA17A]/50"
+                      className="w-full px-4 py-4 sm:py-3 bg-[#19171b] border border-[#CEA17A]/30 rounded-xl text-[#DBD0C0] focus:outline-none focus:border-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20 text-base touch-manipulation"
                       placeholder="40"
                     />
                   </div>
 
-                  {/* Use Base Price */}
-                  <div className="bg-[#19171b]/30 rounded-lg p-4 border border-[#CEA17A]/10">
+                  {/* Use Base Price - Mobile Optimized */}
+                  <div className="bg-[#19171b]/30 rounded-xl p-4 border border-[#CEA17A]/10">
                     <div className="flex items-start space-x-3">
                       <input
                         type="checkbox"
                         id="use_base_price"
                         checked={auctionConfig.use_base_price}
                         onChange={(e) => setAuctionConfig((prev: any) => ({ ...prev, use_base_price: e.target.checked }))}
-                        className="w-5 h-5 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A]/50 mt-1"
+                        className="w-6 h-6 text-[#CEA17A] bg-[#19171b] border-[#CEA17A]/30 rounded focus:ring-[#CEA17A]/50 focus:ring-2 mt-1 touch-manipulation"
                       />
                       <div className="flex-1">
-                        <label htmlFor="use_base_price" className="block text-lg font-semibold text-[#CEA17A] mb-2">
+                        <label htmlFor="use_base_price" className="block text-base sm:text-lg font-semibold text-[#CEA17A] mb-2 touch-manipulation">
                           Use Base Price for Bidding
                         </label>
-                        <p className="text-sm text-[#DBD0C0]/70 mb-2">
+                        <p className="text-xs sm:text-sm text-[#DBD0C0]/70 mb-2 leading-relaxed">
                           If enabled, players with base price higher than minimum bid will start at their base price
                         </p>
-                        <div className="text-xs text-[#CEA17A]/70 space-y-1">
+                        <div className="text-xs text-[#CEA17A]/70 space-y-1 bg-[#19171b]/50 p-3 rounded-lg">
                           <p>• If base price &gt; minimum bid → first bid = base price</p>
                           <p>• If no base price → first bid = minimum bid</p>
                         </div>
@@ -1121,12 +1273,12 @@ export default function TournamentAuctionCreatePage() {
                     </div>
                   </div>
 
-                  {/* Minimum Increments */}
-                  <div className="bg-[#19171b]/30 rounded-lg p-4 border border-[#CEA17A]/10">
-                    <label className="block text-lg font-semibold text-[#CEA17A] mb-2">
+                  {/* Minimum Increments - Mobile Optimized */}
+                  <div className="bg-[#19171b]/30 rounded-xl p-4 border border-[#CEA17A]/10">
+                    <label className="block text-base sm:text-lg font-semibold text-[#CEA17A] mb-2">
                       3. Minimum Bid Increment
                     </label>
-                    <p className="text-sm text-[#DBD0C0]/70 mb-3">
+                    <p className="text-xs sm:text-sm text-[#DBD0C0]/70 mb-3 leading-relaxed">
                       Minimum amount by which bids must increase
                     </p>
                     <input
@@ -1135,7 +1287,7 @@ export default function TournamentAuctionCreatePage() {
                       step="5"
                       value={auctionConfig.min_increment}
                       onChange={(e) => setAuctionConfig((prev: any) => ({ ...prev, min_increment: parseInt(e.target.value) || 20 }))}
-                      className="w-full px-4 py-3 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] focus:outline-none focus:border-[#CEA17A]/50"
+                      className="w-full px-4 py-4 sm:py-3 bg-[#19171b] border border-[#CEA17A]/30 rounded-xl text-[#DBD0C0] focus:outline-none focus:border-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20 text-base touch-manipulation"
                       placeholder="20"
                     />
                   </div>
@@ -1201,12 +1353,12 @@ export default function TournamentAuctionCreatePage() {
                     </div>
                   </div>
 
-                  {/* Timer */}
-                  <div className="bg-[#19171b]/30 rounded-lg p-4 border border-[#CEA17A]/10">
-                    <label className="block text-lg font-semibold text-[#CEA17A] mb-2">
+                  {/* Timer - Mobile Optimized */}
+                  <div className="bg-[#19171b]/30 rounded-xl p-4 border border-[#CEA17A]/10">
+                    <label className="block text-base sm:text-lg font-semibold text-[#CEA17A] mb-2">
                       4. Timer per Action (seconds)
                     </label>
-                    <p className="text-sm text-[#DBD0C0]/70 mb-3">
+                    <p className="text-xs sm:text-sm text-[#DBD0C0]/70 mb-3 leading-relaxed">
                       Time limit for each bidding action (will be explained later)
                     </p>
                     <input
@@ -1215,23 +1367,29 @@ export default function TournamentAuctionCreatePage() {
                       step="5"
                       value={auctionConfig.timer_seconds}
                       onChange={(e) => setAuctionConfig((prev: any) => ({ ...prev, timer_seconds: parseInt(e.target.value) || 20 }))}
-                      className="w-full px-4 py-3 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] focus:outline-none focus:border-[#CEA17A]/50"
+                      className="w-full px-4 py-4 sm:py-3 bg-[#19171b] border border-[#CEA17A]/30 rounded-xl text-[#DBD0C0] focus:outline-none focus:border-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20 text-base touch-manipulation"
                       placeholder="20"
                     />
                   </div>
 
-                  {/* Player Order */}
-                  <div className="bg-[#19171b]/30 rounded-lg p-4 border border-[#CEA17A]/10">
-                    <label className="block text-lg font-semibold text-[#CEA17A] mb-2">
+                  {/* Player Order - Mobile Optimized */}
+                  <div className="bg-[#19171b]/30 rounded-xl p-4 border border-[#CEA17A]/10">
+                    <label className="block text-base sm:text-lg font-semibold text-[#CEA17A] mb-2">
                       5. Player Order
                     </label>
-                    <p className="text-sm text-[#DBD0C0]/70 mb-3">
+                    <p className="text-xs sm:text-sm text-[#DBD0C0]/70 mb-3 leading-relaxed">
                       Order in which players will be auctioned
                     </p>
                     <select
                       value={auctionConfig.player_order_type}
                       onChange={(e) => setAuctionConfig((prev: any) => ({ ...prev, player_order_type: e.target.value }))}
-                      className="w-full px-4 py-3 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] focus:outline-none focus:border-[#CEA17A]/50"
+                      className="w-full px-4 py-4 sm:py-3 bg-[#19171b] border border-[#CEA17A]/30 rounded-xl text-[#DBD0C0] focus:outline-none focus:border-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20 text-base touch-manipulation appearance-none"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23CEA17A' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                        backgroundPosition: 'right 0.75rem center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: '1.5em 1.5em'
+                      }}
                     >
                       <option value="base_price_desc">Base Price (High to Low)</option>
                       <option value="base_price_asc">Base Price (Low to High)</option>
@@ -1479,9 +1637,125 @@ export default function TournamentAuctionCreatePage() {
                     </div>
                   </div>
                   
-                  {/* Captains Table */}
+                  {/* Captain Selection - Mobile Optimized */}
                   <div className="flex-grow overflow-auto" style={{maxHeight: '400px'}}>
-                    <table className="w-full text-sm">
+                    {/* Mobile Card View for Captain Selection */}
+                    <div className="block sm:hidden space-y-3">
+                      {getCurrentPagePlayers().map((player, index) => {
+                        const globalIndex = (currentPage - 1) * playersPerPage + index + 1;
+                        const isSelected = auctionConfig.captains.some((captain: any) => captain.player_id === player.id);
+                        const role = player.skills?.Role;
+                        const basePrice = player.skills?.["Base Price"];
+                        const battingStyle = player.skills?.["Batting Style"];
+                        const bowlingStyle = player.skills?.["Bowling Style"];
+                        
+                        const getRoleEmoji = (role: string | string[] | undefined) => {
+                          if (!role) return "❓";
+                          const roleStr = Array.isArray(role) ? role.join(', ') : role;
+                          if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🏏⚾";
+                          if (roleStr.toLowerCase().includes('batter')) return "🏏";
+                          if (roleStr.toLowerCase().includes('bowler')) return "⚾";
+                          if (roleStr.toLowerCase().includes('wicket')) return "🧤";
+                          if (roleStr.toLowerCase().includes('all')) return "🌟";
+                          return "🏏";
+                        };
+                        
+                        const isMaxCaptainsReached = auctionConfig.captains.length >= (selectedTournament?.selected_teams || 0)
+                        const canSelect = !isSelected && !isMaxCaptainsReached
+                        
+                        return (
+                          <div 
+                            key={player.id} 
+                            className={`bg-[#19171b]/30 rounded-xl p-4 border transition-all duration-150 touch-manipulation ${
+                              isSelected 
+                                ? 'border-[#CEA17A]/40 bg-[#CEA17A]/10' 
+                                : canSelect
+                                  ? 'border-[#CEA17A]/10 hover:border-[#CEA17A]/30 active:scale-95'
+                                  : 'border-[#CEA17A]/10 opacity-50'
+                            }`}
+                            onClick={() => canSelect || isSelected ? handleCaptainSelection(player.id, !isSelected) : null}
+                          >
+                            <div className="flex items-center space-x-3 mb-3">
+                              <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 relative">
+                                {player.profile_pic_url ? (
+                                  <img
+                                    src={player.profile_pic_url}
+                                    alt={player.display_name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                      const parent = target.parentElement;
+                                      if (parent) {
+                                        parent.innerHTML = `<div class="w-full h-full bg-[#CEA17A]/20 flex items-center justify-center"><span class="text-[#CEA17A] text-sm font-bold">${player.display_name.charAt(0).toUpperCase()}</span></div>`;
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-[#CEA17A]/20 flex items-center justify-center">
+                                    <span className="text-[#CEA17A] text-sm font-bold">
+                                      {player.display_name.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                )}
+                                {isSelected && (
+                                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#CEA17A] rounded-full flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-grow">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="text-[#DBD0C0] font-medium">{player.display_name}</h3>
+                                  <span className="text-xs text-[#CEA17A] bg-[#CEA17A]/10 px-2 py-1 rounded-full">#{globalIndex}</span>
+                                </div>
+                                <div className="flex items-center space-x-3 text-xs text-[#DBD0C0]/70 mt-1">
+                                  <span>{getRoleEmoji(role)}</span>
+                                  {basePrice && <span>₹{basePrice}</span>}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Team Name Input for Selected Captains */}
+                            {isSelected ? (
+                              <div className="mt-3">
+                                <label className="block text-xs text-[#CEA17A] mb-1">Team Name</label>
+                                <input
+                                  type="text"
+                                  placeholder="Enter team name"
+                                  value={auctionConfig.captains.find((captain: any) => captain.player_id === player.id)?.team_name || `${player.display_name}'s Team`}
+                                  onChange={(e) => handleTeamNameChange(player.id, e.target.value)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="w-full px-3 py-2 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] placeholder-[#CEA17A]/50 focus:outline-none focus:border-[#CEA17A]/50 text-sm"
+                                />
+                              </div>
+                            ) : (
+                              <div className="mt-3 flex items-center justify-center py-2 border border-dashed border-[#CEA17A]/20 rounded-lg">
+                                <span className={`text-xs ${canSelect ? 'text-[#CEA17A]/70' : 'text-[#CEA17A]/30'}`}>
+                                  {canSelect ? 'Tap to select as captain' : 'Max captains reached'}
+                                </span>
+                              </div>
+                            )}
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-3">
+                              <div>
+                                <span className="text-[#CEA17A] block">Batting</span>
+                                <span className="text-[#DBD0C0]">{battingStyle || "N/A"}</span>
+                              </div>
+                              <div>
+                                <span className="text-[#CEA17A] block">Bowling</span>
+                                <span className="text-[#DBD0C0]">{bowlingStyle || "N/A"}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Desktop Table View for Captain Selection */}
+                    <table className="hidden sm:table w-full text-sm">
                       <thead className="sticky top-0 bg-[#19171b] z-10">
                         <tr className="border-b border-[#CEA17A]/20">
                           <th className="text-left py-3 px-4 text-[#CEA17A] font-semibold">#</th>

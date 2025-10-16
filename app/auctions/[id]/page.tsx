@@ -223,15 +223,15 @@ export default function AuctionPage() {
     const activePlayerId = explicitPlayerId || currentPlayerRef.current?.player_id
     if (!activePlayerId) {
       setRecentBids([])
-      return
+      return []
     }
     const requestMarker = activePlayerId + ':' + Date.now()
     try {
       const response = await fetch(`/api/auctions/${auctionId}/bids?player_id=${activePlayerId}`)
-      if (!response.ok) return
+      if (!response.ok) return []
       const data = await response.json()
       // If current player changed during fetch, discard stale result
-      if (currentPlayerRef.current?.player_id !== activePlayerId) return
+      if (currentPlayerRef.current?.player_id !== activePlayerId) return []
       const formattedBids = data.map((bid: any) => ({
         id: bid.id,
         team_id: bid.team_id,
@@ -251,8 +251,10 @@ export default function AuctionPage() {
         }
         return formattedBids
       })
+      return formattedBids
     } catch (error) {
       console.error('Error fetching bid history:', error)
+      return []
     }
   }
 
@@ -346,6 +348,61 @@ export default function AuctionPage() {
     return bids
   }
 
+  // Memoized team bidding eligibility calculation - reactive to auctionPlayers and auctionTeams changes
+  const teamBiddingStatus = useMemo(() => {
+    if (!auction) return {}
+    
+    const nextBid = calculateNextBid()
+    const status: Record<string, any> = {}
+    
+    auctionTeams.forEach(team => {
+      // Calculate actual sold players for this team for accuracy
+      const actualSoldPlayersForTeam = auctionPlayers.filter(ap => 
+        ap.sold_to === team.id && ap.status === 'sold'
+      ).length
+      
+      const totalSlots = team.required_players
+      // Use the more accurate count between team.players_count and actualSoldPlayersForTeam
+      const filledSlots = Math.max(team.players_count || 0, actualSoldPlayersForTeam)
+      const availableSlots = Math.max(0, totalSlots - filledSlots)
+      const hasOpenSlot = availableSlots > 0
+      
+      // Reserve calculation: keep minimum bid amount for each remaining slot after this purchase
+      const slotsAfterPurchase = Math.max(0, availableSlots - 1)
+      const minPerSlot = auction?.min_bid_amount || 40
+      const reserveNeeded = slotsAfterPurchase * minPerSlot
+      
+      // Account for outstanding bid: if this team already has a bid on the current player,
+      // their effective purse for the next bid calculation should consider the bid replacement
+      const teamCurrentBid = recentBids?.find(bid => 
+        bid.team_id === team.id && bid.is_winning_bid && !bid.is_undone
+      )
+      const outstandingBidAmount = teamCurrentBid ? teamCurrentBid.bid_amount : 0
+      const effectivePurse = team.remaining_purse + outstandingBidAmount
+      
+      const maxPossibleBid = effectivePurse - reserveNeeded
+      const canAfford = effectivePurse >= nextBid
+      const withinMaxPossible = nextBid <= maxPossibleBid
+      const balanceAfterBid = effectivePurse - nextBid
+      
+      status[team.id] = {
+        actualSoldPlayersForTeam,
+        filledSlots,
+        availableSlots,
+        hasOpenSlot,
+        slotsAfterPurchase,
+        reserveNeeded,
+        maxPossibleBid,
+        canAfford,
+        withinMaxPossible,
+        balanceAfterBid,
+        minPerSlot
+      }
+    })
+    
+    return status
+  }, [auctionTeams, auctionPlayers, auction, recentBids, currentPlayer])
+
   // Validate a user-entered bid for a team against increments, affordability and slot reservation.
   const validateCustomBid = (team: AuctionTeam, rawAmount: number | null) => {
     if (!auction || !currentPlayer) return { valid: false, reason: 'Auction/player unavailable' }
@@ -369,9 +426,13 @@ export default function AuctionPage() {
       if (probe > amount) return { valid: false, reason: `Invalid increment. Next valid: ₹${probe}` }
     }
     
-    // Calculate remaining slots and reserve needed
+    // Calculate remaining slots and reserve needed - use accurate sold player count
+    const actualSoldPlayersForTeam = auctionPlayers.filter(ap => 
+      ap.sold_to === team.id && ap.status === 'sold'
+    ).length
     const totalSlots = team.required_players
-    const filledSlots = team.players_count || 0
+    // Use the more accurate count between team.players_count and actualSoldPlayersForTeam
+    const filledSlots = Math.max(team.players_count || 0, actualSoldPlayersForTeam)
     const availableSlots = Math.max(0, totalSlots - filledSlots)
     const remainingSlotsAfterPurchase = Math.max(0, availableSlots - 1)
     const minPerSlot = auction?.min_bid_amount || 40
@@ -440,12 +501,13 @@ export default function AuctionPage() {
         const meta = interpretError(code)
         if (code === 'BID_OUTDATED') {
           // Immediately fetch the latest bid history to update the UI for all users.
-          await fetchBidHistory()
-          // After fetching, get the new current bid to inform the user.
-          const latestBid = getCurrentBid()
+          const freshBids = await fetchBidHistory()
+          // Get the current bid from the fresh data, not from stale state
+          const latestBid = freshBids?.find((bid: any) => bid.is_winning_bid && !bid.is_undone)?.bid_amount || null
+          const nextRequiredBid = calculateNextBid(latestBid ?? undefined)
           addToast({
             title: meta.title,
-            message: meta.message({ latestAmount: latestBid }),
+            message: meta.message({ latestAmount: latestBid, nextAmount: nextRequiredBid }),
             severity: meta.severity,
             actions: [
               { 
@@ -564,12 +626,23 @@ export default function AuctionPage() {
       if (response.ok) {
         const json = await response.json().catch(()=>null)
         const undoneName = json?.data?.player_name || 'Player'
-        setUiNotice({ type: 'info', message: `${undoneName} is now available again` })
+        setUiNotice({ type: 'info', message: `${undoneName} is now available for bidding again` })
         // The realtime subscription will handle updating player, team, and bid state.
         // No manual refetch is needed here.
       } else {
-        const errorData = await response.json()
-        setUiNotice({ type: 'error', message: `Failed to undo player assignment: ${errorData.error || 'Unknown error'}` })
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        let errorMessage = 'Failed to undo player assignment'
+        
+        // Handle specific error cases
+        if (errorData.error && errorData.error.includes('captain')) {
+          errorMessage = 'Cannot undo captain assignments'
+        } else if (errorData.error && errorData.error.includes('non-captain')) {
+          errorMessage = 'No regular player assignments to undo. Only captains have been assigned.'
+        } else if (errorData.error) {
+          errorMessage = errorData.error
+        }
+        
+        setUiNotice({ type: 'error', message: errorMessage })
       }
     } catch (error) {
       console.error('Error undoing player assignment:', error)
@@ -791,6 +864,29 @@ export default function AuctionPage() {
         }
       }
 
+      // Reset bids for current player before moving
+      if (currentPlayer) {
+        try {
+          const resetBidsResponse = await fetch(`/api/auctions/${auctionId}/bids`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              action: 'reset_player_bids',
+              player_id: currentPlayer.player_id
+            })
+          })
+          
+          if (!resetBidsResponse.ok) {
+            console.warn('Failed to reset bids for current player')
+          }
+        } catch (resetError) {
+          console.warn('Error resetting bids:', resetError)
+        }
+      }
+
       // Move to next player in the order
       const nextAuctionPlayer = availablePlayers[currentIndex + 1]
       const nextPlayerData = players.find(p => p.id === nextAuctionPlayer.player_id)
@@ -847,6 +943,29 @@ export default function AuctionPage() {
       if (currentIndex <= 0) {
         alert('No previous player available')
         return
+      }
+
+      // Reset bids for current player before moving
+      if (currentPlayer) {
+        try {
+          const resetBidsResponse = await fetch(`/api/auctions/${auctionId}/bids`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              action: 'reset_player_bids',
+              player_id: currentPlayer.player_id
+            })
+          })
+          
+          if (!resetBidsResponse.ok) {
+            console.warn('Failed to reset bids for current player')
+          }
+        } catch (resetError) {
+          console.warn('Error resetting bids:', resetError)
+        }
       }
 
       // Move to previous player in the order
@@ -1172,8 +1291,16 @@ export default function AuctionPage() {
             return updated
         })
 
-        // Check if a player was just sold (status changed to 'sold')
-        if (payload.new.status === 'sold' && payload.old && payload.old.status !== 'sold') {
+        // Check if a player was just sold (status changed to 'sold' AND has sold_to and sold_price)
+        // Only show notification for actual sales, not navigation changes
+        // Also ensure this is for the current player to avoid showing stale sold notifications
+        if (payload.new.status === 'sold' && 
+            payload.old && 
+            payload.old.status !== 'sold' && 
+            payload.new.sold_to && 
+            payload.new.sold_price > 0 &&
+            currentPlayerRef.current && 
+            payload.new.player_id === currentPlayerRef.current.player_id) {
           const soldPlayer = playersRef.current.find(p => p.id === payload.new.player_id)
           const soldToTeam = auctionTeamsRef.current.find(t => t.id === payload.new.sold_to)
           const captain = soldToTeam ? playersRef.current.find(p => p.id === soldToTeam.captain_id) : null
@@ -1310,15 +1437,15 @@ export default function AuctionPage() {
                 )}
               </button>
               
-              <Link 
-                href="/auctions"
-                className="inline-flex items-center px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150"
-              >
-                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Auctions
-              </Link>
+            <Link 
+              href="/auctions"
+              className="inline-flex items-center px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150"
+            >
+              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Auctions
+            </Link>
             </div>
           </div>
         </div>
@@ -1930,22 +2057,20 @@ export default function AuctionPage() {
                         })
                         .map((team, index) => {
                         const nextBid = calculateNextBid()
-                        const canAfford = team.remaining_purse >= nextBid
                         const isWinning = recentBids?.find(bid => bid.is_winning_bid && !bid.is_undone)?.team_id === team.id
                         
-                        // Simplified slot calculations: required_players includes captain, players_count includes captain
-                        const totalSlots = team.required_players
-                        const filledSlots = team.players_count || 0
-                        const availableSlots = Math.max(0, totalSlots - filledSlots)
-                        const hasOpenSlot = availableSlots > 0
-                        
-                        // Reserve calculation: keep minimum bid amount for each remaining slot after this purchase
-                        const slotsAfterPurchase = Math.max(0, availableSlots - 1)
-                        const minPerSlot = auction?.min_bid_amount || 40
-                        const reserveNeeded = slotsAfterPurchase * minPerSlot
-                        const maxPossibleBid = team.remaining_purse - reserveNeeded
-                        const balanceAfterBid = team.remaining_purse - nextBid
-                        const withinMaxPossible = nextBid <= maxPossibleBid
+                        // Use memoized team bidding status for reactive calculations
+                        const teamStatus = teamBiddingStatus[team.id] || {}
+                        const {
+                          filledSlots = team.players_count || 0,
+                          availableSlots = 0,
+                          hasOpenSlot = false,
+                          maxPossibleBid = 0,
+                          canAfford = false,
+                          withinMaxPossible = false,
+                          balanceAfterBid = 0,
+                          minPerSlot = auction?.min_bid_amount || 40
+                        } = teamStatus
                         const auctionCreatorId = auction?.created_by
                         const isAdmin = userProfile?.role === 'admin'
                         const isHostController = userProfile?.role === 'host' && auctionCreatorId === user?.id
@@ -2027,7 +2152,7 @@ export default function AuctionPage() {
                                             ×
                                           </button>
                                         </div>
-                                        <div className="flex flex-col gap-2">
+                                      <div className="flex flex-col gap-2">
                                         {/* Next 10 bids options */}
                                         <div className="mb-2">
                                           <div className="text-[10px] text-[#CEA17A] font-medium mb-1">Quick Bids:</div>
@@ -2053,15 +2178,15 @@ export default function AuctionPage() {
                                         {/* Custom input */}
                                         <div className="border-t border-[#CEA17A]/10 pt-2">
                                           <div className="text-[10px] text-[#CEA17A] font-medium mb-1">Custom Amount:</div>
-                                          <input
-                                            type="number"
-                                            min={0}
-                                            placeholder={`Min ₹${calculateNextBid(getCurrentBid() ?? undefined)}`}
-                                            value={entered ?? ''}
-                                            onChange={(e)=>{
-                                              const val = e.target.value === '' ? null : parseInt(e.target.value)
-                                              setSelectedBidAmounts(prev=>({...prev,[team.id]: val}))
-                                            }}
+                                        <input
+                                          type="number"
+                                          min={0}
+                                          placeholder={`Min ₹${calculateNextBid(getCurrentBid() ?? undefined)}`}
+                                          value={entered ?? ''}
+                                          onChange={(e)=>{
+                                            const val = e.target.value === '' ? null : parseInt(e.target.value)
+                                            setSelectedBidAmounts(prev=>({...prev,[team.id]: val}))
+                                          }}
                                             className={`w-full bg-[#0f0f0f]/60 border rounded px-2 py-1 text-xs text-[#DBD0C0] focus:outline-none focus:ring-1 ${
                                               entered != null && !customValid 
                                                 ? 'border-red-400/50 focus:ring-red-400' 
@@ -2481,19 +2606,32 @@ export default function AuctionPage() {
         </div>
 
         {/* Mobile Player & Bid snapshot (expanded with player details) */}
-        <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-3 mb-3 relative">
-          {/* Loading overlay for player transitions */}
-          {(actionLoading.nextPlayer || actionLoading.previousPlayer) && (
-            <div className="absolute inset-0 bg-[#1a1a1a]/80 rounded-xl flex items-center justify-center z-10">
-              <div className="flex items-center gap-2 text-[#CEA17A]">
-                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span className="text-sm font-medium">Loading player...</span>
+        {auction.status === 'draft' ? (
+          <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
+            <div className="text-[#CEA17A] text-4xl mb-3">📋</div>
+            <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">Auction Not Started</h3>
+            <p className="text-[#DBD0C0]/70 text-sm">Host needs to start the auction</p>
+          </div>
+        ) : isAuctionLive && !currentPlayer ? (
+          <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
+            <div className="text-[#CEA17A] text-4xl mb-3">🎯</div>
+            <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">No Current Player</h3>
+            <p className="text-[#DBD0C0]/70 text-sm">Host hasn't selected a player yet</p>
+          </div>
+        ) : (
+          <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-3 mb-3 relative">
+            {/* Loading overlay for player transitions */}
+            {(actionLoading.nextPlayer || actionLoading.previousPlayer) && (
+              <div className="absolute inset-0 bg-[#1a1a1a]/80 rounded-xl flex items-center justify-center z-10">
+                <div className="flex items-center gap-2 text-[#CEA17A]">
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="text-sm font-medium">Loading player...</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
           <div className="flex gap-3 mb-3">
             <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-[#CEA17A]/20" onClick={() => currentPlayer && handlePhotoClick(currentPlayer.profile_pic_url || '', currentPlayer.display_name)}>
               {currentPlayer?.profile_pic_url ? (
@@ -2517,9 +2655,9 @@ export default function AuctionPage() {
               >
                 {currentPlayer?.display_name?.charAt(0) || '👤'}
               </div>
-            </div>
-            <div className="flex flex-col flex-1 min-w-0">
-              <h2 className="text-sm font-semibold text-[#DBD0C0] leading-tight truncate">{currentPlayer?.display_name || 'No Player'}</h2>
+          </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <h2 className="text-sm font-semibold text-[#DBD0C0] leading-tight truncate">{currentPlayer?.display_name || 'No Player'}</h2>
               {/* Bio */}
               {currentPlayer?.bio && (
                 <div className="text-[#DBD0C0] text-[9px] leading-tight mt-1 truncate">
@@ -2527,8 +2665,8 @@ export default function AuctionPage() {
                 </div>
               )}
               <div className="mt-auto">
-                <div className="bg-[#2a2a2a]/60 rounded-md p-1.5 border border-[#CEA17A]/10 flex flex-col justify-center">
-                  <div className="text-[9px] text-[#CEA17A] font-medium">Current</div>
+              <div className="bg-[#2a2a2a]/60 rounded-md p-1.5 border border-[#CEA17A]/10 flex flex-col justify-center">
+                <div className="text-[9px] text-[#CEA17A] font-medium">Current</div>
                   <div className="text-[#DBD0C0] text-sm font-bold leading-none">
                     {getCurrentBid() === null ? '—' : (() => {
                       const winningBid = recentBids?.find(b => b.is_winning_bid && !b.is_undone)
@@ -2540,11 +2678,11 @@ export default function AuctionPage() {
                       }
                       return `₹${getCurrentBid()}`
                     })()}
-                  </div>
-                </div>
+              </div>
               </div>
             </div>
           </div>
+        </div>
           
           {/* Player Details Section */}
           {currentPlayer && (
@@ -2589,6 +2727,7 @@ export default function AuctionPage() {
             </div>
           )}
         </div>
+        )}
 
         {/* Removed separate navigation row to consolidate controls at bottom */}
 
@@ -2606,24 +2745,22 @@ export default function AuctionPage() {
               })
               .map((team, index) => {
               const nextBid = calculateNextBid()
-              const canAfford = team.remaining_purse >= nextBid
               const isWinning = recentBids?.find(b => b.is_winning_bid && !b.is_undone)?.team_id === team.id
               const captainPlayer = players.find(p => p.id === team.captain_id)
               const captainName = captainPlayer?.display_name || 'Unknown Captain'
               
-              // Simplified slot calculations: required_players includes captain, players_count includes captain
-              const totalSlots = team.required_players
-              const filledSlots = team.players_count || 0
-              const availableSlots = Math.max(0, totalSlots - filledSlots)
-              const hasOpenSlot = availableSlots > 0
-              
-              // Reserve calculation: keep minimum bid amount for each remaining slot after this purchase
-              const slotsAfterPurchase = Math.max(0, availableSlots - 1)
-              const minPerSlot = auction?.min_bid_amount || 40
-              const reserveNeeded = slotsAfterPurchase * minPerSlot
-              const maxPossibleBid = team.remaining_purse - reserveNeeded
-              const balanceAfter = team.remaining_purse - nextBid
-              const withinMaxPossible = nextBid <= maxPossibleBid
+              // Use memoized team bidding status for reactive calculations
+              const teamStatus = teamBiddingStatus[team.id] || {}
+              const {
+                filledSlots = team.players_count || 0,
+                availableSlots = 0,
+                hasOpenSlot = false,
+                maxPossibleBid = 0,
+                canAfford = false,
+                withinMaxPossible = false,
+                balanceAfterBid = 0
+              } = teamStatus
+              const balanceAfter = balanceAfterBid
               const isEligible = isAuctionLive && hasOpenSlot && canAfford && withinMaxPossible
               const auctionCreatorId = auction?.created_by
               const isAdmin = userProfile?.role === 'admin'
@@ -2712,15 +2849,15 @@ export default function AuctionPage() {
                         {/* Custom input */}
                         <div className="border-t border-[#CEA17A]/10 pt-2">
                           <div className="text-[9px] text-[#CEA17A] font-medium mb-1">Custom:</div>
-                          <input
-                            type="number"
-                            min={0}
-                            value={selected ?? ''}
-                            placeholder={`Min ₹${calculateNextBid(getCurrentBid() ?? undefined)}`}
-                            onChange={(e)=>{
-                              const val = e.target.value === '' ? null : parseInt(e.target.value)
-                              setSelectedBidAmounts(prev=>({...prev,[team.id]: val}))
-                            }}
+                        <input
+                          type="number"
+                          min={0}
+                          value={selected ?? ''}
+                          placeholder={`Min ₹${calculateNextBid(getCurrentBid() ?? undefined)}`}
+                          onChange={(e)=>{
+                            const val = e.target.value === '' ? null : parseInt(e.target.value)
+                            setSelectedBidAmounts(prev=>({...prev,[team.id]: val}))
+                          }}
                             className={`w-full mb-2 bg-[#0f0f0f]/60 border rounded px-2 py-1 text-[10px] text-[#DBD0C0] focus:outline-none focus:ring-1 ${
                               selected != null && !customValid 
                                 ? 'border-red-400/50 focus:ring-red-400' 
@@ -3203,22 +3340,22 @@ export default function AuctionPage() {
         </div>
       )}
 
-      {/* Player Sold Notification */}
-      {soldPlayerInfo && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in-down">
-          <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-2 border-[#CEA17A]/30 rounded-2xl p-8 shadow-2xl text-center max-w-md mx-4">
-             <div className="text-6xl mb-4">💰</div>
-            <h2 className="text-2xl md:text-3xl font-bold text-[#CEA17A] mb-3">Sold!</h2>
-            <p className="text-lg md:text-xl text-[#DBD0C0] mb-2">
-              <span className="font-bold text-white">{soldPlayerInfo.playerName}</span>
-            </p>
-            <p className="text-sm md:text-base text-[#DBD0C0]/80">
-              Sold to <span className="font-semibold text-white">{soldPlayerInfo.captainName}</span>
-            </p>
-            <p className="text-lg md:text-xl font-bold text-green-400 mt-2">
-              ₹{soldPlayerInfo.price}
-            </p>
-          </div>
+       {/* Player Sold Notification */}
+       {soldPlayerInfo && (
+         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in-down">
+           <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-2 border-[#CEA17A]/30 rounded-2xl p-12 shadow-2xl text-center max-w-2xl mx-4">
+             <div className="text-8xl mb-6">💰</div>
+             <h2 className="text-3xl md:text-4xl font-bold text-[#CEA17A] mb-4">Sold!</h2>
+             <p className="text-xl md:text-2xl text-[#DBD0C0] mb-3">
+               <span className="font-bold text-white">{soldPlayerInfo.playerName}</span>
+             </p>
+             <p className="text-base md:text-lg text-[#DBD0C0]/80 mb-4">
+               Sold to <span className="font-semibold text-white">{soldPlayerInfo.captainName}</span>
+             </p>
+             <p className="text-2xl md:text-3xl font-bold text-green-400">
+               ₹{soldPlayerInfo.price}
+             </p>
+           </div>
         </div>
       )}
     </div>

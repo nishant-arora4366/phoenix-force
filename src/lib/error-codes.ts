@@ -15,7 +15,7 @@ interface ErrorMeta {
 export const ERROR_MAP: Record<AuctionErrorCode, ErrorMeta> = {
   BID_OUTDATED: {
     title: 'Outbid',
-    message: ctx => `A newer bid${ctx?.latestAmount ? ` (₹${ctx.latestAmount})` : ''} landed just before yours.`,
+    message: ctx => `A newer bid${ctx?.latestAmount ? ` (₹${ctx.latestAmount})` : ''} landed just before yours.${ctx?.nextAmount ? ` Next bid: ₹${ctx.nextAmount}` : ''}`,
     severity: 'warning',
     retry: true
   },

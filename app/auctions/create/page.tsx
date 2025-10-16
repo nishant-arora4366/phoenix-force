@@ -185,78 +185,83 @@ export default function CreateAuctionPage() {
       </div>
       
       <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
-          <div>
-            <h1 className="text-4xl font-bold text-[#DBD0C0]">Create Auction</h1>
-            <p className="text-[#CEA17A] mt-2">
+        {/* Mobile-Optimized Header */}
+        <div className="mb-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <Link
+              href="/auctions"
+              className="inline-flex items-center px-3 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium text-sm"
+            >
+              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back
+            </Link>
+          </div>
+          <div className="text-center">
+            <h1 className="text-2xl sm:text-4xl font-bold text-[#DBD0C0]">Create Auction</h1>
+            <p className="text-[#CEA17A] mt-2 text-sm sm:text-base">
               Choose how you want to start your player auction
             </p>
           </div>
-          <Link
-            href="/auctions"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium"
-          >
-            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Auctions
-          </Link>
         </div>
 
-        {/* Auction Creation Cards */}
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Mobile-Optimized Auction Creation Options */}
+        <div className="max-w-lg mx-auto space-y-4">
             
-            {/* Quick Auction Card */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 group cursor-pointer">
+            {/* Quick Auction Card - Mobile First */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-2xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 group">
               {/* Luxury Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl"></div>
               
-              <div className="relative z-10 p-8">
-                {/* Icon */}
-                <div className="flex items-center justify-center w-16 h-16 bg-[#CEA17A]/20 rounded-xl mb-6 group-hover:bg-[#CEA17A]/30 transition-all duration-150">
-                  <svg className="h-8 w-8 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                
-                {/* Content */}
-                <h3 className="text-2xl font-bold text-[#DBD0C0] mb-4">Start Quick Auction</h3>
-                <p className="text-[#CEA17A] mb-6 leading-relaxed">
-                  Create a standalone auction with default settings. Perfect for quick player auctions without tournament constraints.
-                </p>
-                
-                {/* Features */}
-                <div className="space-y-3 mb-8">
-                  <div className="flex items-center text-[#DBD0C0]">
-                    <svg className="h-5 w-5 text-[#CEA17A] mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <div className="relative z-10 p-6">
+                <div className="flex items-start space-x-4">
+                  {/* Icon */}
+                  <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-[#CEA17A]/20 rounded-xl group-hover:bg-[#CEA17A]/30 transition-all duration-150">
+                    <svg className="h-6 w-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    <span className="text-sm">Default auction settings</span>
                   </div>
-                  <div className="flex items-center text-[#DBD0C0]">
-                    <svg className="h-5 w-5 text-[#CEA17A] mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-sm">Quick setup process</span>
-                  </div>
-                  <div className="flex items-center text-[#DBD0C0]">
-                    <svg className="h-5 w-5 text-[#CEA17A] mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-sm">Customizable later</span>
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-bold text-[#DBD0C0] mb-2">Quick Auction</h3>
+                    <p className="text-[#CEA17A] text-sm mb-4 leading-relaxed">
+                      Create a standalone auction with default settings. Perfect for quick player auctions.
+                    </p>
+                    
+                    {/* Compact Features */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <span className="inline-flex items-center px-2 py-1 bg-[#CEA17A]/10 text-[#CEA17A] text-xs rounded-full">
+                        <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Default settings
+                      </span>
+                      <span className="inline-flex items-center px-2 py-1 bg-[#CEA17A]/10 text-[#CEA17A] text-xs rounded-full">
+                        <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Quick setup
+                      </span>
+                      <span className="inline-flex items-center px-2 py-1 bg-[#CEA17A]/10 text-[#CEA17A] text-xs rounded-full">
+                        <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Customizable
+                      </span>
+                    </div>
                   </div>
                 </div>
                 
                 {/* Action Button */}
                 <Link
                   href="/auctions/create/quick"
-                  className="w-full inline-flex items-center justify-center px-6 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium group-hover:scale-105"
+                  className="w-full inline-flex items-center justify-center px-4 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-xl hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium text-sm group-hover:scale-[1.02] mt-4"
                 >
-                  <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                   Start Quick Auction
@@ -264,80 +269,97 @@ export default function CreateAuctionPage() {
               </div>
             </div>
 
-            {/* Tournament Auction Card */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 group cursor-pointer">
+            {/* Tournament Auction Card - Mobile First */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-2xl shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 group">
               {/* Luxury Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-xl"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-xl"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#CEA17A]/10 via-transparent to-[#CEA17A]/5 rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#19171b]/60 via-transparent to-[#2b0307]/30 rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#CEA17A]/8 to-transparent rounded-2xl"></div>
               
-              <div className="relative z-10 p-8">
-                {/* Icon */}
-                <div className="flex items-center justify-center w-16 h-16 bg-[#CEA17A]/20 rounded-xl mb-6 group-hover:bg-[#CEA17A]/30 transition-all duration-150">
-                  <svg className="h-8 w-8 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                
-                {/* Content */}
-                <h3 className="text-2xl font-bold text-[#DBD0C0] mb-4">Start from a Tournament</h3>
-                <p className="text-[#CEA17A] mb-6 leading-relaxed">
-                  Create an auction linked to an existing tournament. Inherits tournament settings and player pool automatically.
-                </p>
-                
-                {/* Features */}
-                <div className="space-y-3 mb-8">
-                  <div className="flex items-center text-[#DBD0C0]">
-                    <svg className="h-5 w-5 text-[#CEA17A] mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <div className="relative z-10 p-6">
+                <div className="flex items-start space-x-4">
+                  {/* Icon */}
+                  <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-[#CEA17A]/20 rounded-xl group-hover:bg-[#CEA17A]/30 transition-all duration-150">
+                    <svg className="h-6 w-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span className="text-sm">Tournament integration</span>
                   </div>
-                  <div className="flex items-center text-[#DBD0C0]">
-                    <svg className="h-5 w-5 text-[#CEA17A] mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-sm">Pre-configured player pool</span>
-                  </div>
-                  <div className="flex items-center text-[#DBD0C0]">
-                    <svg className="h-5 w-5 text-[#CEA17A] mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-sm">Team formation workflow</span>
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-bold text-[#DBD0C0] mb-2">Tournament Auction</h3>
+                    <p className="text-[#CEA17A] text-sm mb-4 leading-relaxed">
+                      Create an auction linked to an existing tournament with pre-configured player pool.
+                    </p>
+                    
+                    {/* Compact Features */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <span className="inline-flex items-center px-2 py-1 bg-[#CEA17A]/10 text-[#CEA17A] text-xs rounded-full">
+                        <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Tournament linked
+                      </span>
+                      <span className="inline-flex items-center px-2 py-1 bg-[#CEA17A]/10 text-[#CEA17A] text-xs rounded-full">
+                        <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Player pool ready
+                      </span>
+                      <span className="inline-flex items-center px-2 py-1 bg-[#CEA17A]/10 text-[#CEA17A] text-xs rounded-full">
+                        <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Team formation
+                      </span>
+                    </div>
                   </div>
                 </div>
                 
                 {/* Action Button */}
                 <Link
                   href="/auctions/create/tournament"
-                  className="w-full inline-flex items-center justify-center px-6 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-lg hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium group-hover:scale-105"
+                  className="w-full inline-flex items-center justify-center px-4 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 shadow-lg shadow-[#CEA17A]/10 backdrop-blur-sm rounded-xl hover:bg-[#CEA17A]/25 hover:border-[#CEA17A]/40 transition-all duration-150 font-medium text-sm group-hover:scale-[1.02] mt-4"
                 >
-                  <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   Start from Tournament
                 </Link>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Additional Information */}
-        <div className="max-w-4xl mx-auto mt-12">
-          <div className="bg-[#19171b]/50 rounded-xl p-8 border border-[#CEA17A]/10">
-            <h3 className="text-xl font-semibold text-[#DBD0C0] mb-4">Auction Creation Guide</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="text-lg font-medium text-[#CEA17A] mb-2">Quick Auction</h4>
-                <p className="text-[#DBD0C0] text-sm leading-relaxed">
-                  Perfect for standalone player auctions. You'll set up teams, configure auction rules, and manage the entire process independently.
-                </p>
+        {/* Mobile-Optimized Help Section */}
+        <div className="max-w-lg mx-auto mt-8">
+          <div className="bg-[#19171b]/50 rounded-2xl p-6 border border-[#CEA17A]/10">
+            <h3 className="text-lg font-semibold text-[#DBD0C0] mb-4 text-center">Need Help Choosing?</h3>
+            <div className="space-y-4 text-sm">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-[#CEA17A]/20 rounded-full flex items-center justify-center mt-0.5">
+                  <svg className="h-3 w-3 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-medium text-[#CEA17A] mb-1">Quick Auction</h4>
+                  <p className="text-[#DBD0C0]/80 leading-relaxed">
+                    Perfect for standalone player auctions. You'll set up teams, configure auction rules independently.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="text-lg font-medium text-[#CEA17A] mb-2">Tournament Auction</h4>
-                <p className="text-[#DBD0C0] text-sm leading-relaxed">
-                  Ideal when you have an existing tournament. The auction will be linked to the tournament and can help form teams for the competition.
-                </p>
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-[#CEA17A]/20 rounded-full flex items-center justify-center mt-0.5">
+                  <svg className="h-3 w-3 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-medium text-[#CEA17A] mb-1">Tournament Auction</h4>
+                  <p className="text-[#DBD0C0]/80 leading-relaxed">
+                    Ideal when you have an existing tournament. The auction links to the tournament to help form teams.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
