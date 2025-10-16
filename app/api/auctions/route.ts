@@ -199,6 +199,7 @@ export async function PATCH(request: NextRequest) {
           status: 'sold',
           sold_to: team_id,
           sold_price: sold_price,
+          sold_at: new Date().toISOString(),  // Set the sold timestamp
           current_player: false
         })
         .eq('auction_id', auctionId)
@@ -504,6 +505,7 @@ export async function POST(request: NextRequest) {
             status: 'sold',
             sold_to: teamData?.id || null,
             sold_price: 0,
+            sold_at: new Date().toISOString(),  // Set the sold timestamp for captains
             display_order: index + 1, // Final mapped order after sorting
             times_skipped: 0,
             current_player: false

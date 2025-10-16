@@ -114,7 +114,8 @@ export async function POST(
       `)
       .eq('auction_id', auctionId)
       .eq('status', 'sold')
-      .order('display_order', { ascending: false })
+      .not('sold_at', 'is', null)
+      .order('sold_at', { ascending: false })
       .limit(1)
 
     // Exclude captains from undo operation
@@ -177,6 +178,7 @@ export async function POST(
         status: 'available',
         sold_to: null,
         sold_price: null,
+        sold_at: null,  // Clear the sold timestamp
         current_player: true  // Set this player as current immediately
       })
       .eq('auction_id', auctionId)
