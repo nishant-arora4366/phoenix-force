@@ -424,7 +424,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Remove the image from the arrays
-    const updatedImages = (currentTournament.schedule_images || []).filter(url => url !== imageUrl);
+    const updatedImages = (currentTournament.schedule_images || []).filter((url: string) => url !== imageUrl);
     const updatedSingleImage = currentTournament.schedule_image_url === imageUrl ? null : currentTournament.schedule_image_url;
 
     // Update tournament with removed image
