@@ -5,10 +5,12 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { secureSessionManager } from '@/src/lib/secure-session'
 import { getSupabaseClient } from '@/src/lib/supabaseClient'
+import { generateTournamentShortUrl, copyToClipboard, shareTournamentUrl } from '@/src/lib/url-utils'
 
 interface Tournament {
   id: string
   name: string
+  slug: string
   format: string
   selected_teams: number
   tournament_date: string
@@ -183,6 +185,10 @@ export default function TournamentDetailsPage() {
   const [enabledSkills, setEnabledSkills] = useState<string[]>([])
   const [skillFilterValues, setSkillFilterValues] = useState<{[key: string]: string[]}>({})
   const [showSkillConfig, setShowSkillConfig] = useState(false)
+  
+  // Share functionality state
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareMessage, setShareMessage] = useState('')
 
   // Initialize Supabase client for realtime (singleton to avoid multiple instances)
   const supabase = getSupabaseClient()
@@ -944,6 +950,46 @@ export default function TournamentDetailsPage() {
       setTimeout(() => setStatusMessage(''), 5000)
     } finally {
       setIsAssigning(false)
+    }
+  }
+
+  // Share tournament functions
+  const handleShareTournament = async () => {
+    if (!tournament) return
+
+    const shortUrl = generateTournamentShortUrl(tournament.slug)
+    const shareText = `Check out this cricket tournament: ${tournament.name}`
+    
+    // Try native sharing first
+    const shared = await shareTournamentUrl(shortUrl, tournament.name, shareText)
+    
+    if (shared) {
+      setShareMessage('Tournament shared successfully!')
+      setTimeout(() => setShareMessage(''), 3000)
+    } else {
+      // Fallback to copy to clipboard
+      const copied = await copyToClipboard(shortUrl)
+      if (copied) {
+        setShareMessage('Tournament URL copied to clipboard!')
+        setTimeout(() => setShareMessage(''), 3000)
+      } else {
+        setShowShareModal(true)
+      }
+    }
+  }
+
+  const copyTournamentUrl = async () => {
+    if (!tournament) return
+
+    const shortUrl = generateTournamentShortUrl(tournament.slug)
+    const copied = await copyToClipboard(shortUrl)
+    
+    if (copied) {
+      setShareMessage('Tournament URL copied to clipboard!')
+      setTimeout(() => setShareMessage(''), 3000)
+    } else {
+      setShareMessage('Failed to copy URL. Please try again.')
+      setTimeout(() => setShareMessage(''), 3000)
     }
   }
 
@@ -2071,8 +2117,20 @@ export default function TournamentDetailsPage() {
                 <div className="bg-[#09171F]/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#CEA17A]/20 p-4 sm:p-6 mb-6">
                   {/* Tournament Name and Status Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
-                    <div>
-                      <h3 className="text-2xl font-bold text-[#DBD0C0] mb-2">{tournament.name}</h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-2xl font-bold text-[#DBD0C0]">{tournament.name}</h3>
+                        <button
+                          onClick={handleShareTournament}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 text-sm"
+                          title="Share tournament"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                          </svg>
+                          Share
+                        </button>
+                      </div>
                         <span className={`px-3 py-1 rounded-lg text-sm font-medium shadow-sm ${getStatusColor(tournament.status)}`}>
                           {getStatusText(tournament.status)}
                         </span>
@@ -4294,6 +4352,57 @@ export default function TournamentDetailsPage() {
           </div>
         )
       })()}
+
+      {/* Share Modal */}
+      {showShareModal && tournament && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#09171F]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-[#CEA17A]/30 p-8 max-w-md w-full">
+            <div className="text-center">
+              <div className="text-[#CEA17A] text-4xl mb-4">🔗</div>
+              <h2 className="text-2xl font-bold text-[#DBD0C0] mb-4">
+                Share Tournament
+              </h2>
+              <p className="text-[#CEA17A] mb-6">
+                Share this tournament with others using the short URL:
+              </p>
+              
+              <div className="bg-[#19171b]/50 border border-[#CEA17A]/20 rounded-lg p-3 mb-6">
+                <div className="text-[#DBD0C0] text-sm font-mono break-all">
+                  {generateTournamentShortUrl(tournament.slug)}
+                </div>
+              </div>
+              
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={copyTournamentUrl}
+                  className="px-6 py-3 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy URL
+                </button>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="px-6 py-3 bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#3E4E5A]/30 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Success Message */}
+      {shareMessage && (
+        <div className="fixed top-4 right-4 z-50 bg-[#09171F]/95 backdrop-blur-md border border-[#CEA17A]/30 rounded-lg p-4 shadow-xl">
+          <div className="flex items-center gap-3">
+            <div className="text-green-400 text-xl">✓</div>
+            <div className="text-[#DBD0C0] text-sm">{shareMessage}</div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
