@@ -3,6 +3,8 @@ import sharp from 'sharp';
 export interface ImageProcessingOptions {
   width?: number;
   height?: number;
+  maxWidth?: number;
+  maxHeight?: number;
   quality?: number;
   format?: 'jpeg' | 'png' | 'webp';
   maxFileSize?: number; // in bytes
