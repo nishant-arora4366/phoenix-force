@@ -69,6 +69,24 @@ async function POSTHandler(
       return NextResponse.json({ error: 'Slot is already empty' }, { status: 400 })
     }
 
+    // Record the removal in tournament_players_left table
+    const { error: recordError } = await supabase
+      .from('tournament_players_left')
+      .insert({
+        tournament_id: tournamentId,
+        player_id: slot.player_id,
+        player_name: slot.players?.display_name || 'Unknown Player',
+        player_photo_url: slot.players?.profile_pic_url,
+        left_reason: 'removed',
+        left_by: sessionUser.id, // user who removed the player
+        slot_created_at: slot.created_at
+      })
+
+    if (recordError) {
+      console.error('Failed to record player removal:', recordError)
+      // Continue with deletion even if recording fails
+    }
+
     // Delete the slot record entirely in dynamic slot system
     const { error: deleteError } = await supabase
       .from('tournament_slots')

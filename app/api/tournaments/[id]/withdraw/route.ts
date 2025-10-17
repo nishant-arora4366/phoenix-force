@@ -66,6 +66,38 @@ async function POSTHandler(
       }, { status: 404 })
     }
 
+    // Get player details before deletion for history tracking
+    const { data: playerDetails, error: playerDetailsError } = await supabase
+      .from('players')
+      .select('display_name, profile_pic_url')
+      .eq('id', player.id)
+      .single()
+
+    if (playerDetailsError) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Failed to get player details' 
+      }, { status: 500 })
+    }
+
+    // Record the withdrawal in tournament_players_left table
+    const { error: recordError } = await supabase
+      .from('tournament_players_left')
+      .insert({
+        tournament_id: tournamentId,
+        player_id: player.id,
+        player_name: playerDetails.display_name,
+        player_photo_url: playerDetails.profile_pic_url,
+        left_reason: 'withdrawn',
+        left_by: null, // null for self-withdrawal
+        slot_created_at: registration.created_at
+      })
+
+    if (recordError) {
+      console.error('Failed to record withdrawal:', recordError)
+      // Continue with deletion even if recording fails
+    }
+
     // Delete the slot record entirely in dynamic slot system
     const { error: deleteError } = await supabase
       .from('tournament_slots')

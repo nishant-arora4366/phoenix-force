@@ -189,6 +189,10 @@ export default function TournamentDetailsPage() {
   // Share functionality state
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
+  
+  // Players who left state
+  const [playersLeft, setPlayersLeft] = useState<any[]>([])
+  const [loadingPlayersLeft, setLoadingPlayersLeft] = useState(false)
 
   // Initialize Supabase client for realtime (singleton to avoid multiple instances)
   const supabase = getSupabaseClient()
@@ -218,6 +222,26 @@ export default function TournamentDetailsPage() {
     } catch (error) {
       console.error('Error fetching completed auction:', error)
       setCompletedAuction(null)
+    }
+  }
+
+  // Fetch players who left this tournament
+  const fetchPlayersLeft = async (tournamentId: string) => {
+    try {
+      setLoadingPlayersLeft(true)
+      const response = await fetch(`/api/tournaments/${tournamentId}/players-left`)
+      if (response.ok) {
+        const result = await response.json()
+        setPlayersLeft(result.players_left || [])
+      } else {
+        console.error('Failed to fetch players who left:', response.statusText)
+        setPlayersLeft([])
+      }
+    } catch (error) {
+      console.error('Error fetching players who left:', error)
+      setPlayersLeft([])
+    } finally {
+      setLoadingPlayersLeft(false)
     }
   }
 
@@ -266,6 +290,9 @@ export default function TournamentDetailsPage() {
 
         // Fetch tournament slots for everyone (public information)
         await fetchSlots()
+
+        // Fetch players who left this tournament
+        await fetchPlayersLeft(tournamentData.id)
 
         // Fetch user-specific data only for authenticated users
         if (sessionUser) {
@@ -2062,40 +2089,128 @@ export default function TournamentDetailsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-xl sm:text-2xl font-bold text-[#DBD0C0] mb-2">
-                      Ready to Join?
+                      {tournament.status === 'registration_closed' ? 'Registration Closed' :
+                       tournament.status === 'auction_started' ? 'Auction in Progress' :
+                       tournament.status === 'teams_formed' ? 'Teams Formed' :
+                       tournament.status === 'auction_completed' ? 'Tournament Complete' :
+                       'Ready to Join?'}
                     </h3>
                     <p className="text-[#DBD0C0] text-sm sm:text-base leading-relaxed">
-                      Sign in to register for this tournament and secure your spot in the competition.
+                      {tournament.status === 'registration_closed' ? 
+                        'Registration for this tournament has closed. Teams will be formed soon through the auction process.' :
+                       tournament.status === 'auction_started' ? 
+                        'The auction is currently in progress. Teams are being formed from registered players.' :
+                       tournament.status === 'teams_formed' ? 
+                        'Teams have been successfully formed! The tournament is ready to begin.' :
+                       tournament.status === 'auction_completed' ? 
+                        'This tournament has been completed. Thank you to all participants!' :
+                       'Sign in to register for this tournament and secure your spot in the competition.'}
                     </p>
                   </div>
                 </div>
                 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  {tournament.status === 'registration_open' || tournament.status === 'draft' ? (
+                    <>
+                      <Link
+                        href={`/signin?returnUrl=${encodeURIComponent(`/tournaments/${tournament.id}`)}`}
+                        className="group relative flex-1 inline-flex items-center justify-center px-6 py-4 bg-green-500/20 text-green-300 border border-green-500/30 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 hover:bg-green-500/30 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500/40 focus:ring-offset-2 focus:ring-offset-transparent shadow-sm"
+                      >
+                        <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        <span>Sign In to Register</span>
+                      </Link>
+                      <Link
+                        href="/tournaments"
+                        className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#3E4E5A] text-[#DBD0C0] border border-[#CEA17A]/30 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-[#3E4E5A]/80 hover:border-[#CEA17A]/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
+                      >
+                        <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <span>Browse Tournaments</span>
+                      </Link>
+                    </>
+              ) : tournament.status === 'registration_closed' ? (
                 <Link
-                  href={`/signin?returnUrl=${encodeURIComponent(`/tournaments/${tournament.id}`)}`}
-                  className="group relative flex-1 inline-flex items-center justify-center px-6 py-4 bg-green-500/20 text-green-300 border border-green-500/30 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 hover:bg-green-500/30 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500/40 focus:ring-offset-2 focus:ring-offset-transparent shadow-sm"
+                  href="/tournaments"
+                  className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#3E4E5A] text-[#DBD0C0] border border-[#CEA17A]/30 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-[#3E4E5A]/80 hover:border-[#CEA17A]/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
                 >
-                    <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                    <span>Sign In to Register</span>
-                  </Link>
-                  <Link
-                    href="/tournaments"
-                    className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#3E4E5A] text-[#DBD0C0] border border-[#CEA17A]/30 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-[#3E4E5A]/80 hover:border-[#CEA17A]/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
-                  >
-                    <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    <span>Browse Tournaments</span>
-                  </Link>
+                  <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span>Browse Other Tournaments</span>
+                </Link>
+              ) : tournament.status === 'auction_started' ? (
+                <Link
+                  href="/tournaments"
+                  className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#3E4E5A] text-[#DBD0C0] border border-[#CEA17A]/30 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-[#3E4E5A]/80 hover:border-[#CEA17A]/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
+                >
+                  <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span>Browse Other Tournaments</span>
+                </Link>
+              ) : tournament.status === 'teams_formed' ? (
+                <Link
+                  href="/tournaments"
+                  className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#3E4E5A] text-[#DBD0C0] border border-[#CEA17A]/30 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-[#3E4E5A]/80 hover:border-[#CEA17A]/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
+                >
+                  <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span>Browse Other Tournaments</span>
+                </Link>
+              ) : tournament.status === 'auction_completed' ? (
+                <Link
+                  href="/tournaments"
+                  className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#3E4E5A] text-[#DBD0C0] border border-[#CEA17A]/30 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-[#3E4E5A]/80 hover:border-[#CEA17A]/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
+                >
+                  <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span>Browse Other Tournaments</span>
+                </Link>
+              ) : (
+                    <>
+                      <Link
+                        href={`/signin?returnUrl=${encodeURIComponent(`/tournaments/${tournament.id}`)}`}
+                        className="group relative flex-1 inline-flex items-center justify-center px-6 py-4 bg-green-500/20 text-green-300 border border-green-500/30 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 hover:bg-green-500/30 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500/40 focus:ring-offset-2 focus:ring-offset-transparent shadow-sm"
+                      >
+                        <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        <span>Sign In to Register</span>
+                      </Link>
+                      <Link
+                        href="/tournaments"
+                        className="group flex-1 inline-flex items-center justify-center px-6 py-4 bg-[#3E4E5A] text-[#DBD0C0] border border-[#CEA17A]/30 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 hover:bg-[#3E4E5A]/80 hover:border-[#CEA17A]/50 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[#CEA17A]/40 focus:ring-offset-2 focus:ring-offset-transparent"
+                      >
+                        <svg className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <span>Browse Tournaments</span>
+                      </Link>
+                    </>
+                  )}
                 </div>
                 
                 {/* Additional Info */}
                 <div className="mt-4 pt-4 border-t border-[#CEA17A]/20">
                   <p className="text-[#DBD0C0] text-xs sm:text-sm text-center">
-                    New to Phoenix Force? <span className="text-[#CEA17A] font-medium">Create a free account</span> to get started
+                    {tournament.status === 'registration_closed' ? 
+                      'Registration has closed. Teams will be formed through the auction process. Check out other available tournaments.' :
+                     tournament.status === 'auction_started' ? 
+                      'The auction is currently in progress. Teams are being formed from registered players!' :
+                     tournament.status === 'teams_formed' ? 
+                      'Teams have been successfully formed! The tournament is ready to begin. Check out other available tournaments.' :
+                     tournament.status === 'auction_completed' ? 
+                      'This tournament has been completed. Thank you to all participants!' :
+                     'New to Phoenix Force? Create a free account to get started'}
+                    {tournament.status === 'registration_open' || tournament.status === 'draft' ? (
+                      <span className="text-[#CEA17A] font-medium"> Create a free account</span>
+                    ) : null}
                   </p>
                 </div>
               </div>
@@ -2535,6 +2650,7 @@ export default function TournamentDetailsPage() {
                           </div>
                         </div>
 
+
                         {/* Pending Approval Card */}
                         <div className="relative overflow-hidden bg-gradient-to-br from-[#19171b] via-[#2b0307] to-[#51080d] rounded-xl p-4 shadow-xl border border-[#CEA17A]/20 hover:animate-border-glow transition-all duration-150 h-32">
                           {/* Luxury Gradient Overlay */}
@@ -2776,7 +2892,7 @@ export default function TournamentDetailsPage() {
                       {/* Header - Hidden on mobile, shown on desktop */}
                       <div className="hidden md:block bg-[#3E4E5A] px-6 py-4 border-b border-[#CEA17A]/20">
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#DBD0C0]">
-                          <div className="col-span-1">Photo</div>
+                          <div className="col-span-1"></div>
                           <div className="col-span-4">Player Name</div>
                           <div className="col-span-2">Status</div>
                           <div className="col-span-3">Joined</div>
@@ -3026,7 +3142,7 @@ export default function TournamentDetailsPage() {
                       {/* Header - Hidden on mobile, shown on desktop */}
                       <div className="hidden md:block bg-[#3E4E5A] px-6 py-4 border-b border-[#CEA17A]/20">
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#DBD0C0]">
-                          <div className="col-span-1">Photo</div>
+                          <div className="col-span-1"></div>
                           <div className="col-span-4">Player Name</div>
                           <div className="col-span-2">Status</div>
                           <div className="col-span-3">Joined</div>
@@ -3090,7 +3206,7 @@ export default function TournamentDetailsPage() {
                                   <div onClick={(e) => e.stopPropagation()}>
                                     <button
                                       onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                      className="px-2.5 py-1.5 bg-red-600 text-[#DBD0C0] text-xs rounded-md hover:bg-red-700 transition-colors w-full"
+                                      className="px-2.5 py-1.5 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-md hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs font-medium w-full"
                                     >
                                       🗑️ Remove
                                     </button>
@@ -3144,7 +3260,7 @@ export default function TournamentDetailsPage() {
                                 <div className="col-span-2" onClick={(e) => e.stopPropagation()}>
                                   <button
                                     onClick={() => removePlayerFromSlot(slot.id, slot.players?.display_name || 'Player')}
-                                    className="px-3 py-1 bg-red-600 text-[#DBD0C0] text-xs rounded-lg hover:bg-red-700 transition-colors"
+                                    className="px-3 py-1 bg-red-500/15 text-red-300 border border-red-500/25 shadow-lg shadow-red-500/10 backdrop-blur-sm rounded-lg hover:bg-red-500/25 hover:border-red-500/40 transition-all duration-150 text-xs font-medium"
                                   >
                                     Remove
                                   </button>
@@ -3161,6 +3277,172 @@ export default function TournamentDetailsPage() {
                             <div className="text-sm">All main tournament slots are available</div>
                           </div>
                         )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Players Left Section - Below Waitlist */}
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-2">
+                      <h3 className="text-xl font-semibold text-[#DBD0C0]">Players Left</h3>
+                      {loadingPlayersLeft && (
+                        <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {playersLeft.length} players departed
+                    </div>
+                  </div>
+                  
+                  {loadingPlayersLeft ? (
+                    <div className="bg-[#09171F]/50 rounded-xl border border-[#CEA17A]/20 p-8 text-center">
+                      <div className="text-[#CEA17A]">Loading players who left...</div>
+                    </div>
+                  ) : playersLeft.length === 0 ? (
+                    <div className="bg-[#09171F]/50 rounded-xl border border-[#CEA17A]/20 p-8 text-center">
+                      <div className="text-center">
+                        <svg className="w-16 h-16 mx-auto mb-4 text-[#CEA17A]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-[#DBD0C0] text-lg">No players have left this tournament</p>
+                        <p className="text-[#CEA17A]/60 text-sm mt-2">All registered players are still active</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-[#09171F]/50 rounded-xl border border-[#CEA17A]/20 shadow-sm overflow-hidden">
+                      {/* Header - Hidden on mobile, shown on desktop */}
+                      <div className="hidden md:block bg-[#3E4E5A] px-6 py-4 border-b border-[#CEA17A]/20">
+                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-[#DBD0C0]">
+                          <div className="col-span-1"></div>
+                          <div className="col-span-4">Player Name</div>
+                          <div className="col-span-2">Reason</div>
+                          <div className="col-span-3">Left At</div>
+                          <div className="col-span-2">Details</div>
+                        </div>
+                      </div>
+                      
+                      {/* Players Left List */}
+                      <div className="divide-y divide-gray-200">
+                        {playersLeft.map((player, index) => (
+                          <div 
+                            key={player.id} 
+                            className="px-4 md:px-6 py-4 hover:bg-[#51080d] transition-colors"
+                          >
+                            {/* Mobile Layout */}
+                            <div className="md:hidden">
+                              <div className="flex items-start space-x-3">
+                                {/* Player Photo */}
+                                <div className="flex-shrink-0">
+                                  {player.player_photo_url ? (
+                                    <img
+                                      src={player.player_photo_url}
+                                      alt={player.player_name}
+                                      className="w-10 h-10 rounded-full object-cover border-2 border-[#CEA17A]/30"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-[#CEA17A]/20 flex items-center justify-center border-2 border-[#CEA17A]/30">
+                                      <svg className="w-5 h-5 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Player Details */}
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-lg font-semibold text-[#DBD0C0] truncate">
+                                    {player.player_name}
+                                  </h3>
+                                  
+                                  <div className="mt-2 space-y-1">
+                                    {/* Reason */}
+                                    <div className="flex items-center text-sm">
+                                      <span className="text-[#CEA17A]/60 mr-2">Reason:</span>
+                                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                        player.left_reason === 'withdrawn' 
+                                          ? 'bg-orange-500/20 text-orange-300' 
+                                          : 'bg-red-500/20 text-red-300'
+                                      }`}>
+                                        {player.left_reason === 'withdrawn' ? 'Withdrawn' : 'Removed by Host'}
+                                      </span>
+                                    </div>
+
+                                    {/* Left At */}
+                                    <div className="flex items-center text-sm text-[#CEA17A]/80">
+                                      <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                      {formatDateTime(player.left_at)}
+                                    </div>
+
+                                    {/* Removed By (if applicable) */}
+                                    {player.left_reason === 'removed' && player.removed_by && (
+                                      <div className="flex items-center text-sm text-[#CEA17A]/80">
+                                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        Removed by: Host
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Desktop Layout */}
+                            <div className="hidden md:grid grid-cols-12 gap-4 items-center">
+                              <div className="col-span-1">
+                                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                                  {player.player_photo_url ? (
+                                    <img 
+                                      src={player.player_photo_url} 
+                                      alt={player.player_name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="col-span-4">
+                                <div className="text-sm font-medium text-[#DBD0C0] truncate">
+                                  {player.player_name}
+                                </div>
+                              </div>
+                              
+                              <div className="col-span-2">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  player.left_reason === 'withdrawn' 
+                                    ? 'bg-orange-500/20 text-orange-300' 
+                                    : 'bg-red-500/20 text-red-300'
+                                }`}>
+                                  {player.left_reason === 'withdrawn' ? 'Withdrawn' : 'Removed'}
+                                </span>
+                              </div>
+                              
+                              <div className="col-span-3">
+                                <div className="text-sm text-[#CEA17A]/80">
+                                  {formatDateTime(player.left_at)}
+                                </div>
+                              </div>
+                              
+                              <div className="col-span-2">
+                                <div className="text-sm text-[#CEA17A]/60">
+                                  {player.left_reason === 'removed' && player.removed_by ? (
+                                    <span>By: Host</span>
+                                  ) : (
+                                    <span>Self-withdrawal</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -4403,6 +4685,7 @@ export default function TournamentDetailsPage() {
           </div>
         </div>
       )}
+
     </div>
   )
 }

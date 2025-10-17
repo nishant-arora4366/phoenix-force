@@ -325,6 +325,36 @@ async function putHandler(
       updateData.requested_at = null
     }
 
+    // If rejecting, record the rejection in tournament_players_left table
+    if (action === 'reject' && slot.player_id) {
+      // Get player details before deletion for history tracking
+      const { data: playerDetails, error: playerError } = await supabase
+        .from('players')
+        .select('display_name, profile_pic_url')
+        .eq('id', slot.player_id)
+        .single()
+
+      if (!playerError && playerDetails) {
+        // Record the rejection in tournament_players_left table
+        const { error: recordError } = await supabase
+          .from('tournament_players_left')
+          .insert({
+            tournament_id: tournamentId,
+            player_id: slot.player_id,
+            player_name: playerDetails.display_name,
+            player_photo_url: playerDetails.profile_pic_url,
+            left_reason: 'removed', // Host rejection is considered removal
+            left_by: sessionUser.id, // user who rejected the player
+            slot_created_at: slot.created_at
+          })
+
+        if (recordError) {
+          console.error('Failed to record player rejection:', recordError)
+          // Continue with slot update even if recording fails
+        }
+      }
+    }
+
     const { data: updatedSlot, error: updateError } = await supabase
       .from('tournament_slots')
       .update(updateData)
