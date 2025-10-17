@@ -2048,23 +2048,6 @@ export default function AuctionPage() {
                 </div>
                 
                 {/* Summary Stats */}
-                <div className="grid grid-cols-2 gap-4 p-4 bg-[#0f0f0f]/50 rounded-lg border border-[#CEA17A]/20 w-full max-w-md mx-auto">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-[#CEA17A]">
-                      {auctionPlayers.filter(ap => ap.status === 'sold').length}
-                    </div>
-                    <div className="text-sm text-[#DBD0C0]/70">Players Sold</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-[#CEA17A]">
-                      ₹{auctionPlayers
-                        .filter(ap => ap.status === 'sold')
-                        .reduce((sum, ap) => sum + (ap.sold_price || 0), 0)
-                        .toLocaleString()}
-                    </div>
-                    <div className="text-sm text-[#DBD0C0]/70">Total Spent</div>
-                  </div>
-                </div>
 
                 {/* Final Teams Full Width Responsive Grid */}
                 <div ref={exportRef} className="space-y-6 w-full">
@@ -3273,17 +3256,6 @@ export default function AuctionPage() {
               <p className="text-[#DBD0C0]/70">All players have been sold</p>
             </div>
             
-            {/* Summary Stats */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-[#0f0f0f]/50 rounded-lg border border-[#CEA17A]/20">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#CEA17A]">{auctionTeams.length}</div>
-                <div className="text-sm text-[#DBD0C0]/70">Teams</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#CEA17A]">{auctionPlayers.filter(ap => ap.status === 'sold').length}</div>
-                <div className="text-sm text-[#DBD0C0]/70">Players Sold</div>
-              </div>
-            </div>
             
             {/* Final Team Standings - Mobile: Vertical Stack */}
             <div className="space-y-4">
@@ -3388,17 +3360,6 @@ export default function AuctionPage() {
               <p className="text-[#DBD0C0]/70">All players have been sold</p>
             </div>
             
-            {/* Summary Stats */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-[#0f0f0f]/50 rounded-lg border border-[#CEA17A]/20 mb-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#CEA17A]">{auctionTeams.length}</div>
-                <div className="text-sm text-[#DBD0C0]/70">Teams</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#CEA17A]">{auctionPlayers.filter(ap => ap.status === 'sold' && !auctionTeams.some(team => team.captain_id === ap.player_id)).length}</div>
-                <div className="text-sm text-[#DBD0C0]/70">Players Sold</div>
-              </div>
-            </div>
             
             {/* Final Teams - Desktop Layout for Mobile Export */}
             <div className="space-y-6 w-full">
