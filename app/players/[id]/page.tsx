@@ -279,7 +279,7 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
               {/* Player Details - Label-Value Format */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Basic Information */}
-                {player.mobile_number && (
+                {player.mobile_number && user && (
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-[#CEA17A]">
                       Mobile Number
@@ -374,59 +374,61 @@ export default function PlayerDetailsPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* Quick Stats Card */}
-        <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
-          <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
-            <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
-              <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
-                📊
-              </span>
-              Quick Stats
-            </h3>
-          </div>
-          <div className="p-4 sm:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                <label className="block text-xs font-medium text-[#CEA17A]/80">
-                  Created
-                </label>
-                <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
-                  {new Date(player.created_at).toLocaleDateString()}
+        {/* Quick Stats Card - Only show for logged in users */}
+        {user && (
+          <div className="bg-[#19171b]/50 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-[#CEA17A]/10 hover:animate-border-glow transition-all duration-150">
+            <div className="bg-gradient-to-r from-[#CEA17A]/20 to-[#CEA17A]/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#CEA17A]/20">
+              <h3 className="text-lg font-bold text-[#DBD0C0] flex items-center">
+                <span className="w-6 h-6 bg-[#CEA17A]/20 rounded-lg flex items-center justify-center mr-3 text-sm">
+                  📊
+                </span>
+                Quick Stats
+              </h3>
+            </div>
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-[#CEA17A]/80">
+                    Created
+                  </label>
+                  <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
+                    {new Date(player.created_at).toLocaleDateString()}
+                  </div>
                 </div>
+                {player.updated_at && (
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-[#CEA17A]/80">
+                      Updated
+                    </label>
+                    <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
+                      {new Date(player.updated_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                )}
+                {(userRole === 'admin' || userRole === 'host') && player.skills?.['Base Price'] && (
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-[#CEA17A]/80">
+                      Base Price
+                    </label>
+                    <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm font-medium">
+                      ₹{player.skills['Base Price']}
+                    </div>
+                  </div>
+                )}
+                {player.skills?.Group && (
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-[#CEA17A]/80">
+                      Group
+                    </label>
+                    <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
+                      {player.skills.Group}
+                    </div>
+                  </div>
+                )}
               </div>
-              {player.updated_at && (
-                <div className="space-y-1">
-                  <label className="block text-xs font-medium text-[#CEA17A]/80">
-                    Updated
-                  </label>
-                  <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
-                    {new Date(player.updated_at).toLocaleDateString()}
-                  </div>
-                </div>
-              )}
-              {(userRole === 'admin' || userRole === 'host') && player.skills?.['Base Price'] && (
-                <div className="space-y-1">
-                  <label className="block text-xs font-medium text-[#CEA17A]/80">
-                    Base Price
-                  </label>
-                  <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm font-medium">
-                    ₹{player.skills['Base Price']}
-                  </div>
-                </div>
-              )}
-              {player.skills?.Group && (
-                <div className="space-y-1">
-                  <label className="block text-xs font-medium text-[#CEA17A]/80">
-                    Group
-                  </label>
-                  <div className="px-3 py-2 border border-[#CEA17A]/20 rounded-lg bg-[#19171b]/30 backdrop-blur-sm text-[#DBD0C0] text-sm">
-                    {player.skills.Group}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
-        </div>
+        )}
 
         {/* Back to Players Button */}
         <div className="mt-8 text-center">
