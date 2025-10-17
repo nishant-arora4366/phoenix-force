@@ -22,6 +22,8 @@ interface Tournament {
   base_price_restrictions?: string[]
   min_base_price?: number
   max_base_price?: number
+  schedule_image_url?: string
+  schedule_images?: string[]
   created_at: string
   updated_at: string
 }
@@ -114,6 +116,16 @@ export default function TournamentDetailsPage() {
   const [userStatus, setUserStatus] = useState<string>('')
   const [showRegistrationError, setShowRegistrationError] = useState(false)
   const [registrationErrorMessage, setRegistrationErrorMessage] = useState('')
+  
+  // Schedule upload state
+  const [isUploadingSchedule, setIsUploadingSchedule] = useState(false)
+  const [scheduleUploadMessage, setScheduleUploadMessage] = useState('')
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [showSchedulePreview, setShowSchedulePreview] = useState(false)
+  const [currentScheduleIndex, setCurrentScheduleIndex] = useState(0)
+  const [isDeletingSchedule, setIsDeletingSchedule] = useState(false)
+  const [isClearingSchedules, setIsClearingSchedules] = useState(false)
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
   
   // Player assignment modal state
   const [showAssignModal, setShowAssignModal] = useState(false)
@@ -1434,6 +1446,319 @@ export default function TournamentDetailsPage() {
     }
   }
 
+  // Schedule upload functionality
+  const uploadSchedule = async (file: File) => {
+    if (!tournament || !isHost) return
+
+    setIsUploadingSchedule(true)
+    setScheduleUploadMessage('')
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('tournamentId', tournament.id)
+
+      const token = secureSessionManager.getToken()
+      const response = await fetch('/api/upload/schedule', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Update tournament with new schedule URL
+        setTournament(prev => prev ? { ...prev, schedule_image_url: result.url } : null)
+        setScheduleUploadMessage('Schedule uploaded successfully!')
+        setShowScheduleModal(false)
+        setTimeout(() => setScheduleUploadMessage(''), 5000)
+      } else {
+        setScheduleUploadMessage(`Error: ${result.error}`)
+        setTimeout(() => setScheduleUploadMessage(''), 5000)
+      }
+    } catch (error: any) {
+      setScheduleUploadMessage(`Error uploading schedule: ${error.message}`)
+      setTimeout(() => setScheduleUploadMessage(''), 5000)
+    } finally {
+      setIsUploadingSchedule(false)
+    }
+  }
+
+  const uploadMultipleSchedules = async (files: File[]) => {
+    if (!tournament || !isHost || files.length === 0) return
+
+    setIsUploadingSchedule(true)
+    setScheduleUploadMessage('')
+
+    try {
+      // Check authentication first
+      let token = secureSessionManager.getToken()
+      let user = secureSessionManager.getUser()
+      
+      if (!token || !user) {
+        setScheduleUploadMessage('Authentication required. Please log in again.')
+        setTimeout(() => setScheduleUploadMessage(''), 5000)
+        return
+      }
+
+      // Try to refresh token if it might be expired
+      try {
+        const refreshResponse = await fetch('/api/auth/refresh-token', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+        
+        if (refreshResponse.ok) {
+          const refreshResult = await refreshResponse.json()
+          if (refreshResult.success && refreshResult.token) {
+            token = refreshResult.token
+            console.log('Token refreshed successfully')
+          }
+        }
+      } catch (refreshError) {
+        console.log('Token refresh failed, proceeding with existing token')
+      }
+
+      console.log('Upload attempt - User:', user.id, 'Token present:', !!token)
+
+      // Upload files sequentially to avoid race conditions
+      const results: any[] = []
+      const newUrls: string[] = []
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        setScheduleUploadMessage(`Uploading image ${i + 1} of ${files.length}...`)
+        
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('tournamentId', tournament.id)
+        formData.append('isSequential', 'true') // Flag to indicate this is part of a sequence
+
+        const response = await fetch('/api/upload/schedule', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: formData
+        })
+
+        const result = await response.json()
+        results.push(result)
+        
+        if (result.success) {
+          newUrls.push(result.url)
+        }
+        
+        // Add a small delay between uploads to ensure database consistency
+        if (i < files.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      }
+      const successfulUploads = results.filter(result => result.success)
+      const failedUploads = results.filter(result => !result.success)
+
+      if (successfulUploads.length > 0) {
+        // Update tournament with new schedule URLs
+        setTournament(prev => {
+          if (!prev) return null
+          const existingImages = prev.schedule_images || []
+          const existingSingleImage = prev.schedule_image_url ? [prev.schedule_image_url] : []
+          const allImages = [...existingSingleImage, ...existingImages, ...newUrls]
+          
+          return { 
+            ...prev, 
+            schedule_images: allImages,
+            schedule_image_url: allImages[0] // Keep first image as primary
+          }
+        })
+
+        setScheduleUploadMessage(`Successfully uploaded ${successfulUploads.length} schedule image(s)!`)
+        // Keep modal open briefly to show success message
+        setTimeout(() => {
+          setShowScheduleModal(false)
+          setTimeout(() => setScheduleUploadMessage(''), 5000)
+        }, 1500)
+      }
+
+      if (failedUploads.length > 0) {
+        const errorMessages = failedUploads.map(result => result.error).join(', ')
+        console.error('Upload failures:', failedUploads)
+        setScheduleUploadMessage(`Failed to upload ${failedUploads.length} image(s): ${errorMessages}`)
+        setTimeout(() => setScheduleUploadMessage(''), 5000)
+      }
+    } catch (error: any) {
+      setScheduleUploadMessage(`Error uploading schedules: ${error.message}`)
+      setTimeout(() => setScheduleUploadMessage(''), 5000)
+    } finally {
+      setIsUploadingSchedule(false)
+    }
+  }
+
+  const handleScheduleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files && files.length > 0) {
+      // Validate all files
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          setScheduleUploadMessage(`File "${file.name}" is not an image file`)
+          setTimeout(() => setScheduleUploadMessage(''), 5000)
+          return
+        }
+        
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          setScheduleUploadMessage(`File "${file.name}" is too large (max 10MB)`)
+          setTimeout(() => setScheduleUploadMessage(''), 5000)
+          return
+        }
+      }
+
+      // Upload all files
+      uploadMultipleSchedules(Array.from(files))
+    }
+  }
+
+  const handleAddMoreSchedules = () => {
+    setShowSchedulePreview(false)
+    setShowScheduleModal(true)
+  }
+
+  const deleteScheduleImage = async (imageUrl: string) => {
+    if (!tournament || !isHost) return
+
+    setIsDeletingSchedule(true)
+    setScheduleUploadMessage('')
+
+    try {
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        setScheduleUploadMessage('Authentication required. Please log in again.')
+        setTimeout(() => setScheduleUploadMessage(''), 5000)
+        return
+      }
+
+      const response = await fetch('/api/upload/schedule', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          tournamentId: tournament.id,
+          imageUrl: imageUrl
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Update tournament state to remove the deleted image
+        setTournament(prev => {
+          if (!prev) return null
+          
+          const updatedImages = (prev.schedule_images || []).filter(url => url !== imageUrl)
+          const updatedSingleImage = prev.schedule_image_url === imageUrl ? null : prev.schedule_image_url
+          
+          return {
+            ...prev,
+            schedule_image_url: updatedSingleImage || (updatedImages.length > 0 ? updatedImages[0] : undefined),
+            schedule_images: updatedImages.length > 0 ? updatedImages : undefined
+          }
+        })
+
+        // Adjust current index if needed
+        setCurrentScheduleIndex(prev => {
+          const allImages = []
+          if (tournament.schedule_image_url && tournament.schedule_image_url !== imageUrl) {
+            allImages.push(tournament.schedule_image_url)
+          }
+          if (tournament.schedule_images) {
+            allImages.push(...tournament.schedule_images.filter(url => url !== imageUrl))
+          }
+          
+          return prev >= allImages.length ? Math.max(0, allImages.length - 1) : prev
+        })
+
+        setScheduleUploadMessage('Schedule image deleted successfully!')
+        setTimeout(() => setScheduleUploadMessage(''), 5000)
+      } else {
+        setScheduleUploadMessage(`Error: ${result.error}`)
+        setTimeout(() => setScheduleUploadMessage(''), 5000)
+      }
+    } catch (error: any) {
+      setScheduleUploadMessage(`Error deleting schedule: ${error.message}`)
+      setTimeout(() => setScheduleUploadMessage(''), 5000)
+    } finally {
+      setIsDeletingSchedule(false)
+    }
+  }
+
+  const clearAllSchedules = async () => {
+    if (!tournament || !isHost) return
+
+    setIsClearingSchedules(true)
+    setScheduleUploadMessage('')
+
+    try {
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        setScheduleUploadMessage('Authentication required. Please log in again.')
+        setTimeout(() => setScheduleUploadMessage(''), 5000)
+        return
+      }
+
+      const response = await fetch('/api/upload/schedule', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          tournamentId: tournament.id,
+          clearAll: true
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Clear all schedule images from tournament state
+        setTournament(prev => {
+          if (!prev) return null
+          return {
+            ...prev,
+            schedule_image_url: undefined,
+            schedule_images: undefined
+          }
+        })
+
+        // Reset states
+        setCurrentScheduleIndex(0)
+        setFailedImages(new Set())
+        setShowSchedulePreview(false)
+
+        setScheduleUploadMessage('All schedule images cleared successfully!')
+        setTimeout(() => setScheduleUploadMessage(''), 5000)
+      } else {
+        setScheduleUploadMessage(`Error: ${result.error}`)
+        setTimeout(() => setScheduleUploadMessage(''), 5000)
+      }
+    } catch (error: any) {
+      setScheduleUploadMessage(`Error clearing schedules: ${error.message}`)
+      setTimeout(() => setScheduleUploadMessage(''), 5000)
+    } finally {
+      setIsClearingSchedules(false)
+    }
+  }
+
   const removePlayerFromSlot = (slotId: string, playerName: string) => {
     setConfirmAction({
       title: 'Remove Player',
@@ -2007,7 +2332,8 @@ export default function TournamentDetailsPage() {
                   </div>
 
                   {/* Tournament Restrictions */}
-                  {((tournament.community_restrictions && tournament.community_restrictions.length > 0) || 
+                  {tournament.status === 'registration_open' && 
+                   ((tournament.community_restrictions && tournament.community_restrictions.length > 0) || 
                     (tournament.base_price_restrictions && tournament.base_price_restrictions.length > 0) || 
                     tournament.min_base_price || 
                     tournament.max_base_price) && (
@@ -2248,44 +2574,106 @@ export default function TournamentDetailsPage() {
                   </div>
                 </div>
 
-                {/* Show Formed Teams Card - When tournament is completed */}
+                {/* Show Teams Formed and Schedule Cards - When tournament is teams_formed or completed */}
                 {(tournament.status === 'teams_formed' || tournament.status === 'completed') && (
-                  <div className="bg-gradient-to-br from-[#09171F]/80 to-[#09171F]/60 border border-[#CEA17A]/30 rounded-xl p-4 sm:p-6 backdrop-blur-sm shadow-lg shadow-[#CEA17A]/10 mb-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="flex items-start sm:items-center space-x-3 sm:space-x-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#CEA17A]/20 rounded-full flex items-center justify-center flex-shrink-0">
-                          <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {/* Teams Formed Card */}
+                    <div className="bg-gradient-to-br from-[#09171F]/80 to-[#09171F]/60 border border-[#CEA17A]/30 rounded-xl p-4 sm:p-6 backdrop-blur-sm shadow-lg shadow-[#CEA17A]/10">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-start space-x-3 sm:space-x-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#CEA17A]/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base sm:text-lg font-semibold text-[#DBD0C0] mb-1">Teams Formed</h3>
+                            <p className="text-xs sm:text-sm text-[#DBD0C0]/70 leading-relaxed">
+                              {tournament.status === 'teams_formed' 
+                                ? 'Teams have been formed from the auction. View the final team compositions.'
+                                : 'Tournament completed! View the final team results and auction details.'
+                              }
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-base sm:text-lg font-semibold text-[#DBD0C0] mb-1">Teams Formed</h3>
-                          <p className="text-xs sm:text-sm text-[#DBD0C0]/70 leading-relaxed">
-                            {tournament.status === 'teams_formed' 
-                              ? 'Teams have been formed from the auction. View the final team compositions.'
-                              : 'Tournament completed! View the final team results and auction details.'
-                            }
-                          </p>
-                        </div>
+                        {completedAuction ? (
+                          <Link
+                            href={`/auctions/${completedAuction.id}`}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium text-sm sm:text-base w-full"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            View Teams
+                          </Link>
+                        ) : (
+                          <div className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-500/15 text-gray-400 border border-gray-500/30 rounded-lg cursor-not-allowed font-medium text-sm sm:text-base w-full">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            No Auction Found
+                          </div>
+                        )}
                       </div>
-                      {completedAuction ? (
-                        <Link
-                          href={`/auctions/${completedAuction.id}`}
-                          className="flex items-center justify-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium text-sm sm:text-base w-full sm:w-auto"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
-                          View Teams
-                        </Link>
-                      ) : (
-                        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-500/15 text-gray-400 border border-gray-500/30 rounded-lg cursor-not-allowed font-medium text-sm sm:text-base w-full sm:w-auto">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                          </svg>
-                          No Auction Found
+                    </div>
+
+                    {/* Tournament Schedule Card */}
+                    <div className="bg-gradient-to-br from-[#09171F]/80 to-[#09171F]/60 border border-[#CEA17A]/30 rounded-xl p-4 sm:p-6 backdrop-blur-sm shadow-lg shadow-[#CEA17A]/10">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-start space-x-3 sm:space-x-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#CEA17A]/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base sm:text-lg font-semibold text-[#DBD0C0] mb-1">Tournament Schedule</h3>
+                            <p className="text-xs sm:text-sm text-[#DBD0C0]/70 leading-relaxed">
+                              {tournament.schedule_image_url || (tournament.schedule_images && tournament.schedule_images.length > 0)
+                                ? (tournament.status === 'teams_formed' 
+                                    ? 'View the tournament schedule and upcoming matches.'
+                                    : 'Tournament completed! View the final schedule and match results.')
+                                : (isHost 
+                                    ? 'Upload the tournament schedule for participants to view.'
+                                    : 'Schedule not uploaded yet. Check back later.')
+                              }
+                            </p>
+                          </div>
                         </div>
-                      )}
+                        
+                        {tournament.schedule_image_url || (tournament.schedule_images && tournament.schedule_images.length > 0) ? (
+                          // Schedule exists - show view button
+                          <button
+                            onClick={() => setShowSchedulePreview(true)}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium text-sm sm:text-base w-full"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            View Schedule{tournament.schedule_images && tournament.schedule_images.length > 1 ? 's' : ''}
+                          </button>
+                        ) : isHost ? (
+                          // No schedule and user is host - show upload button
+                          <button
+                            onClick={() => setShowScheduleModal(true)}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium text-sm sm:text-base w-full"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            Upload Schedule
+                          </button>
+                        ) : (
+                          // No schedule and user is not host - show disabled button
+                          <div className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-500/15 text-gray-400 border border-gray-500/30 rounded-lg cursor-not-allowed font-medium text-sm sm:text-base w-full">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            Schedule Not Available
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -3504,6 +3892,408 @@ export default function TournamentDetailsPage() {
           </div>
         </div>
       )}
+
+      {/* Schedule Upload Modal */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-8 max-w-md w-full animate-fade-in">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-[#DBD0C0]">Upload Tournament Schedule</h3>
+              <div className="flex items-center gap-2">
+                {isHost && (tournament?.schedule_image_url || tournament?.schedule_images?.length) && (
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to clear ALL existing schedule images? This action cannot be undone.')) {
+                        clearAllSchedules()
+                      }
+                    }}
+                    disabled={isClearingSchedules}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/15 text-orange-400 border border-orange-500/30 rounded-lg hover:bg-orange-500/25 transition-all duration-150 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isClearingSchedules ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    )}
+                    {isClearingSchedules ? 'Clearing...' : 'Clear All'}
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowScheduleModal(false)}
+                  className="text-[#CEA17A]/60 hover:text-[#CEA17A] transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Upload Area */}
+            <div className="space-y-4">
+              <div className="border-2 border-dashed border-[#CEA17A]/30 rounded-lg p-6 text-center hover:border-[#CEA17A]/50 transition-colors">
+                <input
+                  type="file"
+                  id="schedule-upload"
+                  accept="image/*"
+                  multiple
+                  onChange={handleScheduleFileChange}
+                  className="hidden"
+                  disabled={isUploadingSchedule}
+                />
+                <label
+                  htmlFor="schedule-upload"
+                  className={`cursor-pointer ${isUploadingSchedule ? 'cursor-not-allowed opacity-50' : ''}`}
+                >
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="w-12 h-12 bg-[#CEA17A]/20 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-[#CEA17A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[#DBD0C0] font-medium">
+                        {isUploadingSchedule ? 'Uploading...' : 'Click to upload schedule(s)'}
+                      </p>
+                      <p className="text-sm text-[#CEA17A]/70 mt-1">
+                        PNG, JPG, WEBP up to 10MB each
+                      </p>
+                      <p className="text-xs text-[#CEA17A]/50 mt-1">
+                        Select multiple files to upload several schedules
+                      </p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              {/* Upload Progress */}
+              {isUploadingSchedule && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-[#CEA17A] border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm text-[#CEA17A]">Uploading schedule...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Message */}
+              {scheduleUploadMessage && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  scheduleUploadMessage.includes('successfully') 
+                    ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
+                    : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                }`}>
+                  {scheduleUploadMessage}
+                </div>
+              )}
+
+              {/* Instructions */}
+              <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/20">
+                <h4 className="text-sm font-medium text-[#CEA17A] mb-2">Upload Guidelines:</h4>
+                <ul className="text-xs text-[#DBD0C0]/70 space-y-1">
+                  <li>• Upload a clear, readable schedule image</li>
+                  <li>• Supported formats: PNG, JPG, JPEG, WEBP</li>
+                  <li>• Maximum file size: 10MB</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                disabled={isUploadingSchedule}
+                className="px-4 py-2 text-[#CEA17A]/70 hover:text-[#CEA17A] transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule Preview Modal */}
+      {showSchedulePreview && (() => {
+        // Get all schedule images, excluding failed ones
+        const allImages = []
+        if (tournament?.schedule_image_url && !failedImages.has(tournament.schedule_image_url)) {
+          allImages.push(tournament.schedule_image_url)
+        }
+        if (tournament?.schedule_images) {
+          allImages.push(...tournament.schedule_images.filter(url => !failedImages.has(url)))
+        }
+        
+        // Remove duplicates
+        const uniqueImages = Array.from(new Set(allImages))
+        const currentImage = uniqueImages[currentScheduleIndex]
+
+        // If no valid images, show message and close modal
+        if (uniqueImages.length === 0) {
+          return (
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-1 sm:p-2 md:p-4">
+              <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-lg sm:rounded-xl shadow-2xl max-w-md w-full p-4 sm:p-6 mx-1 sm:mx-0">
+                <div className="text-center">
+                  <svg className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-[#CEA17A]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#DBD0C0] mb-2">No Schedule Images Available</h3>
+                  <p className="text-[#CEA17A]/70 mb-4 text-sm sm:text-base">
+                    {failedImages.size > 0 
+                      ? 'All schedule images failed to load or have been removed.'
+                      : 'No schedule images have been uploaded yet.'
+                    }
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
+                    {isHost && (
+                      <button
+                        onClick={() => {
+                          setShowSchedulePreview(false)
+                          setShowScheduleModal(true)
+                        }}
+                        className="px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 text-sm"
+                      >
+                        Upload Schedule
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowSchedulePreview(false)}
+                      className="px-4 py-2 bg-gray-600/15 text-gray-400 border border-gray-600/30 rounded-lg hover:bg-gray-600/25 transition-all duration-150 text-sm"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        return (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-1 sm:p-2 md:p-4">
+            <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-lg sm:rounded-xl shadow-2xl max-w-6xl w-full max-h-[98vh] sm:max-h-[95vh] overflow-hidden mx-1 sm:mx-0">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 md:p-6 border-b border-[#CEA17A]/20 gap-3 sm:gap-0">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-[#DBD0C0]">Tournament Schedule</h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {uniqueImages.length > 1 && (
+                      <span className="text-xs sm:text-sm text-[#CEA17A]/70 bg-[#CEA17A]/10 px-2 py-1 rounded">
+                        {currentScheduleIndex + 1} of {uniqueImages.length}
+                      </span>
+                    )}
+                    {failedImages.size > 0 && (
+                      <span className="text-xs text-red-400/70 bg-red-500/10 px-2 py-1 rounded">
+                        {failedImages.size} failed to load
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
+                  {isHost && (
+                    <>
+                      <button
+                        onClick={handleAddMoreSchedules}
+                        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 text-xs sm:text-sm"
+                      >
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span className="hidden sm:inline">Add More</span>
+                        <span className="sm:hidden"></span>
+                      </button>
+                      {currentImage && (
+                        <button
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this schedule image?')) {
+                              deleteScheduleImage(currentImage)
+                            }
+                          }}
+                          disabled={isDeletingSchedule}
+                          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-red-500/15 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/25 transition-all duration-150 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isDeletingSchedule ? (
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          ) : (
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          )}
+                          <span className="hidden sm:inline">{isDeletingSchedule ? 'Deleting...' : 'Delete'}</span>
+                          <span className="sm:hidden">{isDeletingSchedule ? '...' : ''}</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          if (confirm('Are you sure you want to clear ALL schedule images? This action cannot be undone.')) {
+                            clearAllSchedules()
+                          }
+                        }}
+                        disabled={isClearingSchedules}
+                        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-orange-500/15 text-orange-400 border border-orange-500/30 rounded-lg hover:bg-orange-500/25 transition-all duration-150 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isClearingSchedules ? (
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        )}
+                        <span className="hidden sm:inline">{isClearingSchedules ? 'Clearing...' : 'Clear All'}</span>
+                        <span className="sm:hidden">{isClearingSchedules ? '...' : ''}</span>
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => setShowSchedulePreview(false)}
+                    className="text-[#CEA17A]/60 hover:text-[#CEA17A] transition-colors p-1"
+                  >
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Message */}
+              {scheduleUploadMessage && (
+                <div className="px-3 sm:px-4 md:px-6 py-2">
+                  <div className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
+                    scheduleUploadMessage.includes('Error') || scheduleUploadMessage.includes('Failed')
+                      ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                      : 'bg-green-500/10 text-green-400 border border-green-500/20'
+                  }`}>
+                    {scheduleUploadMessage}
+                  </div>
+                </div>
+              )}
+
+              {/* Schedule Image with Navigation */}
+              <div className="flex-1 flex items-center justify-center p-2 sm:p-4 md:p-6">
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {/* Previous Button */}
+                  {uniqueImages.length > 1 && (
+                    <button
+                      onClick={() => setCurrentScheduleIndex(prev => prev > 0 ? prev - 1 : uniqueImages.length - 1)}
+                      className="absolute left-2 sm:left-4 z-10 p-1.5 sm:p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                    >
+                      <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Current Image */}
+                  <div className="bg-[#19171b]/50 rounded-lg p-2 sm:p-4 border border-[#CEA17A]/20 flex justify-center items-center w-full h-full">
+                    {currentImage ? (
+                      failedImages.has(currentImage) ? (
+                        <div className="flex items-center justify-center h-24 sm:h-32 text-[#CEA17A]/50">
+                          <div className="text-center">
+                            <svg className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            <p className="text-xs sm:text-sm">Failed to load image</p>
+                            {isHost && (
+                              <p className="text-xs mt-1 text-red-400/70">This image will be hidden from the list</p>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={currentImage}
+                          alt={`Tournament Schedule ${currentScheduleIndex + 1}`}
+                          className="max-w-full max-h-full rounded-lg shadow-lg"
+                          style={{ 
+                            maxHeight: '60vh', 
+                            maxWidth: '100%',
+                            objectFit: 'contain',
+                            objectPosition: 'center',
+                            width: 'auto',
+                            height: 'auto'
+                          }}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            const imageUrl = target.src;
+                            
+                            // Add to failed images set
+                            setFailedImages(prev => new Set(Array.from(prev).concat(imageUrl)));
+                          }}
+                        />
+                      )
+                    ) : (
+                      <div className="flex items-center justify-center h-24 sm:h-32 text-[#CEA17A]/50">
+                        <div className="text-center">
+                          <svg className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          <p className="text-xs sm:text-sm">No schedule images available</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Next Button */}
+                  {uniqueImages.length > 1 && (
+                    <button
+                      onClick={() => setCurrentScheduleIndex(prev => prev < uniqueImages.length - 1 ? prev + 1 : 0)}
+                      className="absolute right-2 sm:right-4 z-10 p-1.5 sm:p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                    >
+                      <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer with Actions */}
+              <div className="flex flex-col sm:flex-row items-center justify-between p-3 sm:p-4 md:p-6 border-t border-[#CEA17A]/20 gap-3 sm:gap-0">
+                <div className="flex items-center gap-2">
+                  {uniqueImages.length > 1 && (
+                    <div className="flex gap-1">
+                      {uniqueImages.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentScheduleIndex(index)}
+                          className={`w-2 h-2 rounded-full transition-colors ${
+                            index === currentScheduleIndex ? 'bg-[#CEA17A]' : 'bg-[#CEA17A]/30'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button
+                    onClick={() => window.open(currentImage, '_blank')}
+                    className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 text-xs sm:text-sm"
+                  >
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    <span className="hidden sm:inline">Open in New Tab</span>
+                    <span className="sm:hidden">Open</span>
+                  </button>
+                  <button
+                    onClick={() => setShowSchedulePreview(false)}
+                    className="px-4 sm:px-6 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 font-medium text-xs sm:text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
