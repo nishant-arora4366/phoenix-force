@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
       const existingImages = currentTournament.schedule_images || [];
       const existingSingleImage = currentTournament.schedule_image_url ? [currentTournament.schedule_image_url] : [];
       const allImages = [...existingSingleImage, ...existingImages, publicUrl];
-      const uniqueImages = [...new Set(allImages)]; // Remove duplicates
+      const uniqueImages = Array.from(new Set(allImages)); // Remove duplicates
 
       console.log('Current images array:', existingImages);
       console.log('Current single image:', existingSingleImage);
