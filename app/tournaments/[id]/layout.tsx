@@ -50,10 +50,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://phoenixforce.in'
   const tournamentUrl = `${baseUrl}/t/${tournament.slug}`
   
-  // Use tournament schedule image if available, otherwise use default logo
-  const imageUrl = tournament.schedule_image_url 
-    ? tournament.schedule_image_url 
-    : `${baseUrl}/logo.png`
+  // Always use the generated OG image with Phoenix Force logo and home page background
+  const imageUrl = `${baseUrl}/api/og/tournament/${tournament.id}`
 
   const title = `${tournament.name} - Phoenix Force Cricket`
   const description = tournament.description 

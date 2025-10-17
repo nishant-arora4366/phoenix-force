@@ -193,6 +193,11 @@ export default function TournamentDetailsPage() {
   // Players who left state
   const [playersLeft, setPlayersLeft] = useState<any[]>([])
   const [loadingPlayersLeft, setLoadingPlayersLeft] = useState(false)
+  const [clearingPlayerLeft, setClearingPlayerLeft] = useState<string | null>(null)
+  const [clearingAllPlayersLeft, setClearingAllPlayersLeft] = useState(false)
+  const [showClearPlayerModal, setShowClearPlayerModal] = useState(false)
+  const [showClearAllModal, setShowClearAllModal] = useState(false)
+  const [playerToClear, setPlayerToClear] = useState<{id: string, name: string} | null>(null)
 
   // Initialize Supabase client for realtime (singleton to avoid multiple instances)
   const supabase = getSupabaseClient()
@@ -242,6 +247,77 @@ export default function TournamentDetailsPage() {
       setPlayersLeft([])
     } finally {
       setLoadingPlayersLeft(false)
+    }
+  }
+
+  // Show confirmation modal for clearing individual player
+  const showClearPlayerConfirmation = (playerLeftId: string, playerName: string) => {
+    setPlayerToClear({ id: playerLeftId, name: playerName })
+    setShowClearPlayerModal(true)
+  }
+
+  // Show confirmation modal for clearing all players
+  const showClearAllConfirmation = () => {
+    setShowClearAllModal(true)
+  }
+
+  // Clear individual player left entry
+  const clearPlayerLeftEntry = async () => {
+    if (!tournamentId || !playerToClear) return
+    
+    try {
+      setClearingPlayerLeft(playerToClear.id)
+      const response = await fetch(`/api/tournaments/${tournamentId}/players-left/${playerToClear.id}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        // Remove the entry from local state
+        setPlayersLeft(prev => prev.filter(player => player.id !== playerToClear.id))
+        // Show success message (you can add a toast notification here)
+        console.log(`Player left entry for ${playerToClear.name} cleared successfully`)
+        setShowClearPlayerModal(false)
+        setPlayerToClear(null)
+      } else {
+        const error = await response.json()
+        console.error('Failed to clear player left entry:', error.message)
+        // You can add error toast notification here
+      }
+    } catch (error) {
+      console.error('Error clearing player left entry:', error)
+      // You can add error toast notification here
+    } finally {
+      setClearingPlayerLeft(null)
+    }
+  }
+
+  // Clear all players left entries
+  const clearAllPlayersLeftEntries = async () => {
+    if (!tournamentId) return
+    
+    try {
+      setClearingAllPlayersLeft(true)
+      const response = await fetch(`/api/tournaments/${tournamentId}/players-left/clear-all`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        // Clear all entries from local state
+        setPlayersLeft([])
+        // Show success message (you can add a toast notification here)
+        console.log(`All ${result.cleared_count} player left entries cleared successfully`)
+        setShowClearAllModal(false)
+      } else {
+        const error = await response.json()
+        console.error('Failed to clear all players left entries:', error.message)
+        // You can add error toast notification here
+      }
+    } catch (error) {
+      console.error('Error clearing all players left entries:', error)
+      // You can add error toast notification here
+    } finally {
+      setClearingAllPlayersLeft(false)
     }
   }
 
@@ -985,7 +1061,7 @@ export default function TournamentDetailsPage() {
     if (!tournament) return
 
     const shortUrl = generateTournamentShortUrl(tournament.slug)
-    const shareText = `Check out this cricket tournament: ${tournament.name}`
+    const shareText = `Check out the Tournament: ${tournament.name}`
     
     // Try native sharing first
     const shared = await shareTournamentUrl(shortUrl, tournament.name, shareText)
@@ -3291,8 +3367,29 @@ export default function TournamentDetailsPage() {
                         <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                       )}
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {playersLeft.length} players departed
+                    <div className="flex items-center space-x-3">
+                      <div className="text-sm text-gray-500">
+                        {playersLeft.length} players departed
+                      </div>
+                      {/* Admin Controls */}
+                      {isAdmin(userProfile) && playersLeft.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={showClearAllConfirmation}
+                            disabled={clearingAllPlayersLeft}
+                            className="px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {clearingAllPlayersLeft ? (
+                              <div className="flex items-center space-x-1">
+                                <div className="w-3 h-3 border border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                                <span>Clearing...</span>
+                              </div>
+                            ) : (
+                              'Clear All'
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -3319,7 +3416,10 @@ export default function TournamentDetailsPage() {
                           <div className="col-span-4">Player Name</div>
                           <div className="col-span-2">Reason</div>
                           <div className="col-span-3">Left At</div>
-                          <div className="col-span-2">Details</div>
+                          <div className="col-span-1">Details</div>
+                          {isAdmin(userProfile) && (
+                            <div className="col-span-1 text-center">Actions</div>
+                          )}
                         </div>
                       </div>
                       
@@ -3352,9 +3452,29 @@ export default function TournamentDetailsPage() {
 
                                 {/* Player Details */}
                                 <div className="flex-1 min-w-0">
-                                  <h3 className="text-lg font-semibold text-[#DBD0C0] truncate">
-                                    {player.player_name}
-                                  </h3>
+                                  <div className="flex items-start justify-between">
+                                    <h3 className="text-lg font-semibold text-[#DBD0C0] truncate">
+                                      {player.player_name}
+                                    </h3>
+                                    
+                                    {/* Admin Clear Button - Mobile */}
+                                    {isAdmin(userProfile) && (
+                                      <button
+                                        onClick={() => showClearPlayerConfirmation(player.id, player.player_name)}
+                                        disabled={clearingPlayerLeft === player.id}
+                                        className="ml-2 p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                                        title="Clear this entry"
+                                      >
+                                        {clearingPlayerLeft === player.id ? (
+                                          <div className="w-4 h-4 border border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                          </svg>
+                                        )}
+                                      </button>
+                                    )}
+                                  </div>
                                   
                                   <div className="mt-2 space-y-1">
                                     {/* Reason */}
@@ -3431,7 +3551,7 @@ export default function TournamentDetailsPage() {
                                 </div>
                               </div>
                               
-                              <div className="col-span-2">
+                              <div className="col-span-1">
                                 <div className="text-sm text-[#CEA17A]/60">
                                   {player.left_reason === 'removed' && player.removed_by ? (
                                     <span>By: Host</span>
@@ -3440,6 +3560,25 @@ export default function TournamentDetailsPage() {
                                   )}
                                 </div>
                               </div>
+                              
+                              {isAdmin(userProfile) && (
+                                <div className="col-span-1 flex justify-center">
+                                  <button
+                                    onClick={() => showClearPlayerConfirmation(player.id, player.player_name)}
+                                    disabled={clearingPlayerLeft === player.id}
+                                    className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Clear this entry"
+                                  >
+                                    {clearingPlayerLeft === player.id ? (
+                                      <div className="w-4 h-4 border border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -4685,6 +4824,108 @@ export default function TournamentDetailsPage() {
           </div>
         </div>
       )}
+
+      {/* Clear Individual Player Left Entry Confirmation Modal */}
+      {showClearPlayerModal && playerToClear && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#09171F]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-500/30 p-8 max-w-md w-full">
+            <div className="text-center">
+              <div className="text-red-400 text-4xl mb-4">⚠️</div>
+              <h3 className="text-xl font-semibold text-[#DBD0C0] mb-4">
+                Clear Player Entry
+              </h3>
+              <p className="text-[#CEA17A]/80 mb-6">
+                Are you sure you want to clear the entry for <span className="font-semibold text-[#DBD0C0]">{playerToClear.name}</span>?
+                <br />
+                <span className="text-sm text-red-400/80 mt-2 block">
+                  This action cannot be undone.
+                </span>
+              </p>
+              <div className="flex space-x-3 justify-center">
+                <button
+                  onClick={clearPlayerLeftEntry}
+                  disabled={clearingPlayerLeft === playerToClear.id}
+                  className="px-6 py-3 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {clearingPlayerLeft === playerToClear.id ? (
+                    <>
+                      <div className="w-4 h-4 border border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Clearing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>Clear Entry</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowClearPlayerModal(false)
+                    setPlayerToClear(null)
+                  }}
+                  disabled={clearingPlayerLeft === playerToClear.id}
+                  className="px-6 py-3 bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#3E4E5A]/30 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Players Left Entries Confirmation Modal */}
+      {showClearAllModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#09171F]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-red-500/30 p-8 max-w-md w-full">
+            <div className="text-center">
+              <div className="text-red-400 text-4xl mb-4">⚠️</div>
+              <h3 className="text-xl font-semibold text-[#DBD0C0] mb-4">
+                Clear All Player Entries
+              </h3>
+              <p className="text-[#CEA17A]/80 mb-6">
+                Are you sure you want to clear all {playersLeft.length} player left entries?
+                <br />
+                <span className="text-sm text-red-400/80 mt-2 block">
+                  This action cannot be undone and will remove all departure records.
+                </span>
+              </p>
+              <div className="flex space-x-3 justify-center">
+                <button
+                  onClick={clearAllPlayersLeftEntries}
+                  disabled={clearingAllPlayersLeft}
+                  className="px-6 py-3 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {clearingAllPlayersLeft ? (
+                    <>
+                      <div className="w-4 h-4 border border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Clearing All...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>Clear All ({playersLeft.length})</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowClearAllModal(false)}
+                  disabled={clearingAllPlayersLeft}
+                  className="px-6 py-3 bg-[#3E4E5A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#3E4E5A]/30 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
     </div>
   )

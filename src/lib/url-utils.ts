@@ -22,7 +22,15 @@ export function generateTournamentUrl(id: string): string {
  * Generate Open Graph image URL for a tournament
  */
 export function generateTournamentOgImageUrl(id: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://phoenixforce.in'
+  // Use current origin when on client side, fallback to environment variable or default
+  let baseUrl = 'https://phoenixforce.in'
+  
+  if (typeof window !== 'undefined') {
+    baseUrl = window.location.origin
+  } else if (process.env.NEXT_PUBLIC_SITE_URL) {
+    baseUrl = process.env.NEXT_PUBLIC_SITE_URL
+  }
+  
   return `${baseUrl}/api/og/tournament/${id}`
 }
 
@@ -54,7 +62,7 @@ export async function shareTournamentUrl(url: string, title: string, text?: stri
   try {
     await navigator.share({
       title,
-      text: text || `Check out this cricket tournament: ${title}`,
+      text: text || `Check out the Tournament: ${title}`,
       url,
     })
     return true
