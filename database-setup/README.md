@@ -1,206 +1,172 @@
 # Phoenix Force Database Setup
 
-This directory contains essential scripts for database setup, backup, and restoration for Phoenix Force.
+This directory contains scripts for backing up and managing the Phoenix Force Supabase database.
 
-## 📁 Files Overview
+## Quick Start
 
-- `backup-data.js` - Data backup system (JSON + SQL formats)
-- `restore-data.js` - Data restoration system
-- `setup-project.js` - Database setup from scratch
-- `fetch-database-info.js` - Database schema extraction
-- `schema/` - Essential database schema files
-- `data-backup/` - Current data backup (2,707 records from 12 tables)
-- `setup-with-realtime.sql` - Complete database setup with realtime
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-## 🚀 Quick Start
+2. **Set up environment variables:**
+   ```bash
+   cp env.template .env
+   # Edit .env with your Supabase credentials
+   ```
 
-### 1. Install Dependencies
+3. **Run complete database backup:**
+   ```bash
+   npm run backup
+   ```
 
-```bash
-cd database-setup
-npm install
+4. **Run data-only backup:**
+   ```bash
+   npm run backup:data
+   ```
+
+5. **Run schema-only backup:**
+   ```bash
+   npm run backup:schema
+   ```
+
+## What Gets Backed Up
+
+### 📊 **Table Data**
+- All table records with complete data
+- Individual JSON files for each table
+- Complete SQL backup with INSERT statements
+
+### 🏗️ **Database Schema**
+- Table structures and relationships
+- Functions and stored procedures
+- Policies and Row Level Security (RLS)
+- Triggers and event handlers
+
+### 📡 **Realtime Configuration**
+- Realtime publications
+- Realtime subscriptions
+- Event triggers and listeners
+
+### 💾 **Storage Information**
+- Storage buckets configuration
+- File listings and metadata
+- Storage policies
+
+## Files Generated
+
+After running the backup, you'll find:
+
+```
+data-backup/
+├── complete-database-backup.sql    # Complete SQL backup
+├── database-schema.json            # Schema information
+├── realtime-config.json            # Realtime configuration
+├── storage-info.json               # Storage information
+├── BACKUP_REPORT.md                # Detailed backup report
+├── backup-summary.json             # Backup summary
+├── json/                           # Individual table JSON files
+│   ├── users.json
+│   ├── players.json
+│   ├── tournaments.json
+│   └── ...
+└── sql/                            # Individual table SQL files
+    ├── users.sql
+    ├── players.sql
+    ├── tournaments.sql
+    └── ...
 ```
 
-### 2. Set Up Environment
+## Environment Variables
 
-Create `.env.local` with your Supabase credentials:
+Create a `.env` file with the following variables:
+
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-### 3. Database Operations
+## Usage Examples
 
-#### **Backup Data:**
+### Complete Database Backup
 ```bash
-# Full backup (JSON + SQL)
 npm run backup
-
-# JSON only
-npm run backup:json
-
-# SQL only  
-npm run backup:sql
 ```
 
-#### **Restore Data:**
+### Manual Backup
 ```bash
-# Restore from JSON
-npm run restore:json
-
-# Restore from SQL
-npm run restore:sql
-
-# Restore from complete SQL file
-npm run restore:complete
-
-# Test restore (dry run)
-npm run restore:dry-run
+node backup-complete-database.js
 ```
 
-#### **Set Up New Database:**
-```bash
-# Basic setup
-npm run setup
+## Backup Contents
 
-# With sample data
-npm run setup:with-data
+### Table Data
+- **users** - User accounts and profiles
+- **players** - Player information and details
+- **tournaments** - Tournament configurations
+- **tournament_slots** - Tournament slot allocations
+- **auctions** - Auction configurations
+- **auction_teams** - Team formations
+- **auction_players** - Player auction status
+- **player_skills** - Player skill definitions
+- **player_skill_values** - Player skill values
+- **player_skill_assignments** - Skill assignments
+- **notifications** - System notifications
+- **api_usage_analytics** - API usage tracking
 
-# Auto setup (no prompts)
-npm run setup:auto
-```
+### Schema Information
+- Table structures and column definitions
+- Foreign key relationships
+- Indexes and constraints
+- Custom functions and procedures
+- Row Level Security policies
+- Database triggers
 
-#### **Extract Schema:**
-```bash
-# Capture current database schema
-npm run fetch
-```
+### Realtime Configuration
+- Publication settings
+- Subscription configurations
+- Event triggers
+- Real-time listeners
 
+### Storage Information
+- Bucket configurations
+- File metadata
+- Storage policies
+- Access controls
 
-## 📋 Prerequisites
-
-- **Node.js**: Version 16 or higher
-- **Supabase Project**: Active project with service role key
-- **Environment Variables**: `.env.local` with Supabase credentials
-
-
-## 📊 Current Backup Status
-
-**Backup Date:** 2025-10-11T12:15:44.706Z  
-**Total Tables:** 12  
-**Total Records:** 2,707  
-**Status:** ✅ Complete
-
-### Table Breakdown
-
-| Table | Records | Description |
-|-------|---------|-------------|
-| `users` | 18 | User accounts and authentication |
-| `players` | 248 | Player profiles and information |
-| `tournaments` | 2 | Tournament configurations |
-| `tournament_slots` | 50 | Tournament registration slots |
-| `player_skills` | 5 | Available skill categories |
-| `player_skill_values` | 21 | Skill value definitions |
-| `player_skill_assignments` | 1,000 | Player-skill relationships |
-| `auctions` | 18 | Auction configurations |
-| `auction_teams` | 36 | Team formations in auctions |
-| `auction_players` | 288 | Players in auction system |
-| `notifications` | 21 | User notifications |
-| `api_usage_analytics` | 1,000 | API usage tracking |
-
-## 🏗️ Production Deployment
-
-### Complete Database Recreation
-
-```bash
-# 1. Set up schema
-psql -f schema/setup-with-realtime.sql
-
-# 2. Restore data
-psql -f data-backup/complete-data-backup.sql
-```
-
-### Individual Table Restoration
-
-```bash
-# Restore in dependency order
-psql -f data-backup/sql/users.sql
-psql -f data-backup/sql/players.sql
-psql -f data-backup/sql/tournaments.sql
-psql -f data-backup/sql/tournament_slots.sql
-psql -f data-backup/sql/player_skills.sql
-psql -f data-backup/sql/player_skill_values.sql
-psql -f data-backup/sql/player_skill_assignments.sql
-psql -f data-backup/sql/auctions.sql
-psql -f data-backup/sql/auction_teams.sql
-psql -f data-backup/sql/auction_players.sql
-psql -f data-backup/sql/notifications.sql
-psql -f data-backup/sql/api_usage_analytics.sql
-```
-
-## 🔧 Available Commands
-
-| Command | Description |
-|---------|-------------|
-| `npm run backup` | Full backup (JSON + SQL) |
-| `npm run backup:json` | JSON format only |
-| `npm run backup:sql` | SQL format only |
-| `npm run restore` | Restore from JSON |
-| `npm run restore:json` | Restore from JSON backup |
-| `npm run restore:sql` | Restore from SQL backup |
-| `npm run restore:complete` | Restore from complete SQL |
-| `npm run restore:dry-run` | Test restore without changes |
-| `npm run setup` | Set up new database |
-| `npm run setup:with-data` | Set up with sample data |
-| `npm run setup:auto` | Auto setup (no prompts) |
-| `npm run fetch` | Extract database schema |
-
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
-1. **Missing Environment Variables**
-   - Ensure `.env.local` exists with Supabase credentials
+1. **Authentication Error**
+   - Verify your `SUPABASE_SERVICE_ROLE_KEY` is correct
+   - Ensure the service role key has proper permissions
 
-2. **Permission Denied**
-   - Verify Service Role Key has proper permissions
+2. **Missing Tables**
+   - Some tables might not exist yet
+   - The script will log warnings for missing tables
 
-3. **Backup/Restore Errors**
-   - Check console output for detailed error messages
-   - Use `--dry-run` flag to test operations safely
+3. **Permission Errors**
+   - Ensure your service role key has read access to all tables
+   - Check RLS policies don't block the service role
 
-4. **Missing function place_bid_atomic**
-   - Error sample: `Could not find the function public.place_bid_atomic(p_auction_id, p_bid_amount, p_team_id, p_user_id) in the schema cache`
-   - Fix:
-     1. Ensure you pulled latest repo including `schema/auction-bid-function.sql`.
-     2. Deploy function:
-        ```bash
-        psql "$DATABASE_URL" -f database-setup/schema/auction-bid-function.sql
-        ```
-     3. If still failing in Supabase RPC, refresh the schema cache (Supabase SQL Editor: run a trivial DDL like `COMMENT ON DATABASE postgres IS 'refresh';`).
-     4. Confirm signature with:
-        ```sql
-        select proname, pronargs, proargnames from pg_proc p join pg_namespace n on n.oid=p.pronamespace where proname='place_bid_atomic';
-        ```
-   - The API expects JSON output containing keys `bid` and `current_bid`.
+### Logs and Output
 
-## 📁 File Structure
+The backup script provides detailed logging:
+- ✅ Success messages for each operation
+- ⚠️ Warnings for non-critical issues
+- ❌ Errors for critical failures
 
-```
-database-setup/
-├── backup-data.js              # Data backup system
-├── restore-data.js             # Data restoration system
-├── setup-project.js            # Database setup
-├── fetch-database-info.js      # Schema extraction
-├── data-backup/                # Current backup (2,707 records)
-│   ├── complete-data-backup.sql
-│   ├── json/                   # Individual table JSON files
-│   └── sql/                    # Individual table SQL files
-├── schema/                     # Database schema files
-│   ├── complete-schema.sql
-│   ├── auction-bid-function.sql        # Atomic bid placement (CREATE OR REPLACE FUNCTION)
-│   ├── tables.json
-│   ├── rls-policies.json
-│   └── ...
-└── setup-with-realtime.sql     # Complete setup script
-```
+## Security Notes
+
+- Never commit your `.env` file to version control
+- Keep your service role key secure
+- The backup contains sensitive data - store securely
+- Consider encrypting backup files for long-term storage
+
+## Support
+
+For issues or questions:
+1. Check the backup report in `BACKUP_REPORT.md`
+2. Review the console output for error messages
+3. Verify your Supabase credentials and permissions

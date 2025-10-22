@@ -1,205 +1,46 @@
-{
-  "table_name": "auctions",
-  "backup_timestamp": "2025-10-11T12:15:47.154Z",
-  "record_count": 18,
-  "data": [
-    {
-      "id": "d9c37eae-b4d3-4603-be4c-ac74a59c69f1",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:05:32.650648+00:00",
-      "updated_at": "2025-10-10T21:05:32.650648+00:00"
-    },
-    {
-      "id": "4755dc9f-393e-4752-88d8-e7e8e4a05495",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:05:45.301214+00:00",
-      "updated_at": "2025-10-10T21:05:45.301214+00:00"
-    },
-    {
-      "id": "1ee70cd9-23fa-4a68-82f5-4523ae916b83",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:07:12.478105+00:00",
-      "updated_at": "2025-10-10T21:07:12.478105+00:00"
-    },
-    {
-      "id": "0107befc-4249-4f47-aa32-0b32725b72e3",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:08:11.771256+00:00",
-      "updated_at": "2025-10-10T21:08:11.771256+00:00"
-    },
-    {
-      "id": "e1b81100-0be9-47d1-b593-3adeecc3fccd",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:08:25.060861+00:00",
-      "updated_at": "2025-10-10T21:08:25.060861+00:00"
-    },
-    {
-      "id": "a5dbda55-1920-4fe4-86b9-e30b6a721c96",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:09:56.065482+00:00",
-      "updated_at": "2025-10-10T21:09:56.065482+00:00"
-    },
-    {
-      "id": "984b34ca-0bec-4b93-af47-f7eb8b810385",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:11:59.044295+00:00",
-      "updated_at": "2025-10-10T21:11:59.044295+00:00"
-    },
-    {
-      "id": "189939db-a871-40e2-bb46-51ff91755190",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:14:24.14311+00:00",
-      "updated_at": "2025-10-10T21:14:24.14311+00:00"
-    },
-    {
-      "id": "e4957de9-fab8-4b58-beab-25ee5e5bed26",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:14:35.760926+00:00",
-      "updated_at": "2025-10-10T21:14:35.760926+00:00"
-    },
-    {
-      "id": "88fdedaa-edaf-45f8-9f05-1a23317f6888",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:16:10.415869+00:00",
-      "updated_at": "2025-10-10T21:16:10.415869+00:00"
-    },
-    {
-      "id": "fb7e373e-daad-4c46-af65-11d115ca28f3",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:16:34.750437+00:00",
-      "updated_at": "2025-10-10T21:16:34.750437+00:00"
-    },
-    {
-      "id": "f5e85c4e-912d-4b1f-b7bc-686169ad8ab0",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:17:30.303425+00:00",
-      "updated_at": "2025-10-10T21:17:30.303425+00:00"
-    },
-    {
-      "id": "fd644dc3-130b-4c16-9765-1f08c99b3c83",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:22:48.471108+00:00",
-      "updated_at": "2025-10-10T21:22:48.471108+00:00"
-    },
-    {
-      "id": "265eea5d-f656-494a-a999-23cc049a3d92",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:23:00.065143+00:00",
-      "updated_at": "2025-10-10T21:23:00.065143+00:00"
-    },
-    {
-      "id": "7185ff16-a967-47a1-9efd-b34b271650bc",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:26:55.22542+00:00",
-      "updated_at": "2025-10-10T21:26:55.22542+00:00"
-    },
-    {
-      "id": "9e73e378-be9a-4536-b234-62f45013d74f",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:27:07.720459+00:00",
-      "updated_at": "2025-10-10T21:27:07.720459+00:00"
-    },
-    {
-      "id": "7a6349d1-ef15-4a5d-a8c0-11597f2e1075",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-10T21:29:23.454725+00:00",
-      "updated_at": "2025-10-10T21:29:23.454725+00:00"
-    },
-    {
-      "id": "5884c1b9-993c-4688-89d2-d3118fb473f8",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "status": "pending",
-      "current_player_id": null,
-      "current_bid": 0,
-      "timer_seconds": 30,
-      "total_purse": 1000000,
-      "created_at": "2025-10-11T11:25:17.231241+00:00",
-      "updated_at": "2025-10-11T11:25:17.231241+00:00"
+[
+  {
+    "id": "5902101d-77fe-489c-a4b6-adf368f9e4c4",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "status": "completed",
+    "max_tokens_per_captain": 2000,
+    "min_bid_amount": 40,
+    "use_base_price": false,
+    "min_increment": 20,
+    "use_fixed_increments": true,
+    "custom_increments": null,
+    "timer_seconds": 20,
+    "player_order_type": "random",
+    "created_by": "55edaef4-2977-40b8-b533-365cae96fbbe",
+    "created_at": "2025-10-16T16:24:34.432601+00:00",
+    "updated_at": "2025-10-16T16:24:34.432601+00:00",
+    "started_at": "2025-10-16T16:31:07.749+00:00",
+    "completed_at": "2025-10-16T18:19:03.766+00:00",
+    "auction_config": {
+      "additional_settings": {},
+      "custom_increment_ranges": null
     }
-  ]
-}
+  },
+  {
+    "id": "c4409b6c-201d-4e64-937e-813d5e8383bb",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "status": "live",
+    "max_tokens_per_captain": 2000,
+    "min_bid_amount": 40,
+    "use_base_price": false,
+    "min_increment": 20,
+    "use_fixed_increments": true,
+    "custom_increments": null,
+    "timer_seconds": 15,
+    "player_order_type": "random",
+    "created_by": "55edaef4-2977-40b8-b533-365cae96fbbe",
+    "created_at": "2025-10-22T04:29:08.178979+00:00",
+    "updated_at": "2025-10-22T04:29:08.178979+00:00",
+    "started_at": "2025-10-22T04:31:41.024+00:00",
+    "completed_at": null,
+    "auction_config": {
+      "additional_settings": {},
+      "custom_increment_ranges": null
+    }
+  }
+]

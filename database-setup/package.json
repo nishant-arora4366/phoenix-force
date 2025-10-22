@@ -1,43 +1,24 @@
 {
   "name": "phoenix-force-database-setup",
   "version": "1.0.0",
-  "description": "Database setup and management tools for Phoenix Force",
-  "main": "fetch-database-info.js",
+  "description": "Database setup and backup scripts for Phoenix Force",
+  "main": "backup-complete-database.js",
   "scripts": {
-    "fetch": "node fetch-database-info.js",
-    "setup": "node setup-project.js",
-    "setup:with-data": "node setup-project.js --with-sample-data",
-    "setup:auto": "node setup-project.js --skip-confirmation",
-    "backup": "node backup-data.js",
-    "backup:json": "node backup-data.js --format=json",
-    "backup:sql": "node backup-data.js --format=sql",
-    "restore": "node restore-data.js",
-    "restore:json": "node restore-data.js --source=json",
-    "restore:sql": "node restore-data.js --source=sql",
-    "restore:complete": "node restore-data.js --source=complete",
-    "restore:dry-run": "node restore-data.js --dry-run",
-    "help": "echo 'Available commands: fetch, setup, setup:with-data, setup:auto, backup, backup:json, backup:sql, restore, restore:json, restore:sql, restore:complete, restore:dry-run'"
+    "backup": "node backup-schema-rest.js",
+    "backup:full": "node backup-schema-rest.js",
+    "backup:data": "node backup-complete-database.js",
+    "backup:schema": "node backup-schema-rest.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "dotenv": "^16.3.1"
   },
   "keywords": [
     "supabase",
     "database",
-    "setup",
-    "phoenix-force",
-    "cricket",
-    "tournament"
+    "backup",
+    "phoenix-force"
   ],
   "author": "Phoenix Force Team",
-  "license": "MIT",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "dotenv": "^16.3.1"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nishant-arora4366/phoenix-force.git",
-    "directory": "database-setup"
-  }
+  "license": "MIT"
 }

@@ -116,8 +116,8 @@ export default function AuctionPage() {
     src: '',
     alt: ''
   })
+  const [previewImageErrored, setPreviewImageErrored] = useState(false)
   const [bidLoading, setBidLoading] = useState<{[key: string]: boolean}>({})
-  const [soldPlayerInfo, setSoldPlayerInfo] = useState<{ playerName: string; teamName: string; captainName: string; price: number } | null>(null)
   // Mobile current player detail modal state
   const [mobilePlayerModalOpen, setMobilePlayerModalOpen] = useState(false)
   // Central interaction lock: when true, all critical actions (navigation, sell, undo, bidding) should be disabled.
@@ -128,6 +128,8 @@ export default function AuctionPage() {
   const [recentBids, setRecentBids] = useState<any[]>([])
   // Track whether navigation (next/previous player) is in progress to avoid race conditions
   const navigationInProgressRef = useRef(false)
+  // Fail-safe timeout handle for navigation transitions (next/previous) to avoid premature auto-fix flicker
+  const navigationFailSafeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Random order refs (for player_order_type === 'random')
   const randomOrderRef = useRef<string[] | null>(null)
   const randomOrderInitializedRef = useRef(false)
@@ -159,6 +161,7 @@ export default function AuctionPage() {
     }, 150)
   }
 
+
   // Per-team transient bid input state
   const [selectedBidAmounts, setSelectedBidAmounts] = useState<Record<string, number | null>>({})
   const [openBidPopover, setOpenBidPopover] = useState<string | null>(null)
@@ -176,23 +179,23 @@ export default function AuctionPage() {
   const exportRef = useRef<HTMLDivElement>(null)
   const mobileExportRef = useRef<HTMLDivElement>(null)
   const [lastLatencySample, setLastLatencySample] = useState<{ optimistic: number; confirm: number } | null>(null)
-  const [viewingUnsoldPlayers, setViewingUnsoldPlayers] = useState(false)
   const [showHostActions, setShowHostActions] = useState(false)
   // Mobile-specific UI state
   const [mobilePurseTeamId, setMobilePurseTeamId] = useState<string | null>(null)
   const [showHostActionsMobile, setShowHostActionsMobile] = useState(false)
   const [formationTeamModalId, setFormationTeamModalId] = useState<string | null>(null)
   const [showRemainingPlayersMobile, setShowRemainingPlayersMobile] = useState(false)
-  // Track recently notified sales to prevent duplicate notifications
-  const recentlyNotifiedSalesRef = useRef<Set<string>>(new Set())
+  // UI suppression flag to hide stale player details during navigation transitions
+  const [suppressPlayerDetails, setSuppressPlayerDetails] = useState(false)
 
-  // Auto-dismiss sold player notification (short duration)
+  // Safety: if suppression somehow remains true but there is a currentPlayer and no navigation in progress, clear it.
   useEffect(() => {
-    if (soldPlayerInfo) {
-      const timer = setTimeout(() => setSoldPlayerInfo(null), 1000) // 1s per updated requirement
-      return () => clearTimeout(timer)
+    if (suppressPlayerDetails && currentPlayer && !navigationInProgressRef.current) {
+      setSuppressPlayerDetails(false)
     }
-  }, [soldPlayerInfo])
+  }, [suppressPlayerDetails, currentPlayer])
+
+
 
   // Auto-dismiss UI notice after a short delay
   useEffect(() => {
@@ -205,14 +208,17 @@ export default function AuctionPage() {
   useEffect(() => {
     if (!auction || !auctionPlayers || !players) return
     if (auction.status !== 'live') return
-    if (navigationInProgressRef.current) return // don't interfere while navigating
+    // Do not attempt auto-fix while an explicit navigation is underway
+    if (navigationInProgressRef.current) return
 
     const captainIds = (auctionTeams || []).map(t => t.captain_id)
     const hasCurrentPlayer = auctionPlayers.some(ap => ap.current_player === true && !captainIds.includes(ap.player_id))
     const hasAvailablePlayers = auctionPlayers.some(ap => ap.status === 'available' && !captainIds.includes(ap.player_id))
 
     if (!hasCurrentPlayer && hasAvailablePlayers) {
+      // Delay longer (3s) to reduce flicker caused by transient gaps during navigation
       const timeoutId = setTimeout(() => {
+        // Abort if a navigation started meanwhile
         if (navigationInProgressRef.current) return
         const stillNoCurrent = !auctionPlayers.some(ap => ap.current_player === true && !captainIds.includes(ap.player_id))
         if (!stillNoCurrent) return
@@ -220,19 +226,19 @@ export default function AuctionPage() {
           .filter(ap => ap.status === 'available' && !captainIds.includes(ap.player_id))
           .sort((a, b) => a.display_order - b.display_order)[0]
         if (firstAvailable) {
-          const token = secureSessionManager.getToken()
-          if (token) {
-            fetch(`/api/auctions/${auctionId}/current-player`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ action: 'set_current', player_id: firstAvailable.player_id })
-            }).catch(err => console.warn('Auto-fix current player failed:', err))
-          }
+            const token = secureSessionManager.getToken()
+            if (token) {
+              fetch(`/api/auctions/${auctionId}/current-player`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'set_current', player_id: firstAvailable.player_id })
+              }).catch(err => console.warn('Auto-fix current player failed:', err))
+            }
         }
-      }, 1000)
+      }, 3000)
       return () => clearTimeout(timeoutId)
     }
   }, [auction?.status, auctionPlayers, auctionTeams, players, auctionId])
@@ -380,20 +386,48 @@ export default function AuctionPage() {
     }
   }
 
-  // Fetch bid history stabilized against player switch / race conditions
-  const fetchBidHistory = async (explicitPlayerId?: string) => {
+  // Fetch bid history with refined de-duplication (prevents loops & burst duplicate GETs)
+  const bidHistoryFetchMetaRef = useRef<{ lastKey?: string; lastTime?: number; inFlight?: boolean; scheduled?: any; staleTimer?: any; lastReason?: string }>({})
+  const fetchBidHistory = async (explicitPlayerId?: string, reason: string = 'generic') => {
     const activePlayerId = explicitPlayerId || currentPlayerRef.current?.player_id
     if (!activePlayerId) {
       setRecentBids([])
       return []
     }
-    const requestMarker = activePlayerId + ':' + Date.now()
+    const meta = bidHistoryFetchMetaRef.current
+    const now = Date.now()
+    const key = activePlayerId
+    const MIN_INTERVAL = 250 // slightly larger spacing for stability
+    const HARD_MAX_STALENESS = 1200 // 1.2s idle refresh window (single-shot)
+
+    // Guard: already in-flight for same key
+    if (meta.inFlight && meta.lastKey === key) {
+      return []
+    }
+    // Debounce rapid successive triggers (except staleness/self trailing)
+    if (
+      reason !== 'staleness-refresh' &&
+      !meta.inFlight && meta.lastKey === key && meta.lastTime && (now - meta.lastTime) < MIN_INTERVAL
+    ) {
+      if (!meta.scheduled) {
+        const delay = MIN_INTERVAL - (now - meta.lastTime)
+        meta.scheduled = setTimeout(() => {
+          meta.scheduled = null
+          fetchBidHistory(activePlayerId, 'debounced-trailing')
+        }, delay)
+      }
+      return []
+    }
+
+    meta.inFlight = true
+    meta.lastKey = key
+    meta.lastTime = now
+    meta.lastReason = reason
     try {
       const response = await fetch(`/api/auctions/${auctionId}/bids?player_id=${activePlayerId}`)
       if (!response.ok) return []
       const data = await response.json()
-      // If current player changed during fetch, discard stale result
-      if (currentPlayerRef.current?.player_id !== activePlayerId) return []
+      if (currentPlayerRef.current?.player_id !== activePlayerId) return [] // discard stale
       const formattedBids = data.map((bid: any) => ({
         id: bid.id,
         team_id: bid.team_id,
@@ -405,7 +439,6 @@ export default function AuctionPage() {
         is_undone: bid.is_undone
       }))
       setRecentBids(prev => {
-        // If we already optimistically inserted bids for same player, merge instead of blunt replace to avoid flicker
         if (prev.length && prev[0].player_id === activePlayerId) {
           const existingIds = new Set(formattedBids.map((b: any)=>b.id))
           const merged = formattedBids.concat(prev.filter((b: any)=> !existingIds.has(b.id)))
@@ -417,6 +450,23 @@ export default function AuctionPage() {
     } catch (error) {
       console.error('Error fetching bid history:', error)
       return []
+    } finally {
+      meta.inFlight = false
+      // Remove any existing stale timer to avoid stacking
+      if (meta.staleTimer) {
+        clearTimeout(meta.staleTimer)
+        meta.staleTimer = null
+      }
+      // Schedule a single idle refresh ONLY if this wasn't itself an idle/staleness or trailing fetch
+      if (!['staleness-refresh','debounced-trailing'].includes(reason)) {
+        meta.staleTimer = setTimeout(() => {
+          // Only run if still same player, not in-flight, and enough time passed (no recent manual/event fetch)
+          const quiet = Date.now() - (meta.lastTime || 0) >= HARD_MAX_STALENESS
+          if (quiet && !meta.inFlight && currentPlayerRef.current?.player_id === key) {
+            fetchBidHistory(key, 'staleness-refresh')
+          }
+        }, HARD_MAX_STALENESS)
+      }
     }
   }
 
@@ -858,8 +908,6 @@ export default function AuctionPage() {
         //  - Advance current_player to the next available player
         // This prevents double subtraction (local minus + realtime minus) that caused negative balances.
         // Any UI dependent on these values will update as soon as the realtime events arrive.
-        // Reset any transient unsold view state; authoritative player set will follow.
-        setViewingUnsoldPlayers(false)
         // Do not manually set currentPlayer; the realtime subscription will emit the next player row (current_player=true)
         // If there is no next player, realtime will clear current_player flags and our derived getter will resolve null.
       } else {
@@ -877,6 +925,7 @@ export default function AuctionPage() {
 
   // Handle photo preview
   const handlePhotoClick = (src: string, alt: string) => {
+    setPreviewImageErrored(false)
     setPhotoPreview({
       isOpen: true,
       src,
@@ -890,6 +939,7 @@ export default function AuctionPage() {
       src: '',
       alt: ''
     })
+    setPreviewImageErrored(false)
   }
 
   // Handle ESC key to close photo preview
@@ -921,8 +971,16 @@ export default function AuctionPage() {
     if (navigationInProgressRef.current) return
     navigationInProgressRef.current = true
     
-    setActionLoading(prev => ({ ...prev, nextPlayer: true }))
+  setSuppressPlayerDetails(true)
+  setActionLoading(prev => ({ ...prev, nextPlayer: true }))
     beginPlayerTransition('next-player')
+    // Start fail-safe timer to clear navigation flag if backend event is delayed excessively
+    if (navigationFailSafeTimeoutRef.current) clearTimeout(navigationFailSafeTimeoutRef.current)
+    navigationFailSafeTimeoutRef.current = setTimeout(() => {
+      navigationInProgressRef.current = false
+      // Fail-safe: if realtime update never arrives, release suppression so UI doesn't stay skeletonized
+      setSuppressPlayerDetails(false)
+    }, 5000)
     
     try {
       const token = secureSessionManager.getToken()
@@ -940,39 +998,10 @@ export default function AuctionPage() {
         return
       }
 
-      // Check if we're at the end of the list
-      if (currentIndex >= availablePlayers.length - 1) {
-        // We're at the end - cycle back to the first available player
-          const firstAuctionPlayer = availablePlayers[0]
-          const firstPlayerData = players.find(p => p.id === firstAuctionPlayer.player_id)
-          
-          if (firstPlayerData && firstAuctionPlayer) {
-          // Always reset the viewingUnsoldPlayers flag when cycling
-          setViewingUnsoldPlayers(true)
-          
-            // Update database to set new current player
-            const response = await fetch(`/api/auctions/${auctionId}/current-player`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                action: 'set_current',
-                player_id: firstAuctionPlayer.player_id
-              })
-            })
-
-            if (response.ok) {
-              // State will be updated by the realtime subscription.
-            } else {
-              const errorData = await response.json()
-            alert(`Failed to cycle to first unsold player: ${errorData.error || 'Unknown error'}`)
-            }
-        } else {
-          alert('No players available to cycle to')
-          }
-          return
+      // Determine next player (cycle to first if at end)
+      let nextIndex = currentIndex + 1
+      if (nextIndex >= availablePlayers.length) {
+        nextIndex = 0 // Cycle back to first player
       }
 
       // Reset bids for current player before moving
@@ -999,7 +1028,7 @@ export default function AuctionPage() {
       }
 
       // Move to next player in the order
-      const nextAuctionPlayer = availablePlayers[currentIndex + 1]
+      const nextAuctionPlayer = availablePlayers[nextIndex]
       const nextPlayerData = players.find(p => p.id === nextAuctionPlayer.player_id)
       
       if (nextPlayerData && nextAuctionPlayer) {
@@ -1028,10 +1057,7 @@ export default function AuctionPage() {
       alert('Failed to move to next player. Please try again.')
     } finally {
       setActionLoading(prev => ({ ...prev, nextPlayer: false }))
-      // Clear navigation flag after a small delay to ensure realtime updates have processed
-      setTimeout(() => {
-        navigationInProgressRef.current = false
-      }, 500)
+      // Do not clear navigation flag here; wait for realtime confirmation (or fail-safe)
     }
   }
 
@@ -1044,8 +1070,15 @@ export default function AuctionPage() {
     if (navigationInProgressRef.current) return
     navigationInProgressRef.current = true
     
-    setActionLoading(prev => ({ ...prev, previousPlayer: true }))
+  setSuppressPlayerDetails(true)
+  setActionLoading(prev => ({ ...prev, previousPlayer: true }))
     beginPlayerTransition('previous-player')
+    if (navigationFailSafeTimeoutRef.current) clearTimeout(navigationFailSafeTimeoutRef.current)
+    navigationFailSafeTimeoutRef.current = setTimeout(() => {
+      navigationInProgressRef.current = false
+      // Fail-safe: also clear suppression here
+      setSuppressPlayerDetails(false)
+    }, 5000)
     
     try {
       const token = secureSessionManager.getToken()
@@ -1059,9 +1092,10 @@ export default function AuctionPage() {
       
       const currentIndex = availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id)
       
-      if (currentIndex <= 0) {
-        alert('No previous player available')
-        return
+      // Determine previous player (cycle to last if at beginning)
+      let previousIndex = currentIndex - 1
+      if (previousIndex < 0) {
+        previousIndex = availablePlayers.length - 1 // Cycle to last player
       }
 
       // Reset bids for current player before moving
@@ -1088,7 +1122,7 @@ export default function AuctionPage() {
       }
 
       // Move to previous player in the order
-      const previousAuctionPlayer = availablePlayers[currentIndex - 1]
+      const previousAuctionPlayer = availablePlayers[previousIndex]
       const previousPlayerData = players.find(p => p.id === previousAuctionPlayer.player_id)
       
       if (previousPlayerData && previousAuctionPlayer) {
@@ -1117,10 +1151,7 @@ export default function AuctionPage() {
       alert('Failed to move to previous player. Please try again.')
     } finally {
       setActionLoading(prev => ({ ...prev, previousPlayer: false }))
-      // Clear navigation flag after a small delay to ensure realtime updates have processed
-      setTimeout(() => {
-        navigationInProgressRef.current = false
-      }, 500)
+      // Await realtime to clear navigation flag (or fail-safe)
     }
   }
 
@@ -1509,7 +1540,8 @@ export default function AuctionPage() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'auction_bids', filter: `auction_id=eq.${auction.id}` }, (payload: any) => {
         const cp = currentPlayerRef.current
         if (cp && payload.new.player_id === cp.player_id) {
-          fetchBidHistory().then(() => {
+          // Instead of unconditional refetch, append optimistically then schedule a debounced refresh
+          fetchBidHistory(undefined, 'insert-event').then(() => {
             if (bidPerfRef.current.player_id === cp.player_id && bidPerfRef.current.optimistic) {
               bidPerfRef.current.confirm = performance.now()
               const optimistic = bidPerfRef.current.optimistic - (bidPerfRef.current.send || bidPerfRef.current.optimistic)
@@ -1524,7 +1556,7 @@ export default function AuctionPage() {
         const cp = currentPlayerRef.current
         setRecentBids(prev => prev.map(b => b.id === payload.new.id ? { ...b, bid_amount: payload.new.bid_amount, is_winning_bid: payload.new.is_winning_bid, is_undone: payload.new.is_undone } : b))
         if (cp && payload.new.player_id === cp.player_id) {
-          fetchBidHistory()
+          fetchBidHistory(undefined, 'update-event')
         }
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'auction_bids', filter: `auction_id=eq.${auction.id}` }, (payload: any) => {
@@ -1532,7 +1564,7 @@ export default function AuctionPage() {
         setRecentBids(prev => prev.filter(b => b.id !== payload.old.id))
         const cp = currentPlayerRef.current
         if (cp && payload.old.player_id === cp.player_id) {
-          fetchBidHistory()
+          fetchBidHistory(undefined, 'delete-event')
         }
       })
       .subscribe()
@@ -1558,43 +1590,7 @@ export default function AuctionPage() {
             return updated
         })
 
-        // Check if a player was just sold (status changed to 'sold' AND has sold_to and sold_price)
-        // Only show notification for actual sales, not navigation changes
-        if (payload.new.status === 'sold' && 
-            payload.old && 
-            payload.old.status !== 'sold' && 
-            payload.new.sold_to && 
-            payload.new.sold_price > 0) {
-          
-          // Create unique sale identifier to prevent duplicate notifications
-          const saleId = `${payload.new.player_id}-${payload.new.sold_to}-${payload.new.sold_price}`
-          
-          // Check if we've already shown notification for this sale
-          if (recentlyNotifiedSalesRef.current.has(saleId)) {
-            return // Skip duplicate notification
-          }
-          
-          // Mark this sale as notified
-          recentlyNotifiedSalesRef.current.add(saleId)
-          
-          // Clean up old sale notifications after 3 seconds
-          setTimeout(() => {
-            recentlyNotifiedSalesRef.current.delete(saleId)
-          }, 3000)
-          
-          const soldPlayer = playersRef.current.find(p => p.id === payload.new.player_id)
-          const soldToTeam = auctionTeamsRef.current.find(t => t.id === payload.new.sold_to)
-          const captain = soldToTeam ? playersRef.current.find(p => p.id === soldToTeam.captain_id) : null
-          
-          if (soldPlayer) {
-            setSoldPlayerInfo({
-              playerName: soldPlayer.display_name,
-              teamName: soldToTeam?.team_name || 'Unknown Team',
-              captainName: captain?.display_name || 'Unknown Captain',
-              price: payload.new.sold_price || 0,
-            })
-          }
-        }
+
         // Clear stale bids if a previously sold player becomes available again (undo assignment)
         if (payload.old && payload.old.status === 'sold' && payload.new.status === 'available') {
           setRecentBids(prev => prev.filter(b => b.player_id !== payload.new.player_id))
@@ -1608,8 +1604,15 @@ export default function AuctionPage() {
           const pl = playersRef.current.find(p => p.id === payload.new.player_id)
           if (pl) {
             setCurrentPlayer({ ...pl, ...payload.new })
+            setSuppressPlayerDetails(false)
             endPlayerTransition()
-            fetchBidHistory()
+            fetchBidHistory(undefined, 'new-current-player')
+            // Realtime confirmed new current player; clear navigation flag & any fail-safe
+            navigationInProgressRef.current = false
+            if (navigationFailSafeTimeoutRef.current) {
+              clearTimeout(navigationFailSafeTimeoutRef.current)
+              navigationFailSafeTimeoutRef.current = null
+            }
           }
         } else {
           const cpRef = currentPlayerRef.current
@@ -1623,8 +1626,9 @@ export default function AuctionPage() {
                 const pl = playersRef.current.find(p => p.id === nextCp.player_id)
                 if (pl) {
                   setCurrentPlayer({ ...pl, ...nextCp })
+                  setSuppressPlayerDetails(false)
                   endPlayerTransition()
-                  fetchBidHistory()
+                  fetchBidHistory(undefined, 'await-next-current')
                 }
               }
             }, 120)
@@ -1840,15 +1844,7 @@ export default function AuctionPage() {
   <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-[#CEA17A] to-transparent motion-safe:animate-pulse" style={{animationDelay: '1.5s'}}></div>
       </div>
 
-      {/* Sold notification fixed-size card */}
-      {soldPlayerInfo && (
-        <div className="absolute top-4 right-4 z-40 w-64 h-28 bg-[#1a1a1a]/90 border border-[#CEA17A]/30 rounded-xl shadow-lg flex flex-col justify-center px-4 animate-fade-in">
-          <div className="text-xs tracking-widest text-[#CEA17A]/70 mb-1 font-semibold">PLAYER SOLD</div>
-          <div className="text-sm font-bold text-[#DBD0C0] truncate" title={soldPlayerInfo.playerName}>{soldPlayerInfo.playerName}</div>
-          <div className="text-[11px] text-[#DBD0C0]/70 truncate" title={soldPlayerInfo.teamName}>to {soldPlayerInfo.teamName}</div>
-          <div className="text-[11px] text-[#CEA17A] mt-1">₹{soldPlayerInfo.price}</div>
-        </div>
-      )}
+
       
       {/* Background Glowing Orbs - Behind Content */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -1941,7 +1937,7 @@ export default function AuctionPage() {
                     ) : auction.status === 'draft' ? (
                       <>
                         <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-6a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5v14l11-7z" />
                         </svg>
                         Start Auction
                       </>
@@ -2172,8 +2168,8 @@ export default function AuctionPage() {
                 </div>
               </div>
             )}
-            {/* Show current player details when auction is live (but not when completed) */}
-            {(isAuctionLive && currentPlayer && auction?.status !== 'completed') ? (
+            {/* Show current player details when auction is live (but not when completed or all players sold) */}
+            {(isAuctionLive && currentPlayer && auction?.status !== 'completed' && !allPlayersSold) ? (
             <div className="space-y-6">
               
 
@@ -2192,7 +2188,7 @@ export default function AuctionPage() {
                       }
                     }}
                   >
-                    {(actionLoading.nextPlayer || actionLoading.previousPlayer) ? (
+                    {(suppressPlayerDetails) ? (
                       <div className="w-full h-full bg-gradient-to-br from-[#CEA17A]/20 to-[#CEA17A]/10 flex items-center justify-center">
                         <div className="animate-pulse w-full h-full flex items-center justify-center">
                           <div className="w-20 h-20 rounded-full bg-[#CEA17A]/30" />
@@ -2201,7 +2197,7 @@ export default function AuctionPage() {
                     ) : (
                       <PlayerImage src={currentPlayer.profile_pic_url} name={currentPlayer.display_name} />
                     )}
-                    {!(actionLoading.nextPlayer || actionLoading.previousPlayer) && (
+                    {!suppressPlayerDetails && (
                     <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                       <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
@@ -2213,7 +2209,7 @@ export default function AuctionPage() {
 
                 {/* Player Name and Info */}
                 <div className="text-center">
-                  {(actionLoading.nextPlayer || actionLoading.previousPlayer) ? (
+                  {(suppressPlayerDetails) ? (
                     <div className="flex flex-col items-center justify-center gap-2 animate-pulse">
                       <div className="h-6 w-40 bg-[#CEA17A]/20 rounded" />
                       <div className="h-3 w-28 bg-[#CEA17A]/10 rounded" />
@@ -2228,9 +2224,7 @@ export default function AuctionPage() {
                           const remainingAfterCurrent = totalRemaining - 1 // Exclude current player
                           return remainingAfterCurrent > 0 ? `${remainingAfterCurrent} more players` : 'Last player'
                         })()}
-                        {viewingUnsoldPlayers && (
-                          <div className="text-xs text-orange-400 mt-1">Viewing Unsold Players</div>
-                    )}
+
                   </div>
                       {currentPlayer.sold_price && (
                         <div className="text-center text-sm text-[#CEA17A] font-semibold mt-2">
@@ -2278,7 +2272,7 @@ export default function AuctionPage() {
                     </div>
                   )}
                   <div className="bg-[#19171b]/50 rounded-lg p-4 border border-[#CEA17A]/10">
-                    {(actionLoading.nextPlayer || actionLoading.previousPlayer) ? (
+                    {(suppressPlayerDetails) ? (
                       <div className="space-y-4 animate-pulse">
                         {[1,2,3,4].map(i => (
                           <div key={i} className="flex items-center justify-between">
@@ -2444,8 +2438,8 @@ export default function AuctionPage() {
                         </button>
                         <button
                           onClick={handleUndoPlayerAssignment}
-                          disabled={isInteractionLocked || !auctionTeams || auctionTeams.length === 0 || !auctionTeams.some(team => team.players_count > 0) || actionLoading.undoPlayerAssignment}
-                          className={`px-6 h-12 rounded-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !auctionTeams || auctionTeams.length === 0 || !auctionTeams.some(team => team.players_count > 0) || actionLoading.undoPlayerAssignment
+                          disabled={isInteractionLocked || !auctionTeams || auctionTeams.length === 0 || !auctionPlayers?.some(ap => ap.sold_price && ap.sold_price > 0) || actionLoading.undoPlayerAssignment || auction?.status === 'draft'}
+                          className={`px-6 h-12 rounded-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !auctionTeams || auctionTeams.length === 0 || !auctionPlayers?.some(ap => ap.sold_price && ap.sold_price > 0) || actionLoading.undoPlayerAssignment || auction?.status === 'draft'
                             ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
                             : 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/25'}`}
                         >
@@ -2471,8 +2465,8 @@ export default function AuctionPage() {
                       <div className="grid grid-cols-2 gap-0 mt-3">
                         <button
                           onClick={handlePreviousPlayer}
-                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id) <= 0 })() || actionLoading.previousPlayer || auction?.status === 'draft'}
-                          className={`w-full h-12 border rounded-l-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.findIndex(ap => ap.player_id === currentPlayer.player_id) <= 0 })() || actionLoading.previousPlayer || auction?.status === 'draft'
+                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length <= 1 })() || actionLoading.previousPlayer || auction?.status === 'draft'}
+                          className={`w-full h-12 border rounded-l-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length <= 1 })() || actionLoading.previousPlayer || auction?.status === 'draft'
                             ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
                             : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'}`}
                         >
@@ -2490,8 +2484,8 @@ export default function AuctionPage() {
                         </button>
                         <button
                           onClick={handleNextPlayer}
-                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length === 0 })() || actionLoading.nextPlayer || auction?.status === 'draft'}
-                          className={`w-full h-12 border rounded-r-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length === 0 })() || actionLoading.nextPlayer || auction?.status === 'draft'
+                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length <= 1 })() || actionLoading.nextPlayer || auction?.status === 'draft'}
+                          className={`w-full h-12 border rounded-r-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length <= 1 })() || actionLoading.nextPlayer || auction?.status === 'draft'
                             ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
                             : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'}`}
                         >
@@ -4003,11 +3997,20 @@ export default function AuctionPage() {
             </button>
             
             {/* Photo */}
-            <img
-              src={photoPreview.src}
-              alt={photoPreview.alt}
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-            />
+            {photoPreview.src && !previewImageErrored ? (
+              <img
+                src={photoPreview.src}
+                alt={photoPreview.alt}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                onError={() => setPreviewImageErrored(true)}
+              />
+            ) : (
+              <div className="flex items-center justify-center w-[70vw] max-w-4xl h-[70vh] max-h-[80vh] bg-gradient-to-br from-[#CEA17A]/20 to-[#CEA17A]/10 rounded-lg shadow-2xl select-none">
+                <span className="text-6xl font-bold text-[#CEA17A]">
+                  {photoPreview.alt?.charAt(0)?.toUpperCase() || '👤'}
+                </span>
+              </div>
+            )}
             
             {/* Player name overlay */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 rounded-b-lg">
@@ -4080,24 +4083,7 @@ export default function AuctionPage() {
         </div>
       )}
 
-       {/* Player Sold Notification */}
-       {soldPlayerInfo && (
-         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade-in-down">
-           <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-2 border-[#CEA17A]/30 rounded-2xl p-12 shadow-2xl text-center max-w-2xl mx-4">
-             {/* <div className="text-8xl mb-6">💰</div> */}
-             <h2 className="text-3xl md:text-4xl font-bold text-[#CEA17A] mb-4">Sold!</h2>
-             <p className="text-xl md:text-2xl text-[#DBD0C0] mb-3">
-               <span className="font-bold text-white">{soldPlayerInfo.playerName}</span>
-             </p>
-             <p className="text-base md:text-lg text-[#DBD0C0]/80 mb-4">
-                to <span className="font-semibold text-white">{soldPlayerInfo.captainName}</span>
-             </p>
-             <p className="text-2xl md:text-3xl font-bold text-green-400">
-               ₹{soldPlayerInfo.price}
-             </p>
-           </div>
-        </div>
-      )}
+
     </div>
   )
 }

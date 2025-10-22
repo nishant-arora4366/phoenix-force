@@ -1,0 +1,362 @@
+{
+  "buckets": [
+    {
+      "id": "player-profiles",
+      "name": "player-profiles",
+      "owner": "",
+      "public": true,
+      "type": "STANDARD",
+      "file_size_limit": 5242880,
+      "allowed_mime_types": [
+        "image/png",
+        "image/jpeg",
+        "image/jpg",
+        "image/webp"
+      ],
+      "created_at": "2025-10-03T16:25:49.496Z",
+      "updated_at": "2025-10-03T16:25:49.496Z"
+    },
+    {
+      "id": "tournament-schedules",
+      "name": "tournament-schedules",
+      "owner": "",
+      "public": true,
+      "type": "STANDARD",
+      "file_size_limit": 10485760,
+      "allowed_mime_types": [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp"
+      ],
+      "created_at": "2025-10-17T04:25:39.369Z",
+      "updated_at": "2025-10-17T04:25:39.369Z"
+    }
+  ],
+  "files": {
+    "player-profiles": [
+      {
+        "name": "02ab90db-0631-45ba-b156-706e0af451d9",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "05befd13-f633-4068-b792-c9305e197ff1",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "0e8a15d1-c379-4e5f-990c-03099be28a25",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "16ef1d7a-4aed-492d-8650-e5607b130517",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "2d21ff27-960e-4556-ae71-1c80bf5af28e",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "352c5e44-773f-41f6-9308-5cc01ebba474",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "3ac901f1-be56-4504-83de-fae8fd29629c",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "47c411da-a0f0-492e-8c95-fdf0bfbba425",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "554d9d6a-0242-4310-a0af-d710d5c1b612",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "55edaef4-2977-40b8-b533-365cae96fbbe",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "5faab8c3-d989-431e-a6b4-058feadba347",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "600965f0-94d8-45ac-b724-42e1bf758f83",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "6256e1f7-77ab-4e24-a777-c43d59a5d0a2",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "6999a30f-5cd8-40cd-9d39-6c3573664d37",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "6bb67d8a-376a-4098-b51f-e24ffc75f1ad",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "6cce3567-aa9c-48f9-982d-3c32d4d55400",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "72e0f4d6-833b-4263-b08f-4cccc982d646",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "75c74eef-9a49-40f0-b64f-31321e80914b",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "77e91702-99d0-4554-88f6-c5f6c3e570f0",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "7e90dd0a-530a-4a41-8459-75ed7f45fed3",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "866e4cdb-9cf0-4822-aee1-ff49fb92d29c",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "9851f455-90eb-4851-ae22-1c987cc9d609",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "9ac6ffe4-35ec-413f-b2fd-e003f9e6e242",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "9e3b4c0b-f123-43b6-82da-4d608113510c",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "9f16beb8-6711-48c6-bb71-3c8d4915113c",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "a053727e-d752-49ad-adfe-98c7cd798730",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "aae9dcfc-38dc-4ea7-b28b-7294eb7ac4a7",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "b7874e82-c0ac-468b-b996-83266f671d31",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "d05c9223-6b2f-4249-ba6e-8abaec094a57",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "d2d7379c-9f77-4896-9dfb-754b68c0adc3",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "d3168453-a62f-486f-b957-1ab8bda31a17",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "e0619065-58e8-45cb-9b84-b01ccd478e31",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "e733a2aa-9366-4967-9333-93b26856a45b",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "ece47c45-13c2-4993-a8cf-627c37394f77",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "ee2b4809-1ee4-426f-a27a-fee26c880c01",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "f29f0c6d-96b1-4257-9ba7-26916ded1e5c",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "f9f0875f-3abe-4566-a788-ddbc4ebe8f81",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "fdbe09cb-15b9-4087-a0d6-21e3657d9b61",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "fffcff23-56c6-408f-951e-826a9e34e0f8",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      }
+    ],
+    "tournament-schedules": [
+      {
+        "name": "tournament-schedules",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      }
+    ]
+  }
+}

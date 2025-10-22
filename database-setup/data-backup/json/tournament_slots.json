@@ -1,507 +1,622 @@
-{
-  "table_name": "tournament_slots",
-  "backup_timestamp": "2025-10-11T12:15:46.434Z",
-  "record_count": 50,
-  "data": [
-    {
-      "id": "c2c31d0b-679f-4954-b71f-a5c2d6dcc05b",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": null,
-      "status": "empty",
-      "is_host_assigned": false,
-      "requested_at": null,
-      "confirmed_at": null,
-      "created_at": "2025-10-10T17:54:45.873106+00:00"
-    },
-    {
-      "id": "2ad13439-4576-4492-9c01-74408982a1c6",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": null,
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T17:56:39.993+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T17:56:40.082503+00:00"
-    },
-    {
-      "id": "13b0ac70-217b-4855-9656-f43fe66488da",
-      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
-      "player_id": null,
-      "status": "confirmed",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T18:19:34.771+00:00",
-      "confirmed_at": "2025-10-10T18:19:40.844+00:00",
-      "created_at": "2025-10-10T18:19:34.847176+00:00"
-    },
-    {
-      "id": "80112a02-6a5d-4996-9365-fd31dfa1a10a",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "17101683-f278-4565-9255-ab4f4181f21c",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:29.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "866b69f0-878c-400d-9635-8f62817134d9",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "e5cd7914-09eb-407a-b700-be2a60071474",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:30.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "07c739d1-2494-43c5-bcff-728cfc533bb5",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "eb250fe8-6032-4e7f-8791-3b9f0a6b87f1",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:31.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "38b5b3b9-818b-4915-a735-7d0a261b6c3f",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "aac6b1e3-8c18-494f-a516-28f8d0b85734",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:32.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "57f8ea69-42e7-423a-ad1f-3b800df03fc1",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "2446fcd0-38c7-4b6c-805c-a96b83017e22",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:33.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "ab58c196-82fd-4a4f-bb5a-dabb42de386f",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "d570145e-9e41-4b5c-b498-d2fbc0a19a46",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:34.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "9371b9d5-74a2-41a5-b978-888960383810",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "8d1ecf00-7eed-4912-9ace-a6991d8aa461",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:35.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "79d52630-f891-4a2e-9be6-f6d86c73ff9f",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "fbec8585-b65f-4a02-a3b0-b14d63c2da50",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:36.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "3d70a017-603a-421e-b777-f5544c17b958",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "16d13c0b-9644-4941-8a74-e4d7bbbaf538",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:37.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "2123d3b3-8a15-4078-8ae1-891bdd260f12",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "08cf410a-c931-49f7-9e91-a1a84f09885b",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:38.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "e907803e-9acb-4ad6-ae23-7a4836fdbaa4",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "b041dc3c-2b3f-4d90-a1fc-484c490bf3d5",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:39.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "cd74679c-97df-4a1e-9a7b-7b5eda0f68c7",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "76ba20d1-c9b5-4641-aafe-2b1add22ec78",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:40.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "91b738de-961a-47cb-9025-c1b27acf9fbe",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "10cf39df-22d8-4dae-becb-2bc43d8a84ce",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:41.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "e0e9f997-2d46-4993-b700-609acc41c3d3",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "946b8d18-6a19-4edc-b6ce-043f7cdd5308",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:42.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "eb56e5b4-27a4-4397-af8e-6f31f90409a1",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "a06074b3-e028-4777-8bed-a01d50cf1bb1",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:43.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "2a0c4943-d0a1-4844-a703-d28f505f0d45",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "fa5094f3-088f-4070-af80-7a458a14e915",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:44.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "147ab58a-c91b-4e67-99a8-a82c001e2e53",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "44574058-9fdc-4ccc-b6c1-a8686d395e76",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:45.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "aab2980b-2f6b-4117-8922-50ca9711716e",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "c13859db-b546-4440-9c4a-145f5d320785",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:46.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "62a46644-737e-4724-ac5b-67347689f3c3",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "7df09fb1-4517-4cb5-83fa-8fe4f194e184",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:47.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "b8d8419f-d3a4-406d-ab04-92b5eeab751b",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "fac7d1ac-3002-4682-beb8-2d698c40468a",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:48.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "e9996d53-f970-466b-864d-aec3f3e3091f",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "bd22094c-2dc3-446c-8359-4589164525fd",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:49.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "dcd06903-0016-481f-915f-fa75892852c3",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "47928aed-7d12-407b-9a64-fadec15e6633",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:50.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "0fed2556-e870-4b4c-98cb-5bd4ff147a91",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "8037724e-4572-432c-8bbd-672d0354ab8d",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:51.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "14c2a938-e926-4c81-a18d-21c70141fce2",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "77bc91dc-053d-438e-844f-a31199f9863a",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:52.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "c0b2438b-807f-4a6d-817f-7d1551fa8939",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "f5903e1a-85ff-4c81-9c97-57395dd28930",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:58.303+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "81ede5c0-7291-4502-bd2d-2da77b0e2e75",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "cf554395-182b-45a8-9673-d14cb1f70ecf",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:47.133+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:47.181119+00:00"
-    },
-    {
-      "id": "c344afdf-8227-4618-8f0f-20b874053cf2",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "aab4f035-3380-46ec-a2a6-3e051d7ee155",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:48.133+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:47.181119+00:00"
-    },
-    {
-      "id": "abe54586-635c-4b29-9b3e-632ef614ad3e",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "d3f0f819-499d-4bb8-bf36-948ba99a9c61",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:49.133+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:47.181119+00:00"
-    },
-    {
-      "id": "5104984b-424d-4ca9-a0da-880095c26c12",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "4d6e32e5-748c-4133-ba44-cf1ca812f082",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:50.133+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:47.181119+00:00"
-    },
-    {
-      "id": "f85598ef-b348-454f-88d3-208a1f32ca33",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "2f6b1103-c2ea-425e-a251-d4f71d0d4dd8",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:51.133+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:47.181119+00:00"
-    },
-    {
-      "id": "3eaef344-cd17-45da-9782-5f19afa607ed",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "8d4c85ef-98be-4587-b598-fa9118125f7b",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:12:52.133+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:47.181119+00:00"
-    },
-    {
-      "id": "5a62d7dd-c2f4-47bc-bea1-d04a98c3e640",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "dfd36478-b73c-462c-b7a4-2ac4966e9079",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:28:54.64+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:28:54.677418+00:00"
-    },
-    {
-      "id": "312270f6-ee53-4782-96b9-c81e209d307d",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": null,
-      "status": "empty",
-      "is_host_assigned": false,
-      "requested_at": null,
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "cd755517-4834-4c4d-aba4-ad730e67d9cb",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": null,
-      "status": "empty",
-      "is_host_assigned": false,
-      "requested_at": null,
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "cbda8ac1-5786-408e-99cf-39d21733a451",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": null,
-      "status": "empty",
-      "is_host_assigned": false,
-      "requested_at": null,
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "f7c8d003-7352-4618-a0c2-aac32cb29ee6",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": null,
-      "status": "empty",
-      "is_host_assigned": false,
-      "requested_at": null,
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "6bc6dabe-4224-4e14-a2b5-5a330b687e1d",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": null,
-      "status": "empty",
-      "is_host_assigned": false,
-      "requested_at": null,
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:12:29.438366+00:00"
-    },
-    {
-      "id": "4d5e5325-3a0c-4624-9afa-1e594018ee53",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "8f8449e1-8fa9-4390-a41a-d04f2231433d",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:29:40.682+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:29:40.72293+00:00"
-    },
-    {
-      "id": "9630dac1-3dd0-4e88-b9ce-92f0e174ddbb",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "c43e98e8-cdf5-4fc1-9001-2d40beccbe88",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:29:41.682+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:29:40.72293+00:00"
-    },
-    {
-      "id": "ef21f33f-ccd6-42a1-af68-f2abc69b115d",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "5aa27e50-921f-497c-9a0f-97144b909065",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:29:42.682+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:29:40.72293+00:00"
-    },
-    {
-      "id": "b1e331b7-c553-466b-82c2-d039a7fc45c6",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "258f4375-2619-46ba-85b0-948a6cf61e77",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:29:43.682+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:29:40.72293+00:00"
-    },
-    {
-      "id": "3eded545-6af4-4b01-8ea0-c610c2dfeb81",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "9046d1de-0f9e-41ce-907b-81c4e58d1424",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:29:44.682+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:29:40.72293+00:00"
-    },
-    {
-      "id": "e4b00585-7b12-4f14-9562-1570cfb34263",
-      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-      "player_id": "2e49f993-b06d-44c6-add4-d66797b404a5",
-      "status": "pending",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-10T19:29:45.682+00:00",
-      "confirmed_at": null,
-      "created_at": "2025-10-10T19:29:40.72293+00:00"
-    },
-    {
-      "id": "7c73e54f-9520-4174-8a85-a6c3c72eea95",
-      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
-      "player_id": null,
-      "status": "empty",
-      "is_host_assigned": false,
-      "requested_at": null,
-      "confirmed_at": null,
-      "created_at": "2025-10-10T18:37:12.026118+00:00"
-    },
-    {
-      "id": "344bfdec-8a16-4568-9105-1d03f71dc38c",
-      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
-      "player_id": "5a050009-afcb-4e4e-90e6-5a505e5cfa15",
-      "status": "confirmed",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-11T05:48:43.453+00:00",
-      "confirmed_at": "2025-10-11T09:00:09.236+00:00",
-      "created_at": "2025-10-11T05:48:43.569753+00:00"
-    },
-    {
-      "id": "5a6e2c80-ad14-42f4-9eb9-fe1f5cab2269",
-      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
-      "player_id": "baa8bcf3-19b6-43ed-ac4d-ac1a0953930a",
-      "status": "confirmed",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-11T05:48:43.467+00:00",
-      "confirmed_at": "2025-10-11T09:00:14.47+00:00",
-      "created_at": "2025-10-11T05:48:43.58163+00:00"
-    },
-    {
-      "id": "c1e6ece5-589e-4b4a-be5f-7211aec447f1",
-      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
-      "player_id": "3444ba05-55b0-4977-af46-069c59e648f7",
-      "status": "confirmed",
-      "is_host_assigned": false,
-      "requested_at": "2025-10-11T05:48:43.889+00:00",
-      "confirmed_at": "2025-10-11T09:00:16.948+00:00",
-      "created_at": "2025-10-11T05:48:44.003684+00:00"
-    }
-  ]
-}
+[
+  {
+    "id": "cd10b1f7-1359-46be-96e0-ee34eb3dd55f",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": null,
+    "status": "empty",
+    "is_host_assigned": false,
+    "requested_at": null,
+    "confirmed_at": null,
+    "created_at": "2025-10-17T10:59:25.222349+00:00"
+  },
+  {
+    "id": "d5278cd5-c76e-400c-9cee-dc110c12315b",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "9ffd6772-0b85-4bb1-a15e-75b368105670",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T07:07:22.624+00:00",
+    "confirmed_at": "2025-10-19T07:07:32.17+00:00",
+    "created_at": "2025-10-19T07:07:20.731829+00:00"
+  },
+  {
+    "id": "d202f598-73e7-47db-bdc7-d93dc9dc2823",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "cc1ae0ca-a7eb-4c7a-81cc-d2946dc32318",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-13T12:57:12.155+00:00",
+    "confirmed_at": "2025-10-14T14:22:36.431+00:00",
+    "created_at": "2025-10-13T12:57:12.27308+00:00"
+  },
+  {
+    "id": "39d02784-85df-41c1-821a-58ea3b94ebb9",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "57c8a85e-1229-4b96-a145-bfbf1a78af2e",
+    "status": "pending",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T07:31:26.356+00:00",
+    "confirmed_at": null,
+    "created_at": "2025-10-19T07:31:26.471089+00:00"
+  },
+  {
+    "id": "13b0ac70-217b-4855-9656-f43fe66488da",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": null,
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-10T18:19:34.771+00:00",
+    "confirmed_at": "2025-10-10T18:19:40.844+00:00",
+    "created_at": "2025-10-10T18:19:34.847176+00:00"
+  },
+  {
+    "id": "21e4bd0d-4916-486e-a991-8d2af9a5f57b",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "1936d998-5b6d-4b34-938e-f25f18b26f77",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T07:36:05.071+00:00",
+    "confirmed_at": "2025-10-19T07:40:28.405+00:00",
+    "created_at": "2025-10-19T07:36:05.180379+00:00"
+  },
+  {
+    "id": "4f19a972-dc73-48af-98ed-7c0386538296",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "c20332cb-86af-41a8-a4b1-461488cc28eb",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T07:07:20.624+00:00",
+    "confirmed_at": "2025-10-19T07:41:20.761+00:00",
+    "created_at": "2025-10-19T07:07:20.731829+00:00"
+  },
+  {
+    "id": "f720f493-15ca-421e-9d9f-5aa95a781760",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "baa8bcf3-19b6-43ed-ac4d-ac1a0953930a",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T07:07:21.624+00:00",
+    "confirmed_at": "2025-10-19T08:58:02.257+00:00",
+    "created_at": "2025-10-19T07:07:20.731829+00:00"
+  },
+  {
+    "id": "86b2fd66-ec7b-4406-951e-e0e37e47071a",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "51865f6e-f7c0-4302-b9dc-0dc026bc05cd",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T12:38:16.121+00:00",
+    "confirmed_at": "2025-10-19T12:44:15.15+00:00",
+    "created_at": "2025-10-19T12:38:16.244129+00:00"
+  },
+  {
+    "id": "3c49ed15-e3ab-42e1-b4fe-41fabeee7d9e",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "f99f2a86-1a16-4e21-b159-edc5e736a143",
+    "status": "pending",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T04:12:03.03+00:00",
+    "confirmed_at": null,
+    "created_at": "2025-10-21T04:12:03.142722+00:00"
+  },
+  {
+    "id": "869c4f7d-375b-4c66-a89d-2a80e111a5cf",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "8f0c5f99-3526-49a0-a599-dde303e4683a",
+    "status": "pending",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T08:25:13.237+00:00",
+    "confirmed_at": null,
+    "created_at": "2025-10-21T08:25:13.351456+00:00"
+  },
+  {
+    "id": "aeba0191-e3c4-4f1f-b5a5-70d3b9d5f70f",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "ea1a4450-1f6a-4f50-bae0-382b2b17ae5a",
+    "status": "pending",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T09:42:55.936+00:00",
+    "confirmed_at": null,
+    "created_at": "2025-10-21T09:42:56.042857+00:00"
+  },
+  {
+    "id": "fecc924c-3d42-42db-a943-b17da242781f",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "ea170ac3-3d38-4a2b-82f0-1a0ca222f0cf",
+    "status": "pending",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T10:29:49.125+00:00",
+    "confirmed_at": null,
+    "created_at": "2025-10-21T10:29:49.241757+00:00"
+  },
+  {
+    "id": "618bd5a2-19a4-4891-92aa-19f0439aaeb0",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "b79b935d-d9a7-4b98-b705-2c55ceafe6e6",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T04:39:44.642+00:00",
+    "confirmed_at": "2025-10-21T16:13:35.937+00:00",
+    "created_at": "2025-10-21T04:39:44.746402+00:00"
+  },
+  {
+    "id": "d3c3e453-e5c9-4a4d-9263-761978e91c4a",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "cc1ae0ca-a7eb-4c7a-81cc-d2946dc32318",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T13:47:45.039+00:00",
+    "confirmed_at": "2025-10-21T16:16:51.966+00:00",
+    "created_at": "2025-10-21T13:47:45.168626+00:00"
+  },
+  {
+    "id": "279f70b9-a5ca-4619-8d64-263c24739c29",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "23afed74-fa83-4a89-90e4-416e6fea5af5",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T16:01:10.531+00:00",
+    "confirmed_at": "2025-10-21T16:20:02.277+00:00",
+    "created_at": "2025-10-21T16:01:10.664338+00:00"
+  },
+  {
+    "id": "f17de6a3-4c4c-4ea2-b80b-032ef5a7ece0",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "8c2c303d-84ac-4d55-96ac-3d234075a11e",
+    "status": "pending",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T17:35:47.808+00:00",
+    "confirmed_at": null,
+    "created_at": "2025-10-21T17:35:47.931911+00:00"
+  },
+  {
+    "id": "d9b24c5f-cbdb-4b73-8423-6c7ef2d5c8cb",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "a9757c1a-3012-48db-b882-97bef9a44145",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T09:21:40.79+00:00",
+    "confirmed_at": "2025-10-21T18:04:31.613+00:00",
+    "created_at": "2025-10-19T09:21:40.907923+00:00"
+  },
+  {
+    "id": "7820de85-72b8-484b-9c44-337fb5ccc8e1",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "1936d998-5b6d-4b34-938e-f25f18b26f77",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-12T06:54:59.572+00:00",
+    "confirmed_at": "2025-10-15T12:08:38.54+00:00",
+    "created_at": "2025-10-12T06:54:59.673936+00:00"
+  },
+  {
+    "id": "1447c452-6190-42c5-974e-d1a4d22ee73f",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "7c17b3e3-960a-4821-9957-805c90da63f4",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-15T12:02:38.532+00:00",
+    "confirmed_at": "2025-10-15T12:08:56.465+00:00",
+    "created_at": "2025-10-15T12:02:38.640742+00:00"
+  },
+  {
+    "id": "f41e85a7-e603-487f-9ae2-ff966d07ccce",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "c0d42ea7-730e-47bc-8476-232ec9d06373",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-15T11:34:06.617+00:00",
+    "confirmed_at": "2025-10-15T12:08:58.423+00:00",
+    "created_at": "2025-10-15T11:34:06.719202+00:00"
+  },
+  {
+    "id": "ee566455-4f8a-4b39-add4-7e14032f3503",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "69b16ece-a53b-4431-a33f-4d0a59e58b80",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-12T11:38:17.179+00:00",
+    "confirmed_at": "2025-10-16T01:35:55.295+00:00",
+    "created_at": "2025-10-12T11:38:17.298135+00:00"
+  },
+  {
+    "id": "d967cfbf-c8a5-4287-9d77-0e4eb016d4cc",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "6304cd82-5446-44ca-ae80-a28bb474b105",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-15T15:33:22.198+00:00",
+    "confirmed_at": "2025-10-16T01:40:13.807+00:00",
+    "created_at": "2025-10-15T15:33:22.336347+00:00"
+  },
+  {
+    "id": "f80bcf6d-ff20-478d-a37e-00055ba68065",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "57c8a85e-1229-4b96-a145-bfbf1a78af2e",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-14T14:17:27.721+00:00",
+    "confirmed_at": "2025-10-16T03:35:39.676+00:00",
+    "created_at": "2025-10-14T14:17:27.830613+00:00"
+  },
+  {
+    "id": "a63b01c4-87ef-4b01-9dcf-4222e3158756",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "a0c44476-75f1-4742-9566-0306f52e01c6",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-13T11:14:49.293+00:00",
+    "confirmed_at": "2025-10-16T03:35:44.16+00:00",
+    "created_at": "2025-10-13T11:14:49.412479+00:00"
+  },
+  {
+    "id": "09e96c84-1e79-41e0-8b15-f97156409166",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "037abdcb-532b-4139-a243-c9e064fc4ad9",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-12T10:59:17.503+00:00",
+    "confirmed_at": "2025-10-16T03:36:36.714+00:00",
+    "created_at": "2025-10-12T10:59:17.625106+00:00"
+  },
+  {
+    "id": "d8488947-9cdf-4825-a8ae-a552903b10a4",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "1f64f105-73b2-474d-a2fe-e5765ae7ac8e",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-12T11:39:02.532+00:00",
+    "confirmed_at": "2025-10-16T06:31:12.317+00:00",
+    "created_at": "2025-10-12T11:39:02.63681+00:00"
+  },
+  {
+    "id": "758c701a-dc42-4dcd-9dc0-9d23fba3e5f2",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "23afed74-fa83-4a89-90e4-416e6fea5af5",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-13T11:50:41.37+00:00",
+    "confirmed_at": "2025-10-16T06:31:17.323+00:00",
+    "created_at": "2025-10-13T11:50:41.476302+00:00"
+  },
+  {
+    "id": "2f21d285-e163-4bbe-84af-19a4e6a4f80a",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "ea1a4450-1f6a-4f50-bae0-382b2b17ae5a",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-16T04:11:44.668+00:00",
+    "confirmed_at": "2025-10-16T06:31:20.761+00:00",
+    "created_at": "2025-10-16T04:11:44.78821+00:00"
+  },
+  {
+    "id": "7c73e54f-9520-4174-8a85-a6c3c72eea95",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": null,
+    "status": "empty",
+    "is_host_assigned": false,
+    "requested_at": null,
+    "confirmed_at": null,
+    "created_at": "2025-10-10T18:37:12.026118+00:00"
+  },
+  {
+    "id": "06f275a1-209d-47af-bd14-13f25a0e548e",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "a879f968-ea7d-4ff4-9545-bfb7f97e7ee1",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-16T12:43:43.077+00:00",
+    "confirmed_at": "2025-10-16T13:01:01.215+00:00",
+    "created_at": "2025-10-16T12:43:43.204+00:00"
+  },
+  {
+    "id": "9342b7a2-dd90-4d7f-a5ad-11756bc23bbc",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "b79b935d-d9a7-4b98-b705-2c55ceafe6e6",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-12T11:36:29.465+00:00",
+    "confirmed_at": "2025-10-17T04:21:11.738+00:00",
+    "created_at": "2025-10-12T11:36:29.58757+00:00"
+  },
+  {
+    "id": "95935c3e-6278-4b37-9c62-6647594b77c3",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "9ffd6772-0b85-4bb1-a15e-75b368105670",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-12T06:45:09.224+00:00",
+    "confirmed_at": "2025-10-12T06:45:15.064+00:00",
+    "created_at": "2025-10-12T06:45:09.333403+00:00"
+  },
+  {
+    "id": "33b07a12-9420-4ec6-8da9-c579d5a294d4",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "3124f940-3ee6-44ba-8f79-efa4cd618a3e",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-12T07:35:51.296+00:00",
+    "confirmed_at": "2025-10-12T08:09:34.289+00:00",
+    "created_at": "2025-10-12T07:35:51.39927+00:00"
+  },
+  {
+    "id": "c1358ff9-1fa2-4c34-a5b5-eb1f9399f5db",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "baa8bcf3-19b6-43ed-ac4d-ac1a0953930a",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-12T07:55:17.774+00:00",
+    "confirmed_at": "2025-10-12T08:09:39.459+00:00",
+    "created_at": "2025-10-12T07:55:17.894706+00:00"
+  },
+  {
+    "id": "432b003c-cbbb-4f33-adf5-911a11fdab8f",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "e1b45a36-e678-4030-939b-826c5f708401",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-12T06:50:53.623+00:00",
+    "confirmed_at": "2025-10-12T09:29:52.179+00:00",
+    "created_at": "2025-10-12T06:50:53.729792+00:00"
+  },
+  {
+    "id": "a3926607-ee09-40fb-908b-f1f82c4c8c72",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "c20332cb-86af-41a8-a4b1-461488cc28eb",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-12T06:57:46.175+00:00",
+    "confirmed_at": "2025-10-12T13:33:09.44+00:00",
+    "created_at": "2025-10-12T06:57:46.293538+00:00"
+  },
+  {
+    "id": "78577501-7e12-46f0-a994-f0c5e961281c",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": null,
+    "status": "empty",
+    "is_host_assigned": false,
+    "requested_at": null,
+    "confirmed_at": null,
+    "created_at": "2025-10-12T14:33:05.697383+00:00"
+  },
+  {
+    "id": "18d4c71e-c9d9-4c46-98d3-0c688bc4e90b",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": null,
+    "status": "empty",
+    "is_host_assigned": false,
+    "requested_at": null,
+    "confirmed_at": null,
+    "created_at": "2025-10-12T15:17:51.198026+00:00"
+  },
+  {
+    "id": "099218c9-6582-445c-96f9-b4a22d726ace",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "4c4446a3-7d8c-431e-8733-72f1a8c1bed3",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-13T03:32:37.891+00:00",
+    "confirmed_at": "2025-10-13T03:49:51.14+00:00",
+    "created_at": "2025-10-13T03:32:38.007656+00:00"
+  },
+  {
+    "id": "16c0339c-bed1-4a2b-aa77-4b34836ad448",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "097ae6a3-aa13-4683-9015-8c73dd438435",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-13T09:40:56.244+00:00",
+    "confirmed_at": "2025-10-13T09:41:39.94+00:00",
+    "created_at": "2025-10-13T09:40:56.358946+00:00"
+  },
+  {
+    "id": "a8620229-c7fa-4d9f-9c60-0da2c1259491",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "3e66cdd9-e10e-4fec-90fc-61c054ffbe5a",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-13T18:20:39.06+00:00",
+    "confirmed_at": "2025-10-16T12:46:52.93+00:00",
+    "created_at": "2025-10-13T18:20:39.176579+00:00"
+  },
+  {
+    "id": "ce646c91-c1f9-4e15-a6ce-2414523251da",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": null,
+    "status": "empty",
+    "is_host_assigned": false,
+    "requested_at": null,
+    "confirmed_at": null,
+    "created_at": "2025-10-17T10:54:09.968236+00:00"
+  },
+  {
+    "id": "114afbce-7728-4714-a706-8a0f7ea99e5a",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": null,
+    "status": "empty",
+    "is_host_assigned": false,
+    "requested_at": null,
+    "confirmed_at": null,
+    "created_at": "2025-10-17T10:54:09.968236+00:00"
+  },
+  {
+    "id": "ba3778a3-daeb-4239-b0ff-dfc1c9567cd0",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": null,
+    "status": "empty",
+    "is_host_assigned": false,
+    "requested_at": null,
+    "confirmed_at": null,
+    "created_at": "2025-10-16T12:57:30.738395+00:00"
+  },
+  {
+    "id": "7f739648-5139-4ef3-afd8-7825efae678e",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": null,
+    "status": "empty",
+    "is_host_assigned": false,
+    "requested_at": null,
+    "confirmed_at": null,
+    "created_at": "2025-10-17T10:40:23.258668+00:00"
+  },
+  {
+    "id": "8e690a50-5cec-48b0-9b00-316b4fc67371",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": null,
+    "status": "empty",
+    "is_host_assigned": false,
+    "requested_at": null,
+    "confirmed_at": null,
+    "created_at": "2025-10-17T10:40:23.258668+00:00"
+  },
+  {
+    "id": "37229c63-05e6-417a-ae7b-e03b9365c0ad",
+    "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+    "player_id": "33622008-b8c8-40ef-b765-0eff5bb8b5c4",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-18T08:19:04.547+00:00",
+    "confirmed_at": "2025-10-18T08:19:04.547+00:00",
+    "created_at": "2025-10-18T08:19:04.668363+00:00"
+  },
+  {
+    "id": "aad5ff76-b955-4ed7-9b30-67c09cad1f8d",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": null,
+    "status": "empty",
+    "is_host_assigned": false,
+    "requested_at": null,
+    "confirmed_at": null,
+    "created_at": "2025-10-17T10:54:09.968236+00:00"
+  },
+  {
+    "id": "500313d8-6c34-4de7-87bb-b3193c52229a",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "537073e1-2f10-49a4-9df8-73dad121e80e",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T07:31:06.597+00:00",
+    "confirmed_at": "2025-10-19T07:32:39.139+00:00",
+    "created_at": "2025-10-19T07:31:06.714126+00:00"
+  },
+  {
+    "id": "322a7fab-3be2-45dc-ad9c-ce3c8f84adcc",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "a0c44476-75f1-4742-9566-0306f52e01c6",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T07:31:30.39+00:00",
+    "confirmed_at": "2025-10-19T07:36:45.251+00:00",
+    "created_at": "2025-10-19T07:31:30.506368+00:00"
+  },
+  {
+    "id": "36699dcd-19a5-4157-9549-a57cb670750f",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "ebf69fc6-9da2-4528-befc-d1b38b99dcb3",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T09:37:02.051+00:00",
+    "confirmed_at": "2025-10-19T09:37:19.577+00:00",
+    "created_at": "2025-10-19T09:37:02.164752+00:00"
+  },
+  {
+    "id": "08126d23-25c7-4a5a-b10e-80d0cd9afed8",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "0ce744bd-2641-447d-a51e-a8595d8f0b85",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T04:15:46.574+00:00",
+    "confirmed_at": "2025-10-21T04:17:00.001+00:00",
+    "created_at": "2025-10-21T04:15:46.693779+00:00"
+  },
+  {
+    "id": "5eb31bf8-ce72-4cba-a30d-0fe9d3b107a4",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "7c17b3e3-960a-4821-9957-805c90da63f4",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T07:27:49.866+00:00",
+    "confirmed_at": "2025-10-21T07:29:59.342+00:00",
+    "created_at": "2025-10-21T07:27:49.985602+00:00"
+  },
+  {
+    "id": "1ddbefd6-8c0f-4d3b-a1ab-b6dcaf89759b",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "1f64f105-73b2-474d-a2fe-e5765ae7ac8e",
+    "status": "pending",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T15:08:41.464+00:00",
+    "confirmed_at": null,
+    "created_at": "2025-10-21T15:08:41.602799+00:00"
+  },
+  {
+    "id": "16af68ff-eafc-4282-a6e9-7f502d5eefc7",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "02f517f6-c79d-4c21-ac9a-449bb94c02ec",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T16:05:03.564+00:00",
+    "confirmed_at": "2025-10-21T16:11:46.91+00:00",
+    "created_at": "2025-10-21T16:05:03.682503+00:00"
+  },
+  {
+    "id": "2e47d19a-4793-46bd-bd32-52f317033cd5",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "4c4446a3-7d8c-431e-8733-72f1a8c1bed3",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T10:28:15.023+00:00",
+    "confirmed_at": "2025-10-21T16:13:31.052+00:00",
+    "created_at": "2025-10-21T10:28:15.138782+00:00"
+  },
+  {
+    "id": "b58fc641-090a-4a83-b39c-1321bd610767",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "c0d42ea7-730e-47bc-8476-232ec9d06373",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-19T08:17:43.37+00:00",
+    "confirmed_at": "2025-10-21T16:15:16.466+00:00",
+    "created_at": "2025-10-19T08:17:43.478153+00:00"
+  },
+  {
+    "id": "97d82efd-75c6-4f40-bf58-9060a73d3216",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "69b16ece-a53b-4431-a33f-4d0a59e58b80",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T15:07:08.487+00:00",
+    "confirmed_at": "2025-10-21T16:17:07.404+00:00",
+    "created_at": "2025-10-21T15:07:08.610334+00:00"
+  },
+  {
+    "id": "041fde50-dc92-4c25-a1f7-5e010c0ba01e",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "097ae6a3-aa13-4683-9015-8c73dd438435",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T10:30:03.84+00:00",
+    "confirmed_at": "2025-10-21T16:18:54.57+00:00",
+    "created_at": "2025-10-21T10:30:03.941744+00:00"
+  },
+  {
+    "id": "b1715537-c796-4685-b794-aad14113d6f5",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "f7be3031-5045-4a70-be31-fe1afc34f94a",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T15:09:01.142+00:00",
+    "confirmed_at": "2025-10-21T16:19:03.462+00:00",
+    "created_at": "2025-10-21T15:09:01.265949+00:00"
+  },
+  {
+    "id": "a85c15ac-312d-459c-8992-e5c04f7d88a3",
+    "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+    "player_id": "3bbe1ec7-99a3-4629-a212-f9d3b822e354",
+    "status": "confirmed",
+    "is_host_assigned": false,
+    "requested_at": "2025-10-21T09:19:04.083+00:00",
+    "confirmed_at": "2025-10-22T04:02:25.94+00:00",
+    "created_at": "2025-10-21T09:19:04.187147+00:00"
+  }
+]

@@ -1,0 +1,911 @@
+{
+  "tables": {
+    "users": {
+      "exists": true,
+      "columns": [
+        "id",
+        "email",
+        "role",
+        "created_at",
+        "updated_at",
+        "username",
+        "firstname",
+        "middlename",
+        "lastname",
+        "photo",
+        "password_hash",
+        "status"
+      ],
+      "column_types": {
+        "id": "string",
+        "email": "string",
+        "role": "string",
+        "created_at": "string",
+        "updated_at": "string",
+        "username": "string",
+        "firstname": "string",
+        "middlename": "object",
+        "lastname": "string",
+        "photo": "object",
+        "password_hash": "string",
+        "status": "string"
+      },
+      "sample_record": {
+        "id": "a3200dcf-d45f-4473-86cd-bf4cf3c8d101",
+        "email": "amovert14@gmail.com",
+        "role": "viewer",
+        "created_at": "2025-10-18T11:59:13.65797+00:00",
+        "updated_at": "2025-10-18T11:59:13.65797+00:00",
+        "username": "amovert14",
+        "firstname": "Amit",
+        "middlename": null,
+        "lastname": "Kumar",
+        "photo": null,
+        "password_hash": "$2b$12$H3gZ8n9Mf/Sh/07LwC1HmuO0VYnodwNWL5iBGEL2GNNQomKXLO2bK",
+        "status": "pending"
+      }
+    },
+    "players": {
+      "exists": true,
+      "columns": [
+        "id",
+        "user_id",
+        "display_name",
+        "bio",
+        "profile_pic_url",
+        "mobile_number",
+        "cricheroes_profile_url",
+        "created_at",
+        "updated_at",
+        "status",
+        "created_by"
+      ],
+      "column_types": {
+        "id": "string",
+        "user_id": "object",
+        "display_name": "string",
+        "bio": "object",
+        "profile_pic_url": "object",
+        "mobile_number": "object",
+        "cricheroes_profile_url": "object",
+        "created_at": "string",
+        "updated_at": "string",
+        "status": "string",
+        "created_by": "string"
+      },
+      "sample_record": {
+        "id": "17101683-f278-4565-9255-ab4f4181f21c",
+        "user_id": null,
+        "display_name": "Diwakar",
+        "bio": null,
+        "profile_pic_url": null,
+        "mobile_number": null,
+        "cricheroes_profile_url": null,
+        "created_at": "2025-10-10T04:57:20.006274+00:00",
+        "updated_at": "2025-10-10T05:12:03.646529+00:00",
+        "status": "approved",
+        "created_by": "55edaef4-2977-40b8-b533-365cae96fbbe"
+      }
+    },
+    "tournaments": {
+      "exists": true,
+      "columns": [
+        "id",
+        "name",
+        "host_id",
+        "host_player_id",
+        "status",
+        "total_slots",
+        "created_at",
+        "updated_at",
+        "format",
+        "selected_teams",
+        "description",
+        "venue",
+        "google_maps_link",
+        "tournament_date",
+        "community_restrictions",
+        "base_price_restrictions",
+        "min_base_price",
+        "max_base_price",
+        "schedule_images",
+        "schedule_image_url",
+        "slug"
+      ],
+      "column_types": {
+        "id": "string",
+        "name": "string",
+        "host_id": "string",
+        "host_player_id": "object",
+        "status": "string",
+        "total_slots": "number",
+        "created_at": "string",
+        "updated_at": "string",
+        "format": "string",
+        "selected_teams": "number",
+        "description": "string",
+        "venue": "string",
+        "google_maps_link": "string",
+        "tournament_date": "string",
+        "community_restrictions": "object",
+        "base_price_restrictions": "object",
+        "min_base_price": "object",
+        "max_base_price": "object",
+        "schedule_images": "object",
+        "schedule_image_url": "string",
+        "slug": "string"
+      },
+      "sample_record": {
+        "id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+        "name": "Phoenix Force Tri Series 16",
+        "host_id": "55edaef4-2977-40b8-b533-365cae96fbbe",
+        "host_player_id": null,
+        "status": "completed",
+        "total_slots": 24,
+        "created_at": "2025-10-10T17:41:09.319008+00:00",
+        "updated_at": "2025-10-19T07:20:35.401+00:00",
+        "format": "TriSeries",
+        "selected_teams": 3,
+        "description": "",
+        "venue": "iBlitz",
+        "google_maps_link": "",
+        "tournament_date": "2025-10-19T01:30:00+00:00",
+        "community_restrictions": [
+          "iBlitz"
+        ],
+        "base_price_restrictions": [
+          "100",
+          "60",
+          "150",
+          "80",
+          "200"
+        ],
+        "min_base_price": null,
+        "max_base_price": null,
+        "schedule_images": [
+          "https://ydhwhnwuzbjzsfhixsou.supabase.co/storage/v1/object/public/tournament-schedules/tournament-schedules/3fe7e4ed-33c3-4788-bab4-22710a278c34/1760678636648-bahjbz.jpg"
+        ],
+        "schedule_image_url": "https://ydhwhnwuzbjzsfhixsou.supabase.co/storage/v1/object/public/tournament-schedules/tournament-schedules/3fe7e4ed-33c3-4788-bab4-22710a278c34/1760678636648-bahjbz.jpg",
+        "slug": "phoenix-force-tri-series-16"
+      }
+    },
+    "tournament_slots": {
+      "exists": true,
+      "columns": [
+        "id",
+        "tournament_id",
+        "player_id",
+        "status",
+        "is_host_assigned",
+        "requested_at",
+        "confirmed_at",
+        "created_at"
+      ],
+      "column_types": {
+        "id": "string",
+        "tournament_id": "string",
+        "player_id": "object",
+        "status": "string",
+        "is_host_assigned": "boolean",
+        "requested_at": "object",
+        "confirmed_at": "object",
+        "created_at": "string"
+      },
+      "sample_record": {
+        "id": "cd10b1f7-1359-46be-96e0-ee34eb3dd55f",
+        "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+        "player_id": null,
+        "status": "empty",
+        "is_host_assigned": false,
+        "requested_at": null,
+        "confirmed_at": null,
+        "created_at": "2025-10-17T10:59:25.222349+00:00"
+      }
+    },
+    "auctions": {
+      "exists": true,
+      "columns": [
+        "id",
+        "tournament_id",
+        "status",
+        "max_tokens_per_captain",
+        "min_bid_amount",
+        "use_base_price",
+        "min_increment",
+        "use_fixed_increments",
+        "custom_increments",
+        "timer_seconds",
+        "player_order_type",
+        "created_by",
+        "created_at",
+        "updated_at",
+        "started_at",
+        "completed_at",
+        "auction_config"
+      ],
+      "column_types": {
+        "id": "string",
+        "tournament_id": "string",
+        "status": "string",
+        "max_tokens_per_captain": "number",
+        "min_bid_amount": "number",
+        "use_base_price": "boolean",
+        "min_increment": "number",
+        "use_fixed_increments": "boolean",
+        "custom_increments": "object",
+        "timer_seconds": "number",
+        "player_order_type": "string",
+        "created_by": "string",
+        "created_at": "string",
+        "updated_at": "string",
+        "started_at": "string",
+        "completed_at": "string",
+        "auction_config": "object"
+      },
+      "sample_record": {
+        "id": "5902101d-77fe-489c-a4b6-adf368f9e4c4",
+        "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+        "status": "completed",
+        "max_tokens_per_captain": 2000,
+        "min_bid_amount": 40,
+        "use_base_price": false,
+        "min_increment": 20,
+        "use_fixed_increments": true,
+        "custom_increments": null,
+        "timer_seconds": 20,
+        "player_order_type": "random",
+        "created_by": "55edaef4-2977-40b8-b533-365cae96fbbe",
+        "created_at": "2025-10-16T16:24:34.432601+00:00",
+        "updated_at": "2025-10-16T16:24:34.432601+00:00",
+        "started_at": "2025-10-16T16:31:07.749+00:00",
+        "completed_at": "2025-10-16T18:19:03.766+00:00",
+        "auction_config": {
+          "additional_settings": {},
+          "custom_increment_ranges": null
+        }
+      }
+    },
+    "auction_teams": {
+      "exists": true,
+      "columns": [
+        "id",
+        "auction_id",
+        "captain_id",
+        "captain_user_id",
+        "team_name",
+        "max_tokens",
+        "total_spent",
+        "remaining_purse",
+        "players_count",
+        "required_players",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "string",
+        "auction_id": "string",
+        "captain_id": "string",
+        "captain_user_id": "object",
+        "team_name": "string",
+        "max_tokens": "number",
+        "total_spent": "number",
+        "remaining_purse": "number",
+        "players_count": "number",
+        "required_players": "number",
+        "created_at": "string",
+        "updated_at": "string"
+      },
+      "sample_record": {
+        "id": "f48b7b9d-a883-4fe6-8f19-fea6e6166bb5",
+        "auction_id": "5902101d-77fe-489c-a4b6-adf368f9e4c4",
+        "captain_id": "57c8a85e-1229-4b96-a145-bfbf1a78af2e",
+        "captain_user_id": null,
+        "team_name": "Thunder Strikers",
+        "max_tokens": 2000,
+        "total_spent": 1860,
+        "remaining_purse": 140,
+        "players_count": 8,
+        "required_players": 8,
+        "created_at": "2025-10-16T16:24:35.10275+00:00",
+        "updated_at": "2025-10-16T16:24:35.10275+00:00"
+      }
+    },
+    "auction_players": {
+      "exists": true,
+      "columns": [
+        "id",
+        "auction_id",
+        "player_id",
+        "status",
+        "sold_to",
+        "sold_price",
+        "display_order",
+        "times_skipped",
+        "created_at",
+        "updated_at",
+        "current_player",
+        "sold_at"
+      ],
+      "column_types": {
+        "id": "string",
+        "auction_id": "string",
+        "player_id": "string",
+        "status": "string",
+        "sold_to": "string",
+        "sold_price": "number",
+        "display_order": "number",
+        "times_skipped": "number",
+        "created_at": "string",
+        "updated_at": "string",
+        "current_player": "boolean",
+        "sold_at": "object"
+      },
+      "sample_record": {
+        "id": "ff9fa3b3-0d3e-4e34-b3fb-aca837b39227",
+        "auction_id": "5902101d-77fe-489c-a4b6-adf368f9e4c4",
+        "player_id": "6304cd82-5446-44ca-ae80-a28bb474b105",
+        "status": "sold",
+        "sold_to": "d32247a2-a0f6-493f-b42e-2ea4f8342833",
+        "sold_price": 240,
+        "display_order": 10,
+        "times_skipped": 0,
+        "created_at": "2025-10-16T16:24:35.640317+00:00",
+        "updated_at": "2025-10-16T16:24:35.640317+00:00",
+        "current_player": false,
+        "sold_at": null
+      }
+    },
+    "player_skills": {
+      "exists": true,
+      "columns": [
+        "id",
+        "skill_name",
+        "skill_type",
+        "is_required",
+        "display_order",
+        "created_at",
+        "updated_at",
+        "is_admin_managed",
+        "viewer_can_see"
+      ],
+      "column_types": {
+        "id": "string",
+        "skill_name": "string",
+        "skill_type": "string",
+        "is_required": "boolean",
+        "display_order": "number",
+        "created_at": "string",
+        "updated_at": "string",
+        "is_admin_managed": "boolean",
+        "viewer_can_see": "boolean"
+      },
+      "sample_record": {
+        "id": "1a078475-a428-4548-87f0-2e7e02bec3b3",
+        "skill_name": "Role",
+        "skill_type": "multiselect",
+        "is_required": true,
+        "display_order": 1,
+        "created_at": "2025-10-08T08:52:17.007763+00:00",
+        "updated_at": "2025-10-08T08:52:17.007763+00:00",
+        "is_admin_managed": false,
+        "viewer_can_see": true
+      }
+    },
+    "player_skill_values": {
+      "exists": true,
+      "columns": [
+        "id",
+        "skill_id",
+        "value_name",
+        "display_order",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "string",
+        "skill_id": "string",
+        "value_name": "string",
+        "display_order": "number",
+        "is_active": "boolean",
+        "created_at": "string",
+        "updated_at": "string"
+      },
+      "sample_record": {
+        "id": "652b42c6-533b-4367-bc26-690f4c1d7917",
+        "skill_id": "66401c99-e797-4966-a742-1a5b4013345a",
+        "value_name": "Right Hand Batter",
+        "display_order": 2,
+        "is_active": true,
+        "created_at": "2025-10-08T08:57:06.398666+00:00",
+        "updated_at": "2025-10-08T08:57:06.398666+00:00"
+      }
+    },
+    "player_skill_assignments": {
+      "exists": true,
+      "columns": [
+        "id",
+        "player_id",
+        "skill_id",
+        "skill_value_id",
+        "created_at",
+        "value_array",
+        "skill_value_ids"
+      ],
+      "column_types": {
+        "id": "string",
+        "player_id": "string",
+        "skill_id": "string",
+        "skill_value_id": "string",
+        "created_at": "string",
+        "value_array": "object",
+        "skill_value_ids": "object"
+      },
+      "sample_record": {
+        "id": "86adcc7f-b907-41ed-905a-f4494c3d0577",
+        "player_id": "1b26c6b2-4e65-473b-9305-b17ae243efd8",
+        "skill_id": "30e8ca29-831d-4000-9157-47ee976d24b4",
+        "skill_value_id": "45b6f6f8-b608-430e-959a-7a263c00bc2f",
+        "created_at": "2025-10-10T05:05:53.407574+00:00",
+        "value_array": [
+          "iBlitz"
+        ],
+        "skill_value_ids": [
+          "45b6f6f8-b608-430e-959a-7a263c00bc2f"
+        ]
+      }
+    },
+    "notifications": {
+      "exists": true,
+      "columns": [
+        "id",
+        "user_id",
+        "type",
+        "title",
+        "message",
+        "data",
+        "read_at",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "string",
+        "user_id": "string",
+        "type": "string",
+        "title": "string",
+        "message": "string",
+        "data": "object",
+        "read_at": "object",
+        "created_at": "string",
+        "updated_at": "string"
+      },
+      "sample_record": {
+        "id": "1fa79b81-52dd-4b0c-ae42-834cf70c5587",
+        "user_id": "abbfc149-9aa1-4ad1-bf29-0d8bf287279f",
+        "type": "tournament_assignment",
+        "title": "Tournament Assignment",
+        "message": "You have been assigned to tournament \"Quad Series 44\" by the host.",
+        "data": {
+          "status": "pending",
+          "slot_id": "1e655b3b-ff76-4f55-bf83-d4642a66dd90",
+          "tournament_id": "061781a3-13a5-412e-9811-881c47db0651",
+          "assigned_by_host": true
+        },
+        "read_at": null,
+        "created_at": "2025-10-08T11:07:45.439952+00:00",
+        "updated_at": "2025-10-08T11:07:45.439952+00:00"
+      }
+    },
+    "api_usage_analytics": {
+      "exists": true,
+      "columns": [
+        "id",
+        "route",
+        "method",
+        "user_id",
+        "user_role",
+        "ip_address",
+        "user_agent",
+        "response_status",
+        "response_time_ms",
+        "request_size_bytes",
+        "response_size_bytes",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "string",
+        "route": "string",
+        "method": "string",
+        "user_id": "object",
+        "user_role": "object",
+        "ip_address": "string",
+        "user_agent": "string",
+        "response_status": "number",
+        "response_time_ms": "number",
+        "request_size_bytes": "number",
+        "response_size_bytes": "number",
+        "created_at": "string",
+        "updated_at": "string"
+      },
+      "sample_record": {
+        "id": "ff2e2de8-d7cd-48b0-b5d7-7591353f727f",
+        "route": "/api/auth/login",
+        "method": "POST",
+        "user_id": null,
+        "user_role": null,
+        "ip_address": "::1",
+        "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+        "response_status": 500,
+        "response_time_ms": 54,
+        "request_size_bytes": 853,
+        "response_size_bytes": 32,
+        "created_at": "2025-10-10T08:15:42.183542+00:00",
+        "updated_at": "2025-10-10T08:15:42.183542+00:00"
+      }
+    }
+  },
+  "storage": {
+    "buckets": [
+      {
+        "id": "player-profiles",
+        "name": "player-profiles",
+        "owner": "",
+        "public": true,
+        "type": "STANDARD",
+        "file_size_limit": 5242880,
+        "allowed_mime_types": [
+          "image/png",
+          "image/jpeg",
+          "image/jpg",
+          "image/webp"
+        ],
+        "created_at": "2025-10-03T16:25:49.496Z",
+        "updated_at": "2025-10-03T16:25:49.496Z"
+      },
+      {
+        "id": "tournament-schedules",
+        "name": "tournament-schedules",
+        "owner": "",
+        "public": true,
+        "type": "STANDARD",
+        "file_size_limit": 10485760,
+        "allowed_mime_types": [
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/webp"
+        ],
+        "created_at": "2025-10-17T04:25:39.369Z",
+        "updated_at": "2025-10-17T04:25:39.369Z"
+      }
+    ],
+    "files": {
+      "player-profiles": [
+        {
+          "name": "02ab90db-0631-45ba-b156-706e0af451d9",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "05befd13-f633-4068-b792-c9305e197ff1",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "0e8a15d1-c379-4e5f-990c-03099be28a25",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "16ef1d7a-4aed-492d-8650-e5607b130517",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "2d21ff27-960e-4556-ae71-1c80bf5af28e",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "352c5e44-773f-41f6-9308-5cc01ebba474",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "3ac901f1-be56-4504-83de-fae8fd29629c",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "47c411da-a0f0-492e-8c95-fdf0bfbba425",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "554d9d6a-0242-4310-a0af-d710d5c1b612",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "55edaef4-2977-40b8-b533-365cae96fbbe",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "5faab8c3-d989-431e-a6b4-058feadba347",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "600965f0-94d8-45ac-b724-42e1bf758f83",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "6256e1f7-77ab-4e24-a777-c43d59a5d0a2",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "6999a30f-5cd8-40cd-9d39-6c3573664d37",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "6bb67d8a-376a-4098-b51f-e24ffc75f1ad",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "6cce3567-aa9c-48f9-982d-3c32d4d55400",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "72e0f4d6-833b-4263-b08f-4cccc982d646",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "75c74eef-9a49-40f0-b64f-31321e80914b",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "77e91702-99d0-4554-88f6-c5f6c3e570f0",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "7e90dd0a-530a-4a41-8459-75ed7f45fed3",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "866e4cdb-9cf0-4822-aee1-ff49fb92d29c",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "9851f455-90eb-4851-ae22-1c987cc9d609",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "9ac6ffe4-35ec-413f-b2fd-e003f9e6e242",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "9e3b4c0b-f123-43b6-82da-4d608113510c",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "9f16beb8-6711-48c6-bb71-3c8d4915113c",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "a053727e-d752-49ad-adfe-98c7cd798730",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "aae9dcfc-38dc-4ea7-b28b-7294eb7ac4a7",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "b7874e82-c0ac-468b-b996-83266f671d31",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "d05c9223-6b2f-4249-ba6e-8abaec094a57",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "d2d7379c-9f77-4896-9dfb-754b68c0adc3",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "d3168453-a62f-486f-b957-1ab8bda31a17",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "e0619065-58e8-45cb-9b84-b01ccd478e31",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "e733a2aa-9366-4967-9333-93b26856a45b",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "ece47c45-13c2-4993-a8cf-627c37394f77",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "ee2b4809-1ee4-426f-a27a-fee26c880c01",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "f29f0c6d-96b1-4257-9ba7-26916ded1e5c",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "f9f0875f-3abe-4566-a788-ddbc4ebe8f81",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "fdbe09cb-15b9-4087-a0d6-21e3657d9b61",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        },
+        {
+          "name": "fffcff23-56c6-408f-951e-826a9e34e0f8",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        }
+      ],
+      "tournament-schedules": [
+        {
+          "name": "tournament-schedules",
+          "id": null,
+          "updated_at": null,
+          "created_at": null,
+          "last_accessed_at": null,
+          "metadata": null
+        }
+      ]
+    }
+  },
+  "timestamp": "2025-10-22T08:52:42.528Z"
+}

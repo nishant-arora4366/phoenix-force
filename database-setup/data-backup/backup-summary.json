@@ -1,81 +1,33 @@
 {
-  "backup_timestamp": "2025-10-11T12:15:47.903Z",
-  "total_tables": 12,
-  "successful_backups": 12,
-  "failed_backups": 0,
-  "total_records": 2707,
-  "tables": [
-    {
-      "table_name": "users",
-      "success": true,
-      "record_count": 18,
-      "error": null
-    },
-    {
-      "table_name": "players",
-      "success": true,
-      "record_count": 248,
-      "error": null
-    },
-    {
-      "table_name": "tournaments",
-      "success": true,
-      "record_count": 2,
-      "error": null
-    },
-    {
-      "table_name": "tournament_slots",
-      "success": true,
-      "record_count": 50,
-      "error": null
-    },
-    {
-      "table_name": "player_skills",
-      "success": true,
-      "record_count": 5,
-      "error": null
-    },
-    {
-      "table_name": "player_skill_values",
-      "success": true,
-      "record_count": 21,
-      "error": null
-    },
-    {
-      "table_name": "player_skill_assignments",
-      "success": true,
-      "record_count": 1000,
-      "error": null
-    },
-    {
-      "table_name": "auctions",
-      "success": true,
-      "record_count": 18,
-      "error": null
-    },
-    {
-      "table_name": "auction_teams",
-      "success": true,
-      "record_count": 36,
-      "error": null
-    },
-    {
-      "table_name": "auction_players",
-      "success": true,
-      "record_count": 288,
-      "error": null
-    },
-    {
-      "table_name": "notifications",
-      "success": true,
-      "record_count": 21,
-      "error": null
-    },
-    {
-      "table_name": "api_usage_analytics",
-      "success": true,
-      "record_count": 1000,
-      "error": null
-    }
-  ]
+  "timestamp": "2025-10-22T05:46:16.733Z",
+  "database_url": "https://ydhwhnwuzbjzsfhixsou.supabase.co",
+  "table_counts": {
+    "users": 63,
+    "players": 293,
+    "tournaments": 2,
+    "tournament_slots": 62,
+    "auctions": 2,
+    "auction_teams": 6,
+    "auction_players": 48,
+    "player_skills": 5,
+    "player_skill_values": 21,
+    "player_skill_assignments": 1414,
+    "notifications": 37,
+    "api_usage_analytics": 27082
+  },
+  "total_records": 29035,
+  "schema_info": {
+    "tables_count": 0,
+    "functions_count": 0,
+    "policies_count": 0,
+    "triggers_count": 0
+  },
+  "realtime_info": {
+    "publications_count": 0,
+    "subscriptions_count": 0
+  },
+  "storage_info": {
+    "buckets_count": 2,
+    "total_files": 40
+  }
 }

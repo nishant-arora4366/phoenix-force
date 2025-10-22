@@ -1,336 +1,580 @@
-{
-  "table_name": "notifications",
-  "backup_timestamp": "2025-10-11T12:15:47.633Z",
-  "record_count": 21,
-  "data": [
-    {
-      "id": "1fa79b81-52dd-4b0c-ae42-834cf70c5587",
-      "user_id": "abbfc149-9aa1-4ad1-bf29-0d8bf287279f",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"Quad Series 44\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "1e655b3b-ff76-4f55-bf83-d4642a66dd90",
-        "tournament_id": "061781a3-13a5-412e-9811-881c47db0651",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-08T11:07:45.439952+00:00",
-      "updated_at": "2025-10-08T11:07:45.439952+00:00"
+[
+  {
+    "id": "1fa79b81-52dd-4b0c-ae42-834cf70c5587",
+    "user_id": "abbfc149-9aa1-4ad1-bf29-0d8bf287279f",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 44\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "1e655b3b-ff76-4f55-bf83-d4642a66dd90",
+      "tournament_id": "061781a3-13a5-412e-9811-881c47db0651",
+      "assigned_by_host": true
     },
-    {
-      "id": "b4c2c1a1-2a15-4aa3-ae5d-c464f6de66f6",
-      "user_id": "b0fc0faa-7085-4ceb-ab68-2db45944dc58",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"Quad Series 44\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "2349aabf-2c62-418d-84a9-5d6bf85182d6",
-        "tournament_id": "061781a3-13a5-412e-9811-881c47db0651",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-08T11:19:47.287365+00:00",
-      "updated_at": "2025-10-08T11:19:47.287365+00:00"
+    "read_at": null,
+    "created_at": "2025-10-08T11:07:45.439952+00:00",
+    "updated_at": "2025-10-08T11:07:45.439952+00:00"
+  },
+  {
+    "id": "b4c2c1a1-2a15-4aa3-ae5d-c464f6de66f6",
+    "user_id": "b0fc0faa-7085-4ceb-ab68-2db45944dc58",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 44\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "2349aabf-2c62-418d-84a9-5d6bf85182d6",
+      "tournament_id": "061781a3-13a5-412e-9811-881c47db0651",
+      "assigned_by_host": true
     },
-    {
-      "id": "f0dceec5-b280-4f8b-8630-a647bd36e4a4",
-      "user_id": "abbfc149-9aa1-4ad1-bf29-0d8bf287279f",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "5026ae17-66d5-4ccf-be1a-bd6cc6ca88ba",
-        "tournament_id": "ba9ea046-93a0-4ef9-83be-2c1cf041d07e",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-08T13:01:16.365863+00:00",
-      "updated_at": "2025-10-08T13:01:16.365863+00:00"
+    "read_at": null,
+    "created_at": "2025-10-08T11:19:47.287365+00:00",
+    "updated_at": "2025-10-08T11:19:47.287365+00:00"
+  },
+  {
+    "id": "f0dceec5-b280-4f8b-8630-a647bd36e4a4",
+    "user_id": "abbfc149-9aa1-4ad1-bf29-0d8bf287279f",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "5026ae17-66d5-4ccf-be1a-bd6cc6ca88ba",
+      "tournament_id": "ba9ea046-93a0-4ef9-83be-2c1cf041d07e",
+      "assigned_by_host": true
     },
-    {
-      "id": "9399aa7c-ff68-49fa-8ed9-e3b98d55622e",
-      "user_id": "abbfc149-9aa1-4ad1-bf29-0d8bf287279f",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been confirmed to tournament \"Quad Series 43\" by the host.",
-      "data": {
-        "status": "confirmed",
-        "slot_id": "7092249c-4215-4531-8755-afe62cb04734",
-        "tournament_id": "ba9ea046-93a0-4ef9-83be-2c1cf041d07e",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-08T15:06:50.100745+00:00",
-      "updated_at": "2025-10-08T15:06:50.100745+00:00"
+    "read_at": null,
+    "created_at": "2025-10-08T13:01:16.365863+00:00",
+    "updated_at": "2025-10-08T13:01:16.365863+00:00"
+  },
+  {
+    "id": "9399aa7c-ff68-49fa-8ed9-e3b98d55622e",
+    "user_id": "abbfc149-9aa1-4ad1-bf29-0d8bf287279f",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been confirmed to tournament \"Quad Series 43\" by the host.",
+    "data": {
+      "status": "confirmed",
+      "slot_id": "7092249c-4215-4531-8755-afe62cb04734",
+      "tournament_id": "ba9ea046-93a0-4ef9-83be-2c1cf041d07e",
+      "assigned_by_host": true
     },
-    {
-      "id": "1eddef36-0c43-4999-a8c4-dae9dd3a9204",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "5b58380e-574b-462d-a44c-8219487e35c4",
-        "tournament_id": "ba9ea046-93a0-4ef9-83be-2c1cf041d07e",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-09T02:20:46.434011+00:00",
-      "updated_at": "2025-10-09T02:20:46.434011+00:00"
+    "read_at": null,
+    "created_at": "2025-10-08T15:06:50.100745+00:00",
+    "updated_at": "2025-10-08T15:06:50.100745+00:00"
+  },
+  {
+    "id": "1eddef36-0c43-4999-a8c4-dae9dd3a9204",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "5b58380e-574b-462d-a44c-8219487e35c4",
+      "tournament_id": "ba9ea046-93a0-4ef9-83be-2c1cf041d07e",
+      "assigned_by_host": true
     },
-    {
-      "id": "99533112-3d00-437b-ad3e-7394e0ae777a",
-      "user_id": "3789500f-6f96-48ec-9cda-4c2104ccf891",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "58dfcaa6-d7af-4f4a-bb8d-a70233bfde4e",
-        "tournament_id": "ba9ea046-93a0-4ef9-83be-2c1cf041d07e",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-09T15:10:10.794+00:00",
-      "updated_at": "2025-10-09T15:10:10.794+00:00"
+    "read_at": null,
+    "created_at": "2025-10-09T02:20:46.434011+00:00",
+    "updated_at": "2025-10-09T02:20:46.434011+00:00"
+  },
+  {
+    "id": "99533112-3d00-437b-ad3e-7394e0ae777a",
+    "user_id": "3789500f-6f96-48ec-9cda-4c2104ccf891",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "58dfcaa6-d7af-4f4a-bb8d-a70233bfde4e",
+      "tournament_id": "ba9ea046-93a0-4ef9-83be-2c1cf041d07e",
+      "assigned_by_host": true
     },
-    {
-      "id": "2fb4eb87-703e-47bf-a55e-5ceb10f96564",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"45\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "4fa22e82-f175-4a06-93aa-04058844d1a5",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T11:59:05.814334+00:00",
-      "updated_at": "2025-10-10T11:59:05.814334+00:00"
+    "read_at": null,
+    "created_at": "2025-10-09T15:10:10.794+00:00",
+    "updated_at": "2025-10-09T15:10:10.794+00:00"
+  },
+  {
+    "id": "2fb4eb87-703e-47bf-a55e-5ceb10f96564",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"45\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "4fa22e82-f175-4a06-93aa-04058844d1a5",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016",
+      "assigned_by_host": true
     },
-    {
-      "id": "4b0c5dd9-10ae-4b73-89ab-18ef8e24c807",
-      "user_id": "3789500f-6f96-48ec-9cda-4c2104ccf891",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"45\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "a43308c9-19ae-4b7b-b239-218c463c426e",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T11:59:05.814334+00:00",
-      "updated_at": "2025-10-10T11:59:05.814334+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T11:59:05.814334+00:00",
+    "updated_at": "2025-10-10T11:59:05.814334+00:00"
+  },
+  {
+    "id": "4b0c5dd9-10ae-4b73-89ab-18ef8e24c807",
+    "user_id": "3789500f-6f96-48ec-9cda-4c2104ccf891",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"45\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "a43308c9-19ae-4b7b-b239-218c463c426e",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016",
+      "assigned_by_host": true
     },
-    {
-      "id": "0737855e-98c2-42a0-94da-5f4054efabce",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "player_removed",
-      "title": "You have been removed from the tournament",
-      "message": "You have been removed from the tournament by the host.",
-      "data": {
-        "slot_id": "4fa22e82-f175-4a06-93aa-04058844d1a5",
-        "removed_at": "2025-10-10T13:18:28.809Z",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T13:18:28.917687+00:00",
-      "updated_at": "2025-10-10T13:18:28.917687+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T11:59:05.814334+00:00",
+    "updated_at": "2025-10-10T11:59:05.814334+00:00"
+  },
+  {
+    "id": "0737855e-98c2-42a0-94da-5f4054efabce",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "4fa22e82-f175-4a06-93aa-04058844d1a5",
+      "removed_at": "2025-10-10T13:18:28.809Z",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
     },
-    {
-      "id": "afe579a0-a195-4069-b4c9-1e5ed987424c",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "player_removed",
-      "title": "You have been removed from the tournament",
-      "message": "You have been removed from the tournament by the host.",
-      "data": {
-        "slot_id": "d2fe84b4-bfa9-4019-98b6-e1e2d453c3ef",
-        "removed_at": "2025-10-10T13:19:11.527Z",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T13:19:11.631214+00:00",
-      "updated_at": "2025-10-10T13:19:11.631214+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T13:18:28.917687+00:00",
+    "updated_at": "2025-10-10T13:18:28.917687+00:00"
+  },
+  {
+    "id": "afe579a0-a195-4069-b4c9-1e5ed987424c",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "d2fe84b4-bfa9-4019-98b6-e1e2d453c3ef",
+      "removed_at": "2025-10-10T13:19:11.527Z",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
     },
-    {
-      "id": "ee5f79d5-c1d1-42c9-b590-39d52af90de9",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "player_removed",
-      "title": "You have been removed from the tournament",
-      "message": "You have been removed from the tournament by the host.",
-      "data": {
-        "slot_id": "052ea9b0-9e0a-4fca-a3eb-111eff262725",
-        "removed_at": "2025-10-10T13:19:21.858Z",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T13:19:21.968127+00:00",
-      "updated_at": "2025-10-10T13:19:21.968127+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T13:19:11.631214+00:00",
+    "updated_at": "2025-10-10T13:19:11.631214+00:00"
+  },
+  {
+    "id": "ee5f79d5-c1d1-42c9-b590-39d52af90de9",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "052ea9b0-9e0a-4fca-a3eb-111eff262725",
+      "removed_at": "2025-10-10T13:19:21.858Z",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
     },
-    {
-      "id": "75e3aa06-bdd4-4f33-bed2-35ee3bd07874",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "player_removed",
-      "title": "You have been removed from the tournament",
-      "message": "You have been removed from the tournament by the host.",
-      "data": {
-        "slot_id": "f21c5bf2-2069-41cd-b685-773ed03ed09e",
-        "removed_at": "2025-10-10T13:24:33.426Z",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T13:24:33.544283+00:00",
-      "updated_at": "2025-10-10T13:24:33.544283+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T13:19:21.968127+00:00",
+    "updated_at": "2025-10-10T13:19:21.968127+00:00"
+  },
+  {
+    "id": "75e3aa06-bdd4-4f33-bed2-35ee3bd07874",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "f21c5bf2-2069-41cd-b685-773ed03ed09e",
+      "removed_at": "2025-10-10T13:24:33.426Z",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
     },
-    {
-      "id": "44347e40-6313-4ad6-a276-9d0ea96480ff",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "player_removed",
-      "title": "You have been removed from the tournament",
-      "message": "You have been removed from the tournament by the host.",
-      "data": {
-        "slot_id": "bc959be1-b899-452a-b286-294cf611c876",
-        "removed_at": "2025-10-10T13:32:17.342Z",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T13:32:17.435411+00:00",
-      "updated_at": "2025-10-10T13:32:17.435411+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T13:24:33.544283+00:00",
+    "updated_at": "2025-10-10T13:24:33.544283+00:00"
+  },
+  {
+    "id": "44347e40-6313-4ad6-a276-9d0ea96480ff",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "bc959be1-b899-452a-b286-294cf611c876",
+      "removed_at": "2025-10-10T13:32:17.342Z",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
     },
-    {
-      "id": "fe1e4243-08e9-4316-be76-98fb48b17284",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "player_removed",
-      "title": "You have been removed from the tournament",
-      "message": "You have been removed from the tournament by the host.",
-      "data": {
-        "slot_id": "aecfd7c7-80e1-4df5-8325-3765d8fae038",
-        "removed_at": "2025-10-10T13:33:51.337Z",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T13:33:51.435726+00:00",
-      "updated_at": "2025-10-10T13:33:51.435726+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T13:32:17.435411+00:00",
+    "updated_at": "2025-10-10T13:32:17.435411+00:00"
+  },
+  {
+    "id": "fe1e4243-08e9-4316-be76-98fb48b17284",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "aecfd7c7-80e1-4df5-8325-3765d8fae038",
+      "removed_at": "2025-10-10T13:33:51.337Z",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
     },
-    {
-      "id": "a0c1cdbb-0aef-4a51-8f90-9c2b33776e8f",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "player_removed",
-      "title": "You have been removed from the tournament",
-      "message": "You have been removed from the tournament by the host.",
-      "data": {
-        "slot_id": "4ffcb739-4517-4ee6-affb-539830455ad7",
-        "removed_at": "2025-10-10T13:48:42.317Z",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T13:48:42.391661+00:00",
-      "updated_at": "2025-10-10T13:48:42.391661+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T13:33:51.435726+00:00",
+    "updated_at": "2025-10-10T13:33:51.435726+00:00"
+  },
+  {
+    "id": "a0c1cdbb-0aef-4a51-8f90-9c2b33776e8f",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "4ffcb739-4517-4ee6-affb-539830455ad7",
+      "removed_at": "2025-10-10T13:48:42.317Z",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016"
     },
-    {
-      "id": "f99c7d19-4769-4619-bb17-b7855d7aa16a",
-      "user_id": "b0fc0faa-7085-4ceb-ab68-2db45944dc58",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"45\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "5358bf95-06a8-4f42-ade3-bc4b6edb465b",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T14:21:42.085045+00:00",
-      "updated_at": "2025-10-10T14:21:42.085045+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T13:48:42.391661+00:00",
+    "updated_at": "2025-10-10T13:48:42.391661+00:00"
+  },
+  {
+    "id": "f99c7d19-4769-4619-bb17-b7855d7aa16a",
+    "user_id": "b0fc0faa-7085-4ceb-ab68-2db45944dc58",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"45\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "5358bf95-06a8-4f42-ade3-bc4b6edb465b",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016",
+      "assigned_by_host": true
     },
-    {
-      "id": "d12d9ed5-7ff1-4c9f-9a89-86a9edea33f4",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"45\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "90f381bf-c1a0-40d2-b032-6957fe516b54",
-        "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T14:21:42.085045+00:00",
-      "updated_at": "2025-10-10T14:21:42.085045+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T14:21:42.085045+00:00",
+    "updated_at": "2025-10-10T14:21:42.085045+00:00"
+  },
+  {
+    "id": "d12d9ed5-7ff1-4c9f-9a89-86a9edea33f4",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"45\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "90f381bf-c1a0-40d2-b032-6957fe516b54",
+      "tournament_id": "4f783aeb-9b8f-4c3f-8bfc-cb2fb483e016",
+      "assigned_by_host": true
     },
-    {
-      "id": "e34a8c1e-b09b-424b-9718-748f2e138388",
-      "user_id": "b0fc0faa-7085-4ceb-ab68-2db45944dc58",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "eb56e5b4-27a4-4397-af8e-6f31f90409a1",
-        "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T19:12:29.603688+00:00",
-      "updated_at": "2025-10-10T19:12:29.603688+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T14:21:42.085045+00:00",
+    "updated_at": "2025-10-10T14:21:42.085045+00:00"
+  },
+  {
+    "id": "e34a8c1e-b09b-424b-9718-748f2e138388",
+    "user_id": "b0fc0faa-7085-4ceb-ab68-2db45944dc58",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "eb56e5b4-27a4-4397-af8e-6f31f90409a1",
+      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
+      "assigned_by_host": true
     },
-    {
-      "id": "2df10c34-dd5b-46c8-a4e1-6772c99831bb",
-      "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "2a0c4943-d0a1-4844-a703-d28f505f0d45",
-        "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T19:12:29.603688+00:00",
-      "updated_at": "2025-10-10T19:12:29.603688+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T19:12:29.603688+00:00",
+    "updated_at": "2025-10-10T19:12:29.603688+00:00"
+  },
+  {
+    "id": "2df10c34-dd5b-46c8-a4e1-6772c99831bb",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "2a0c4943-d0a1-4844-a703-d28f505f0d45",
+      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
+      "assigned_by_host": true
     },
-    {
-      "id": "32ecc672-0306-4184-ae9b-1a0d8e182b26",
-      "user_id": "3789500f-6f96-48ec-9cda-4c2104ccf891",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "147ab58a-c91b-4e67-99a8-a82c001e2e53",
-        "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T19:12:29.603688+00:00",
-      "updated_at": "2025-10-10T19:12:29.603688+00:00"
+    "read_at": null,
+    "created_at": "2025-10-10T19:12:29.603688+00:00",
+    "updated_at": "2025-10-10T19:12:29.603688+00:00"
+  },
+  {
+    "id": "32ecc672-0306-4184-ae9b-1a0d8e182b26",
+    "user_id": "3789500f-6f96-48ec-9cda-4c2104ccf891",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "147ab58a-c91b-4e67-99a8-a82c001e2e53",
+      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
+      "assigned_by_host": true
     },
-    {
-      "id": "838a553e-9daa-49da-b741-c85b816a61b5",
-      "user_id": "abbfc149-9aa1-4ad1-bf29-0d8bf287279f",
-      "type": "tournament_assignment",
-      "title": "Tournament Assignment",
-      "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
-      "data": {
-        "status": "pending",
-        "slot_id": "5a62d7dd-c2f4-47bc-bea1-d04a98c3e640",
-        "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
-        "assigned_by_host": true
-      },
-      "read_at": null,
-      "created_at": "2025-10-10T19:28:54.777125+00:00",
-      "updated_at": "2025-10-10T19:28:54.777125+00:00"
-    }
-  ]
-}
+    "read_at": null,
+    "created_at": "2025-10-10T19:12:29.603688+00:00",
+    "updated_at": "2025-10-10T19:12:29.603688+00:00"
+  },
+  {
+    "id": "838a553e-9daa-49da-b741-c85b816a61b5",
+    "user_id": "abbfc149-9aa1-4ad1-bf29-0d8bf287279f",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "5a62d7dd-c2f4-47bc-bea1-d04a98c3e640",
+      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
+      "assigned_by_host": true
+    },
+    "read_at": null,
+    "created_at": "2025-10-10T19:28:54.777125+00:00",
+    "updated_at": "2025-10-10T19:28:54.777125+00:00"
+  },
+  {
+    "id": "4d7173f5-1bdf-46d2-acbe-cc0893caafb0",
+    "user_id": "f7130771-2805-4e23-b1cb-da17350a4d16",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "c1e6ece5-589e-4b4a-be5f-7211aec447f1",
+      "removed_at": "2025-10-12T06:43:53.213Z",
+      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34"
+    },
+    "read_at": null,
+    "created_at": "2025-10-12T06:43:53.327446+00:00",
+    "updated_at": "2025-10-12T06:43:53.327446+00:00"
+  },
+  {
+    "id": "4d256f08-5a5d-4df7-8717-37fa15a72302",
+    "user_id": "55edaef4-2977-40b8-b533-365cae96fbbe",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 44\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "95935c3e-6278-4b37-9c62-6647594b77c3",
+      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+      "assigned_by_host": true
+    },
+    "read_at": null,
+    "created_at": "2025-10-12T06:45:09.561723+00:00",
+    "updated_at": "2025-10-12T06:45:09.561723+00:00"
+  },
+  {
+    "id": "26da8943-571d-43b6-ad6c-0fb27457ceb6",
+    "user_id": "38e2226d-b29b-4264-870e-920b4b4b8990",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "344bfdec-8a16-4568-9105-1d03f71dc38c",
+      "removed_at": "2025-10-12T06:45:51.804Z",
+      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34"
+    },
+    "read_at": null,
+    "created_at": "2025-10-12T06:45:51.917913+00:00",
+    "updated_at": "2025-10-12T06:45:51.917913+00:00"
+  },
+  {
+    "id": "5674b5ee-a179-48f4-a137-6b5da0dfd7e0",
+    "user_id": "02ab90db-0631-45ba-b156-706e0af451d9",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "5a6e2c80-ad14-42f4-9eb9-fe1f5cab2269",
+      "removed_at": "2025-10-12T06:46:01.672Z",
+      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34"
+    },
+    "read_at": null,
+    "created_at": "2025-10-12T06:46:01.792482+00:00",
+    "updated_at": "2025-10-12T06:46:01.792482+00:00"
+  },
+  {
+    "id": "5a86c81c-2ace-47e3-b652-5b9ac3bb99ec",
+    "user_id": "a053727e-d752-49ad-adfe-98c7cd798730",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "bf15b9e0-d48e-4705-a11e-1b802401ac63",
+      "removed_at": "2025-10-12T15:21:42.634Z",
+      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34"
+    },
+    "read_at": null,
+    "created_at": "2025-10-12T15:21:42.756161+00:00",
+    "updated_at": "2025-10-12T15:21:42.756161+00:00"
+  },
+  {
+    "id": "6dbb5532-d048-412e-9a0f-7d6de275ac9f",
+    "user_id": "55edaef4-2977-40b8-b533-365cae96fbbe",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Quad Series 43\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "9aa88ac9-6685-4185-b706-a5818bf0d6fc",
+      "tournament_id": "7ec989e3-61c6-4591-99f2-ba1ecd483fd1",
+      "assigned_by_host": true
+    },
+    "read_at": null,
+    "created_at": "2025-10-12T19:48:20.225079+00:00",
+    "updated_at": "2025-10-12T19:48:20.225079+00:00"
+  },
+  {
+    "id": "183b97c9-b6b1-4b72-8606-b500c30c8f34",
+    "user_id": "9ac6ffe4-35ec-413f-b2fd-e003f9e6e242",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "1f9bb63c-a608-4e19-a9e1-92c944e13524",
+      "removed_at": "2025-10-15T16:20:08.951Z",
+      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34"
+    },
+    "read_at": null,
+    "created_at": "2025-10-15T16:20:09.475714+00:00",
+    "updated_at": "2025-10-15T16:20:09.475714+00:00"
+  },
+  {
+    "id": "6b740020-11c7-4455-846d-2a772ebeffb5",
+    "user_id": "02ab90db-0631-45ba-b156-706e0af451d9",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Phoenix Force Tri Series 17\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "8e690a50-5cec-48b0-9b00-316b4fc67371",
+      "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+      "assigned_by_host": true
+    },
+    "read_at": null,
+    "created_at": "2025-10-17T10:40:23.382451+00:00",
+    "updated_at": "2025-10-17T10:40:23.382451+00:00"
+  },
+  {
+    "id": "ea761bf8-9f2d-43a6-b92c-364b22823e6c",
+    "user_id": "55edaef4-2977-40b8-b533-365cae96fbbe",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Phoenix Force Tri Series 17\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "7f739648-5139-4ef3-afd8-7825efae678e",
+      "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+      "assigned_by_host": true
+    },
+    "read_at": null,
+    "created_at": "2025-10-17T10:40:23.382451+00:00",
+    "updated_at": "2025-10-17T10:40:23.382451+00:00"
+  },
+  {
+    "id": "acf4b97d-640a-4e87-8412-dc6641cbcbb9",
+    "user_id": "e7dcc42d-cc47-422a-949d-93edde57f3e2",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Phoenix Force Tri Series 17\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "114afbce-7728-4714-a706-8a0f7ea99e5a",
+      "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+      "assigned_by_host": true
+    },
+    "read_at": null,
+    "created_at": "2025-10-17T10:54:10.3241+00:00",
+    "updated_at": "2025-10-17T10:54:10.3241+00:00"
+  },
+  {
+    "id": "00f1b021-dd03-4b43-9ef6-a68517a1089d",
+    "user_id": "4b49c820-4383-4e59-9451-ce882b4cb45f",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "b9e767b4-6117-4638-b5ec-a28ea9055645",
+      "removed_at": "2025-10-17T12:38:29.748Z",
+      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34"
+    },
+    "read_at": null,
+    "created_at": "2025-10-17T12:38:29.866833+00:00",
+    "updated_at": "2025-10-17T12:38:29.866833+00:00"
+  },
+  {
+    "id": "089e801a-2ac2-46d1-82aa-5bdcb8babd01",
+    "user_id": "05befd13-f633-4068-b792-c9305e197ff1",
+    "type": "player_removed",
+    "title": "You have been removed from the tournament",
+    "message": "You have been removed from the tournament by the host.",
+    "data": {
+      "slot_id": "eb93dc5d-3fa5-422a-9083-138e3747b18b",
+      "removed_at": "2025-10-18T08:18:32.168Z",
+      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34"
+    },
+    "read_at": null,
+    "created_at": "2025-10-18T08:18:32.284133+00:00",
+    "updated_at": "2025-10-18T08:18:32.284133+00:00"
+  },
+  {
+    "id": "f3b8221d-949f-4502-8006-a67d8680f595",
+    "user_id": "b2125691-2276-4fed-9d51-2241c39de66e",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been confirmed to tournament \"Phoenix Force Tri Series 16\" by the host.",
+    "data": {
+      "status": "confirmed",
+      "slot_id": "37229c63-05e6-417a-ae7b-e03b9365c0ad",
+      "tournament_id": "3fe7e4ed-33c3-4788-bab4-22710a278c34",
+      "assigned_by_host": true
+    },
+    "read_at": null,
+    "created_at": "2025-10-18T08:19:04.907189+00:00",
+    "updated_at": "2025-10-18T08:19:04.907189+00:00"
+  },
+  {
+    "id": "72724416-2f6b-4a8d-8398-4d2f32c17a68",
+    "user_id": "f9f0875f-3abe-4566-a788-ddbc4ebe8f81",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Phoenix Force Tri Series 17\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "4f19a972-dc73-48af-98ed-7c0386538296",
+      "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+      "assigned_by_host": true
+    },
+    "read_at": null,
+    "created_at": "2025-10-19T07:07:20.973124+00:00",
+    "updated_at": "2025-10-19T07:07:20.973124+00:00"
+  },
+  {
+    "id": "456e42ff-435b-4e6e-ba7c-fa8648a3053e",
+    "user_id": "02ab90db-0631-45ba-b156-706e0af451d9",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Phoenix Force Tri Series 17\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "f720f493-15ca-421e-9d9f-5aa95a781760",
+      "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+      "assigned_by_host": true
+    },
+    "read_at": null,
+    "created_at": "2025-10-19T07:07:20.973124+00:00",
+    "updated_at": "2025-10-19T07:07:20.973124+00:00"
+  },
+  {
+    "id": "045e4733-cfaa-482e-acaa-d103c7556083",
+    "user_id": "55edaef4-2977-40b8-b533-365cae96fbbe",
+    "type": "tournament_assignment",
+    "title": "Tournament Assignment",
+    "message": "You have been assigned to tournament \"Phoenix Force Tri Series 17\" by the host.",
+    "data": {
+      "status": "pending",
+      "slot_id": "d5278cd5-c76e-400c-9cee-dc110c12315b",
+      "tournament_id": "4157f221-ded5-468c-abf8-767c6710e318",
+      "assigned_by_host": true
+    },
+    "read_at": null,
+    "created_at": "2025-10-19T07:07:20.973124+00:00",
+    "updated_at": "2025-10-19T07:07:20.973124+00:00"
+  }
+]
