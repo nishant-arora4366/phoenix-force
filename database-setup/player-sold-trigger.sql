@@ -1,7 +1,7 @@
 -- SQL function and trigger to handle player sold status updates
 -- This ensures that when a player is sold, all necessary fields are updated
 
--- Function to mark a player as sold
+-- Function to mark a player as sold (deadlock-safe version)
 CREATE OR REPLACE FUNCTION mark_player_as_sold(
   p_auction_id UUID,
   p_player_id UUID,
@@ -9,42 +9,45 @@ CREATE OR REPLACE FUNCTION mark_player_as_sold(
   p_sold_amount INTEGER
 )
 RETURNS BOOLEAN AS $$
+DECLARE
+  v_updated BOOLEAN := FALSE;
 BEGIN
-  -- Update the auction_players table
+  -- Use advisory lock to prevent concurrent operations on same auction
+  PERFORM pg_advisory_xact_lock(hashtext(p_auction_id::text));
+  
+  -- Single UPDATE to auction_players table with all changes
   UPDATE auction_players
   SET 
     status = 'sold',
     sold_to = p_team_id,
     sold_price = p_sold_amount,
+    current_player = false,
     updated_at = NOW()
   WHERE 
     auction_id = p_auction_id 
     AND player_id = p_player_id
     AND status != 'sold'; -- Prevent duplicate updates
   
-  -- Update the auction_teams table to reflect the purchase
-  UPDATE auction_teams
-  SET 
-    total_spent = total_spent + p_sold_amount,
-    remaining_purse = remaining_purse - p_sold_amount,
-    players_count = players_count + 1,
-    updated_at = NOW()
-  WHERE 
-    id = p_team_id 
-    AND auction_id = p_auction_id;
+  GET DIAGNOSTICS v_updated = ROW_COUNT;
   
-  -- Clear the current_player flag
-  UPDATE auction_players
-  SET current_player = false
-  WHERE 
-    auction_id = p_auction_id 
-    AND player_id = p_player_id;
+  -- Only update team if player was actually updated
+  IF v_updated THEN
+    UPDATE auction_teams
+    SET 
+      total_spent = total_spent + p_sold_amount,
+      remaining_purse = remaining_purse - p_sold_amount,
+      players_count = players_count + 1,
+      updated_at = NOW()
+    WHERE 
+      id = p_team_id 
+      AND auction_id = p_auction_id;
+  END IF;
   
-  RETURN FOUND;
+  RETURN v_updated;
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to handle the "Sell Player" action
+-- Function to handle the "Sell Player" action (deadlock-safe version)
 CREATE OR REPLACE FUNCTION sell_current_player(
   p_auction_id UUID,
   p_user_id UUID
@@ -55,6 +58,9 @@ DECLARE
   v_winning_bid RECORD;
   v_result JSONB;
 BEGIN
+  -- Use advisory lock to prevent concurrent operations on same auction
+  PERFORM pg_advisory_xact_lock(hashtext(p_auction_id::text));
+  
   -- Get the current player
   SELECT player_id INTO v_current_player_id
   FROM auction_players
