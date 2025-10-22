@@ -24,7 +24,7 @@ interface AuctionState {
   updateAuctionPlayer: (playerId: string, update: Partial<any>) => void
   
   // Optimistic updates
-  optimisticBidUpdate: (teamId: string, amount: number) => void
+  optimisticBidUpdate: (teamId: string, amount: number) => string
   rollbackBid: (bidId: string) => void
   
   // Batch updates for performance

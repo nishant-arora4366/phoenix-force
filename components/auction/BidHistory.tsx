@@ -1,5 +1,7 @@
-import React, { memo, useRef, useEffect } from 'react'
-import { FixedSizeList as List } from 'react-window'
+import React, { memo, useRef, useEffect, CSSProperties } from 'react'
+
+// Use require to bypass TypeScript issues with react-window
+const { List: FixedSizeList } = require('react-window')
 
 interface Bid {
   id: string
@@ -16,7 +18,7 @@ interface BidHistoryProps {
 }
 
 // Virtualized bid row component
-const BidRow = memo(({ 
+const BidRow = ({ 
   index, 
   style, 
   data 
@@ -62,16 +64,14 @@ const BidRow = memo(({
       </div>
     </div>
   )
-})
-
-BidRow.displayName = 'BidRow'
+}
 
 // Main virtualized bid history component
 export const BidHistory = memo(({ 
   bids, 
   height = 400 
 }: BidHistoryProps) => {
-  const listRef = useRef<List>(null)
+  const listRef = useRef<any>(null)
   
   // Auto-scroll to top when new bid is added
   useEffect(() => {
@@ -98,7 +98,7 @@ export const BidHistory = memo(({
         </h3>
       </div>
       
-      <List
+      <FixedSizeList
         ref={listRef}
         height={height}
         itemCount={bids.length}
@@ -108,7 +108,7 @@ export const BidHistory = memo(({
         className="scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
       >
         {BidRow}
-      </List>
+      </FixedSizeList>
     </div>
   )
 })

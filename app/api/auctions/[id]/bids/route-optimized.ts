@@ -3,6 +3,23 @@ import { createClient } from '@supabase/supabase-js'
 import { verifyToken } from '@/src/lib/jwt'
 import { auctionCache, cacheKeys, cachedQuery } from '@/lib/auction-cache'
 
+// Type definitions
+interface UserData {
+  id: string
+  role: string
+}
+
+interface AuctionData {
+  id: string
+  status: string
+  created_by: string
+}
+
+interface TeamData {
+  id: string
+  captain_id: string
+}
+
 // Connection pooling - reuse Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -137,7 +154,7 @@ export async function POST(
     
     // Check cached user permissions first
     const userCacheKey = cacheKeys.userProfile(decoded.userId)
-    let user = auctionCache.get(userCacheKey)
+    let user = auctionCache.get<UserData>(userCacheKey)
     
     if (!user) {
       const { data, error } = await supabase
@@ -156,7 +173,7 @@ export async function POST(
     
     // Quick authorization check using cached auction data
     const auctionCacheKey = cacheKeys.auction(auctionId)
-    let auctionData = auctionCache.get(auctionCacheKey)
+    let auctionData = auctionCache.get<AuctionData>(auctionCacheKey)
     
     if (!auctionData) {
       const { data, error } = await supabase
@@ -190,7 +207,7 @@ export async function POST(
     } else {
       // Check team captain ownership (with caching)
       const teamsCacheKey = `team:${team_id}`
-      let teamData = auctionCache.get(teamsCacheKey)
+      let teamData = auctionCache.get<TeamData>(teamsCacheKey)
       
       if (!teamData) {
         const { data } = await supabase

@@ -49,11 +49,13 @@ class AuctionCache {
   // Clear all cache entries matching a pattern
   invalidatePattern(pattern: string): void {
     const regex = new RegExp(pattern)
-    for (const key of this.cache.keys()) {
+    const keysToDelete: string[] = []
+    this.cache.forEach((_, key) => {
       if (regex.test(key)) {
-        this.cache.delete(key)
+        keysToDelete.push(key)
       }
-    }
+    })
+    keysToDelete.forEach(key => this.cache.delete(key))
   }
   
   // Clear entire cache
@@ -72,10 +74,10 @@ class AuctionCache {
   
   private estimateMemoryUsage(): number {
     let size = 0
-    for (const [key, value] of this.cache.entries()) {
+    this.cache.forEach((value, key) => {
       size += key.length * 2 // Rough estimate for string memory
       size += JSON.stringify(value.data).length * 2
-    }
+    })
     return size
   }
 }

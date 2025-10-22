@@ -124,6 +124,12 @@ export const STATUS = {
     SOLD: 'sold',
     UNSOLD: 'unsold',
     SKIPPED: 'skipped',
+    REPLACED: 'replaced',
+  },
+  REPLACEMENT: {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
   },
   USER: {
     PENDING: 'pending',
@@ -152,6 +158,7 @@ export const API_ENDPOINTS = {
     BIDS: (id: string) => `/api/auctions/${id}/bids`,
     CURRENT_PLAYER: (id: string) => `/api/auctions/${id}/current-player`,
     UNDO_PLAYER: (id: string) => `/api/auctions/${id}/undo-player-assignment`,
+    REPLACEMENTS: (id: string) => `/api/auctions/${id}/replacements`,
   },
   TOURNAMENT: {
     LIST: '/api/tournaments',

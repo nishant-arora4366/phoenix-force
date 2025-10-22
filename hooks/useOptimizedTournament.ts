@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { realtimeManager } from '@/lib/realtime-manager'
 import { secureSessionManager } from '@/src/lib/secure-session'
 import { getSupabaseClient } from '@/src/lib/supabaseClient'
+import { logger } from '@/lib/logger'
 
 interface Tournament {
   id: string
@@ -76,7 +77,7 @@ export function useOptimizedTournament({
       if (slotsError) throw slotsError
       
       setSlots(slotsData || [])
-      setPlayers(slotsData?.map(s => s.player).filter(Boolean) || [])
+      setPlayers(slotsData?.map((s: any) => s.player).filter(Boolean) || [])
 
       // Fetch user registration if userId provided
       if (userId) {
@@ -87,14 +88,14 @@ export function useOptimizedTournament({
           .single()
 
         if (userPlayer) {
-          const userSlot = slotsData?.find(s => s.player_id === userPlayer.id)
+          const userSlot = slotsData?.find((s: any) => s.player_id === userPlayer.id)
           setUserRegistration(userSlot || null)
         }
       }
 
       setError(null)
     } catch (err: any) {
-      console.error('Error fetching tournament:', err)
+      logger.error('Error fetching tournament', err)
       setError(err.message || 'Failed to load tournament')
     } finally {
       setIsLoading(false)
