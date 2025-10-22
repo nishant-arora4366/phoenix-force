@@ -4,6 +4,7 @@
  */
 
 import { secureSessionManager } from '@/src/lib/secure-session'
+import { logger } from './logger'
 
 interface LoginCredentials {
   email: string
@@ -69,7 +70,7 @@ class AuthAPI {
         error: data.error || 'Login failed'
       }
     } catch (error: any) {
-      console.error('Login error:', error)
+      logger.error('Login error', error)
       return {
         success: false,
         error: error.message || 'Network error during login'
@@ -105,7 +106,7 @@ class AuthAPI {
         error: data.error || 'Registration failed'
       }
     } catch (error: any) {
-      console.error('Registration error:', error)
+      logger.error('Registration error', error)
       return {
         success: false,
         error: error.message || 'Network error during registration'
@@ -223,7 +224,7 @@ class AuthAPI {
         error: data.error || 'Failed to update profile'
       }
     } catch (error: any) {
-      console.error('Update profile error:', error)
+      logger.error('Update profile error', error)
       return {
         success: false,
         error: error.message || 'Network error during profile update'
@@ -264,7 +265,7 @@ class AuthAPI {
         error: data.error
       }
     } catch (error: any) {
-      console.error('Change password error:', error)
+      logger.error('Change password error', error)
       return {
         success: false,
         error: error.message || 'Network error during password change'

@@ -5,6 +5,7 @@
 
 import { getSupabaseClient } from '@/src/lib/supabaseClient'
 import { RealtimeChannel } from '@supabase/supabase-js'
+import { logger } from './logger'
 
 interface UpdateBuffer {
   type: string
@@ -67,7 +68,7 @@ class RealtimeManager {
           ...(filter ? { filter } : {})
         }
 
-        channel.on('postgres_changes', subscription, (payload) => {
+        channel.on('postgres_changes', subscription, (payload: any) => {
           this.bufferUpdate(channelId, {
             type: event,
             table,
@@ -79,12 +80,12 @@ class RealtimeManager {
     })
 
     // Subscribe with error handling
-    channel.subscribe((status, err) => {
+    channel.subscribe((status: string, err?: any) => {
       if (err) {
-        console.error(`[RealtimeManager] Channel ${channelId} error:`, err)
+        logger.error(`[RealtimeManager] Channel ${channelId} error`, err)
         config.onError?.(err)
       } else if (status === 'SUBSCRIBED') {
-        console.log(`[RealtimeManager] Channel ${channelId} subscribed successfully`)
+        logger.info(`[RealtimeManager] Channel ${channelId} subscribed successfully`)
       }
     })
 
@@ -134,7 +135,7 @@ class RealtimeManager {
     try {
       config.onUpdate(updates)
     } catch (error) {
-      console.error(`[RealtimeManager] Error in update handler for ${channelId}:`, error)
+      logger.error(`[RealtimeManager] Error in update handler for ${channelId}`, error)
       config.onError?.(error)
     }
   }

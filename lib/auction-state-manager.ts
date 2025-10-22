@@ -131,19 +131,19 @@ class AuctionWebSocketManager {
       .channel(`auction-all-${auctionId}`)
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'auction_bids', filter: `auction_id=eq.${auctionId}` },
-        (payload) => this.bufferUpdate('bid', payload)
+        (payload: any) => this.bufferUpdate('bid', payload)
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'auctions', filter: `id=eq.${auctionId}` },
-        (payload) => this.bufferUpdate('auction', payload)
+        (payload: any) => this.bufferUpdate('auction', payload)
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'auction_players', filter: `auction_id=eq.${auctionId}` },
-        (payload) => this.bufferUpdate('player', payload)
+        (payload: any) => this.bufferUpdate('player', payload)
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'auction_teams', filter: `auction_id=eq.${auctionId}` },
-        (payload) => this.bufferUpdate('team', payload)
+        (payload: any) => this.bufferUpdate('team', payload)
       )
       .subscribe()
   }
