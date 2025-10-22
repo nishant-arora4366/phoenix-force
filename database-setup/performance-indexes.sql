@@ -172,6 +172,9 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop existing function first to avoid return type conflicts
+DROP FUNCTION IF EXISTS get_current_player(UUID);
+
 -- Function to get current player with caching hints
 CREATE OR REPLACE FUNCTION get_current_player(p_auction_id UUID)
 RETURNS TABLE (
@@ -219,8 +222,9 @@ $$ LANGUAGE plpgsql STABLE;
 -- Enable query result caching for read-heavy queries
 ALTER FUNCTION get_current_player SET work_mem = '256MB';
 
--- Vacuum and analyze tables for better query planning
-VACUUM ANALYZE auction_bids;
-VACUUM ANALYZE auction_players;
-VACUUM ANALYZE auction_teams;
-VACUUM ANALYZE auctions;
+-- Note: VACUUM ANALYZE commands should be run separately outside of transaction blocks
+-- Run these commands manually after the main script:
+-- VACUUM ANALYZE auction_bids;
+-- VACUUM ANALYZE auction_players;
+-- VACUUM ANALYZE auction_teams;
+-- VACUUM ANALYZE auctions;

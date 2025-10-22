@@ -281,6 +281,7 @@ export async function POST(
     }
     
     // Use RPC for atomic bid placement
+    // Ensure we're calling the function with the correct signature: (uuid, uuid, integer, uuid)
     const { data: rpcResult, error: rpcError } = await supabase
       .rpc('place_bid_atomic', {
         p_auction_id: auctionId,

@@ -201,10 +201,11 @@ export async function POST(
     }
 
     // Delegate concurrency & validation to PostgreSQL function (implemented separately).
+    // Ensure we're calling the function with the correct signature: (uuid, uuid, integer, uuid)
     const { data: rpcResult, error: rpcError } = await supabase
       .rpc('place_bid_atomic', {
         p_auction_id: auctionId,
-        p_team_id: team_id,
+        p_team_id: team_id, 
         p_bid_amount: bid_amount,
         p_user_id: decoded.userId
       })
