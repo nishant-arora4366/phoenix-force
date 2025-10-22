@@ -62,6 +62,10 @@ export default function TournamentAuctionCreatePage() {
   const [showMessageModal, setShowMessageModal] = useState(false)
   const [messageModal, setMessageModal] = useState({ type: '', message: '' })
   const [creatingAuction, setCreatingAuction] = useState<string | null>(null)
+  const [showAddPlayersModal, setShowAddPlayersModal] = useState(false)
+  const [availablePlayers, setAvailablePlayers] = useState<Player[]>([])
+  const [loadingAvailablePlayers, setLoadingAvailablePlayers] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null)
   const [currentStep, setCurrentStep] = useState(1)
   const [auctionConfig, setAuctionConfig] = useState<any>({
@@ -81,6 +85,31 @@ export default function TournamentAuctionCreatePage() {
   const [isRestoringState, setIsRestoringState] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const playersPerPage = 10
+
+  // Simple role emoji mapping for Batter, Bowler, Wicket Keeper combinations
+  const getRoleEmoji = (role: string | string[] | undefined) => {
+    if (!role) return "❓";
+    
+    // Handle array of roles
+    if (Array.isArray(role)) {
+      const roles = role.map(r => r.toLowerCase());
+      let emoji = "";
+      
+      if (roles.includes('batter')) emoji += "🏏";
+      if (roles.includes('bowler')) emoji += "⚾";
+      if (roles.includes('wicket keeper')) emoji += "🧤";
+      
+      return emoji || "❓";
+    }
+    
+    // Handle string role (fallback)
+    const lowerRole = role.toLowerCase();
+    if (lowerRole.includes('batter')) return "🏏";
+    if (lowerRole.includes('bowler')) return "⚾";
+    if (lowerRole.includes('wicket')) return "🧤";
+    
+    return "❓";
+  };
 
   const { data: tournaments, error, isLoading: tournamentsLoading, mutate } = useSWR<Tournament[]>('/api/tournaments', fetcher)
 
@@ -280,6 +309,93 @@ export default function TournamentAuctionCreatePage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
+  }
+
+  // Load tournament players
+  const loadTournamentPlayers = async () => {
+    if (!selectedTournament) return
+    
+    setLoadingPlayers(true)
+    try {
+      const response = await fetch(`/api/tournaments/${selectedTournament.id}/players`)
+      if (response.ok) {
+        const result = await response.json()
+        const sortedPlayers = (result.players || []).sort((a: Player, b: Player) => 
+          a.display_name.localeCompare(b.display_name)
+        )
+        setTournamentPlayers(sortedPlayers)
+      }
+    } catch (error) {
+      console.error('Error loading tournament players:', error)
+    } finally {
+      setLoadingPlayers(false)
+    }
+  }
+
+  // Fetch all players from database for adding to tournament
+  const fetchAvailablePlayers = async () => {
+    setLoadingAvailablePlayers(true)
+    try {
+      const token = secureSessionManager.getToken()
+      const response = await fetch('/api/players-public', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Handle different possible response structures
+        let allPlayers = []
+        if (Array.isArray(data)) {
+          allPlayers = data
+        } else if (data.data && Array.isArray(data.data)) {
+          allPlayers = data.data
+        } else if (data.players && Array.isArray(data.players)) {
+          allPlayers = data.players
+        } else {
+          console.error('Unexpected API response structure:', data)
+          setMessageModal({ type: 'error', message: 'Unexpected data format from server.' })
+          setShowMessageModal(true)
+          return
+        }
+        
+        // Don't filter out players - show all players but mark tournament players
+        setAvailablePlayers(allPlayers)
+      } else {
+        console.error('Failed to fetch players:', response.status)
+        setMessageModal({ type: 'error', message: 'Failed to fetch players. Please try again.' })
+        setShowMessageModal(true)
+      }
+    } catch (error) {
+      console.error('Error fetching available players:', error)
+      setMessageModal({ type: 'error', message: 'Error fetching players. Please try again.' })
+      setShowMessageModal(true)
+    } finally {
+      setLoadingAvailablePlayers(false)
+    }
+  }
+
+  // Get filtered players based on search query
+  const getFilteredPlayers = () => {
+    if (!searchQuery.trim()) return availablePlayers
+    
+    return availablePlayers.filter(player => 
+      player.display_name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  }
+
+  // Add player to auction (not tournament)
+  const addPlayerToAuction = (playerId: string) => {
+    const player = availablePlayers.find(p => p.id === playerId)
+    if (!player) return
+    
+    // Add player to tournament players list (for auction)
+    setTournamentPlayers(prev => [...prev, player])
+    
+    // Remove from available players list
+    setAvailablePlayers(prev => prev.filter(p => p.id !== playerId))
   }
 
   const handleStep1Next = () => {
@@ -1029,6 +1145,17 @@ export default function TournamentAuctionCreatePage() {
                           }`}>
                             {tournamentPlayers.length % (selectedTournament.selected_teams || 1) === 0 ? 'Yes' : 'No'}
                           </span>
+                          {tournamentPlayers.length % (selectedTournament.selected_teams || 1) !== 0 && (isHost || userProfile?.role === 'admin') && (
+                            <button
+                              onClick={() => {
+                                fetchAvailablePlayers()
+                                setShowAddPlayersModal(true)
+                              }}
+                              className="ml-3 px-3 py-1 text-xs bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/30 transition-all duration-150"
+                            >
+                              Add Players
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1052,16 +1179,6 @@ export default function TournamentAuctionCreatePage() {
                             const battingStyle = player.skills?.["Batting Style"];
                             const bowlingStyle = player.skills?.["Bowling Style"];
                             
-                            const getRoleEmoji = (role: string | string[] | undefined) => {
-                              if (!role) return "❓";
-                              const roleStr = Array.isArray(role) ? role.join(', ') : role;
-                              if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🏏⚾";
-                              if (roleStr.toLowerCase().includes('batter')) return "🏏";
-                              if (roleStr.toLowerCase().includes('bowler')) return "⚾";
-                              if (roleStr.toLowerCase().includes('wicket')) return "🧤";
-                              if (roleStr.toLowerCase().includes('all')) return "🌟";
-                              return "🏏";
-                            };
                             
                             return (
                               <div key={player.id} className="bg-[#19171b]/30 rounded-xl p-4 border border-[#CEA17A]/10">
@@ -1137,16 +1254,6 @@ export default function TournamentAuctionCreatePage() {
                               const bowlingStyle = player.skills?.["Bowling Style"];
                               
                               // Get role emoji
-                              const getRoleEmoji = (role: string | string[] | undefined) => {
-                                if (!role) return "❓";
-                                const roleStr = Array.isArray(role) ? role.join(', ') : role;
-                                if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🏏⚾";
-                                if (roleStr.toLowerCase().includes('batter')) return "🏏";
-                                if (roleStr.toLowerCase().includes('bowler')) return "⚾";
-                                if (roleStr.toLowerCase().includes('wicket')) return "🧤";
-                                if (roleStr.toLowerCase().includes('all')) return "🌟";
-                                return "🏏";
-                              };
                               
                               return (
                                 <tr key={player.id} className="border-b border-[#CEA17A]/10 hover:bg-[#19171b]/30 transition-colors">
@@ -1590,16 +1697,6 @@ export default function TournamentAuctionCreatePage() {
                           const bowlingStyle = player.skills?.["Bowling Style"];
                           
                           // Get role emoji
-                          const getRoleEmoji = (role: string | string[] | undefined) => {
-                            if (!role) return "❓";
-                            const roleStr = Array.isArray(role) ? role.join(', ') : role;
-                            if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🏏⚾";
-                            if (roleStr.toLowerCase().includes('batter')) return "🏏";
-                            if (roleStr.toLowerCase().includes('bowler')) return "⚾";
-                            if (roleStr.toLowerCase().includes('wicket')) return "🧤";
-                            if (roleStr.toLowerCase().includes('all')) return "🌟";
-                            return "❓";
-                          };
 
                           return (
                             <div key={player.id} className="flex items-center space-x-3 p-3 bg-[#19171b]/50 rounded-lg border border-[#CEA17A]/10">
@@ -1719,16 +1816,6 @@ export default function TournamentAuctionCreatePage() {
                         const battingStyle = player.skills?.["Batting Style"];
                         const bowlingStyle = player.skills?.["Bowling Style"];
                         
-                        const getRoleEmoji = (role: string | string[] | undefined) => {
-                          if (!role) return "❓";
-                          const roleStr = Array.isArray(role) ? role.join(', ') : role;
-                          if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🏏⚾";
-                          if (roleStr.toLowerCase().includes('batter')) return "🏏";
-                          if (roleStr.toLowerCase().includes('bowler')) return "⚾";
-                          if (roleStr.toLowerCase().includes('wicket')) return "🧤";
-                          if (roleStr.toLowerCase().includes('all')) return "🌟";
-                          return "🏏";
-                        };
                         
                         const isMaxCaptainsReached = auctionConfig.captains.length >= (selectedTournament?.selected_teams || 0)
                         const canSelect = !isSelected && !isMaxCaptainsReached
@@ -1848,16 +1935,6 @@ export default function TournamentAuctionCreatePage() {
                           const bowlingStyle = player.skills?.["Bowling Style"];
                           
                           // Get role emoji
-                          const getRoleEmoji = (role: string | string[] | undefined) => {
-                            if (!role) return "❓";
-                            const roleStr = Array.isArray(role) ? role.join(', ') : role;
-                            if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🏏⚾";
-                            if (roleStr.toLowerCase().includes('batter')) return "🏏";
-                            if (roleStr.toLowerCase().includes('bowler')) return "⚾";
-                            if (roleStr.toLowerCase().includes('wicket')) return "🧤";
-                            if (roleStr.toLowerCase().includes('all')) return "🌟";
-                            return "🏏";
-                          };
                           
                           const isMaxCaptainsReached = auctionConfig.captains.length >= (selectedTournament?.selected_teams || 0)
                           const canSelect = !isSelected && !isMaxCaptainsReached
@@ -2039,6 +2116,132 @@ export default function TournamentAuctionCreatePage() {
                 }`}
               >
                 OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Players Modal */}
+      {showAddPlayersModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#19171b] border border-[#CEA17A]/20 rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-[#DBD0C0]">Add Players to Auction</h3>
+                <p className="text-sm text-[#DBD0C0]/70 mt-1">Select players from the database to add to this auction</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAddPlayersModal(false)
+                  setSearchQuery('')
+                }}
+                className="text-[#DBD0C0]/50 hover:text-[#DBD0C0] transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Search Input */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search players by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 bg-[#19171b]/50 border border-[#CEA17A]/20 rounded-lg text-[#DBD0C0] placeholder-[#DBD0C0]/50 focus:outline-none focus:border-[#CEA17A]/40 transition-colors"
+              />
+            </div>
+            
+            <div className="flex-1 overflow-y-auto">
+              {loadingAvailablePlayers ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#CEA17A]"></div>
+                  <span className="ml-3 text-[#DBD0C0]">Loading available players...</span>
+                </div>
+              ) : getFilteredPlayers().length === 0 ? (
+                <div className="text-center py-8 text-[#DBD0C0]/70">
+                  {searchQuery ? 'No players found matching your search.' : 'No players available.'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {getFilteredPlayers().map((player) => {
+                    const isAlreadyInTournament = tournamentPlayers.some(p => p.id === player.id)
+                    
+                    return (
+                      <div key={player.id} className={`rounded-lg p-4 border transition-all duration-150 ${
+                        isAlreadyInTournament 
+                          ? 'bg-[#19171b]/30 border-[#CEA17A]/20 opacity-60' 
+                          : 'bg-[#19171b]/50 border-[#CEA17A]/10 hover:border-[#CEA17A]/20'
+                      }`}>
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                            {player.profile_pic_url ? (
+                              <img
+                                src={player.profile_pic_url}
+                                alt={player.display_name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const parent = target.parentElement;
+                                  if (parent) {
+                                    parent.innerHTML = `
+                                      <div class="w-full h-full bg-[#CEA17A]/20 flex items-center justify-center">
+                                        <span class="text-[#CEA17A] text-sm font-bold">
+                                          ${player.display_name.charAt(0).toUpperCase()}
+                                        </span>
+                                      </div>
+                                    `;
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-[#CEA17A]/20 flex items-center justify-center">
+                                <span className="text-[#CEA17A] text-sm font-bold">
+                                  {player.display_name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-grow min-w-0">
+                            <div className="text-[#DBD0C0] font-medium text-sm truncate">{player.display_name}</div>
+                            <div className="flex items-center space-x-2 text-xs text-[#DBD0C0]/70">
+                              <span>{getRoleEmoji(player.skills?.Role)}</span>
+                              {player.skills?.["Base Price"] && <span>₹{player.skills["Base Price"]}</span>}
+                            </div>
+                          </div>
+                        </div>
+                        {isAlreadyInTournament ? (
+                          <div className="w-full px-3 py-2 bg-[#CEA17A]/10 text-[#CEA17A]/60 border border-[#CEA17A]/20 rounded-lg text-sm text-center">
+                            Already in Tournament
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => addPlayerToAuction(player.id)}
+                            className="w-full px-3 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 text-sm"
+                          >
+                            Add to Auction
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-[#CEA17A]/20 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowAddPlayersModal(false)
+                  setSearchQuery('')
+                }}
+                className="px-4 py-2 bg-[#19171b]/50 text-[#DBD0C0] border border-[#CEA17A]/20 rounded-lg hover:bg-[#CEA17A]/10 transition-all duration-150"
+              >
+                Close
               </button>
             </div>
           </div>

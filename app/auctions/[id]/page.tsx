@@ -1857,8 +1857,8 @@ export default function AuctionPage() {
   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#CEA17A]/3 rounded-full blur-3xl motion-safe:animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
       
-  {/* Desktop / Tablet layout (md and up) */}
-  <div className="hidden md:flex relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 min-h-screen flex-col">
+  {/* Desktop / Tablet layout (lg and up) */}
+  <div className="hidden lg:flex relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 min-h-screen flex-col">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 space-y-4 sm:space-y-0 flex-shrink-0">
           <div className="flex items-center space-x-4">
@@ -2022,7 +2022,7 @@ export default function AuctionPage() {
 
   {/* AUCTION COMPLETION: Always show current player card; when completed make card + final teams full width */}
 
-  <div className={(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) ? 'space-y-12 mb-12' : 'grid grid-cols-1 md:grid-cols-4 gap-6 mb-8'}>
+  <div className={(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) ? 'space-y-12 mb-12' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8'}>
           {/* Current Player Card - Always visible when there's a current player */}
           <div className="xl:col-span-1 bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#CEA17A]/10 transition-opacity duration-200 ease-out">
             {!isAuctionLive && auction?.status !== 'completed' && (
@@ -2245,7 +2245,7 @@ export default function AuctionPage() {
                   <div>
                   {/* Mobile Player Detail Modal */}
                   {mobilePlayerModalOpen && currentPlayer && (
-                    <div className="md:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                    <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
                       <div className="w-11/12 max-w-sm bg-[#1a1a1a] border border-[#CEA17A]/30 rounded-xl p-5 shadow-2xl relative animate-fade-in">
                         <button
                           onClick={() => setMobilePlayerModalOpen(false)}
@@ -2357,7 +2357,7 @@ export default function AuctionPage() {
 
           {/* Live Bids Card - Hidden when auction is completed */}
           {!(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
-          <div className="xl:col-span-3 bg-gradient-to-br from-[#1a1a1a]/80 to-[#0f0f0f]/80 rounded-xl p-6 border-2 border-[#CEA17A]/20 shadow-2xl flex flex-col">
+          <div className="md:col-span-2 lg:col-span-3 xl:col-span-3 bg-gradient-to-br from-[#1a1a1a]/80 to-[#0f0f0f]/80 rounded-xl p-4 md:p-6 border-2 border-[#CEA17A]/20 shadow-2xl flex flex-col">
             <div className="flex items-center justify-between mb-6 flex-shrink-0">
               <h2 className="text-2xl font-bold text-[#DBD0C0] flex items-center gap-3">
                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
@@ -2369,9 +2369,9 @@ export default function AuctionPage() {
             
             {currentPlayer && !allPlayersSold ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
                   {/* Left: Current/Next Bid cards side by side (span 2) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 h-full md:col-span-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 h-full md:col-span-2 lg:col-span-2">
                     <div className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-lg p-3 border border-[#CEA17A]/20 shadow">
                       <h3 className="text-base font-semibold text-[#CEA17A] mb-2 flex items-center gap-2">
                         <span className="inline-block text-base leading-none">🔨</span>
@@ -2534,7 +2534,7 @@ export default function AuctionPage() {
                   {/* Min width ensures columns don't squeeze and cause overflow outside parent */}
                   <div className="min-w-[960px]">
                     {/* Header */}
-                    <div className="grid grid-cols-12 gap-4 p-4 bg-[#1a1a1a]/50 border-b border-[#CEA17A]/20 text-base font-semibold text-[#CEA17A] sticky top-0 z-10">
+                    <div className="grid grid-cols-12 gap-2 md:gap-4 p-3 md:p-4 bg-[#1a1a1a]/50 border-b border-[#CEA17A]/20 text-sm md:text-base font-semibold text-[#CEA17A] sticky top-0 z-10">
                       <div className="col-span-3">Team</div>
                       <div className="col-span-2">Place Bid</div>
                       <div className="col-span-2 text-center">Remaining</div>
@@ -2587,10 +2587,10 @@ export default function AuctionPage() {
                         const captainPlayer = players.find(p => p.id === team.captain_id)
                         const captainName = captainPlayer?.display_name || 'Unknown Captain'
                         return (
-                          <div key={team.id} className={`grid grid-cols-12 gap-4 p-3 items-center text-sm md:text-base ${index % 2 === 0 ? 'bg-[#1a1a1a]/20' : 'bg-[#1a1a1a]/10'}`}>
+                          <div key={team.id} className={`grid grid-cols-12 gap-2 md:gap-4 p-2 md:p-3 items-center text-xs md:text-sm lg:text-base ${index % 2 === 0 ? 'bg-[#1a1a1a]/20' : 'bg-[#1a1a1a]/10'}`}>
                             <div className="col-span-3">
-                              <div className="font-semibold text-[#DBD0C0] text-base md:text-lg leading-snug">{captainName}</div>
-                              <div className="text-[11px] md:text-xs text-[#DBD0C0]/70 font-medium">{team.players_count}/{team.required_players} • {availableSlots} left</div>
+                              <div className="font-semibold text-[#DBD0C0] text-sm md:text-base lg:text-lg leading-snug">{captainName}</div>
+                              <div className="text-[10px] md:text-xs text-[#DBD0C0]/70 font-medium">{team.players_count}/{team.required_players} • {availableSlots} left</div>
                   </div>
                             <div className="col-span-2 relative">
                               { (isAuctionController || isUserCaptainForTeam) ? (
@@ -3105,15 +3105,15 @@ export default function AuctionPage() {
         </div>
       </div>
 
-      {/* Mobile layout (below md) */}
-      <div className="md:hidden relative z-10 w-full px-3 pt-4 pb-24 min-h-screen flex flex-col">
+      {/* Mobile/Tablet layout (below lg) */}
+      <div className="lg:hidden relative z-10 w-full px-3 md:px-6 pt-4 pb-24 min-h-screen flex flex-col">
         {/* Mobile Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 min-w-0">
             <Link href="/auctions" className="p-2 rounded-lg bg-[#CEA17A]/10 text-[#CEA17A] flex-shrink-0" aria-label="Back">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             </Link>
-            <h1 className="text-lg font-bold text-[#DBD0C0] truncate">{auction.tournament_name || 'Auction'}</h1>
+            <h1 className="text-lg md:text-xl font-bold text-[#DBD0C0] truncate">{auction.tournament_name || 'Auction'}</h1>
           </div>
           <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${getStatusColor(auction.status)}`}>{getStatusText(auction.status)}</span>
         </div>
