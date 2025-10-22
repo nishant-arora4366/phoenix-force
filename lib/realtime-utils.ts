@@ -4,6 +4,41 @@
 
 import { realtimeManager } from './realtime-manager'
 import { useEffect, useCallback } from 'react'
+import { showPlayerSoldNotification } from '@/components/common/ToastNotification'
+import { getSupabaseClient } from '@/src/lib/supabaseClient'
+import { logger } from './logger'
+
+// Helper function to handle player sold notifications
+async function handlePlayerSoldNotification(auctionPlayer: any) {
+  try {
+    const supabase = getSupabaseClient()
+    
+    // Fetch player details
+    const { data: playerData } = await supabase
+      .from('players')
+      .select('display_name, profile_pic_url')
+      .eq('id', auctionPlayer.player_id)
+      .single()
+    
+    // Fetch team details
+    const { data: teamData } = await supabase
+      .from('auction_teams')
+      .select('team_name')
+      .eq('id', auctionPlayer.sold_to)
+      .single()
+    
+    if (playerData && teamData) {
+      showPlayerSoldNotification(
+        playerData.display_name,
+        auctionPlayer.sold_price || 0,
+        teamData.team_name,
+        playerData.profile_pic_url
+      )
+    }
+  } catch (error) {
+    logger.error('Error showing player sold notification', error)
+  }
+}
 
 /**
  * Hook for auction realtime subscriptions
@@ -42,6 +77,13 @@ export function useAuctionRealtime(
                 break
               case 'auction_players':
                 handlers.onPlayerUpdate?.(payload)
+                // Check for player sold event
+                if (payload.eventType === 'UPDATE' && 
+                    payload.new?.status === 'sold' && 
+                    payload.old?.status !== 'sold') {
+                  // Fetch additional data and show notification
+                  handlePlayerSoldNotification(payload.new)
+                }
                 break
               case 'auction_teams':
                 handlers.onTeamUpdate?.(payload)

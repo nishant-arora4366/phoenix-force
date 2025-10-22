@@ -1,0 +1,68 @@
+/* Custom animations for toast notifications */
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+/* Entrance animation for toasts */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Exit animation for toasts */
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Pulse animation for player sold notification */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(206, 161, 122, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(206, 161, 122, 0.8);
+  }
+}
+
+.player-sold-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Celebration confetti effect */
+@keyframes confetti {
+  0% {
+    transform: translateY(-100%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti {
+  animation: confetti 3s ease-in-out;
+}
