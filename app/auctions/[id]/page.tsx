@@ -235,7 +235,7 @@ export default function AuctionPage() {
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ action: 'set_current', player_id: firstAvailable.player_id })
-              }).catch(err => console.warn('Auto-fix current player failed:', err))
+              }).catch(err => {})
             }
         }
       }, 3000)
@@ -252,7 +252,6 @@ export default function AuctionPage() {
     if (auction.status === 'draft' && randomOrderInitializedRef.current) {
       randomOrderRef.current = null
       randomOrderInitializedRef.current = false
-      console.log('Reset random player order due to auction going back to draft')
       return
     }
     
@@ -275,7 +274,6 @@ export default function AuctionPage() {
         
         randomOrderRef.current = shuffledIds
         randomOrderInitializedRef.current = true
-        console.log('Initialized random player order:', shuffledIds)
       }
     }
   }, [auction?.status, auction?.player_order_type, auctionPlayers, auctionTeams, players])
@@ -365,7 +363,6 @@ export default function AuctionPage() {
               })
             }
           } catch (error) {
-            console.warn('Failed to auto-set current player:', error)
           }
         }
         setCurrentPlayerAsync()
@@ -448,7 +445,6 @@ export default function AuctionPage() {
       })
       return formattedBids
     } catch (error) {
-      console.error('Error fetching bid history:', error)
       return []
     } finally {
       meta.inFlight = false
@@ -728,7 +724,6 @@ export default function AuctionPage() {
         }
       }
     } catch (error) {
-      console.error('Error placing bid:', error)
       addToast({ title: 'Network', message: 'Failed to place bid. Please try again.', severity: 'error' })
     } finally {
       setBidLoading(prev => ({ ...prev, [`bid_${teamId}`]: false }))
@@ -781,7 +776,6 @@ export default function AuctionPage() {
         setUiNotice({ type: 'error', message: `Failed to undo bid: ${errorData.error || 'Unknown error'}` })
       }
     } catch (error) {
-      console.error('Error undoing bid:', error)
       setUiNotice({ type: 'error', message: 'Failed to undo bid. Please try again.' })
     } finally {
       setActionLoading(prev => ({ ...prev, undoBid: false }))
@@ -845,7 +839,6 @@ export default function AuctionPage() {
         setUiNotice({ type: 'error', message: errorMessage })
       }
     } catch (error) {
-      console.error('Error undoing player assignment:', error)
       setUiNotice({ type: 'error', message: 'Failed to undo player assignment. Please try again.' })
     } finally {
       setActionLoading(prev => ({ ...prev, undoPlayerAssignment: false }))
@@ -915,7 +908,6 @@ export default function AuctionPage() {
         alert(`Failed to sell player: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
-      console.error('Error selling player:', error)
       alert('Failed to sell player. Please try again.')
     } finally {
       setActionLoading(prev => ({ ...prev, sellPlayer: false }))
@@ -1019,11 +1011,9 @@ export default function AuctionPage() {
             })
           })
           
-          if (!resetBidsResponse.ok) {
-            console.warn('Failed to reset bids for current player')
-          }
-        } catch (resetError) {
-          console.warn('Error resetting bids:', resetError)
+        if (!resetBidsResponse.ok) {
+        }
+      } catch (resetError) {
         }
       }
 
@@ -1053,7 +1043,6 @@ export default function AuctionPage() {
         }
       }
     } catch (error) {
-      console.error('Error moving to next player:', error)
       alert('Failed to move to next player. Please try again.')
     } finally {
       setActionLoading(prev => ({ ...prev, nextPlayer: false }))
@@ -1113,11 +1102,9 @@ export default function AuctionPage() {
             })
           })
           
-          if (!resetBidsResponse.ok) {
-            console.warn('Failed to reset bids for current player')
-          }
-        } catch (resetError) {
-          console.warn('Error resetting bids:', resetError)
+        if (!resetBidsResponse.ok) {
+        }
+      } catch (resetError) {
         }
       }
 
@@ -1147,7 +1134,6 @@ export default function AuctionPage() {
         }
       }
     } catch (error) {
-      console.error('Error moving to previous player:', error)
       alert('Failed to move to previous player. Please try again.')
     } finally {
       setActionLoading(prev => ({ ...prev, previousPlayer: false }))
@@ -1222,7 +1208,6 @@ export default function AuctionPage() {
         setUiNotice({ type: 'error', message: `Failed to ${auction.status === 'draft' ? 'start' : 'pause/resume'} auction: ${errorData.error || 'Unknown error'}` })
       }
     } catch (error) {
-      console.error('Error controlling auction:', error)
       setUiNotice({ type: 'error', message: 'Failed to control auction. Please try again.' })
     } finally {
       setActionLoading(prev => ({ ...prev, startPause: false }))
@@ -1274,7 +1259,6 @@ export default function AuctionPage() {
         setUiNotice({ type: 'error', message: `Failed to mark auction as complete: ${errorData.error || 'Unknown error'}` })
       }
     } catch (error) {
-      console.error('Error marking auction as complete:', error)
       setUiNotice({ type: 'error', message: 'Failed to mark auction as complete. Please try again.' })
     } finally {
       setActionLoading(prev => ({ ...prev, markComplete: false }))
@@ -1287,16 +1271,13 @@ export default function AuctionPage() {
     const isMobile = window.innerWidth < 768
     let targetRef = isMobile ? mobileExportRef : exportRef
     
-    console.log('Export debug:', { isMobile, hasTargetRef: !!targetRef.current, windowWidth: window.innerWidth })
     
     // Fallback to desktop export if mobile export ref is not available
     if (!targetRef.current && isMobile) {
-      console.log('Mobile export ref not found, falling back to desktop export')
       targetRef = exportRef
     }
     
     if (!targetRef.current) {
-      console.error('Target ref not found:', { isMobile, mobileRef: !!mobileExportRef.current, desktopRef: !!exportRef.current })
       setUiNotice({ type: 'error', message: 'Export layout not found. Please try again.' })
       return
     }
@@ -1353,7 +1334,6 @@ export default function AuctionPage() {
       }, 'image/jpeg', 0.9)
       
     } catch (error) {
-      console.error('Error exporting image:', error)
       setUiNotice({ type: 'error', message: `Failed to export image: ${error instanceof Error ? error.message : 'Unknown error'}` })
     } finally {
       setActionLoading(prev => ({ ...prev, exportImage: false }))
@@ -1386,7 +1366,6 @@ export default function AuctionPage() {
           }
         }
       } catch (error) {
-        console.error('Error checking user:', error)
       } finally {
         setIsUserLoading(false)
       }
@@ -1412,7 +1391,6 @@ export default function AuctionPage() {
             }
           })
           .catch(error => {
-            console.error('Error fetching user profile:', error)
           })
       } else {
         setUserProfile(null)
@@ -1483,11 +1461,9 @@ export default function AuctionPage() {
             setError('Unable to connect to the server. Please check your internet connection and try again.')
           } else {
             // Only log unexpected errors
-            console.error('Unexpected error fetching auction data:', error)
             setError('An unexpected error occurred. Please try again.')
           }
         } else {
-          console.error('Unexpected error type:', error)
           setError('An unexpected error occurred. Please try again.')
         }
       } finally {
