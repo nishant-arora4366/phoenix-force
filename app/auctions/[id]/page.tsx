@@ -2948,16 +2948,13 @@ export default function AuctionPage() {
                   const role = player.skills?.Role;
                   const basePrice = player.skills?.["Base Price"];
                   
-                  // Get role emoji
+                  // Get role emoji using the same function as mobile
                   const getRoleEmoji = (role: string | string[] | undefined) => {
-                    if (!role) return "❓";
-                    const roleStr = Array.isArray(role) ? role.join(', ') : role;
-                    if (roleStr.toLowerCase().includes('batter') && roleStr.toLowerCase().includes('bowler')) return "🎯";
-                    if (roleStr.toLowerCase().includes('batter')) return "🏏";
-                    if (roleStr.toLowerCase().includes('bowler')) return "⚾";
-                    if (roleStr.toLowerCase().includes('wicket')) return "🧤";
-                    if (roleStr.toLowerCase().includes('all')) return "🎯";
-                    return "❓";
+                    if (!role) return "👤";
+                    if (Array.isArray(role)) {
+                      return role.map(mapRoleToEmoji).join('');
+                    }
+                    return mapRoleToEmoji(String(role));
                   };
 
                   return (
@@ -3899,7 +3896,19 @@ export default function AuctionPage() {
                 <div className="col-span-3 text-center">Price</div>
               </div>
               <div className="flex-1 overflow-y-auto rounded-lg border border-[#CEA17A]/20">
-                {teamPlayers.length ? teamPlayers.map((ap, idx) => {
+                {teamPlayers.length ? teamPlayers
+                  .sort((a, b) => {
+                    const aIsCaptain = a.player_id === team.captain_id
+                    const bIsCaptain = b.player_id === team.captain_id
+                    
+                    // Captains first
+                    if (aIsCaptain && !bIsCaptain) return -1
+                    if (!aIsCaptain && bIsCaptain) return 1
+                    
+                    // Then sort by price (highest first)
+                    return (b.sold_price || 0) - (a.sold_price || 0)
+                  })
+                  .map((ap, idx) => {
                   const pl = players.find(p => p.id === ap.player_id)
                   if (!pl) return null
                   const isCaptain = ap.player_id === team.captain_id
