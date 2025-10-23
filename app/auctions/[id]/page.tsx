@@ -3121,6 +3121,12 @@ export default function AuctionPage() {
                 <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">Auction Not Started</h3>
                 <p className="text-[#DBD0C0]/70 text-sm">Host needs to start the auction</p>
               </div>
+            ) : auction.status === 'paused' ? (
+              <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
+                <div className="text-[#CEA17A] text-4xl mb-3">🕒</div>
+                <h3 className="text-lg font-semibold text-[#DBD0C0] mb-2">Auction Paused</h3>
+                <p className="text-[#DBD0C0]/70 text-sm">Auction has been paused by the host</p>
+              </div>
             ) : isAuctionLive && !currentPlayer ? (
               <div className="bg-[#1a1a1a]/60 border border-[#CEA17A]/20 rounded-xl p-6 mb-3 text-center">
                 <div className="text-[#CEA17A] text-4xl mb-3">🎯</div>
