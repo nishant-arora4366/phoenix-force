@@ -75,33 +75,50 @@ export default function Home() {
         const data = await response.json()
         
         if (data.success && data.tournaments) {
+          const now = new Date().getTime()
+          
           // Define status priority: Open first, then Opening Soon, then Closed
           const getStatusPriority = (status: string) => {
             switch (status) {
-              case 'registration_open': return 1 // Open - highest priority
+              case 'registration_open': return 1 // Open
               case 'draft': return 2 // Opening Soon
-              case 'registration_closed': return 3
-              case 'auction_started': return 4
-              case 'auction_completed': return 5
-              case 'teams_formed': return 6
-              case 'completed': return 7 // Closed
-              case 'in_progress': return 8 // Closed
-              default: return 9
+              case 'registration_closed': return 3 // Closed
+              case 'auction_started': return 3
+              case 'auction_completed': return 3
+              case 'teams_formed': return 3
+              case 'completed': return 3
+              case 'in_progress': return 3
+              default: return 4
             }
           }
 
-          // Sort tournaments by status priority first, then by date
+          // Sort tournaments: Date first (soonest upcoming), then by status, then by date again
           const sortedTournaments = data.tournaments.sort((a: any, b: any) => {
+            const dateA = new Date(a.tournament_date).getTime()
+            const dateB = new Date(b.tournament_date).getTime()
             const statusPriorityA = getStatusPriority(a.status)
             const statusPriorityB = getStatusPriority(b.status)
             
-            // If status priorities are different, sort by status
+            // Check if tournaments are upcoming (in the future)
+            const isUpcomingA = dateA >= now
+            const isUpcomingB = dateB >= now
+            
+            // Priority 1: Upcoming tournaments first (regardless of status)
+            if (isUpcomingA && !isUpcomingB) return -1
+            if (!isUpcomingA && isUpcomingB) return 1
+            
+            // Priority 2: Among upcoming tournaments, sort by date (soonest first)
+            if (isUpcomingA && isUpcomingB) {
+              return dateA - dateB
+            }
+            
+            // Priority 3: Among past/current tournaments, sort by status (open > opening soon > closed)
             if (statusPriorityA !== statusPriorityB) {
               return statusPriorityA - statusPriorityB
             }
             
-            // If same status, sort by date (earliest first)
-            return new Date(a.tournament_date).getTime() - new Date(b.tournament_date).getTime()
+            // Priority 4: Same status, sort by date (most recent first for past tournaments)
+            return dateB - dateA
           })
           
           setUpcomingTournaments(sortedTournaments.slice(0, 2))

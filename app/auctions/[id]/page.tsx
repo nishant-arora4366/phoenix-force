@@ -76,13 +76,19 @@ interface AuctionPlayer {
   auction_id: string
   player_id: string
   status: string
-  sold_to?: string
-  sold_price?: number
+  sold_to: string | null
+  sold_price: number | null
   display_order: number
   times_skipped: number
-  current_player: boolean
   created_at: string
   updated_at: string
+  current_player: boolean
+  sold_at: string | null
+  is_replaced?: boolean
+  replaced_by?: string
+  replaced_at?: string
+  replaced_by_user?: string
+  replacement_reason?: string
 }
 
 interface Player {
@@ -129,6 +135,21 @@ export default function AuctionPage() {
   const [bidLoading, setBidLoading] = useState<{[key: string]: boolean}>({})
   // Mobile current player detail modal state
   const [mobilePlayerModalOpen, setMobilePlayerModalOpen] = useState(false)
+  // Player replacement modal state
+  const [replacementModal, setReplacementModal] = useState<{
+    isOpen: boolean
+    teamId: string | null
+    playerToReplace: any | null
+    step: 'select-player' | 'select-replacement'
+  }>({
+    isOpen: false,
+    teamId: null,
+    playerToReplace: null,
+    step: 'select-player'
+  })
+  const [replacementReason, setReplacementReason] = useState('')
+  const [availableReplacementPlayers, setAvailableReplacementPlayers] = useState<Player[]>([])
+  const [loadingReplacementPlayers, setLoadingReplacementPlayers] = useState(false)
   // Central interaction lock: when true, all critical actions (navigation, sell, undo, bidding) should be disabled.
   const isInteractionLocked = Object.values(actionLoading).some(v => v)
 
@@ -1679,6 +1700,258 @@ export default function AuctionPage() {
     }
   }
 
+  // Fetch available replacement players from roster
+  const fetchReplacementPlayers = async () => {
+    setLoadingReplacementPlayers(true)
+    try {
+      const token = secureSessionManager.getToken()
+      const response = await fetch('/api/players-public', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        // API returns 'data' not 'players'
+        const allPlayers = result.data || result.players || []
+        
+        console.log('Fetched players:', allPlayers.length)
+        
+        // Filter out players who are already sold to teams or are captains
+        const filteredPlayers = allPlayers.filter((p: Player) => {
+          const auctionPlayer = auctionPlayers.find(ap => ap.player_id === p.id)
+          const isSoldToTeam = auctionPlayer?.status === 'sold' && auctionPlayer?.sold_to
+          const isCaptain = auctionTeams.some(t => t.captain_id === p.id)
+          
+          return !isSoldToTeam && !isCaptain
+        })
+        
+        console.log('Filtered players:', filteredPlayers.length)
+        
+        // Sort alphabetically
+        const sortedPlayers = filteredPlayers.sort((a: Player, b: Player) => 
+          (a.display_name || '').localeCompare(b.display_name || '')
+        )
+        
+        setAvailableReplacementPlayers(sortedPlayers)
+      } else {
+        addToast({ 
+          title: 'Error', 
+          message: 'Failed to fetch players', 
+          severity: 'error' 
+        })
+      }
+    } catch (error) {
+      addToast({ 
+        title: 'Error', 
+        message: 'Error fetching players', 
+        severity: 'error' 
+      })
+    } finally {
+      setLoadingReplacementPlayers(false)
+    }
+  }
+
+  // Handle remove player from team
+  const handleRemovePlayer = async (auctionPlayerId: string, playerName: string) => {
+    if (!confirm(`Are you sure you want to remove ${playerName} from the team? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      setActionLoading(prev => ({ ...prev, removePlayer: true }))
+      
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        addToast({ title: 'Auth', message: 'Authentication required', severity: 'error' })
+        return
+      }
+
+      const response = await fetch(`/api/auctions/${auctionId}/remove-player`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          auction_player_id: auctionPlayerId
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        addToast({ 
+          title: 'Success', 
+          message: 'Player removed successfully', 
+          severity: 'info' 
+        })
+        
+        // Refresh auction data
+        const auctionResponse = await fetch(`/api/auctions/${auctionId}`)
+        if (auctionResponse.ok) {
+          const auctionResult = await auctionResponse.json()
+          if (auctionResult.success) {
+            setAuction(auctionResult.auction)
+            setAuctionTeams(auctionResult.teams || [])
+            setAuctionPlayers(auctionResult.players || [])
+            setPlayers(auctionResult.playerDetails || [])
+          }
+        }
+      } else {
+        addToast({ 
+          title: 'Error', 
+          message: data.error || 'Failed to remove player', 
+          severity: 'error' 
+        })
+      }
+    } catch (error) {
+      addToast({ 
+        title: 'Error', 
+        message: 'Failed to remove player', 
+        severity: 'error' 
+      })
+    } finally {
+      setActionLoading(prev => ({ ...prev, removePlayer: false }))
+    }
+  }
+
+  // Handle undo replacement
+  const handleUndoReplacement = async (auctionPlayerId: string) => {
+    try {
+      setActionLoading(prev => ({ ...prev, undoReplacement: true }))
+      
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        addToast({ title: 'Auth', message: 'Authentication required', severity: 'error' })
+        return
+      }
+
+      const response = await fetch(`/api/auctions/${auctionId}/undo-replacement`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          auction_player_id: auctionPlayerId
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        addToast({ 
+          title: 'Success', 
+          message: 'Replacement undone successfully', 
+          severity: 'info' 
+        })
+        
+        // Refresh auction data
+        const auctionResponse = await fetch(`/api/auctions/${auctionId}`)
+        if (auctionResponse.ok) {
+          const auctionResult = await auctionResponse.json()
+          if (auctionResult.success) {
+            setAuction(auctionResult.auction)
+            setAuctionTeams(auctionResult.teams || [])
+            setAuctionPlayers(auctionResult.players || [])
+            setPlayers(auctionResult.playerDetails || [])
+          }
+        }
+      } else {
+        addToast({ 
+          title: 'Error', 
+          message: data.error || 'Failed to undo replacement', 
+          severity: 'error' 
+        })
+      }
+    } catch (error) {
+      addToast({ 
+        title: 'Error', 
+        message: 'Failed to undo replacement', 
+        severity: 'error' 
+      })
+    } finally {
+      setActionLoading(prev => ({ ...prev, undoReplacement: false }))
+    }
+  }
+
+  // Handle player replacement
+  const handleReplacePlayer = async (replacementPlayerId: string) => {
+    if (!replacementModal.teamId || !replacementModal.playerToReplace) return
+    
+    try {
+      setActionLoading(prev => ({ ...prev, replacePlayer: true }))
+      
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        addToast({ title: 'Auth', message: 'Authentication required', severity: 'error' })
+        return
+      }
+
+      const response = await fetch(`/api/auctions/${auctionId}/replace-player`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          team_id: replacementModal.teamId,
+          player_to_replace_id: replacementModal.playerToReplace.id,
+          replacement_player_id: replacementPlayerId,
+          reason: replacementReason || null
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        addToast({ 
+          title: 'Success', 
+          message: 'Player replaced successfully', 
+          severity: 'info' 
+        })
+        
+        // Close modal and reset state
+        setReplacementModal({
+          isOpen: false,
+          teamId: null,
+          playerToReplace: null,
+          step: 'select-player'
+        })
+        setReplacementReason('')
+        
+        // Refresh auction data by fetching again
+        const auctionResponse = await fetch(`/api/auctions/${auctionId}`)
+        if (auctionResponse.ok) {
+          const auctionResult = await auctionResponse.json()
+          if (auctionResult.success) {
+            setAuction(auctionResult.auction)
+            setAuctionTeams(auctionResult.teams || [])
+            setAuctionPlayers(auctionResult.players || [])
+            setPlayers(auctionResult.playerDetails || [])
+          }
+        }
+      } else {
+        addToast({ 
+          title: 'Error', 
+          message: data.error || 'Failed to replace player', 
+          severity: 'error' 
+        })
+      }
+    } catch (error) {
+      addToast({ 
+        title: 'Error', 
+        message: 'Failed to replace player', 
+        severity: 'error' 
+      })
+    } finally {
+      setActionLoading(prev => ({ ...prev, replacePlayer: false }))
+    }
+  }
+
   // Check user authentication and role
   useEffect(() => {
     const checkUser = async () => {
@@ -2482,30 +2755,32 @@ export default function AuctionPage() {
 
                 {/* Final Teams Full Width Responsive Grid */}
                 <div ref={exportRef} className="space-y-6 w-full">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <h4 className="text-lg font-semibold text-[#DBD0C0]">Final Teams</h4>
-                    <button
-                      onClick={handleExportAsImage}
-                      disabled={actionLoading.exportImage}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {actionLoading.exportImage ? (
-                        <>
-                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Exporting...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          Export as JPEG
-                        </>
-                      )}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleExportAsImage}
+                        disabled={actionLoading.exportImage}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#CEA17A]/15 text-[#CEA17A] border border-[#CEA17A]/30 rounded-lg hover:bg-[#CEA17A]/25 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {actionLoading.exportImage ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Exporting...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Export as JPEG
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div className={`grid gap-5 ${
                     auctionTeams.length === 1 ? 'grid-cols-1' :
@@ -2515,16 +2790,31 @@ export default function AuctionPage() {
                   }`}>
                     {auctionTeams.map(team => {
                       const captain = players.find(p => p.id === team.captain_id)
-                      const soldPlayers = auctionPlayers
-                        .filter(ap => ap.sold_to === team.id && ap.status === 'sold' && ap.player_id !== team.captain_id)
-                        .map(ap => players.find(p => p.id === ap.player_id))
-                        .filter(Boolean)
-                      
+                      const soldPlayersData = auctionPlayers
+                        .filter(ap => {
+                          // Include only players sold to this team (not captain)
+                          if (ap.sold_to !== team.id || ap.status !== 'sold' || ap.player_id === team.captain_id) {
+                            return false
+                          }
+                          // Exclude players who are replacements (their ID is in another player's replaced_by)
+                          const isReplacement = auctionPlayers.some(other => 
+                            other.sold_to === team.id && 
+                            other.is_replaced && 
+                            other.replaced_by === ap.player_id
+                          )
+                          return !isReplacement
+                        })
+                        .map(ap => ({
+                          player: players.find(p => p.id === ap.player_id),
+                          auctionPlayer: ap
+                        }))
+                        .filter(item => item.player)
+                        .sort((a, b) => (b.auctionPlayer.sold_price || 0) - (a.auctionPlayer.sold_price || 0))
                       return (
                         <div key={team.id} className="bg-[#0f0f0f]/50 rounded-lg border border-[#CEA17A]/20 p-4">
                           {/* Team Header */}
                           <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#CEA17A]/20">
-                            <div>
+                            <div className="flex-1">
                               <h5 className="text-lg font-bold text-[#CEA17A]">{team.team_name}</h5>
                               <p className="text-sm text-[#DBD0C0]/70">Captain: {captain?.display_name}</p>
                             </div>
@@ -2533,6 +2823,27 @@ export default function AuctionPage() {
                               <div className="text-sm text-[#DBD0C0]/70">Total Spent</div>
                             </div>
                           </div>
+                          
+                          {/* Add Replacement Button for Admin/Host */}
+                          {isAuctionController && (
+                            <button
+                              onClick={() => {
+                                setReplacementModal({
+                                  isOpen: true,
+                                  teamId: team.id,
+                                  playerToReplace: null,
+                                  step: 'select-player'
+                                })
+                                fetchReplacementPlayers()
+                              }}
+                              className="w-full mb-3 px-3 py-2 bg-blue-500/15 text-blue-300 border border-blue-500/30 rounded-lg hover:bg-blue-500/25 transition-all duration-150 text-sm font-medium flex items-center justify-center gap-2"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                              </svg>
+                              Add Replacement
+                            </button>
+                          )}
                           
                           {/* Players List */}
                           <div className="space-y-2">
@@ -2550,23 +2861,81 @@ export default function AuctionPage() {
                             </div>
                             
                             {/* Sold Players */}
-                            {soldPlayers.map(player => {
-                              const auctionPlayer = auctionPlayers.find(ap => ap.player_id === player?.id)
+                            {soldPlayersData.map(({ player, auctionPlayer }) => {
+                              const isReplaced = auctionPlayer.is_replaced
+                              const replacementPlayer = isReplaced ? players.find(p => p.id === auctionPlayer.replaced_by) : null
+                              
                               return (
-                                <div key={player?.id} className="flex items-center justify-between p-2 bg-[#1a1a1a]/50 rounded border border-[#CEA17A]/10">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full overflow-hidden">
-                                      <PlayerImage src={player?.profile_pic_url} name={player?.display_name || ''} />
+                                <div key={player?.id}>
+                                  {/* Original Player (greyed out if replaced) */}
+                                  <div className={`flex items-center justify-between p-2 bg-[#1a1a1a]/50 rounded border border-[#CEA17A]/10 ${isReplaced ? 'opacity-40' : ''}`}>
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-full overflow-hidden">
+                                        <PlayerImage src={player?.profile_pic_url} name={player?.display_name || ''} />
+                                      </div>
+                                      <div>
+                                        <div className="font-semibold text-[#DBD0C0]">{player?.display_name}</div>
+                                        {isReplaced && <div className="text-xs text-red-400">Replaced</div>}
+                                      </div>
                                     </div>
-                                    <div className="font-semibold text-[#DBD0C0]">{player?.display_name}</div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="text-sm font-semibold text-green-400">₹{auctionPlayer?.sold_price?.toLocaleString()}</div>
+                                      {isAuctionController && !isReplaced && (
+                                        <button
+                                          onClick={() => handleRemovePlayer(auctionPlayer.id, player?.display_name || '')}
+                                          disabled={actionLoading.removePlayer}
+                                          className="text-xs px-2 py-1 bg-red-500/15 text-red-300 border border-red-500/30 rounded hover:bg-red-500/25 transition-all disabled:opacity-50"
+                                          title="Remove from team"
+                                        >
+                                          Remove
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="text-sm font-semibold text-green-400">₹{auctionPlayer?.sold_price?.toLocaleString()}</div>
+                                  
+                                  {/* Replacement Player (shown below if exists) */}
+                                  {isReplaced && replacementPlayer && (
+                                    <div className="ml-4 mt-1 flex items-center justify-between p-2 bg-blue-500/10 rounded border border-blue-500/30">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full overflow-hidden">
+                                          <PlayerImage src={replacementPlayer?.profile_pic_url} name={replacementPlayer?.display_name || ''} />
+                                        </div>
+                                        <div>
+                                          <div className="font-semibold text-blue-300">{replacementPlayer?.display_name}</div>
+                                          <div className="text-xs text-blue-400">Replacement</div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="text-sm font-semibold text-blue-400">₹0</div>
+                                        {isAuctionController && (
+                                          <>
+                                            <button
+                                              onClick={() => handleUndoReplacement(auctionPlayer.id)}
+                                              disabled={actionLoading.undoReplacement}
+                                              className="text-xs px-2 py-1 bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 rounded hover:bg-yellow-500/25 transition-all disabled:opacity-50"
+                                              title="Undo replacement"
+                                            >
+                                              Undo
+                                            </button>
+                                            <button
+                                              onClick={() => handleRemovePlayer(auctionPlayers.find(ap => ap.player_id === replacementPlayer?.id && ap.sold_to === auctionPlayer.sold_to)?.id || '', replacementPlayer?.display_name || '')}
+                                              disabled={actionLoading.removePlayer}
+                                              className="text-xs px-2 py-1 bg-red-500/15 text-red-300 border border-red-500/30 rounded hover:bg-red-500/25 transition-all disabled:opacity-50"
+                                              title="Remove from team"
+                                            >
+                                              Remove
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )
                             })}
                             
                             {/* Empty slots if any */}
-                            {Array.from({ length: Math.max(0, (team.required_players || 0) - 1 - soldPlayers.length) }).map((_, idx) => (
+                            {Array.from({ length: Math.max(0, (team.required_players || 0) - 1 - soldPlayersData.length) }).map((_, idx) => (
                               <div key={`empty-${idx}`} className="flex items-center justify-between p-2 bg-[#1a1a1a]/30 rounded border border-[#CEA17A]/10 opacity-50">
                                 <div className="flex items-center gap-3">
                                   <div className="w-8 h-8 rounded-full bg-[#CEA17A]/20 flex items-center justify-center">
@@ -2582,7 +2951,7 @@ export default function AuctionPage() {
                           {/* Team Summary */}
                           <div className="mt-3 pt-2 border-t border-[#CEA17A]/20 grid grid-cols-3 gap-4 text-center text-sm">
                             <div>
-                              <div className="font-semibold text-[#DBD0C0]">{1 + soldPlayers.length}</div>
+                              <div className="font-semibold text-[#DBD0C0]">{1 + soldPlayersData.length}</div>
                               <div className="text-[#DBD0C0]/70">Players</div>
                             </div>
                             <div>
@@ -3801,11 +4170,26 @@ export default function AuctionPage() {
               <div className="space-y-3">
                 {auctionTeams.map(team => {
                   const captain = players.find(p => p.id === team.captain_id)
-                  const soldPlayers = auctionPlayers
-                    .filter(ap => ap.sold_to === team.id && ap.status === 'sold' && ap.player_id !== team.captain_id)
+                  const soldPlayersData = auctionPlayers
+                    .filter(ap => {
+                      // Include only players sold to this team (not captain)
+                      if (ap.sold_to !== team.id || ap.status !== 'sold' || ap.player_id === team.captain_id) {
+                        return false
+                      }
+                      // Exclude players who are replacements (their ID is in another player's replaced_by)
+                      const isReplacement = auctionPlayers.some(other => 
+                        other.sold_to === team.id && 
+                        other.is_replaced && 
+                        other.replaced_by === ap.player_id
+                      )
+                      return !isReplacement
+                    })
                     .sort((a, b) => (b.sold_price || 0) - (a.sold_price || 0)) // Sort by price high to low
-                    .map(ap => players.find(p => p.id === ap.player_id))
-                    .filter(Boolean)
+                    .map(ap => ({
+                      player: players.find(p => p.id === ap.player_id),
+                      auctionPlayer: ap
+                    }))
+                    .filter(item => item.player)
                   
                   return (
                     <div key={team.id} className="bg-[#0f0f0f]/50 rounded-lg border border-[#CEA17A]/20 p-4">
@@ -3820,6 +4204,27 @@ export default function AuctionPage() {
                           <div className="text-sm text-[#DBD0C0]/70">Total Spent</div>
                         </div>
                       </div>
+                      
+                      {/* Add Replacement Button for Admin/Host - Mobile */}
+                      {isAuctionController && (
+                        <button
+                          onClick={() => {
+                            setReplacementModal({
+                              isOpen: true,
+                              teamId: team.id,
+                              playerToReplace: null,
+                              step: 'select-player'
+                            })
+                            fetchReplacementPlayers()
+                          }}
+                          className="w-full mb-3 px-3 py-2 bg-blue-500/15 text-blue-300 border border-blue-500/30 rounded-lg hover:bg-blue-500/25 transition-all duration-150 text-sm font-medium flex items-center justify-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                          </svg>
+                          Add Replacement
+                        </button>
+                      )}
                       
                       {/* Players List */}
                       <div className="space-y-2">
@@ -3837,23 +4242,81 @@ export default function AuctionPage() {
                         </div>
                         
                         {/* Sold Players */}
-                        {soldPlayers.map(player => {
-                          const auctionPlayer = auctionPlayers.find(ap => ap.player_id === player?.id)
+                        {soldPlayersData.map(({ player, auctionPlayer }) => {
+                          const isReplaced = auctionPlayer.is_replaced
+                          const replacementPlayer = isReplaced ? players.find(p => p.id === auctionPlayer.replaced_by) : null
+                          
                           return (
-                            <div key={player?.id} className="flex items-center justify-between p-2 bg-[#1a1a1a]/50 rounded border border-[#CEA17A]/10">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full overflow-hidden">
-                                  <PlayerImage src={player?.profile_pic_url} name={player?.display_name || ''} />
+                            <div key={player?.id}>
+                              {/* Original Player (greyed out if replaced) */}
+                              <div className={`flex items-center justify-between p-2 bg-[#1a1a1a]/50 rounded border border-[#CEA17A]/10 ${isReplaced ? 'opacity-40' : ''}`}>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full overflow-hidden">
+                                    <PlayerImage src={player?.profile_pic_url} name={player?.display_name || ''} />
+                                  </div>
+                                  <div>
+                                    <div className="font-semibold text-[#DBD0C0]">{player?.display_name}</div>
+                                    {isReplaced && <div className="text-xs text-red-400">Replaced</div>}
+                                  </div>
                                 </div>
-                                <div className="font-semibold text-[#DBD0C0]">{player?.display_name}</div>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-semibold text-green-400">₹{auctionPlayer?.sold_price?.toLocaleString()}</div>
+                                  {isAuctionController && !isReplaced && (
+                                    <button
+                                      onClick={() => handleRemovePlayer(auctionPlayer.id, player?.display_name || '')}
+                                      disabled={actionLoading.removePlayer}
+                                      className="text-xs px-2 py-1 bg-red-500/15 text-red-300 border border-red-500/30 rounded hover:bg-red-500/25 transition-all disabled:opacity-50"
+                                      title="Remove from team"
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
+                                </div>
                               </div>
-                              <div className="text-sm font-semibold text-green-400">₹{auctionPlayer?.sold_price?.toLocaleString()}</div>
+                              
+                              {/* Replacement Player (shown below if exists) */}
+                              {isReplaced && replacementPlayer && (
+                                <div className="ml-4 mt-1 flex items-center justify-between p-2 bg-blue-500/10 rounded border border-blue-500/30">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full overflow-hidden">
+                                      <PlayerImage src={replacementPlayer?.profile_pic_url} name={replacementPlayer?.display_name || ''} />
+                                    </div>
+                                    <div>
+                                      <div className="font-semibold text-blue-300">{replacementPlayer?.display_name}</div>
+                                      <div className="text-xs text-blue-400">Replacement</div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-sm font-semibold text-blue-400">₹0</div>
+                                    {isAuctionController && (
+                                      <>
+                                        <button
+                                          onClick={() => handleUndoReplacement(auctionPlayer.id)}
+                                          disabled={actionLoading.undoReplacement}
+                                          className="text-xs px-2 py-1 bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 rounded hover:bg-yellow-500/25 transition-all disabled:opacity-50"
+                                          title="Undo replacement"
+                                        >
+                                          Undo
+                                        </button>
+                                        <button
+                                          onClick={() => handleRemovePlayer(auctionPlayers.find(ap => ap.player_id === replacementPlayer?.id && ap.sold_to === auctionPlayer.sold_to)?.id || '', replacementPlayer?.display_name || '')}
+                                          disabled={actionLoading.removePlayer}
+                                          className="text-xs px-2 py-1 bg-red-500/15 text-red-300 border border-red-500/30 rounded hover:bg-red-500/25 transition-all disabled:opacity-50"
+                                          title="Remove from team"
+                                        >
+                                          Remove
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )
                         })}
                         
                         {/* Empty slots if any */}
-                        {Array.from({ length: Math.max(0, (team.required_players || 0) - 1 - soldPlayers.length) }).map((_, idx) => (
+                        {Array.from({ length: Math.max(0, (team.required_players || 0) - 1 - soldPlayersData.length) }).map((_, idx) => (
                           <div key={`empty-${idx}`} className="flex items-center justify-between p-2 bg-[#1a1a1a]/30 rounded border border-[#CEA17A]/10 opacity-50">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-[#CEA17A]/20 flex items-center justify-center">
@@ -3869,7 +4332,7 @@ export default function AuctionPage() {
                       {/* Team Summary */}
                       <div className="mt-3 pt-2 border-t border-[#CEA17A]/20 grid grid-cols-3 gap-4 text-center text-sm">
                         <div>
-                          <div className="font-semibold text-[#DBD0C0]">{1 + soldPlayers.length}</div>
+                          <div className="font-semibold text-[#DBD0C0]">{1 + soldPlayersData.length}</div>
                           <div className="text-[#DBD0C0]/70">Players</div>
                         </div>
                         <div>
@@ -4728,6 +5191,151 @@ export default function AuctionPage() {
         </div>
       )}
 
+      {/* Player Replacement Modal */}
+      {replacementModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70" onClick={() => setReplacementModal({ isOpen: false, teamId: null, playerToReplace: null, step: 'select-player' })}>
+          <div className="bg-[#19171b] rounded-lg border border-[#CEA17A]/30 p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] sm:max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-[#CEA17A]">
+                {replacementModal.step === 'select-player' ? 'Select Player to Replace' : 'Select Replacement Player'}
+              </h3>
+              <button
+                onClick={() => setReplacementModal({ isOpen: false, teamId: null, playerToReplace: null, step: 'select-player' })}
+                className="text-[#DBD0C0] hover:text-[#CEA17A] transition-colors"
+              >
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {replacementModal.step === 'select-player' ? (
+              /* Step 1: Select player to replace */
+              <div className="space-y-3">
+                <p className="text-[#DBD0C0]/70 mb-4">Select the player you want to replace from the team:</p>
+                {auctionPlayers
+                  .filter(ap => ap.sold_to === replacementModal.teamId && ap.status === 'sold' && !ap.is_replaced)
+                  .map(ap => {
+                    const player = players.find(p => p.id === ap.player_id)
+                    const team = auctionTeams.find(t => t.id === replacementModal.teamId)
+                    const isCaptain = player?.id === team?.captain_id
+                    
+                    return (
+                      <button
+                        key={ap.id}
+                        onClick={() => {
+                          if (!isCaptain) {
+                            setReplacementModal({
+                              ...replacementModal,
+                              playerToReplace: ap,
+                              step: 'select-replacement'
+                            })
+                          }
+                        }}
+                        disabled={isCaptain}
+                        className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-lg border transition-all ${
+                          isCaptain
+                            ? 'bg-[#1a1a1a]/30 border-[#CEA17A]/10 opacity-50 cursor-not-allowed'
+                            : 'bg-[#1a1a1a]/50 border-[#CEA17A]/20 hover:border-[#CEA17A]/40 hover:bg-[#1a1a1a]/70'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden flex-shrink-0">
+                            <PlayerImage src={player?.profile_pic_url} name={player?.display_name || ''} />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold text-[#DBD0C0] text-sm sm:text-base">{player?.display_name}</div>
+                            {isCaptain && <div className="text-xs text-[#CEA17A]">Captain (Cannot Replace)</div>}
+                          </div>
+                        </div>
+                        <div className="text-xs sm:text-sm font-semibold text-green-400 flex-shrink-0">₹{ap.sold_price?.toLocaleString()}</div>
+                      </button>
+                    )
+                  })}
+              </div>
+            ) : (
+              /* Step 2: Select replacement player */
+              <div className="space-y-4">
+                <div className="bg-[#1a1a1a]/50 rounded-lg p-3 sm:p-4 border border-[#CEA17A]/20 mb-4">
+                  <p className="text-xs sm:text-sm text-[#DBD0C0]/70 mb-2">Replacing:</p>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                      <PlayerImage 
+                        src={players.find(p => p.id === replacementModal.playerToReplace?.player_id)?.profile_pic_url} 
+                        name={players.find(p => p.id === replacementModal.playerToReplace?.player_id)?.display_name || ''} 
+                      />
+                    </div>
+                    <div className="font-semibold text-[#DBD0C0] text-sm sm:text-base">
+                      {players.find(p => p.id === replacementModal.playerToReplace?.player_id)?.display_name}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm text-[#DBD0C0]/70 mb-2">Reason for Replacement (Optional):</label>
+                  <input
+                    type="text"
+                    value={replacementReason}
+                    onChange={(e) => setReplacementReason(e.target.value)}
+                    placeholder="e.g., Player unavailable, injury, etc."
+                    className="w-full px-3 py-2 text-sm sm:text-base bg-[#1a1a1a]/50 border border-[#CEA17A]/20 rounded-lg text-[#DBD0C0] placeholder-[#DBD0C0]/30 focus:outline-none focus:border-[#CEA17A]/40"
+                  />
+                </div>
+
+                <p className="text-[#DBD0C0]/70 text-sm sm:text-base">Select replacement player from roster:</p>
+                <div className="space-y-2 max-h-[50vh] sm:max-h-96 overflow-y-auto">
+                  {loadingReplacementPlayers ? (
+                    <div className="flex items-center justify-center py-8">
+                      <svg className="animate-spin h-8 w-8 text-[#CEA17A]" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  ) : availableReplacementPlayers.length === 0 ? (
+                    <div className="text-center py-8 text-[#DBD0C0]/50">
+                      No available players found
+                    </div>
+                  ) : (
+                    availableReplacementPlayers.map(player => (
+                      <button
+                        key={player.id}
+                        onClick={() => handleReplacePlayer(player.id)}
+                        disabled={actionLoading.replacePlayer}
+                        className="w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border border-[#CEA17A]/20 bg-[#1a1a1a]/50 hover:border-[#CEA17A]/40 hover:bg-[#1a1a1a]/70 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                          <PlayerImage src={player.profile_pic_url} name={player.display_name} />
+                        </div>
+                        <div className="text-left flex-1 min-w-0">
+                          <div className="font-semibold text-[#DBD0C0] text-sm sm:text-base truncate">{player.display_name}</div>
+                          {player.skills?.Role && (
+                            <div className="text-xs text-[#DBD0C0]/50 truncate">
+                              {Array.isArray(player.skills.Role) ? player.skills.Role.join(', ') : player.skills.Role}
+                            </div>
+                          )}
+                        </div>
+                        {actionLoading.replacePlayer && (
+                          <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-[#CEA17A] flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setReplacementModal({ ...replacementModal, step: 'select-player', playerToReplace: null })}
+                  className="w-full px-4 py-2 bg-[#1a1a1a]/50 text-[#DBD0C0] border border-[#CEA17A]/20 rounded-lg hover:bg-[#1a1a1a]/70 transition-all"
+                >
+                  Back
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   )

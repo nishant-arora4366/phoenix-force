@@ -85,6 +85,11 @@ export function usePlayerSoldNotification(
               const soldTo = payload.new.sold_to
               const soldPrice = payload.new.sold_price
               
+              // Skip notification for replacement players (sold_price = 0)
+              if (soldPrice === 0) {
+                return
+              }
+              
               // Prevent duplicate notifications
               const notificationKey = `${playerId}-${soldTo}-${soldPrice}`
               if (notifiedPlayers.current.has(notificationKey)) {
