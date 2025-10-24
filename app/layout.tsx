@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import '../styles/globals.css'
 import ClientLayout from '@/src/components/ClientLayout'
@@ -15,13 +15,6 @@ export const metadata: Metadata = {
   title: 'Phoenix Force Cricket',
   description: 'The ultimate platform for cricket tournament management with advanced auction systems, player ratings, and real-time bidding.',
   manifest: '/manifest.json',
-  themeColor: '#19171b',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -65,6 +58,14 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#19171b',
 }
 
 export default function RootLayout({

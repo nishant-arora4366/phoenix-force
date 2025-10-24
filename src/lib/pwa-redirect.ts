@@ -63,7 +63,22 @@ export class PWARedirectService {
     const targetUrl = url || window.location.href;
     
     try {
-      // If PWA is installed, try custom scheme
+      // Check if we're on desktop (where custom schemes don't work)
+      const isDesktop = !/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isDesktop) {
+        // On desktop, just show install prompt or instructions
+        if (this.isPWAInstallable() && !this.isPWAInstalled()) {
+          this.showInstallPrompt();
+          return true;
+        } else {
+          // Show desktop-specific instructions
+          alert('To get the best experience on desktop:\n\n1. Install Phoenix Force Cricket as a PWA\n2. Look for the install icon in your browser address bar\n3. Or use Chrome menu → "Install Phoenix Force Cricket"');
+          return true;
+        }
+      }
+      
+      // Mobile: If PWA is installed, try custom scheme
       if (this.isPWAInstalled()) {
         const customUrl = this.convertToCustomScheme(targetUrl);
         
