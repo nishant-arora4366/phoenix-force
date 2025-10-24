@@ -54,6 +54,17 @@ input[data-autocompleted] {
   }
 }
 
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes fade-in-up {
   from {
     opacity: 0;
@@ -122,6 +133,10 @@ input[data-autocompleted] {
 
 .animate-slide-up {
   animation: slide-up 0.5s ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.4s ease-out forwards;
 }
 
 .animate-fade-in-up {

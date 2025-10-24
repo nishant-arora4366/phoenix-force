@@ -3,9 +3,8 @@ import { Inter } from 'next/font/google'
 import '../styles/globals.css'
 import ClientLayout from '@/src/components/ClientLayout'
 import Navbar from '@/src/components/Navbar'
-import PWAInstallPrompt from '@/src/components/PWAInstallPrompt'
+import PWANotification from '@/src/components/PWANotification'
 import PWAStatus from '@/src/components/PWAStatus'
-import PWADetection from '@/src/components/PWADetection'
 import NotificationProvider from '@/components/providers/NotificationProvider'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -105,11 +104,10 @@ export default function RootLayout({
             <div className="min-h-screen bg-[#19171b]">
               <Navbar />
               <PWAStatus />
-              <PWADetection />
+              <PWANotification />
               <main>
                 {children}
               </main>
-              <PWAInstallPrompt />
             </div>
           </ClientLayout>
         </NotificationProvider>

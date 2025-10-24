@@ -65,6 +65,8 @@ export class PWARedirectService {
     try {
       // Check if we're on desktop (where custom schemes don't work)
       const isDesktop = !/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
       
       if (isDesktop) {
         // On desktop, just show install prompt or instructions
@@ -78,22 +80,37 @@ export class PWARedirectService {
         }
       }
       
-      // Mobile: If PWA is installed, try custom scheme
+      // Mobile: If PWA is installed, try to redirect
       if (this.isPWAInstalled()) {
-        const customUrl = this.convertToCustomScheme(targetUrl);
-        
-        // Try to open with custom scheme
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = customUrl;
-        document.body.appendChild(iframe);
-        
-        // Clean up after attempt
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 1000);
-        
-        return true;
+        if (isIOS) {
+          // iOS: Use universal link approach
+          // Try to open with custom scheme first
+          const customUrl = this.convertToCustomScheme(targetUrl);
+          window.location.href = customUrl;
+          
+          // Fallback: If custom scheme doesn't work, show instructions
+          setTimeout(() => {
+            if (document.visibilityState === 'visible') {
+              // Still on the page, custom scheme didn't work
+              alert('To open in the Phoenix Force app:\n\n1. Long press this link\n2. Select "Open in Phoenix Force Cricket"\n\nOr open the app directly from your home screen.');
+            }
+          }, 1500);
+          
+          return true;
+        } else if (isAndroid) {
+          // Android: Use intent URL
+          const intentUrl = `intent://${targetUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.phoenixforce.cricket;end`;
+          
+          try {
+            window.location.href = intentUrl;
+            return true;
+          } catch (e) {
+            // Fallback to custom scheme
+            const customUrl = this.convertToCustomScheme(targetUrl);
+            window.location.href = customUrl;
+            return true;
+          }
+        }
       }
       
       // If PWA can be installed, show install prompt
