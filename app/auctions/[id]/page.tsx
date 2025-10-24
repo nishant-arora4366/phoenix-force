@@ -7,6 +7,7 @@ import Link from 'next/link'
 import html2canvas from 'html2canvas'
 import { secureSessionManager } from '@/src/lib/secure-session'
 import { interpretError } from '@/src/lib/error-codes'
+import { usePlayerSoldNotification } from '@/hooks/usePlayerSoldNotification'
 
 // Reusable player image with graceful fallback
 function PlayerImage({ src, name }: { src?: string | null; name: string }) {
@@ -108,6 +109,9 @@ export default function AuctionPage() {
   const [auctionTeams, setAuctionTeams] = useState<AuctionTeam[]>([])
   const [auctionPlayers, setAuctionPlayers] = useState<AuctionPlayer[]>([])
   const [players, setPlayers] = useState<Player[]>([])
+  
+  // Enable player sold notifications (after state declarations)
+  usePlayerSoldNotification(auctionId, { players, teams: auctionTeams })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<{[key: string]: boolean}>({})
@@ -1015,6 +1019,24 @@ export default function AuctionPage() {
         }
       } catch (resetError) {
         }
+      }
+
+      // Increment times_skipped for current player (since we're moving without selling)
+      try {
+        await fetch(`/api/auctions/${auctionId}/players`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'increment_skip',
+            player_id: currentPlayer.player_id
+          })
+        })
+      } catch (skipError) {
+        console.error('Failed to increment skip count:', skipError)
+        // Continue anyway
       }
 
       // Move to next player in the order
@@ -2743,8 +2765,11 @@ export default function AuctionPage() {
               ) || []
               const captainPlayer = auctionPlayers?.find(ap => ap.player_id === team.captain_id) || null
               
-              // Combine captain (first) with sold players, ensuring no duplicates
-              const teamPlayers = captainPlayer ? [captainPlayer, ...soldPlayers] : soldPlayers
+              // Sort sold players by price (highest first)
+              const sortedSoldPlayers = soldPlayers.sort((a, b) => (b.sold_price || 0) - (a.sold_price || 0))
+              
+              // Combine captain (first) with sorted sold players, ensuring no duplicates
+              const teamPlayers = captainPlayer ? [captainPlayer, ...sortedSoldPlayers] : sortedSoldPlayers
               
               return (
                 <div key={team.id} className="bg-gradient-to-br from-[#2a2a2a]/80 to-[#1a1a1a]/80 rounded-xl border-2 border-[#CEA17A]/20 shadow-lg overflow-hidden">
@@ -2835,7 +2860,7 @@ export default function AuctionPage() {
                           </div>
                           <div className="col-span-4 text-center text-[#CEA17A] font-bold text-sm md:text-base">
                             {player ? (
-                              `₹${isCaptain ? 0 : (auctionPlayer.sold_price || 0)}`
+                              isCaptain ? <span className="text-[#CEA17A]/50 text-xs">—</span> : `₹${auctionPlayer.sold_price || 0}`
                             ) : (
                               <span className="text-[#CEA17A]/20">—</span>
                                   )}
@@ -3238,6 +3263,7 @@ export default function AuctionPage() {
                   const captain = players.find(p => p.id === team.captain_id)
                   const soldPlayers = auctionPlayers
                     .filter(ap => ap.sold_to === team.id && ap.status === 'sold' && ap.player_id !== team.captain_id)
+                    .sort((a, b) => (b.sold_price || 0) - (a.sold_price || 0)) // Sort by price high to low
                     .map(ap => players.find(p => p.id === ap.player_id))
                     .filter(Boolean)
                   
@@ -3342,6 +3368,7 @@ export default function AuctionPage() {
                   const captain = players.find(p => p.id === team.captain_id)
                   const soldPlayers = auctionPlayers
                     .filter(ap => ap.sold_to === team.id && ap.status === 'sold' && ap.player_id !== team.captain_id)
+                    .sort((a, b) => (b.sold_price || 0) - (a.sold_price || 0)) // Sort by price high to low
                     .map(ap => players.find(p => p.id === ap.player_id))
                     .filter(Boolean)
                   
@@ -3919,7 +3946,7 @@ export default function AuctionPage() {
                         <div className="truncate text-[#DBD0C0] text-xs font-medium">{pl.display_name}{isCaptain && <span className="text-[#CEA17A] ml-1">(C)</span>}</div>
                       </div>
                       <div className="col-span-3 text-center text-lg">{getPlayerRoleEmojis(pl)}</div>
-                      <div className="col-span-3 text-center text-[#CEA17A] text-xs font-semibold">₹{isCaptain ? 0 : (ap.sold_price || 0)}</div>
+                      <div className="col-span-3 text-center text-[#CEA17A] text-xs font-semibold">{isCaptain ? <span className="text-[#CEA17A]/50">—</span> : `₹${ap.sold_price || 0}`}</div>
                     </div>
                   )
                 }) : (

@@ -176,8 +176,11 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({ toast, onClose })
 // Toast Container Component
 export const ToastContainer: React.FC = () => {
   const [toasts, setToasts] = useState<Toast[]>([])
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
+    
     // Listen for custom toast events
     const handleToast = (event: CustomEvent<Toast>) => {
       setToasts(prev => [...prev, event.detail])
@@ -191,7 +194,7 @@ export const ToastContainer: React.FC = () => {
     setToasts(prev => prev.filter(t => t.id !== id))
   }
 
-  if (typeof window === 'undefined') return null
+  if (!isMounted) return null
 
   return createPortal(
     <div className="fixed top-4 right-4 z-50 space-y-3">

@@ -171,10 +171,11 @@ export default function PWAInstallPrompt() {
                   Install Phoenix Force Cricket
                 </h3>
                 <p className="text-xs text-gray-300 mt-1">
-                  To install this app on your Android device:
+                  To install this app on your Device:
                 </p>
                 <div className="text-xs text-gray-400 mt-2 space-y-1">
-                   <div>Tap the Chrome menu (⋮) → "Add to Home Screen"</div>
+                   <div>Tap the Menu (⋮) → "Add to Home Screen"</div>
+                   <div>Or Click on "Install Phoenix Force Cricket" from the Browser's Address Bar</div>
                 </div>
                 <div className="flex space-x-2 mt-3">
                   <button

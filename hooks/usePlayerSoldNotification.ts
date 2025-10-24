@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { showPlayerSoldNotification } from '@/components/common/ToastNotification'
+import { showPlayerSoldDialog } from '@/components/common/PlayerSoldDialog'
 import { getSupabaseClient } from '@/src/lib/supabaseClient'
 import { logger } from '@/lib/logger'
 
@@ -13,15 +13,58 @@ interface PlayerSoldData {
   auction_id: string
 }
 
+interface UsePlayerSoldNotificationOptions {
+  players?: any[]
+  teams?: any[]
+}
+
 /**
  * Hook to listen for player sold events and show notifications
  */
-export function usePlayerSoldNotification(auctionId: string | null) {
+export function usePlayerSoldNotification(
+  auctionId: string | null,
+  options?: UsePlayerSoldNotificationOptions
+) {
   const notifiedPlayers = useRef<Set<string>>(new Set())
+  const initialSoldPlayers = useRef<Set<string>>(new Set())
   const supabase = getSupabaseClient()
+  const { players = [], teams = [] } = options || {}
+  
+  // Use refs to avoid re-subscribing when players/teams change
+  const playersRef = useRef(players)
+  const teamsRef = useRef(teams)
+  
+  // Update refs when data changes
+  useEffect(() => {
+    playersRef.current = players
+    teamsRef.current = teams
+  }, [players, teams])
 
   useEffect(() => {
     if (!auctionId) return
+    
+    // Fetch all currently sold players to avoid showing notifications for them
+    const initializeSoldPlayers = async () => {
+      try {
+        const { data: soldPlayers } = await supabase
+          .from('auction_players')
+          .select('player_id, sold_to, sold_price')
+          .eq('auction_id', auctionId)
+          .eq('status', 'sold')
+        
+        if (soldPlayers) {
+          soldPlayers.forEach((ap: any) => {
+            const key = `${ap.player_id}-${ap.sold_to}-${ap.sold_price}`
+            initialSoldPlayers.current.add(key)
+            notifiedPlayers.current.add(key)
+          })
+        }
+      } catch (error) {
+        logger.error('Error initializing sold players list', error)
+      }
+    }
+    
+    initializeSoldPlayers()
 
     // Subscribe to auction_players table for sold status updates
     const channel = supabase
@@ -49,30 +92,44 @@ export function usePlayerSoldNotification(auctionId: string | null) {
               }
               notifiedPlayers.current.add(notificationKey)
               
-              // Fetch player details
-              const { data: playerData } = await supabase
-                .from('players')
-                .select('display_name, profile_pic_url')
-                .eq('id', playerId)
-                .single()
+              // Find player and team from passed data or fetch if needed
+              let playerData = playersRef.current.find((p: any) => p.id === playerId)
+              let teamData = teamsRef.current.find((t: any) => t.id === soldTo)
               
-              // Fetch team details
-              const { data: teamData } = await supabase
-                .from('auction_teams')
-                .select('team_name')
-                .eq('id', soldTo)
-                .single()
+              // If data not available in props, try fetching (with error handling)
+              if (!playerData || !teamData) {
+                try {
+                  const [playerResult, teamResult] = await Promise.all([
+                    !playerData ? supabase
+                      .from('players')
+                      .select('id, display_name, profile_pic_url')
+                      .eq('id', playerId)
+                      .maybeSingle() : Promise.resolve({ data: playerData }),
+                    !teamData ? supabase
+                      .from('auction_teams')
+                      .select('id, team_name')
+                      .eq('id', soldTo)
+                      .maybeSingle() : Promise.resolve({ data: teamData })
+                  ])
+                  
+                  playerData = playerResult.data
+                  teamData = teamResult.data
+                } catch (error) {
+                  logger.error('Error fetching player/team data for notification', error)
+                  return
+                }
+              }
               
               if (playerData && teamData) {
-                // Show the notification
-                showPlayerSoldNotification(
+                // Show the dialog
+                showPlayerSoldDialog(
                   playerData.display_name,
                   soldPrice,
                   teamData.team_name,
                   playerData.profile_pic_url
                 )
                 
-                logger.info('Player sold notification shown', {
+                logger.info('Player sold dialog shown', {
                   player: playerData.display_name,
                   team: teamData.team_name,
                   amount: soldPrice
@@ -112,26 +169,40 @@ export function usePlayerSoldNotification(auctionId: string | null) {
               }
               notifiedPlayers.current.add(notificationKey)
               
-              // Fetch player and team details in parallel
-              const [playerResult, teamResult] = await Promise.all([
-                supabase
-                  .from('players')
-                  .select('display_name, profile_pic_url')
-                  .eq('id', playerId)
-                  .single(),
-                supabase
-                  .from('auction_teams')
-                  .select('team_name')
-                  .eq('id', teamId)
-                  .single()
-              ])
+              // Find player and team from passed data or fetch if needed
+              let playerData = playersRef.current.find((p: any) => p.id === playerId)
+              let teamData = teamsRef.current.find((t: any) => t.id === teamId)
               
-              if (playerResult.data && teamResult.data) {
-                showPlayerSoldNotification(
-                  playerResult.data.display_name,
+              // If data not available in props, try fetching (with error handling)
+              if (!playerData || !teamData) {
+                try {
+                  const [playerResult, teamResult] = await Promise.all([
+                    !playerData ? supabase
+                      .from('players')
+                      .select('id, display_name, profile_pic_url')
+                      .eq('id', playerId)
+                      .maybeSingle() : Promise.resolve({ data: playerData }),
+                    !teamData ? supabase
+                      .from('auction_teams')
+                      .select('id, team_name')
+                      .eq('id', teamId)
+                      .maybeSingle() : Promise.resolve({ data: teamData })
+                  ])
+                  
+                  playerData = playerResult.data
+                  teamData = teamResult.data
+                } catch (error) {
+                  logger.error('Error fetching player/team data for bid notification', error)
+                  return
+                }
+              }
+              
+              if (playerData && teamData) {
+                showPlayerSoldDialog(
+                  playerData.display_name,
                   amount,
-                  teamResult.data.team_name,
-                  playerResult.data.profile_pic_url
+                  teamData.team_name,
+                  playerData.profile_pic_url
                 )
               }
             }
@@ -145,14 +216,14 @@ export function usePlayerSoldNotification(auctionId: string | null) {
     return () => {
       supabase.removeChannel(channel)
       supabase.removeChannel(bidsChannel)
-      // Clear notification history on cleanup
-      notifiedPlayers.current.clear()
+      // Don't clear notification history on cleanup to prevent duplicate notifications
+      // notifiedPlayers.current.clear()
     }
-  }, [auctionId])
+  }, [auctionId, supabase])
 }
 
 /**
- * Manual trigger for player sold notification
+ * Manual trigger for player sold dialog
  * Useful for testing or manual triggers
  */
 export function triggerPlayerSoldNotification(
@@ -161,5 +232,5 @@ export function triggerPlayerSoldNotification(
   teamName: string,
   playerImage?: string
 ) {
-  showPlayerSoldNotification(playerName, amount, teamName, playerImage)
+  showPlayerSoldDialog(playerName, amount, teamName, playerImage)
 }

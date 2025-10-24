@@ -5,6 +5,7 @@ import ClientLayout from '@/src/components/ClientLayout'
 import Navbar from '@/src/components/Navbar'
 import PWAInstallPrompt from '@/src/components/PWAInstallPrompt'
 import PWAStatus from '@/src/components/PWAStatus'
+import NotificationProvider from '@/components/providers/NotificationProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -97,16 +98,18 @@ export default function RootLayout({
         <meta name="theme-color" content="#19171b" />
       </head>
       <body className={`${inter.className} bg-[#19171b]`}>
-        <ClientLayout>
-          <div className="min-h-screen bg-[#19171b]">
-            <Navbar />
-            <PWAStatus />
-            <main>
-              {children}
-            </main>
-            <PWAInstallPrompt />
-          </div>
-        </ClientLayout>
+        <NotificationProvider>
+          <ClientLayout>
+            <div className="min-h-screen bg-[#19171b]">
+              <Navbar />
+              <PWAStatus />
+              <main>
+                {children}
+              </main>
+              <PWAInstallPrompt />
+            </div>
+          </ClientLayout>
+        </NotificationProvider>
       </body>
     </html>
   )
