@@ -170,6 +170,9 @@ export default function AuctionPage() {
   // Per-team transient bid input state
   const [selectedBidAmounts, setSelectedBidAmounts] = useState<Record<string, number | null>>({})
   const [openBidPopover, setOpenBidPopover] = useState<string | null>(null)
+  // Skip tracking - captains who have skipped the current player
+  const [skippedCaptains, setSkippedCaptains] = useState<Set<string>>(new Set())
+  const [skipLoading, setSkipLoading] = useState(false)
   // UI notices & toasts
   const [uiNotice, setUiNotice] = useState<{ type: 'error' | 'info' | 'warning'; message: string } | null>(null)
   const [toasts, setToasts] = useState<Array<{ id: string; title: string; message: string; severity: 'info'|'warning'|'error'; actions?: Array<{label: string; onClick: () => void}> }>>([])
@@ -192,13 +195,14 @@ export default function AuctionPage() {
   const [showRemainingPlayersMobile, setShowRemainingPlayersMobile] = useState(false)
   // UI suppression flag to hide stale player details during navigation transitions
   const [suppressPlayerDetails, setSuppressPlayerDetails] = useState(false)
+  // Track the player id we are transitioning away from so we only reveal UI when a DIFFERENT player becomes current
+  const transitionFromPlayerIdRef = useRef<string | null>(null)
 
-  // Safety: if suppression somehow remains true but there is a currentPlayer and no navigation in progress, clear it.
-  useEffect(() => {
-    if (suppressPlayerDetails && currentPlayer && !navigationInProgressRef.current) {
-      setSuppressPlayerDetails(false)
-    }
-  }, [suppressPlayerDetails, currentPlayer])
+  // Previous logic auto-cleared suppression whenever navigation flag dropped while a currentPlayer existed, which
+  // caused a flash of the OLD player before realtime delivered the NEW current player. We now rely exclusively on:
+  //  1. Realtime confirmation of a NEW current_player row (different id) OR
+  //  2. Fail-safe timeout in navigation handlers
+  // to clear suppression. This removes the brief stale re-render.
 
 
 
@@ -208,6 +212,11 @@ export default function AuctionPage() {
     const timeoutId = setTimeout(() => setUiNotice(null), 3500)
     return () => clearTimeout(timeoutId)
   }, [uiNotice])
+
+  // Clear skipped captains when current player changes
+  useEffect(() => {
+    setSkippedCaptains(new Set())
+  }, [currentPlayer?.player_id])
 
   // Ensure we have a current player when auction is live (auto-fix missing current_player flag)
   useEffect(() => {
@@ -426,7 +435,18 @@ export default function AuctionPage() {
     meta.lastTime = now
     meta.lastReason = reason
     try {
-      const response = await fetch(`/api/auctions/${auctionId}/bids?player_id=${activePlayerId}`)
+      // Attach auth token if available (optional - endpoint is public for viewers)
+      const token = secureSessionManager.getToken()
+      const headers: HeadersInit = {
+        'Accept': 'application/json'
+      }
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
+      const response = await fetch(`/api/auctions/${auctionId}/bids?player_id=${activePlayerId}`, {
+        headers
+      })
       if (!response.ok) return []
       const data = await response.json()
       if (currentPlayerRef.current?.player_id !== activePlayerId) return [] // discard stale
@@ -482,6 +502,13 @@ export default function AuctionPage() {
     }, {} as Record<string, any>)
     return (Object.values(latestBidsByTeam) as any[]).sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   }, [recentBids])
+
+  // Check if there's a current winning bid that can be undone
+  const hasCurrentWinningBid = useMemo(() => {
+    if (!recentBids.length) return false
+    const latestBids = getLatestBidsByCaptain()
+    return latestBids.some(bid => bid.is_winning_bid && !bid.is_undone)
+  }, [recentBids, getLatestBidsByCaptain])
   const latestBidsMemo = useMemo(() => getLatestBidsByCaptain(), [getLatestBidsByCaptain])
 
   // Refs to hold latest collections for stable realtime subscription closures
@@ -924,6 +951,182 @@ export default function AuctionPage() {
     }
   }
 
+  // Handle skip player
+  const handleSkipPlayer = async (teamId: string) => {
+    if (!currentPlayer || !user || skipLoading) return
+    
+    setSkipLoading(true)
+    try {
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        alert('Authentication required')
+        return
+      }
+
+      const response = await fetch(`/api/auctions/${auctionId}/skip`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          player_id: currentPlayer.player_id,
+          team_id: teamId
+        })
+      })
+
+      if (response.ok) {
+        // Optimistically update local state
+        setSkippedCaptains(prev => new Set(Array.from(prev).concat(teamId)))
+      } else {
+        const errorData = await response.json()
+        alert(`Failed to skip: ${errorData.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      alert('Failed to skip player. Please try again.')
+    } finally {
+      setSkipLoading(false)
+    }
+  }
+
+  // Timer state and logic
+  const [timeRemaining, setTimeRemaining] = useState<number>(0)
+  const [isTimerActive, setIsTimerActive] = useState<boolean>(false)
+  const [isTimerPaused, setIsTimerPaused] = useState<boolean>(false)
+  const [timerKey, setTimerKey] = useState<number>(0)
+  const [pausedTime, setPausedTime] = useState<number>(0)
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const animationStartTimeRef = useRef<number>(0)
+
+  // Timer effect
+  useEffect(() => {
+    // Clear any existing interval
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
+    }
+
+    if (!auction?.timer_seconds || !isAuctionLive || !currentPlayer) {
+      setTimeRemaining(0)
+      setIsTimerActive(false)
+      setIsTimerPaused(false)
+      setPausedTime(0)
+      return
+    }
+
+    // Start timer when a new player is selected
+    setTimeRemaining(auction.timer_seconds)
+    setIsTimerActive(true)
+    setIsTimerPaused(false)
+    setPausedTime(0)
+    setTimerKey(prev => prev + 1) // Force re-render for CSS animation
+    animationStartTimeRef.current = Date.now()
+
+    // Start the interval
+    timerIntervalRef.current = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+        timerIntervalRef.current = null
+      }
+    }
+  }, [auction?.timer_seconds, isAuctionLive, currentPlayer?.player_id])
+
+  // Timer control functions
+  const handlePauseTimer = () => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
+    }
+    setIsTimerPaused(true)
+    setPausedTime(timeRemaining)
+  }
+
+  const handleResumeTimer = () => {
+    setIsTimerPaused(false)
+    // Update animation start time to account for elapsed time
+    const elapsedTime = auction.timer_seconds - timeRemaining
+    animationStartTimeRef.current = Date.now() - (elapsedTime * 1000)
+    
+    // Start new interval for remaining time
+    timerIntervalRef.current = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  // Format time as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Refresh skipped captains state by fetching current skips
+  const refreshSkippedCaptains = async () => {
+    if (!currentPlayer) return
+    
+    try {
+      const response = await fetch(`/api/auctions/${auctionId}/skip?player_id=${currentPlayer.player_id}`)
+      if (response.ok) {
+        const data = await response.json()
+        const currentSkips = new Set(data.skips.map((skip: any) => skip.team_id))
+        setSkippedCaptains(currentSkips)
+      }
+    } catch (error) {
+      // Silently handle errors
+    }
+  }
+
+  // Handle undo skip (admin/host only)
+  const handleUndoSkip = async (teamId: string) => {
+    if (!currentPlayer || !user || skipLoading) return
+    
+    setSkipLoading(true)
+    try {
+      const token = secureSessionManager.getToken()
+      if (!token) {
+        alert('Authentication required')
+        return
+      }
+
+      const response = await fetch(`/api/auctions/${auctionId}/skip?player_id=${currentPlayer.player_id}&team_id=${teamId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        // Optimistically update local state
+        setSkippedCaptains(prev => {
+          const newSet = new Set(Array.from(prev))
+          newSet.delete(teamId)
+          return newSet
+        })
+      } else {
+        const errorData = await response.json()
+        alert(`Failed to undo skip: ${errorData.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      alert('Failed to undo skip. Please try again.')
+    } finally {
+      setSkipLoading(false)
+    }
+  }
+
   // Handle photo preview
   const handlePhotoClick = (src: string, alt: string) => {
     setPreviewImageErrored(false)
@@ -972,6 +1175,7 @@ export default function AuctionPage() {
     if (navigationInProgressRef.current) return
     navigationInProgressRef.current = true
     
+  transitionFromPlayerIdRef.current = currentPlayer.player_id
   setSuppressPlayerDetails(true)
   setActionLoading(prev => ({ ...prev, nextPlayer: true }))
     beginPlayerTransition('next-player')
@@ -1088,6 +1292,7 @@ export default function AuctionPage() {
     if (navigationInProgressRef.current) return
     navigationInProgressRef.current = true
     
+  transitionFromPlayerIdRef.current = currentPlayer.player_id
   setSuppressPlayerDetails(true)
   setActionLoading(prev => ({ ...prev, previousPlayer: true }))
     beginPlayerTransition('previous-player')
@@ -1482,6 +1687,22 @@ export default function AuctionPage() {
         setAuctionPlayers(auctionResult.players || [])
         setPlayers(auctionResult.playerDetails || [])
         
+        // Fetch existing skips for current player
+        const currentPlayerRow = auctionResult.players?.find((p: any) => p.current_player)
+        if (currentPlayerRow) {
+          try {
+            const skipsResponse = await fetch(`/api/auctions/${auctionId}/skip?player_id=${currentPlayerRow.player_id}`)
+            if (skipsResponse.ok) {
+              const skipsData = await skipsResponse.json()
+              if (skipsData.skips) {
+                setSkippedCaptains(new Set(skipsData.skips.map((s: any) => s.team_id)))
+              }
+            }
+          } catch (error) {
+            // Skip errors are non-critical
+          }
+        }
+        
       } catch (error) {
         // Only log unexpected errors, not handled HTTP errors
         if (error instanceof Error) {
@@ -1610,8 +1831,14 @@ export default function AuctionPage() {
         if (payload.new.current_player) {
           const pl = playersRef.current.find(p => p.id === payload.new.player_id)
           if (pl) {
+            // Only end suppression if this is actually a DIFFERENT player than the one we transitioned away from.
+            const transitionedFrom = transitionFromPlayerIdRef.current
+            const isNewPlayer = !transitionedFrom || transitionedFrom !== payload.new.player_id
             setCurrentPlayer({ ...pl, ...payload.new })
-            setSuppressPlayerDetails(false)
+            if (isNewPlayer) {
+              setSuppressPlayerDetails(false)
+              transitionFromPlayerIdRef.current = null
+            }
             endPlayerTransition()
             fetchBidHistory(undefined, 'new-current-player')
             // Realtime confirmed new current player; clear navigation flag & any fail-safe
@@ -1633,8 +1860,13 @@ export default function AuctionPage() {
               if (nextCp) {
                 const pl = playersRef.current.find(p => p.id === nextCp.player_id)
                 if (pl) {
+                  const transitionedFrom = transitionFromPlayerIdRef.current
+                  const isNewPlayer = !transitionedFrom || transitionedFrom !== nextCp.player_id
                   setCurrentPlayer({ ...pl, ...nextCp })
-                  setSuppressPlayerDetails(false)
+                  if (isNewPlayer) {
+                    setSuppressPlayerDetails(false)
+                    transitionFromPlayerIdRef.current = null
+                  }
                   endPlayerTransition()
                   setActionLoading(prev => ({ ...prev, nextPlayer: false, previousPlayer: false }))
                   fetchBidHistory(undefined, 'await-next-current')
@@ -1663,11 +1895,34 @@ export default function AuctionPage() {
       })
       .subscribe()
 
+    const skipsChannel = supabase.channel(`auction-skips-${auction.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'auction_skips', filter: `auction_id=eq.${auction.id}` }, (payload: any) => {
+        // Add team to skipped captains set
+        if (payload.new && payload.new.player_id === currentPlayerRef.current?.player_id) {
+          setSkippedCaptains(prev => new Set(Array.from(prev).concat(payload.new.team_id)))
+        }
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'auction_skips' }, (payload: any) => {
+        // Since DELETE events only include the primary key, we need to refresh
+        // the skipped captains state by fetching the current skips for this player
+        if (payload.old?.id) {
+          // If we have a current player, refresh the skipped captains state
+          if (currentPlayer) {
+            refreshSkippedCaptains()
+          } else {
+            // If no current player, clear the skipped captains state
+            setSkippedCaptains(new Set())
+          }
+        }
+      })
+      .subscribe()
+
     return () => {
       supabase.removeChannel(bidsChannel)
       supabase.removeChannel(auctionChannel)
       supabase.removeChannel(playersChannel)
       supabase.removeChannel(teamsChannel)
+      supabase.removeChannel(skipsChannel)
     }
   }, [auction?.id])
 
@@ -1851,6 +2106,18 @@ export default function AuctionPage() {
   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#CEA17A]/3 rounded-full blur-3xl motion-safe:animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
       
+  {/* CSS Animation for Timer */}
+  <style jsx>{`
+    @keyframes timerCountdown {
+      from {
+        width: 100%;
+      }
+      to {
+        width: 0%;
+      }
+    }
+  `}</style>
+
   {/* Desktop / Tablet layout (lg and up) */}
   <div className="hidden lg:flex relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 min-h-screen flex-col">
         {/* Header */}
@@ -2013,6 +2280,71 @@ export default function AuctionPage() {
             )}
           </div>
         )}
+
+  {/* Timer Bar - Desktop */}
+  {isTimerActive && (
+    <div className="hidden md:block mb-6">
+      <div className="bg-gradient-to-r from-[#1a1a1a]/90 to-[#0f0f0f]/90 rounded-lg p-4 border border-[#CEA17A]/30 shadow-lg">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-[#CEA17A]">Time Remaining</span>
+            {isTimerPaused && (
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+                <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse"></div>
+                <span className="text-xs text-yellow-400 font-medium">Paused</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-lg font-bold text-[#DBD0C0]">{formatTime(timeRemaining)}</span>
+            {isAuctionController && (
+              <div className="flex gap-2">
+                {!isTimerPaused ? (
+                  <button
+                    onClick={handlePauseTimer}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#2a2a2a] text-[#DBD0C0] border border-[#4a4a4a] rounded-md hover:bg-[#3a3a3a] active:bg-[#1a1a1a] transition-colors duration-200"
+                  >
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                    </svg>
+                    Pause
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleResumeTimer}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#2a2a2a] text-[#DBD0C0] border border-[#4a4a4a] rounded-md hover:bg-[#3a3a3a] active:bg-[#1a1a1a] transition-colors duration-200"
+                  >
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    Resume
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="w-full bg-[#2a2a2a] rounded-full h-2 overflow-hidden">
+          <div 
+            key={timerKey}
+            className={`h-2 rounded-full ${
+              timeRemaining > auction.timer_seconds * 0.3 
+                ? 'bg-gradient-to-r from-green-500 to-[#CEA17A]' 
+                : timeRemaining > auction.timer_seconds * 0.1 
+                ? 'bg-gradient-to-r from-yellow-500 to-orange-500' 
+                : 'bg-gradient-to-r from-red-500 to-red-600'
+            }`}
+            style={{ 
+              width: isTimerPaused ? `${(timeRemaining / auction.timer_seconds) * 100}%` : '100%',
+              animation: isTimerPaused ? 'none' : `timerCountdown ${auction.timer_seconds}s linear forwards`,
+              animationPlayState: isTimerPaused ? 'paused' : 'running',
+              animationDelay: isTimerPaused ? '0s' : `-${((Date.now() - animationStartTimeRef.current) / 1000)}s`
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  )}
 
   {/* AUCTION COMPLETION: Always show current player card; when completed make card + final teams full width */}
 
@@ -2251,7 +2583,7 @@ export default function AuctionPage() {
                             <PlayerImage src={currentPlayer.profile_pic_url} name={currentPlayer.display_name} />
                           </div>
                           <h2 className="text-xl font-bold text-[#DBD0C0]">{currentPlayer.display_name}</h2>
-                          <div className="text-xs text-[#DBD0C0]/60 mt-1">Base Price: ₹{getPlayerBasePrice(currentPlayer)}</div>
+                          <div className="text-xs text-[#DBD0C0]/60 mt-1">Base Price: ₹{currentPlayer.skills?.["Base Price"] || 0}</div>
                         </div>
                         <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                           {Object.entries(currentPlayer.skills || {}).map(([key,val]) => (
@@ -2347,6 +2679,7 @@ export default function AuctionPage() {
             )}
           </div>
 
+
           {/* Live Bids Card - Hidden when auction is completed */}
           {!(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
           <div className="md:col-span-2 lg:col-span-3 xl:col-span-3 bg-gradient-to-br from-[#1a1a1a]/80 to-[#0f0f0f]/80 rounded-xl p-4 md:p-6 border-2 border-[#CEA17A]/20 shadow-2xl flex flex-col">
@@ -2417,8 +2750,8 @@ export default function AuctionPage() {
                         </button>
                         <button
                           onClick={handleUndoBid}
-                          disabled={isInteractionLocked || !isAuctionLive || !recentBids || recentBids.length === 0 || actionLoading.undoBid}
-                          className={`px-6 h-12 rounded-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !isAuctionLive || !recentBids || recentBids.length === 0 || actionLoading.undoBid
+                          disabled={isInteractionLocked || !isAuctionLive || !hasCurrentWinningBid || actionLoading.undoBid}
+                          className={`px-6 h-12 rounded-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !isAuctionLive || !hasCurrentWinningBid || actionLoading.undoBid
                             ? 'bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed'
                             : 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/25'}`}
                         >
@@ -2587,43 +2920,73 @@ export default function AuctionPage() {
                             <div className="col-span-2 relative">
                               { (isAuctionController || isUserCaptainForTeam) ? (
                                 <div className="flex flex-col gap-2">
-                                  <div className="flex w-full divide-x divide-[#CEA17A]/30 rounded-lg overflow-hidden border border-[#CEA17A]/30">
-                                    <button
-                                      onClick={() => {
-                                        if (!canUserBidOnThisTeam || !isAuctionLive) return
-                                        const current = getCurrentBid()
-                                        const next = calculateNextBid(current ?? undefined)
-                                        const toBid = (entered && customValid) ? entered : next
-                                        if (isEligible) handlePlaceBid(team.id, toBid)
-                                      }}
-                                      disabled={!canUserBidOnThisTeam || !isAuctionLive || !hasOpenSlot || !canAfford || !withinMaxPossible}
-                                      className={`flex-1 py-1.5 px-2 text-[11px] font-semibold transition-all ${
-                                        !canUserBidOnThisTeam || !isAuctionLive || !hasOpenSlot || !canAfford || !withinMaxPossible
-                                          ? 'bg-gray-500/10 text-gray-500 cursor-not-allowed'
-                                          : 'bg-[#CEA17A]/20 text-[#CEA17A] hover:bg-[#CEA17A]/30'
-                                      }`}
-                                    >
-                                      {(() => {
-                                        const loadingActive = bidLoading[`bid_${team.id}`]
-                                        if (!loadingActive) return `Bid ₹${(entered && customValid) ? entered : calculateNextBid(getCurrentBid() ?? undefined)}`
-                                        return 'Placing...'
-                                      })()}
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        if (!canUserBidOnThisTeam || !isAuctionLive) return
-                                        setOpenBidPopover(prev => prev === team.id ? null : team.id)
-                                      }}
-                                      disabled={!canUserBidOnThisTeam || !isAuctionLive}
-                                      className={`w-8 flex items-center justify-center py-1.5 text-[#CEA17A] text-xs transition-all ${
-                                        !canUserBidOnThisTeam || !isAuctionLive
-                                          ? 'bg-gray-500/10 text-gray-500'
-                                          : 'bg-[#CEA17A]/10 hover:bg-[#CEA17A]/20'
-                                      }`}
-                                      aria-label="Custom bid"
-                                    >
-                                      <svg className={`h-3 w-3 transition-transform ${openBidPopover===team.id?'rotate-180':''}`} viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z"/></svg>
-                                    </button>
+                                  <div className="flex w-full gap-1">
+                                    <div className="flex flex-1 divide-x divide-[#CEA17A]/30 rounded-lg overflow-hidden border border-[#CEA17A]/30">
+                                      <button
+                                        onClick={() => {
+                                          if (!canUserBidOnThisTeam || !isAuctionLive) return
+                                          const current = getCurrentBid()
+                                          const next = calculateNextBid(current ?? undefined)
+                                          const toBid = (entered && customValid) ? entered : next
+                                          if (isEligible) handlePlaceBid(team.id, toBid)
+                                        }}
+                                        disabled={!canUserBidOnThisTeam || !isAuctionLive || !hasOpenSlot || !canAfford || !withinMaxPossible || skippedCaptains.has(team.id)}
+                                        className={`flex-1 py-1.5 px-2 text-[11px] font-semibold transition-all ${
+                                          !canUserBidOnThisTeam || !isAuctionLive || !hasOpenSlot || !canAfford || !withinMaxPossible || skippedCaptains.has(team.id)
+                                            ? 'bg-gray-500/10 text-gray-500 cursor-not-allowed'
+                                            : 'bg-[#CEA17A]/20 text-[#CEA17A] hover:bg-[#CEA17A]/30'
+                                        }`}
+                                      >
+                                        {(() => {
+                                          const loadingActive = bidLoading[`bid_${team.id}`]
+                                          if (!loadingActive) return `Bid ₹${(entered && customValid) ? entered : calculateNextBid(getCurrentBid() ?? undefined)}`
+                                          return 'Placing...'
+                                        })()}
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (!canUserBidOnThisTeam || !isAuctionLive) return
+                                          setOpenBidPopover(prev => prev === team.id ? null : team.id)
+                                        }}
+                                        disabled={!canUserBidOnThisTeam || !isAuctionLive || skippedCaptains.has(team.id)}
+                                        className={`w-8 flex items-center justify-center py-1.5 text-[#CEA17A] text-xs transition-all ${
+                                          !canUserBidOnThisTeam || !isAuctionLive || skippedCaptains.has(team.id)
+                                            ? 'bg-gray-500/10 text-gray-500'
+                                            : 'bg-[#CEA17A]/10 hover:bg-[#CEA17A]/20'
+                                        }`}
+                                        aria-label="Custom bid"
+                                      >
+                                        <svg className={`h-3 w-3 transition-transform ${openBidPopover===team.id?'rotate-180':''}`} viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z"/></svg>
+                                      </button>
+                                    </div>
+                                    {/* Skip/Undo Button */}
+                                    {skippedCaptains.has(team.id) && isAuctionController ? (
+                                      <button
+                                        onClick={() => handleUndoSkip(team.id)}
+                                        disabled={skipLoading}
+                                        className={`px-2 py-1.5 text-[11px] font-semibold rounded-lg border transition-all ${
+                                          skipLoading
+                                            ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
+                                            : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/20'
+                                        }`}
+                                        title="Undo skip (admin/host only)"
+                                      >
+                                        {skipLoading ? '...' : 'Undo'}
+                                      </button>
+                                    ) : !skippedCaptains.has(team.id) && (
+                                      <button
+                                        onClick={() => handleSkipPlayer(team.id)}
+                                        disabled={!canUserBidOnThisTeam || !isAuctionLive || skipLoading}
+                                        className={`px-2 py-1.5 text-[11px] font-semibold rounded-lg border transition-all ${
+                                          !canUserBidOnThisTeam || !isAuctionLive || skipLoading
+                                            ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
+                                            : 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20'
+                                        }`}
+                                        title="Skip this player"
+                                      >
+                                        {skipLoading ? '...' : 'Skip'}
+                                      </button>
+                                    )}
                                   </div>
                                   {openBidPopover === team.id && (
                                     <>
@@ -2718,8 +3081,19 @@ export default function AuctionPage() {
                               {hasOpenSlot ? `₹${Math.max(0, maxPossibleBid)}` : '—'}
                             </div>
                             <div className={`col-span-2 text-base font-semibold text-center ${balanceAfterBid >= 0 ? 'text-[#DBD0C0]' : 'text-red-400'}`}>{hasOpenSlot ? `₹${Math.max(0, balanceAfterBid)}` : '—'}</div>
-                            <div className="col-span-1 flex justify-center">
-                              {isWinning ? <div className="w-3 h-3 bg-green-500 rounded-full"/> : canAfford ? <div className="w-3 h-3 bg-[#CEA17A] rounded-full"/> : <div className="w-3 h-3 bg-gray-500 rounded-full"/>}
+                            <div className="col-span-1 flex justify-center items-center">
+                              {skippedCaptains.has(team.id) ? (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[10px] text-red-400 font-semibold">OUT</span>
+                                  <div className="w-2 h-2 bg-red-500 rounded-full"/>
+                                </div>
+                              ) : isWinning ? (
+                                <div className="w-3 h-3 bg-green-500 rounded-full" title="Winning bid"/>
+                              ) : canAfford ? (
+                                <div className="w-3 h-3 bg-[#CEA17A] rounded-full" title="Can bid"/>
+                              ) : (
+                                <div className="w-3 h-3 bg-gray-500 rounded-full" title="Cannot afford"/>
+                              )}
                                 </div>
                           </div>
                         )
@@ -3103,6 +3477,69 @@ export default function AuctionPage() {
           <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${getStatusColor(auction.status)}`}>{getStatusText(auction.status)}</span>
         </div>
 
+        {/* Timer Bar - Mobile */}
+        {isTimerActive && (
+          <div className="mb-4">
+            <div className="bg-gradient-to-r from-[#1a1a1a]/90 to-[#0f0f0f]/90 rounded-lg p-4 border border-[#CEA17A]/30 shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-[#CEA17A]">Time Remaining</span>
+                  {isTimerPaused && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded">
+                      <div className="w-1 h-1 bg-yellow-400 rounded-full animate-pulse"></div>
+                      <span className="text-xs text-yellow-400 font-medium">Paused</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-[#DBD0C0]">{formatTime(timeRemaining)}</span>
+                  {isAuctionController && (
+                    <div className="flex gap-1">
+                      {!isTimerPaused ? (
+                        <button
+                          onClick={handlePauseTimer}
+                          className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-[#2a2a2a] text-[#DBD0C0] border border-[#4a4a4a] rounded hover:bg-[#3a3a3a] active:bg-[#1a1a1a] transition-colors duration-200"
+                        >
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                          </svg>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleResumeTimer}
+                          className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-[#2a2a2a] text-[#DBD0C0] border border-[#4a4a4a] rounded hover:bg-[#3a3a3a] active:bg-[#1a1a1a] transition-colors duration-200"
+                        >
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="w-full bg-[#2a2a2a] rounded-full h-2 overflow-hidden">
+                <div 
+                  key={timerKey}
+                  className={`h-2 rounded-full ${
+                    timeRemaining > auction.timer_seconds * 0.3 
+                      ? 'bg-gradient-to-r from-green-500 to-[#CEA17A]' 
+                      : timeRemaining > auction.timer_seconds * 0.1 
+                      ? 'bg-gradient-to-r from-yellow-500 to-orange-500' 
+                      : 'bg-gradient-to-r from-red-500 to-red-600'
+                  }`}
+                  style={{ 
+                    width: isTimerPaused ? `${(timeRemaining / auction.timer_seconds) * 100}%` : '100%',
+                    animation: isTimerPaused ? 'none' : `timerCountdown ${auction.timer_seconds}s linear forwards`,
+                    animationPlayState: isTimerPaused ? 'paused' : 'running',
+                    animationDelay: isTimerPaused ? '0s' : `-${((Date.now() - animationStartTimeRef.current) / 1000)}s`
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Mobile Player & Bid snapshot (expanded with player details) - Hidden when auction is completed */}
         {!(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
           <>
@@ -3227,7 +3664,7 @@ export default function AuctionPage() {
                 {/* Base Price */}
                 <div className="flex items-start gap-1">
                   <span className="text-[#CEA17A] font-medium w-8 flex-shrink-0">Base:</span>
-                  <span className="text-[#DBD0C0] font-semibold">₹{getPlayerBasePrice(currentPlayer)}</span>
+                  <span className="text-[#DBD0C0] font-semibold">₹{currentPlayer.skills?.["Base Price"] || 0}</span>
                 </div>
               </div>
             </div>
@@ -3517,41 +3954,79 @@ export default function AuctionPage() {
                       <span className={`text-[9px] font-medium ${balanceAfter >= 0 ? 'text-green-400' : 'text-red-400'}`}>After {availableSlots > 0 ? `₹${Math.max(0, balanceAfter)}` : '—'}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 relative">
-                    <div className="flex divide-x divide-[#CEA17A]/30 rounded-md overflow-hidden border border-[#CEA17A]/30">
-                      <button
-                        onClick={() => {
-                          if (!canUserBidOnThisTeam || !isAuctionLive) return
-                          const current = getCurrentBid()
-                          const next = calculateNextBid(current ?? undefined)
-                          const toBid = (selected && finalEligible) ? selected : next
-                          if (finalEligible) handlePlaceBid(team.id, toBid)
-                        }}
-                        disabled={!canUserBidOnThisTeam || !isAuctionLive || !hasOpenSlot || !canAfford || !withinMaxPossible}
-                        className={`px-2.5 py-1.5 text-[11px] font-semibold transition-all ${
-                          !canUserBidOnThisTeam || !isAuctionLive || !hasOpenSlot || !canAfford || !withinMaxPossible
-                            ? 'bg-gray-500/10 text-gray-500'
-                            : 'bg-[#CEA17A]/20 text-[#CEA17A] active:scale-95'
-                        }`}
-                      >
-                        {bidLoading[`bid_${team.id}`] ? 'Placing...' : `Bid ₹${(selected && finalEligible) ? selected : calculateNextBid(getCurrentBid() ?? undefined)}`}
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (!canUserBidOnThisTeam || !isAuctionLive) return
-                          setOpenBidPopover(prev => prev === `m-${team.id}` ? null : `m-${team.id}`)
-                        }}
-                        disabled={!canUserBidOnThisTeam || !isAuctionLive}
-                        className={`w-8 flex items-center justify-center py-1.5 text-[#CEA17A] text-xs transition-all ${
-                          !canUserBidOnThisTeam || !isAuctionLive
-                            ? 'bg-gray-500/10 text-gray-500'
-                            : 'bg-[#CEA17A]/10 hover:bg-[#CEA17A]/20'
-                        }`}
-                        aria-label="Custom bid"
-                      >
-                        <svg className={`h-3 w-3 transition-transform ${openBidPopover===`m-${team.id}`?'rotate-180':''}`} viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z"/></svg>
-                      </button>
-                    </div>
+                  <div className="flex items-center gap-1.5 relative">
+                    {skippedCaptains.has(team.id) ? (
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1 px-2 py-1.5 bg-red-500/10 border border-red-500/30 rounded-md">
+                          <span className="text-[10px] text-red-400 font-semibold">OUT</span>
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full"/>
+                        </div>
+                        {isAuctionController && (
+                          <button
+                            onClick={() => handleUndoSkip(team.id)}
+                            disabled={skipLoading}
+                            className={`px-2 py-1.5 text-[10px] font-semibold rounded-md border transition-all ${
+                              skipLoading
+                                ? 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+                                : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30 active:scale-95'
+                            }`}
+                            title="Undo skip"
+                          >
+                            {skipLoading ? '...' : 'Undo'}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex divide-x divide-[#CEA17A]/30 rounded-md overflow-hidden border border-[#CEA17A]/30">
+                          <button
+                            onClick={() => {
+                              if (!canUserBidOnThisTeam || !isAuctionLive) return
+                              const current = getCurrentBid()
+                              const next = calculateNextBid(current ?? undefined)
+                              const toBid = (selected && finalEligible) ? selected : next
+                              if (finalEligible) handlePlaceBid(team.id, toBid)
+                            }}
+                            disabled={!canUserBidOnThisTeam || !isAuctionLive || !hasOpenSlot || !canAfford || !withinMaxPossible}
+                            className={`px-2.5 py-1.5 text-[11px] font-semibold transition-all ${
+                              !canUserBidOnThisTeam || !isAuctionLive || !hasOpenSlot || !canAfford || !withinMaxPossible
+                                ? 'bg-gray-500/10 text-gray-500'
+                                : 'bg-[#CEA17A]/20 text-[#CEA17A] active:scale-95'
+                            }`}
+                          >
+                            {bidLoading[`bid_${team.id}`] ? 'Placing...' : `Bid ₹${(selected && finalEligible) ? selected : calculateNextBid(getCurrentBid() ?? undefined)}`}
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (!canUserBidOnThisTeam || !isAuctionLive) return
+                              setOpenBidPopover(prev => prev === `m-${team.id}` ? null : `m-${team.id}`)
+                            }}
+                            disabled={!canUserBidOnThisTeam || !isAuctionLive}
+                            className={`w-8 flex items-center justify-center py-1.5 text-[#CEA17A] text-xs transition-all ${
+                              !canUserBidOnThisTeam || !isAuctionLive
+                                ? 'bg-gray-500/10 text-gray-500'
+                                : 'bg-[#CEA17A]/10 hover:bg-[#CEA17A]/20'
+                            }`}
+                            aria-label="Custom bid"
+                          >
+                            <svg className={`h-3 w-3 transition-transform ${openBidPopover===`m-${team.id}`?'rotate-180':''}`} viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z"/></svg>
+                          </button>
+                        </div>
+                        {/* Skip Button for Mobile */}
+                        <button
+                          onClick={() => handleSkipPlayer(team.id)}
+                          disabled={!canUserBidOnThisTeam || !isAuctionLive || skipLoading}
+                          className={`px-2 py-1.5 text-[10px] font-semibold rounded-md border transition-all ${
+                            !canUserBidOnThisTeam || !isAuctionLive || skipLoading
+                              ? 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+                              : 'bg-red-500/10 text-red-400 border-red-500/30 active:scale-95'
+                          }`}
+                          title="Skip this player"
+                        >
+                          {skipLoading ? '...' : 'Skip'}
+                        </button>
+                      </>
+                    )}
                     {openBidPopover === `m-${team.id}` && (
                       <div className="absolute z-30 top-full right-0 mt-1 w-48 bg-[#1a1a1a] border border-[#CEA17A]/30 rounded-md p-2 shadow-xl">
                         {/* Next 10 bids options */}
@@ -3707,7 +4182,7 @@ export default function AuctionPage() {
                 'Sell'
               )}
             </button>
-            <button onClick={handleUndoBid} disabled={allPlayersSold || !isAuctionLive || !recentBids?.length} className="py-3 rounded-xl bg-yellow-600/20 text-yellow-300 border border-yellow-400/30 text-xs font-medium disabled:opacity-30">Undo</button>
+            <button onClick={handleUndoBid} disabled={allPlayersSold || !isAuctionLive || !hasCurrentWinningBid} className="py-3 rounded-xl bg-yellow-600/20 text-yellow-300 border border-yellow-400/30 text-xs font-medium disabled:opacity-30">Undo</button>
           </div>
         )}
         {isAuctionController && !showHostActionsMobile && (

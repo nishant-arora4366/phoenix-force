@@ -13,7 +13,9 @@ function SignInContent() {
   const [message, setMessage] = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnUrl = searchParams.get('returnUrl') || '/'
+  // Sanitize returnUrl: must be an internal path starting with a single '/' and not auth pages
+  const rawReturn = searchParams.get('returnUrl') || '/'
+  const returnUrl = (rawReturn.startsWith('/') && !rawReturn.startsWith('//') && !['/signin','/signup'].includes(rawReturn)) ? rawReturn : '/'
 
   useEffect(() => {
     // Check if user is already logged in

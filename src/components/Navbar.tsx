@@ -15,6 +15,10 @@ export default function Navbar() {
   const router = useRouter()
   const pathname = usePathname()
   const dropdownRef = useRef<HTMLDivElement>(null)
+  // Compute dynamic sign-in href with returnUrl so user is routed back after auth
+  const signInHref = !user && pathname && !['/signin','/signup'].includes(pathname)
+    ? `/signin?returnUrl=${encodeURIComponent(pathname)}`
+    : '/signin'
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -315,10 +319,10 @@ export default function Navbar() {
                 ))}
               </div>
 
-              {/* Sign In Link for non-authenticated users */}
+              {/* Sign In Link for non-authenticated users (preserve return path) */}
               {!user && (
                 <Link
-                  href="/signin"
+                  href={signInHref}
                   className="flex items-center space-x-2 text-[#DBD0C0] hover:text-[#75020f] px-4 py-2 rounded-lg hover:bg-[#75020f]/10 transition-all duration-300 font-medium"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -476,12 +480,12 @@ export default function Navbar() {
                   </>
                 )}
                 
-                {/* Sign In link for non-authenticated users */}
+                {/* Sign In link for non-authenticated users (mobile, preserve return path) */}
                 {!user && (
                   <>
                     <div className="border-t border-[#75020f]/20 my-4"></div>
                     <Link
-                      href="/signin"
+                      href={signInHref}
                       className="flex items-center space-x-4 text-[#DBD0C0] hover:text-[#75020f] px-4 py-4 rounded-lg hover:bg-[#75020f]/10 transition-all duration-300 font-medium"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >

@@ -2,7 +2,9 @@ const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: false, // Enable PWA in development for testing
+  // Disable PWA in development to avoid noisy Workbox logs & GenerateSW multi-call warning.
+  // Set ENABLE_PWA=true env var to force-enable locally if you need to test offline.
+  disable: process.env.NODE_ENV === 'development' && process.env.ENABLE_PWA !== 'true',
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

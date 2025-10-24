@@ -11,7 +11,6 @@ const supabase = createClient(
 
 async function getHandler(
   request: NextRequest,
-  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -359,12 +358,9 @@ async function deleteHandler(
 }
 
 // Export with middleware - wrap to handle params
+// GET is public - anyone can view bids (viewers need to see live bids)
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const user = await import('@/src/lib/auth-middleware').then(m => m.authenticateRequest(request))
-  if (!user) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-  }
-  return getHandler(request, user, context)
+  return getHandler(request, context)
 }
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {

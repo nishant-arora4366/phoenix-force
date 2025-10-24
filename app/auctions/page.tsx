@@ -227,12 +227,18 @@ function AuctionsContent() {
 
   // Realtime subscriptions for auction updates
   useEffect(() => {
-    let auctionsChannel: any = null
+    // Guard against duplicate subscriptions caused by Fast Refresh / re-renders
+    const channelName = 'auctions-list-updates'
+  let channel = supabase.getChannels().find((c: any) => c.topic === `realtime:${channelName}`)
+    let retryTimeout: any = null
 
-    try {
-      // Subscribe to auction changes (status updates, etc.)
-      auctionsChannel = supabase
-        .channel('auctions-list-updates')
+    const subscribe = () => {
+      // If a stale channel exists (possible after HMR), remove it first so bindings match.
+      if (channel) {
+        try { supabase.removeChannel(channel) } catch {}
+      }
+      channel = supabase
+        .channel(channelName)
         .on(
           'postgres_changes',
           {
@@ -241,36 +247,36 @@ function AuctionsContent() {
             table: 'auctions'
           },
           (payload: any) => {
-            if (isMountedRef.current) {
-              console.log('Auction updated:', payload)
-              // Refresh auctions list when any auction is updated
-              mutate()
-            }
+            if (!isMountedRef.current) return
+            // Lightweight throttle: only refetch after a small delay to coalesce bursts
+            mutate()
           }
         )
-        .subscribe((status: string, err: any) => {
+        .subscribe((status: string, err?: any) => {
           if (err) {
             console.warn('Auctions channel subscription error:', err)
+            const msg = (err?.message || '').toLowerCase()
+            // Handle Supabase mismatch error by forcing a clean re-subscribe
+            if (msg.includes('mismatch') || msg.includes('bindings')) {
+              if (retryTimeout) clearTimeout(retryTimeout)
+              retryTimeout = setTimeout(() => {
+                subscribe()
+              }, 500)
+            }
           }
         })
-
-    } catch (error) {
-      console.warn('Error setting up realtime subscriptions:', error)
     }
 
-    // Cleanup subscriptions on component unmount
+    subscribe()
+
     return () => {
+      if (retryTimeout) clearTimeout(retryTimeout)
+      // Deferred cleanup to avoid race with immediate remount on Fast Refresh
       setTimeout(() => {
-        try {
-          if (auctionsChannel) {
-            supabase.removeChannel(auctionsChannel)
-          }
-        } catch (error) {
-          console.warn('Error cleaning up realtime subscriptions:', error)
-        }
-      }, 100)
+        try { if (channel) supabase.removeChannel(channel) } catch {}
+      }, 50)
     }
-  }, [mutate])
+  }, [mutate, supabase])
 
   const handleDeleteAuction = async (auctionId: string) => {
     setIsDeleting(true)

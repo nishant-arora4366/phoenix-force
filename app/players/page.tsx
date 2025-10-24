@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/src/lib/supabaseClient'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { getRoleEmoji } from '@/lib/utils'
 import { secureSessionManager } from '@/src/lib/secure-session'
 
