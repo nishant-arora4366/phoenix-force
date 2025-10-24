@@ -521,9 +521,11 @@ export default function AuctionPage() {
 
     const customRanges = auction.auction_config?.custom_increment_ranges
     if (customRanges) {
-      if (bid <= 200) return bid + (customRanges.range_0_200 || 20)
-      if (bid <= 500) return bid + (customRanges.range_200_500 || 50)
-      return bid + (customRanges.range_500_plus || 100)
+      const boundary1 = customRanges.boundary_1 || 200
+      const boundary2 = customRanges.boundary_2 || 500
+      if (bid <= boundary1) return bid + (customRanges.increment_range_1 || 20)
+      if (bid <= boundary2) return bid + (customRanges.increment_range_2 || 50)
+      return bid + (customRanges.increment_range_3 || 100)
     }
     return bid + auction.min_increment
   }
@@ -534,9 +536,11 @@ export default function AuctionPage() {
     if (auction.use_fixed_increments) return auction.min_increment
     const customRanges = auction.auction_config?.custom_increment_ranges
     if (customRanges) {
-      if (bidAmount <= 200) return customRanges.range_0_200 || 20
-      if (bidAmount <= 500) return customRanges.range_200_500 || 50
-      return customRanges.range_500_plus || 100
+      const boundary1 = customRanges.boundary_1 || 200
+      const boundary2 = customRanges.boundary_2 || 500
+      if (bidAmount <= boundary1) return customRanges.increment_range_1 || 20
+      if (bidAmount <= boundary2) return customRanges.increment_range_2 || 50
+      return customRanges.increment_range_3 || 100
     }
     return auction.min_increment
   }
@@ -974,6 +978,7 @@ export default function AuctionPage() {
     if (navigationFailSafeTimeoutRef.current) clearTimeout(navigationFailSafeTimeoutRef.current)
     navigationFailSafeTimeoutRef.current = setTimeout(() => {
       navigationInProgressRef.current = false
+      setActionLoading(prev => ({ ...prev, nextPlayer: false }))
       // Fail-safe: if realtime update never arrives, release suppression so UI doesn't stay skeletonized
       setSuppressPlayerDetails(false)
     }, 5000)
@@ -1066,10 +1071,11 @@ export default function AuctionPage() {
       }
     } catch (error) {
       alert('Failed to move to next player. Please try again.')
-    } finally {
       setActionLoading(prev => ({ ...prev, nextPlayer: false }))
-      // Do not clear navigation flag here; wait for realtime confirmation (or fail-safe)
+      navigationInProgressRef.current = false
+      setSuppressPlayerDetails(false)
     }
+    // Do not clear loading state in finally; wait for realtime confirmation
   }
 
   // Handle previous player navigation
@@ -1087,6 +1093,7 @@ export default function AuctionPage() {
     if (navigationFailSafeTimeoutRef.current) clearTimeout(navigationFailSafeTimeoutRef.current)
     navigationFailSafeTimeoutRef.current = setTimeout(() => {
       navigationInProgressRef.current = false
+      setActionLoading(prev => ({ ...prev, previousPlayer: false }))
       // Fail-safe: also clear suppression here
       setSuppressPlayerDetails(false)
     }, 5000)
@@ -1157,10 +1164,11 @@ export default function AuctionPage() {
       }
     } catch (error) {
       alert('Failed to move to previous player. Please try again.')
-    } finally {
       setActionLoading(prev => ({ ...prev, previousPlayer: false }))
-      // Await realtime to clear navigation flag (or fail-safe)
+      navigationInProgressRef.current = false
+      setSuppressPlayerDetails(false)
     }
+    // Do not clear loading state in finally; wait for realtime confirmation
   }
 
   // Handle starting/pausing the auction
@@ -1607,6 +1615,7 @@ export default function AuctionPage() {
             fetchBidHistory(undefined, 'new-current-player')
             // Realtime confirmed new current player; clear navigation flag & any fail-safe
             navigationInProgressRef.current = false
+            setActionLoading(prev => ({ ...prev, nextPlayer: false, previousPlayer: false }))
             if (navigationFailSafeTimeoutRef.current) {
               clearTimeout(navigationFailSafeTimeoutRef.current)
               navigationFailSafeTimeoutRef.current = null
@@ -1626,6 +1635,7 @@ export default function AuctionPage() {
                   setCurrentPlayer({ ...pl, ...nextCp })
                   setSuppressPlayerDetails(false)
                   endPlayerTransition()
+                  setActionLoading(prev => ({ ...prev, nextPlayer: false, previousPlayer: false }))
                   fetchBidHistory(undefined, 'await-next-current')
                 }
               }
@@ -2463,8 +2473,8 @@ export default function AuctionPage() {
                       <div className="grid grid-cols-2 gap-0 mt-3">
                         <button
                           onClick={handlePreviousPlayer}
-                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length <= 1 })() || actionLoading.previousPlayer || auction?.status === 'draft'}
-                          className={`w-full h-12 border rounded-l-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length <= 1 })() || actionLoading.previousPlayer || auction?.status === 'draft'
+                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || actionLoading.previousPlayer || auction?.status === 'draft'}
+                          className={`w-full h-12 border rounded-l-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || actionLoading.previousPlayer || auction?.status === 'draft'
                             ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
                             : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'}`}
                         >
@@ -2482,8 +2492,8 @@ export default function AuctionPage() {
                         </button>
                         <button
                           onClick={handleNextPlayer}
-                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length <= 1 })() || actionLoading.nextPlayer || auction?.status === 'draft'}
-                          className={`w-full h-12 border rounded-r-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || (() => { const availablePlayers = getAvailablePlayers(); return availablePlayers.length <= 1 })() || actionLoading.nextPlayer || auction?.status === 'draft'
+                          disabled={isInteractionLocked || !currentPlayer || !auctionPlayers || actionLoading.nextPlayer || auction?.status === 'draft'}
+                          className={`w-full h-12 border rounded-r-lg transition-all duration-150 flex items-center justify-center ${isInteractionLocked || !currentPlayer || !auctionPlayers || actionLoading.nextPlayer || auction?.status === 'draft'
                             ? 'bg-gray-500/10 text-gray-500 border-gray-500/20 cursor-not-allowed'
                             : 'bg-[#CEA17A]/15 text-[#CEA17A] border-[#CEA17A]/30 hover:bg-[#CEA17A]/25'}`}
                         >
@@ -3673,7 +3683,7 @@ export default function AuctionPage() {
           <div className="fixed bottom-3 left-3 right-3 grid grid-cols-4 gap-2 z-40">
             <button 
               onClick={handlePreviousPlayer} 
-              disabled={allPlayersSold || !currentPlayer || getAvailablePlayers().findIndex(ap => ap.player_id === currentPlayer?.player_id) <= 0 || auction?.status === 'draft' || actionLoading.previousPlayer} 
+              disabled={allPlayersSold || !currentPlayer || auction?.status === 'draft' || actionLoading.previousPlayer} 
               className="py-3 rounded-xl bg-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 text-xs font-medium disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {actionLoading.previousPlayer ? (
@@ -3686,7 +3696,7 @@ export default function AuctionPage() {
             </button>
             <button 
               onClick={handleNextPlayer} 
-              disabled={allPlayersSold || !currentPlayer || getAvailablePlayers().length === 0 || auction?.status === 'draft' || actionLoading.nextPlayer} 
+              disabled={allPlayersSold || !currentPlayer || auction?.status === 'draft' || actionLoading.nextPlayer} 
               className="py-3 rounded-xl bg-[#CEA17A]/10 text-[#CEA17A] border border-[#CEA17A]/30 text-xs font-medium disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {actionLoading.nextPlayer ? (

@@ -75,6 +75,13 @@ export default function TournamentAuctionCreatePage() {
     use_base_price: false,
     min_increment: 20,
     use_fixed_increments: true,
+    custom_increment_ranges: {
+      boundary_1: 200,
+      boundary_2: 500,
+      increment_range_1: 20,
+      increment_range_2: 50,
+      increment_range_3: 100
+    },
     timer_seconds: 20,
     player_order_type: 'base_price_desc',
     selected_players: [],
@@ -473,6 +480,7 @@ export default function TournamentAuctionCreatePage() {
           use_base_price: auctionConfig.use_base_price,
           min_increment: auctionConfig.min_increment,
           use_fixed_increments: auctionConfig.use_fixed_increments,
+          custom_increment_ranges: auctionConfig.use_fixed_increments ? null : auctionConfig.custom_increment_ranges,
           player_order_type: auctionConfig.player_order_type,
           captains: auctionConfig.captains,
           selected_players: tournamentPlayers
@@ -1487,41 +1495,138 @@ export default function TournamentAuctionCreatePage() {
                           If unchecked, you can set custom increment ranges
                         </p>
                         {!auctionConfig.use_fixed_increments && (
-                          <div className="mt-3 space-y-3">
-                            <div className="text-sm text-[#CEA17A] font-medium">Custom Increment Ranges:</div>
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-[#DBD0C0] text-sm">0 - 200:</span>
-                                <input
-                                  type="number"
-                                  min="5"
-                                  step="5"
-                                  placeholder="20"
-                                  className="w-20 px-2 py-1 bg-[#19171b] border border-[#CEA17A]/30 rounded text-[#DBD0C0] text-sm focus:outline-none focus:border-[#CEA17A]/50"
-                                />
-                                <span className="text-[#DBD0C0] text-sm">tokens</span>
+                          <div className="mt-4 space-y-3">
+                            <div className="text-sm font-semibold text-[#CEA17A] mb-3">Custom Increment Ranges</div>
+                            
+                            {/* Range 1: 0 to boundary_1 */}
+                            <div className="bg-[#0f0f0f]/50 rounded-lg p-3 sm:p-4 border border-[#CEA17A]/20">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <span className="text-[#DBD0C0]/70 text-xs sm:text-sm font-medium whitespace-nowrap">Range:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[#CEA17A] text-sm font-semibold">₹0</span>
+                                    <span className="text-[#DBD0C0]/50">→</span>
+                                    <div className="relative">
+                                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[#CEA17A] text-xs">₹</span>
+                                      <input
+                                        type="number"
+                                        min="50"
+                                        step="50"
+                                        value={auctionConfig.custom_increment_ranges?.boundary_1 || 200}
+                                        onChange={(e) => setAuctionConfig((prev: any) => ({
+                                          ...prev,
+                                          custom_increment_ranges: {
+                                            ...prev.custom_increment_ranges,
+                                            boundary_1: parseInt(e.target.value) || 200
+                                          }
+                                        }))}
+                                        className="w-24 pl-5 pr-2 py-2 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] text-sm focus:outline-none focus:border-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[#DBD0C0]/70 text-xs sm:text-sm font-medium">Increment:</span>
+                                  <div className="relative">
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[#CEA17A] text-xs">₹</span>
+                                    <input
+                                      type="number"
+                                      min="5"
+                                      step="5"
+                                      value={auctionConfig.custom_increment_ranges?.increment_range_1 || 20}
+                                      onChange={(e) => setAuctionConfig((prev: any) => ({
+                                        ...prev,
+                                        custom_increment_ranges: {
+                                          ...prev.custom_increment_ranges,
+                                          increment_range_1: parseInt(e.target.value) || 20
+                                        }
+                                      }))}
+                                      className="w-20 pl-5 pr-2 py-2 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] text-sm focus:outline-none focus:border-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20"
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-[#DBD0C0] text-sm">200 - 500:</span>
-                                <input
-                                  type="number"
-                                  min="5"
-                                  step="5"
-                                  placeholder="50"
-                                  className="w-20 px-2 py-1 bg-[#19171b] border border-[#CEA17A]/30 rounded text-[#DBD0C0] text-sm focus:outline-none focus:border-[#CEA17A]/50"
-                                />
-                                <span className="text-[#DBD0C0] text-sm">tokens</span>
+                            </div>
+                            
+                            {/* Range 2: boundary_1 to boundary_2 */}
+                            <div className="bg-[#0f0f0f]/50 rounded-lg p-3 sm:p-4 border border-[#CEA17A]/20">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <span className="text-[#DBD0C0]/70 text-xs sm:text-sm font-medium whitespace-nowrap">Range:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[#CEA17A] text-sm font-semibold">₹{auctionConfig.custom_increment_ranges?.boundary_1 || 200}</span>
+                                    <span className="text-[#DBD0C0]/50">→</span>
+                                    <div className="relative">
+                                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[#CEA17A] text-xs">₹</span>
+                                      <input
+                                        type="number"
+                                        min={auctionConfig.custom_increment_ranges?.boundary_1 || 200}
+                                        step="50"
+                                        value={auctionConfig.custom_increment_ranges?.boundary_2 || 500}
+                                        onChange={(e) => setAuctionConfig((prev: any) => ({
+                                          ...prev,
+                                          custom_increment_ranges: {
+                                            ...prev.custom_increment_ranges,
+                                            boundary_2: parseInt(e.target.value) || 500
+                                          }
+                                        }))}
+                                        className="w-24 pl-5 pr-2 py-2 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] text-sm focus:outline-none focus:border-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[#DBD0C0]/70 text-xs sm:text-sm font-medium">Increment:</span>
+                                  <div className="relative">
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[#CEA17A] text-xs">₹</span>
+                                    <input
+                                      type="number"
+                                      min="5"
+                                      step="5"
+                                      value={auctionConfig.custom_increment_ranges?.increment_range_2 || 50}
+                                      onChange={(e) => setAuctionConfig((prev: any) => ({
+                                        ...prev,
+                                        custom_increment_ranges: {
+                                          ...prev.custom_increment_ranges,
+                                          increment_range_2: parseInt(e.target.value) || 50
+                                        }
+                                      }))}
+                                      className="w-20 pl-5 pr-2 py-2 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] text-sm focus:outline-none focus:border-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20"
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-[#DBD0C0] text-sm">500+:</span>
-                                <input
-                                  type="number"
-                                  min="5"
-                                  step="5"
-                                  placeholder="100"
-                                  className="w-20 px-2 py-1 bg-[#19171b] border border-[#CEA17A]/30 rounded text-[#DBD0C0] text-sm focus:outline-none focus:border-[#CEA17A]/50"
-                                />
-                                <span className="text-[#DBD0C0] text-sm">tokens</span>
+                            </div>
+                            
+                            {/* Range 3: boundary_2+ */}
+                            <div className="bg-[#0f0f0f]/50 rounded-lg p-3 sm:p-4 border border-[#CEA17A]/20">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <span className="text-[#DBD0C0]/70 text-xs sm:text-sm font-medium whitespace-nowrap">Range:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[#CEA17A] text-sm font-semibold">₹{auctionConfig.custom_increment_ranges?.boundary_2 || 500}+</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[#DBD0C0]/70 text-xs sm:text-sm font-medium">Increment:</span>
+                                  <div className="relative">
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[#CEA17A] text-xs">₹</span>
+                                    <input
+                                      type="number"
+                                      min="5"
+                                      step="5"
+                                      value={auctionConfig.custom_increment_ranges?.increment_range_3 || 100}
+                                      onChange={(e) => setAuctionConfig((prev: any) => ({
+                                        ...prev,
+                                        custom_increment_ranges: {
+                                          ...prev.custom_increment_ranges,
+                                          increment_range_3: parseInt(e.target.value) || 100
+                                        }
+                                      }))}
+                                      className="w-20 pl-5 pr-2 py-2 bg-[#19171b] border border-[#CEA17A]/30 rounded-lg text-[#DBD0C0] text-sm focus:outline-none focus:border-[#CEA17A]/50 focus:ring-2 focus:ring-[#CEA17A]/20"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
