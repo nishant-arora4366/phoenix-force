@@ -12,7 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-type NotificationType = 'install' | 'open-in-app' | 'open-instructions' | null;
+type NotificationType = 'install' | null;
 
 export default function PWANotification() {
   const [notificationType, setNotificationType] = useState<NotificationType>(null);
@@ -48,15 +48,7 @@ export default function PWANotification() {
       return;
     }
     
-    // Priority 1: If PWA is installed, show "Open in App" prompt (mobile only)
-    if (!desktop && pwaRedirect.isPWAInstalled()) {
-      const timer = setTimeout(() => {
-        setNotificationType('open-in-app');
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-    
-    // Priority 2: Show install prompt after delay
+    // Show install prompt after delay
     const timer = setTimeout(() => {
       setNotificationType('install');
     }, 3000);
@@ -84,22 +76,6 @@ export default function PWANotification() {
     };
   }, []);
 
-  const handleOpenInApp = async () => {
-    if (isIOS) {
-      // iOS: Show instructions in the card
-      setNotificationType('open-instructions');
-    } else {
-      // Android: Try to redirect
-      const success = await pwaRedirect.openInPWA();
-      
-      if (!success) {
-        // If redirect failed, show install instructions instead
-        setNotificationType('install');
-      } else {
-        handleDismiss();
-      }
-    }
-  };
 
   const handleInstall = async () => {
     if (isIOS) {
@@ -158,67 +134,7 @@ export default function PWANotification() {
           
           {/* Content */}
           <div className="flex-1 min-w-0">
-            {notificationType === 'open-in-app' ? (
-              <>
-                <h3 className="text-sm font-bold text-[#CEA17A]">
-                  Open in Phoenix Force App
-                </h3>
-                <p className="text-xs text-[#DBD0C0] mt-1.5 leading-relaxed">
-                  Get the best experience with faster loading and offline access.
-                </p>
-                <div className="flex space-x-2 mt-3">
-                  <button
-                    onClick={handleOpenInApp}
-                    className="bg-[#CEA17A] hover:bg-[#CEA17A]/90 text-[#19171b] text-xs px-4 py-2 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    Open in App
-                  </button>
-                  <button
-                    onClick={handleDismiss}
-                    className="text-[#DBD0C0] hover:text-white text-xs px-3 py-2 rounded-lg transition-colors hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30"
-                  >
-                    Continue in Browser
-                  </button>
-                </div>
-              </>
-            ) : notificationType === 'open-instructions' ? (
-              <>
-                <h3 className="text-sm font-bold text-[#CEA17A]">
-                  How to Open in App
-                </h3>
-                <p className="text-xs text-[#DBD0C0] mt-1.5 leading-relaxed">
-                  Follow these steps to open in the Phoenix Force app:
-                </p>
-                <div className="text-xs text-[#DBD0C0] mt-2 space-y-1.5 bg-[#0f0d0f]/80 rounded-lg p-2.5 border border-[#CEA17A]/20">
-                  <div className="flex items-start space-x-2">
-                    <span className="text-[#CEA17A] font-bold">1.</span>
-                    <span>Tap the <strong>Share button (⎋)</strong> at the bottom of Safari</span>
-                  </div>
-                  <div className="flex items-start space-x-2">
-                    <span className="text-[#CEA17A] font-bold">2.</span>
-                    <span>Scroll down and tap <strong>"Phoenix Force Cricket"</strong></span>
-                  </div>
-                  <div className="flex items-start space-x-2">
-                    <span className="text-[#CEA17A] font-bold">OR</span>
-                    <span>Simply open the <strong>Phoenix Force app</strong> from your home screen!</span>
-                  </div>
-                </div>
-                <div className="flex space-x-2 mt-3">
-                  <button
-                    onClick={handleDismiss}
-                    className="bg-[#CEA17A] hover:bg-[#CEA17A]/90 text-[#19171b] text-xs px-4 py-2 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    Got it
-                  </button>
-                  <button
-                    onClick={handleDismiss}
-                    className="text-[#DBD0C0] hover:text-white text-xs px-3 py-2 rounded-lg transition-colors hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30"
-                  >
-                    Continue in Browser
-                  </button>
-                </div>
-              </>
-            ) : (
+            {notificationType === 'install' && (
               <>
                 <h3 className="text-sm font-bold text-[#CEA17A]">
                   Install Phoenix Force Cricket
