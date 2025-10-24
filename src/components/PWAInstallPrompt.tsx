@@ -15,15 +15,41 @@ export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [showManualInstall, setShowManualInstall] = useState(false);
 
   useEffect(() => {
+    // Detect iOS
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    setIsIOS(iOS);
+    
     // Check if app is already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches;
+    setIsStandalone(isStandaloneMode);
+    
+    if (isStandaloneMode) {
       setIsInstalled(true);
       return;
     }
 
-    // Listen for the beforeinstallprompt event
+    // For iOS, show custom prompt after a delay
+    if (iOS) {
+      const timer = setTimeout(() => {
+        setShowInstallPrompt(true);
+      }, 3000); // Show after 3 seconds
+      return () => clearTimeout(timer);
+    }
+
+    // For Android/Desktop, show manual install option if no automatic prompt
+    if (!iOS && !isStandaloneMode) {
+      const timer = setTimeout(() => {
+        setShowManualInstall(true);
+      }, 5000); // Show manual install after 5 seconds
+      return () => clearTimeout(timer);
+    }
+
+    // Listen for the beforeinstallprompt event (Android/Desktop)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -47,6 +73,11 @@ export default function PWAInstallPrompt() {
   }, []);
 
   const handleInstallClick = async () => {
+    if (isIOS) {
+      // For iOS, we can't programmatically install, so we show instructions
+      return;
+    }
+    
     if (!deferredPrompt) return;
 
     deferredPrompt.prompt();
@@ -67,8 +98,50 @@ export default function PWAInstallPrompt() {
     setDeferredPrompt(null);
   };
 
-  // Don't show if already installed or no prompt available
-  if (isInstalled || !showInstallPrompt || !deferredPrompt) {
+  const handleManualInstall = () => {
+    if (isIOS) {
+      // For iOS, show instructions
+      setShowInstallPrompt(true);
+    } else {
+      // For Android/Desktop, try to trigger install
+      if (deferredPrompt) {
+        handleInstallClick();
+      } else {
+        // Show instructions for manual install
+        alert('To install this app:\n\n1. Look for the install icon in your browser address bar\n2. Or go to Chrome menu → "Install Phoenix Force Cricket"\n3. Or add to home screen from browser menu');
+      }
+    }
+  };
+
+  // Don't show if already installed
+  if (isInstalled) {
+    return null;
+  }
+
+  // Show manual install button if no automatic prompt is available
+  if (showManualInstall && !showInstallPrompt) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <button
+          onClick={handleManualInstall}
+          className="bg-[#4f46e5] hover:bg-[#4338ca] text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          <span className="text-sm font-medium">Install App</span>
+        </button>
+      </div>
+    );
+  }
+
+  // Don't show if no prompt available (for non-iOS)
+  if (!isIOS && (!showInstallPrompt || !deferredPrompt)) {
+    return null;
+  }
+
+  // Don't show if iOS and no prompt
+  if (isIOS && !showInstallPrompt) {
     return null;
   }
 
@@ -88,26 +161,58 @@ export default function PWAInstallPrompt() {
             />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-white">
-              Install Phoenix Force Cricket
-            </h3>
-            <p className="text-xs text-gray-300 mt-1">
-              Get quick access to tournaments, auctions, and player management.
-            </p>
-            <div className="flex space-x-2 mt-3">
-              <button
-                onClick={handleInstallClick}
-                className="bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs px-3 py-1.5 rounded-md font-medium transition-colors shadow-lg"
-              >
-                Install
-              </button>
-              <button
-                onClick={handleDismiss}
-                className="text-gray-400 hover:text-white text-xs px-3 py-1.5 rounded-md transition-colors hover:bg-gray-700/50"
-              >
-                Not now
-              </button>
-            </div>
+            {isIOS ? (
+              <>
+                <h3 className="text-sm font-semibold text-white">
+                  Install Phoenix Force Cricket
+                </h3>
+                <p className="text-xs text-gray-300 mt-1">
+                  To install this app on your iPhone:
+                </p>
+                <div className="text-xs text-gray-400 mt-2 space-y-1">
+                  <div>1. Tap the Share button <span className="text-white">⎋</span></div>
+                  <div>2. Scroll down and tap "Add to Home Screen"</div>
+                  <div>3. Tap "Add" to install</div>
+                </div>
+                <div className="flex space-x-2 mt-3">
+                  <button
+                    onClick={handleDismiss}
+                    className="bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs px-3 py-1.5 rounded-md font-medium transition-colors shadow-lg"
+                  >
+                    Got it
+                  </button>
+                  <button
+                    onClick={handleDismiss}
+                    className="text-gray-400 hover:text-white text-xs px-3 py-1.5 rounded-md transition-colors hover:bg-gray-700/50"
+                  >
+                    Not now
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-sm font-semibold text-white">
+                  Install Phoenix Force Cricket
+                </h3>
+                <p className="text-xs text-gray-300 mt-1">
+                  Get quick access to tournaments, auctions, and player management.
+                </p>
+                <div className="flex space-x-2 mt-3">
+                  <button
+                    onClick={handleInstallClick}
+                    className="bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs px-3 py-1.5 rounded-md font-medium transition-colors shadow-lg"
+                  >
+                    Install
+                  </button>
+                  <button
+                    onClick={handleDismiss}
+                    className="text-gray-400 hover:text-white text-xs px-3 py-1.5 rounded-md transition-colors hover:bg-gray-700/50"
+                  >
+                    Not now
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
