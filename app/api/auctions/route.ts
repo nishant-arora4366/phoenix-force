@@ -102,6 +102,23 @@ async function patchHandler(request: NextRequest, user: AuthenticatedUser) {
         return NextResponse.json({ error: 'Failed to update auction status' }, { status: 500 })
       }
 
+      // Initialize timer on first transition to live (only if not already started)
+      if (status === 'live') {
+        try {
+          await supabase
+            .from('auctions')
+            .update({
+              timer_last_reset_at: new Date().toISOString(),
+              timer_paused: false,
+              timer_paused_remaining_seconds: null
+            })
+            .eq('id', auctionId)
+            .is('timer_last_reset_at', null)
+        } catch (e) {
+          console.error('Error initializing auction timer on start:', e)
+        }
+      }
+
       // If transitioning to live (start or resume) ensure a current player exists.
       // This prevents first bid failures (NO_CURRENT_PLAYER) and aligns with bids route safeguard.
       if (status === 'live') {
@@ -265,6 +282,16 @@ async function patchHandler(request: NextRequest, user: AuthenticatedUser) {
           console.error('Error setting next player as current:', setCurrentError)
         }
       }
+
+      // Reset timer on sell
+      await supabase
+        .from('auctions')
+        .update({
+          timer_last_reset_at: new Date().toISOString(),
+          timer_paused: false,
+          timer_paused_remaining_seconds: null
+        })
+        .eq('id', auctionId)
 
       return NextResponse.json({ 
         success: true, 

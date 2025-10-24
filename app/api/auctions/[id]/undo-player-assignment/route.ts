@@ -252,6 +252,17 @@ export async function POST(
     // Note: The undone player is already set as current in the undo operation above
 
     console.log('🔍 [DEBUG] Operation completed successfully, returning response')
+
+    // Reset timer on undo sell
+    await supabase
+      .from('auctions')
+      .update({
+        timer_last_reset_at: new Date().toISOString(),
+        timer_paused: false,
+        timer_paused_remaining_seconds: null
+      })
+      .eq('id', auctionId)
+
     return NextResponse.json({ 
       success: true, 
       message: `Player ${playerInfo?.display_name || lastSoldPlayer.player_id} unsold and set as current`,

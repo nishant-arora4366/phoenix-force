@@ -69,6 +69,13 @@ async function postHandler(
           logger.error('Error setting current player:', setError)
           return NextResponse.json({ error: 'Failed to set current player' }, { status: 500 })
         }
+
+        // Reset timer on explicit current player set
+        await supabase.from('auctions').update({
+          timer_last_reset_at: new Date().toISOString(),
+          timer_paused: false,
+          timer_paused_remaining_seconds: null
+        }).eq('id', auctionId)
         
         return NextResponse.json({ 
           success: true, 
@@ -86,6 +93,11 @@ async function postHandler(
         }
         
         if (nextResult && nextResult.length > 0) {
+          await supabase.from('auctions').update({
+            timer_last_reset_at: new Date().toISOString(),
+            timer_paused: false,
+            timer_paused_remaining_seconds: null
+          }).eq('id', auctionId)
           return NextResponse.json({ 
             success: true, 
             message: 'Moved to next player successfully'
@@ -105,6 +117,11 @@ async function postHandler(
         }
         
         if (prevResult && prevResult.length > 0) {
+          await supabase.from('auctions').update({
+            timer_last_reset_at: new Date().toISOString(),
+            timer_paused: false,
+            timer_paused_remaining_seconds: null
+          }).eq('id', auctionId)
           return NextResponse.json({ 
             success: true, 
             message: 'Moved to previous player successfully'
@@ -122,6 +139,12 @@ async function postHandler(
           logger.error('Error setting first player:', firstError)
           return NextResponse.json({ error: 'Failed to set first player' }, { status: 500 })
         }
+
+        await supabase.from('auctions').update({
+          timer_last_reset_at: new Date().toISOString(),
+          timer_paused: false,
+          timer_paused_remaining_seconds: null
+        }).eq('id', auctionId)
         
         return NextResponse.json({ 
           success: true, 

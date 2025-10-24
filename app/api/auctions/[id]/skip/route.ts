@@ -142,6 +142,16 @@ async function postHandler(
 
     logger.info(`Team ${team.team_name} skipped player ${player_id}`)
 
+    // Reset timer on skip
+    await supabase
+      .from('auctions')
+      .update({
+        timer_last_reset_at: new Date().toISOString(),
+        timer_paused: false,
+        timer_paused_remaining_seconds: null
+      })
+      .eq('id', auctionId)
+
     return NextResponse.json({
       success: true,
       message: 'Player skipped successfully'
@@ -203,6 +213,16 @@ async function deleteHandler(
     }
 
     logger.info(`Skip undone for team ${teamId} on player ${playerId}`)
+
+    // Reset timer on undo skip
+    await supabase
+      .from('auctions')
+      .update({
+        timer_last_reset_at: new Date().toISOString(),
+        timer_paused: false,
+        timer_paused_remaining_seconds: null
+      })
+      .eq('id', auctionId)
 
     return NextResponse.json({
       success: true,

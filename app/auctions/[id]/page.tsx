@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useAuctionTimer } from '@/hooks/useAuctionTimer'
 import { getSupabaseClient } from '@/src/lib/supabaseClient'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -36,6 +37,9 @@ interface Auction {
   tournament_id: string
   status: string
   timer_seconds: number
+  timer_last_reset_at?: string | null
+  timer_paused?: boolean | null
+  timer_paused_remaining_seconds?: number | null
   total_purse: number
   max_tokens_per_captain: number
   min_bid_amount: number
@@ -142,9 +146,22 @@ export default function AuctionPage() {
   // Helper: derive a player's base price (fallback 0)
   const getPlayerBasePrice = (player: any) => {
     if (!player) return 0
-    // Attempt to find auctionPlayer record for more authoritative base price if present
+    
+    // Base price can be stored in multiple places:
+    // 1. In player.skills['Base Price'] (most common - from player_skill_assignments)
+    // 2. In auction_player.base_price (if stored there)
+    // 3. In player.base_price (legacy or direct column)
+    
     const auctionPlayerRecord = auctionPlayers.find(ap => ap.player_id === player.id)
-    // Some schemas might store base price on auction_player; fallback to player.base_price if exists
+    
+    // Try to get base price from skills first
+    const basePriceFromSkills = player.skills?.['Base Price']
+    if (basePriceFromSkills) {
+      const parsed = parseFloat(basePriceFromSkills)
+      if (!isNaN(parsed)) return parsed
+    }
+    
+    // Fallback to other sources
     // @ts-ignore - allow dynamic access
     return auctionPlayerRecord?.base_price || player.base_price || 0
   }
@@ -551,8 +568,9 @@ export default function AuctionPage() {
     if (customRanges) {
       const boundary1 = customRanges.boundary_1 || 200
       const boundary2 = customRanges.boundary_2 || 500
-      if (bid <= boundary1) return bid + (customRanges.increment_range_1 || 20)
-      if (bid <= boundary2) return bid + (customRanges.increment_range_2 || 50)
+      // Use < instead of <= so that boundary values use the next range's increment
+      if (bid < boundary1) return bid + (customRanges.increment_range_1 || 20)
+      if (bid < boundary2) return bid + (customRanges.increment_range_2 || 50)
       return bid + (customRanges.increment_range_3 || 100)
     }
     return bid + auction.min_increment
@@ -566,8 +584,9 @@ export default function AuctionPage() {
     if (customRanges) {
       const boundary1 = customRanges.boundary_1 || 200
       const boundary2 = customRanges.boundary_2 || 500
-      if (bidAmount <= boundary1) return customRanges.increment_range_1 || 20
-      if (bidAmount <= boundary2) return customRanges.increment_range_2 || 50
+      // Use < instead of <= so that boundary values use the next range's increment
+      if (bidAmount < boundary1) return customRanges.increment_range_1 || 20
+      if (bidAmount < boundary2) return customRanges.increment_range_2 || 50
       return customRanges.increment_range_3 || 100
     }
     return auction.min_increment
@@ -578,7 +597,6 @@ export default function AuctionPage() {
     if (!auction) return []
     
     const currentBid = getCurrentBid()
-    const startingBid = currentBid == null ? getPlayerBasePrice(currentPlayer) : currentBid
     const nextBid = calculateNextBid(currentBid ?? undefined)
     
     const bids = []
@@ -592,6 +610,43 @@ export default function AuctionPage() {
     return bids
   }
 
+  // Helper: Get base prices of remaining available players (excluding current player and captains)
+  // Returns array of base prices sorted by specified order
+  const getRemainingPlayersBasePrices = useCallback((excludeCurrentPlayer: boolean = true, sortOrder: 'asc' | 'desc' = 'asc') => {
+    if (!auction || !auctionPlayers || !players) return []
+    
+    const captainIds = auctionTeams.map(t => t.captain_id)
+    const currentPlayerId = currentPlayer?.player_id
+    
+    // Get all available players excluding captains and optionally current player
+    const availablePlayers = auctionPlayers
+      .filter(ap => {
+        if (ap.status !== 'available') return false
+        if (captainIds.includes(ap.player_id)) return false
+        if (excludeCurrentPlayer && ap.player_id === currentPlayerId) return false
+        return true
+      })
+      .map(ap => {
+        const playerDetail = players.find(p => p.id === ap.player_id)
+        return playerDetail
+      })
+      .filter(p => p != null)
+    
+    // Get base prices for these players
+    const basePrices = availablePlayers.map(player => {
+      const basePrice = getPlayerBasePrice(player)
+      // When use_base_price is true, minimum is max(basePrice, minBid)
+      // When false, minimum is just minBid
+      if (auction.use_base_price) {
+        return Math.max(basePrice, auction.min_bid_amount || 0)
+      }
+      return auction.min_bid_amount || 0
+    })
+    
+    // Sort based on order: 'asc' = lowest to highest, 'desc' = highest to lowest
+    return basePrices.sort((a, b) => sortOrder === 'asc' ? a - b : b - a)
+  }, [auction, auctionPlayers, players, auctionTeams, currentPlayer, getPlayerBasePrice])
+
   // Memoized team bidding eligibility calculation - reactive to auctionPlayers and auctionTeams changes
   const teamBiddingStatus = useMemo(() => {
     if (!auction) return {}
@@ -599,19 +654,75 @@ export default function AuctionPage() {
     const nextBid = calculateNextBid()
     const status: Record<string, any> = {}
     
+    // Only use competition-aware logic when use_base_price is enabled
+    // Otherwise, use simple min_bid_amount for all slots
+    const useCompetitionLogic = auction.use_base_price === true
+    
+    // Get remaining players' base prices sorted from LOWEST to HIGHEST (ascending)
+    const remainingBasePrices = useCompetitionLogic ? getRemainingPlayersBasePrices(true, 'asc') : []
+    
+    // Calculate total demand: how many slots do ALL teams still need to fill?
+    const totalSlotsNeeded = auctionTeams.reduce((sum, t) => {
+      const soldNonCaptain = auctionPlayers.filter(ap => ap.sold_to === t.id && ap.status === 'sold' && ap.player_id !== t.captain_id).length
+      const filled = 1 + soldNonCaptain
+      return sum + Math.max(0, t.required_players - filled)
+    }, 0)
+    
+    // Competition factor: ratio of demand to supply (only when using base price logic)
+    const availablePlayersCount = remainingBasePrices.length
+    const competitionRatio = useCompetitionLogic && availablePlayersCount > 0 ? totalSlotsNeeded / availablePlayersCount : 1
+    
     auctionTeams.forEach(team => {
       // Calculate actual sold players for this team for accuracy
-      // Authoritative count: captain + sold non-captain players for team
       const soldNonCaptainPlayers = auctionPlayers.filter(ap => ap.sold_to === team.id && ap.status === 'sold' && ap.player_id !== team.captain_id).length
       const totalSlots = team.required_players // includes captain slot
       const filledSlots = 1 + soldNonCaptainPlayers // 1 for captain
       const availableSlots = Math.max(0, totalSlots - filledSlots)
       const hasOpenSlot = availableSlots > 0
       
-      // Reserve calculation: keep minimum bid amount for each remaining slot after this purchase
+      // Reserve calculation with competition awareness (only when use_base_price is true)
+      // After buying current player, team needs (availableSlots - 1) more players
       const slotsAfterPurchase = Math.max(0, availableSlots - 1)
-      const minPerSlot = auction?.min_bid_amount || 40
-      const reserveNeeded = slotsAfterPurchase * minPerSlot
+      
+      let reserveNeeded = 0
+      if (slotsAfterPurchase > 0) {
+        if (useCompetitionLogic && remainingBasePrices.length > 0) {
+          // Smart reserve strategy based on competition:
+          // - Low competition (ratio < 1.5): Use cheapest players (optimistic)
+          // - High competition (ratio >= 1.5): Account for the fact that cheap players will be taken
+          
+          if (competitionRatio >= 1.5) {
+            // High competition: Can't assume cheapest will be available
+            // Use median-range prices instead of absolute cheapest
+            const startIndex = Math.min(
+              Math.floor(remainingBasePrices.length * 0.2), // Skip bottom 20% (likely to be taken)
+              remainingBasePrices.length - slotsAfterPurchase
+            )
+            const competitivePrices = remainingBasePrices.slice(startIndex, startIndex + slotsAfterPurchase)
+            reserveNeeded = competitivePrices.reduce((sum, price) => sum + price, 0)
+            
+            // If not enough players in competitive range, add from cheapest
+            if (competitivePrices.length < slotsAfterPurchase) {
+              const needed = slotsAfterPurchase - competitivePrices.length
+              const fallbackPrices = remainingBasePrices.slice(0, needed)
+              reserveNeeded += fallbackPrices.reduce((sum, price) => sum + price, 0)
+            }
+          } else {
+            // Low/moderate competition: Can use cheapest players
+            const lowestNPrices = remainingBasePrices.slice(0, slotsAfterPurchase)
+            reserveNeeded = lowestNPrices.reduce((sum, price) => sum + price, 0)
+          }
+          
+          // If we need more slots than remaining players, use min_bid for the rest
+          const additionalSlots = slotsAfterPurchase - Math.min(slotsAfterPurchase, remainingBasePrices.length)
+          if (additionalSlots > 0) {
+            reserveNeeded += additionalSlots * (auction?.min_bid_amount || 0)
+          }
+        } else {
+          // Simple reserve: use_base_price is false, just use min_bid_amount per slot
+          reserveNeeded = slotsAfterPurchase * (auction?.min_bid_amount || 0)
+        }
+      }
       
       // Remaining purse represents the true spendable amount; outstanding bids aren't deducted until sale.
       const effectivePurse = team.remaining_purse
@@ -631,12 +742,13 @@ export default function AuctionPage() {
         canAfford,
         withinMaxPossible,
         balanceAfterBid,
-        minPerSlot
+        minPerSlot: auction?.min_bid_amount || 40,
+        competitionRatio // Expose for debugging/UI
       }
     })
     
     return status
-  }, [auctionTeams, auctionPlayers, auction, recentBids, currentPlayer])
+  }, [auctionTeams, auctionPlayers, auction, recentBids, currentPlayer, getRemainingPlayersBasePrices])
 
   // Validate a user-entered bid for a team against increments, affordability and slot reservation.
   const validateCustomBid = (team: AuctionTeam, rawAmount: number | null) => {
@@ -647,6 +759,15 @@ export default function AuctionPage() {
     
     // Check if auction is live
     if (auction.status !== 'live') return { valid: false, reason: `Auction is ${auction.status}` }
+    
+    // Admin/Host bypass: Allow them to bid anything to handle edge cases during live auction
+    const isAdmin = userProfile?.role === 'admin'
+    const isHost = userProfile?.role === 'host' && auction?.created_by === user?.id
+    if (isAdmin || isHost) {
+      // Only basic checks for admin/host - they can override all other validations
+      if (amount > team.remaining_purse) return { valid: false, reason: 'Exceeds remaining purse' }
+      return { valid: true, reason: '' }
+    }
     
     // Determine reference (current winning bid or starting).
     const current = getCurrentBid()
@@ -667,8 +788,52 @@ export default function AuctionPage() {
     const filledSlots = 1 + soldNonCaptainPlayers
     const availableSlots = Math.max(0, totalSlots - filledSlots)
     const remainingSlotsAfterPurchase = Math.max(0, availableSlots - 1)
-    const minPerSlot = auction?.min_bid_amount || 40
-    const reserveNeeded = remainingSlotsAfterPurchase * minPerSlot
+    
+    // Calculate reserve with competition awareness (only when use_base_price is true)
+    const useCompetitionLogic = auction.use_base_price === true
+    const remainingBasePrices = useCompetitionLogic ? getRemainingPlayersBasePrices(true, 'asc') : []
+    
+    let reserveNeeded = 0
+    if (remainingSlotsAfterPurchase > 0) {
+      if (useCompetitionLogic && remainingBasePrices.length > 0) {
+        // Calculate competition ratio
+        const totalSlotsNeeded = auctionTeams.reduce((sum, t) => {
+          const soldNonCaptain = auctionPlayers.filter(ap => ap.sold_to === t.id && ap.status === 'sold' && ap.player_id !== t.captain_id).length
+          const filled = 1 + soldNonCaptain
+          return sum + Math.max(0, t.required_players - filled)
+        }, 0)
+        const competitionRatio = remainingBasePrices.length > 0 ? totalSlotsNeeded / remainingBasePrices.length : 1
+        
+        if (competitionRatio >= 1.5) {
+          // High competition: Use median-range prices
+          const startIndex = Math.min(
+            Math.floor(remainingBasePrices.length * 0.2),
+            remainingBasePrices.length - remainingSlotsAfterPurchase
+          )
+          const competitivePrices = remainingBasePrices.slice(startIndex, startIndex + remainingSlotsAfterPurchase)
+          reserveNeeded = competitivePrices.reduce((sum, price) => sum + price, 0)
+          
+          if (competitivePrices.length < remainingSlotsAfterPurchase) {
+            const needed = remainingSlotsAfterPurchase - competitivePrices.length
+            const fallbackPrices = remainingBasePrices.slice(0, needed)
+            reserveNeeded += fallbackPrices.reduce((sum, price) => sum + price, 0)
+          }
+        } else {
+          // Low/moderate competition: Use cheapest players
+          const lowestNPrices = remainingBasePrices.slice(0, remainingSlotsAfterPurchase)
+          reserveNeeded = lowestNPrices.reduce((sum, price) => sum + price, 0)
+        }
+        
+        const additionalSlots = remainingSlotsAfterPurchase - Math.min(remainingSlotsAfterPurchase, remainingBasePrices.length)
+        if (additionalSlots > 0) {
+          reserveNeeded += additionalSlots * (auction?.min_bid_amount || 0)
+        }
+      } else {
+        // Simple reserve: use_base_price is false, just use min_bid_amount per slot
+        reserveNeeded = remainingSlotsAfterPurchase * (auction?.min_bid_amount || 0)
+      }
+    }
+    
     const maxPossibleBid = team.remaining_purse - reserveNeeded
     
     if (amount > team.remaining_purse) return { valid: false, reason: 'Insufficient purse' }
@@ -719,15 +884,19 @@ export default function AuctionPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        setRecentBids(prev => [
-          { id: data.bid.id, team_id: teamId, team_name: auctionTeams.find(t=>t.id===teamId)?.team_name || 'Unknown', bid_amount: bidAmount, timestamp: new Date().toISOString(), player_id: currentPlayer?.player_id, is_winning_bid: true, is_undone: false },
-          ...prev.map(b=> b.player_id===currentPlayer?.player_id ? { ...b, is_winning_bid: false } : b)
-        ])
+        // Don't optimistically update recentBids - wait for realtime to avoid UI flash
         bidPerfRef.current.optimistic = performance.now()
         // Reset conflict tracking on success
         lastConflictRef.current = null
         // Clear custom bid input for this team after successful bid
         setSelectedBidAmounts(prev => ({ ...prev, [teamId]: null }))
+        
+        // Fetch bid history to get the confirmed bid (this will update recentBids)
+        // This ensures UI updates with server-confirmed data, not optimistic data
+        await fetchBidHistory(currentPlayer?.player_id, 'post-bid-confirmation')
+        
+        // Small delay to ensure UI has updated before clearing loading state
+        await new Promise(resolve => setTimeout(resolve, 50))
       } else {
         const errorData = await response.json().catch(()=>({}))
         const code = errorData.code as string | undefined
@@ -989,85 +1158,19 @@ export default function AuctionPage() {
     }
   }
 
-  // Timer state and logic
-  const [timeRemaining, setTimeRemaining] = useState<number>(0)
-  const [isTimerActive, setIsTimerActive] = useState<boolean>(false)
-  const [isTimerPaused, setIsTimerPaused] = useState<boolean>(false)
-  const [timerKey, setTimerKey] = useState<number>(0)
-  const [pausedTime, setPausedTime] = useState<number>(0)
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const animationStartTimeRef = useRef<number>(0)
+  // Synchronized timer hook
+  const {
+    remainingSeconds: timeRemaining,
+    durationSeconds: timerDuration,
+    isActive: isTimerActive,
+    isPaused: isTimerPaused,
+    isExpired: isTimerExpired,
+    pause: handlePauseTimer,
+    resume: handleResumeTimer,
+    reset: handleResetTimer,
+    progressPercent
+  } = useAuctionTimer(auction)
 
-  // Timer effect
-  useEffect(() => {
-    // Clear any existing interval
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current)
-      timerIntervalRef.current = null
-    }
-
-    if (!auction?.timer_seconds || !isAuctionLive || !currentPlayer) {
-      setTimeRemaining(0)
-      setIsTimerActive(false)
-      setIsTimerPaused(false)
-      setPausedTime(0)
-      return
-    }
-
-    // Start timer when a new player is selected
-    setTimeRemaining(auction.timer_seconds)
-    setIsTimerActive(true)
-    setIsTimerPaused(false)
-    setPausedTime(0)
-    setTimerKey(prev => prev + 1) // Force re-render for CSS animation
-    animationStartTimeRef.current = Date.now()
-
-    // Start the interval
-    timerIntervalRef.current = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev <= 1) {
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current)
-        timerIntervalRef.current = null
-      }
-    }
-  }, [auction?.timer_seconds, isAuctionLive, currentPlayer?.player_id])
-
-  // Timer control functions
-  const handlePauseTimer = () => {
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current)
-      timerIntervalRef.current = null
-    }
-    setIsTimerPaused(true)
-    setPausedTime(timeRemaining)
-  }
-
-  const handleResumeTimer = () => {
-    setIsTimerPaused(false)
-    // Update animation start time to account for elapsed time
-    const elapsedTime = auction.timer_seconds - timeRemaining
-    animationStartTimeRef.current = Date.now() - (elapsedTime * 1000)
-    
-    // Start new interval for remaining time
-    timerIntervalRef.current = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev <= 1) {
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }
-
-  // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -1082,7 +1185,7 @@ export default function AuctionPage() {
       const response = await fetch(`/api/auctions/${auctionId}/skip?player_id=${currentPlayer.player_id}`)
       if (response.ok) {
         const data = await response.json()
-        const currentSkips = new Set(data.skips.map((skip: any) => skip.team_id))
+  const currentSkips = new Set<string>(data.skips.map((skip: any) => skip.team_id as string))
         setSkippedCaptains(currentSkips)
       }
     } catch (error) {
@@ -1695,7 +1798,7 @@ export default function AuctionPage() {
             if (skipsResponse.ok) {
               const skipsData = await skipsResponse.json()
               if (skipsData.skips) {
-                setSkippedCaptains(new Set(skipsData.skips.map((s: any) => s.team_id)))
+                setSkippedCaptains(new Set<string>(skipsData.skips.map((s: any) => s.team_id as string)))
               }
             }
           } catch (error) {
@@ -2106,15 +2209,11 @@ export default function AuctionPage() {
   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#CEA17A]/3 rounded-full blur-3xl motion-safe:animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
       
-  {/* CSS Animation for Timer */}
+  {/* CSS for smooth timer bar */}
   <style jsx>{`
-    @keyframes timerCountdown {
-      from {
-        width: 100%;
-      }
-      to {
-        width: 0%;
-      }
+    .timer-bar {
+      transition: width 0.016s linear;
+      will-change: width;
     }
   `}</style>
 
@@ -2299,7 +2398,17 @@ export default function AuctionPage() {
             <span className="text-lg font-bold text-[#DBD0C0]">{formatTime(timeRemaining)}</span>
             {isAuctionController && (
               <div className="flex gap-2">
-                {!isTimerPaused ? (
+                {isTimerExpired ? (
+                  <button
+                    onClick={handleResetTimer}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/40 rounded-md hover:bg-[#CEA17A]/30 active:bg-[#CEA17A]/10 transition-colors duration-200"
+                  >
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                    Reset
+                  </button>
+                ) : !isTimerPaused ? (
                   <button
                     onClick={handlePauseTimer}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#2a2a2a] text-[#DBD0C0] border border-[#4a4a4a] rounded-md hover:bg-[#3a3a3a] active:bg-[#1a1a1a] transition-colors duration-200"
@@ -2326,19 +2435,15 @@ export default function AuctionPage() {
         </div>
         <div className="w-full bg-[#2a2a2a] rounded-full h-2 overflow-hidden">
           <div 
-            key={timerKey}
-            className={`h-2 rounded-full ${
-              timeRemaining > auction.timer_seconds * 0.3 
+            className={`timer-bar h-2 rounded-full ${
+              progressPercent > 30 
                 ? 'bg-gradient-to-r from-green-500 to-[#CEA17A]' 
-                : timeRemaining > auction.timer_seconds * 0.1 
+                : progressPercent > 10 
                 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' 
                 : 'bg-gradient-to-r from-red-500 to-red-600'
             }`}
             style={{ 
-              width: isTimerPaused ? `${(timeRemaining / auction.timer_seconds) * 100}%` : '100%',
-              animation: isTimerPaused ? 'none' : `timerCountdown ${auction.timer_seconds}s linear forwards`,
-              animationPlayState: isTimerPaused ? 'paused' : 'running',
-              animationDelay: isTimerPaused ? '0s' : `-${((Date.now() - animationStartTimeRef.current) / 1000)}s`
+              width: `${progressPercent}%`
             }}
           />
         </div>
@@ -3495,7 +3600,16 @@ export default function AuctionPage() {
                   <span className="text-lg font-bold text-[#DBD0C0]">{formatTime(timeRemaining)}</span>
                   {isAuctionController && (
                     <div className="flex gap-1">
-                      {!isTimerPaused ? (
+                      {isTimerExpired ? (
+                        <button
+                          onClick={handleResetTimer}
+                          className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-[#CEA17A]/20 text-[#CEA17A] border border-[#CEA17A]/40 rounded hover:bg-[#CEA17A]/30 active:bg-[#CEA17A]/10 transition-colors duration-200"
+                        >
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                          </svg>
+                        </button>
+                      ) : !isTimerPaused ? (
                         <button
                           onClick={handlePauseTimer}
                           className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-[#2a2a2a] text-[#DBD0C0] border border-[#4a4a4a] rounded hover:bg-[#3a3a3a] active:bg-[#1a1a1a] transition-colors duration-200"
@@ -3520,19 +3634,15 @@ export default function AuctionPage() {
               </div>
               <div className="w-full bg-[#2a2a2a] rounded-full h-2 overflow-hidden">
                 <div 
-                  key={timerKey}
-                  className={`h-2 rounded-full ${
-                    timeRemaining > auction.timer_seconds * 0.3 
+                  className={`timer-bar h-2 rounded-full ${
+                    progressPercent > 30 
                       ? 'bg-gradient-to-r from-green-500 to-[#CEA17A]' 
-                      : timeRemaining > auction.timer_seconds * 0.1 
+                      : progressPercent > 10 
                       ? 'bg-gradient-to-r from-yellow-500 to-orange-500' 
                       : 'bg-gradient-to-r from-red-500 to-red-600'
                   }`}
                   style={{ 
-                    width: isTimerPaused ? `${(timeRemaining / auction.timer_seconds) * 100}%` : '100%',
-                    animation: isTimerPaused ? 'none' : `timerCountdown ${auction.timer_seconds}s linear forwards`,
-                    animationPlayState: isTimerPaused ? 'paused' : 'running',
-                    animationDelay: isTimerPaused ? '0s' : `-${((Date.now() - animationStartTimeRef.current) / 1000)}s`
+                    width: `${progressPercent}%`
                   }}
                 />
               </div>
@@ -4090,6 +4200,8 @@ export default function AuctionPage() {
         </div>
         )}
 
+        {/* Timer Bar - Removed duplicate, timer is shown at top of mobile view */}
+
         {/* Teams horizontal carousel (restored) - Hidden when auction is completed */}
         {!(auction?.status === 'completed' || (isAuctionLive && allPlayersSold)) && (
         <div className="mb-6">
@@ -4201,7 +4313,54 @@ export default function AuctionPage() {
           const team = auctionTeams.find(t => t.id === mobilePurseTeamId)
           if (!team) return null
           const remainingSlots = Math.max(0, team.required_players - team.players_count)
-          const maxPossibleBid = team.remaining_purse - ((remainingSlots - 1) * (auction?.min_bid_amount || 40))
+          
+          // Calculate max possible bid with competition awareness (only when use_base_price is true)
+          const useCompetitionLogic = auction?.use_base_price === true
+          const remainingBasePrices = useCompetitionLogic ? getRemainingPlayersBasePrices(true, 'asc') : []
+          const slotsAfterPurchase = Math.max(0, remainingSlots - 1)
+          
+          let reserveNeeded = 0
+          if (slotsAfterPurchase > 0) {
+            if (useCompetitionLogic && remainingBasePrices.length > 0) {
+              // Calculate competition ratio
+              const totalSlotsNeeded = auctionTeams.reduce((sum, t) => {
+                const soldNonCaptain = auctionPlayers.filter(ap => ap.sold_to === t.id && ap.status === 'sold' && ap.player_id !== t.captain_id).length
+                const filled = 1 + soldNonCaptain
+                return sum + Math.max(0, t.required_players - filled)
+              }, 0)
+              const competitionRatio = remainingBasePrices.length > 0 ? totalSlotsNeeded / remainingBasePrices.length : 1
+              
+              if (competitionRatio >= 1.5) {
+                // High competition: Use median-range prices
+                const startIndex = Math.min(
+                  Math.floor(remainingBasePrices.length * 0.2),
+                  remainingBasePrices.length - slotsAfterPurchase
+                )
+                const competitivePrices = remainingBasePrices.slice(startIndex, startIndex + slotsAfterPurchase)
+                reserveNeeded = competitivePrices.reduce((sum, price) => sum + price, 0)
+                
+                if (competitivePrices.length < slotsAfterPurchase) {
+                  const needed = slotsAfterPurchase - competitivePrices.length
+                  const fallbackPrices = remainingBasePrices.slice(0, needed)
+                  reserveNeeded += fallbackPrices.reduce((sum, price) => sum + price, 0)
+                }
+              } else {
+                // Low/moderate competition: Use cheapest players
+                const lowestNPrices = remainingBasePrices.slice(0, slotsAfterPurchase)
+                reserveNeeded = lowestNPrices.reduce((sum, price) => sum + price, 0)
+              }
+              
+              const additionalSlots = slotsAfterPurchase - Math.min(slotsAfterPurchase, remainingBasePrices.length)
+              if (additionalSlots > 0) {
+                reserveNeeded += additionalSlots * (auction?.min_bid_amount || 0)
+              }
+            } else {
+              // Simple reserve: use_base_price is false, just use min_bid_amount per slot
+              reserveNeeded = slotsAfterPurchase * (auction?.min_bid_amount || 0)
+            }
+          }
+          const maxPossibleBid = team.remaining_purse - reserveNeeded
+          
           return (
             <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
               <div className="absolute inset-0 bg-black/70" onClick={() => setMobilePurseTeamId(null)} />

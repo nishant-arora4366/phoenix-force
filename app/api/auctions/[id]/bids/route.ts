@@ -204,6 +204,7 @@ async function postHandler(
         AUCTION_NOT_LIVE: 400,
         INSUFFICIENT_FUNDS: 400,
         INVALID_INCREMENT: 400,
+        EXCEEDS_MAX_POSSIBLE: 400,
         TEAM_NOT_FOUND: 404,
         AUCTION_NOT_FOUND: 404,
         NO_CURRENT_PLAYER: 400,
@@ -212,6 +213,16 @@ async function postHandler(
       const status = statusMap[code] || 500
       return NextResponse.json({ success: false, code, error: detail || 'Bid failed' }, { status })
     }
+
+    // Reset global timer on successful bid
+    await supabase
+      .from('auctions')
+      .update({
+        timer_last_reset_at: new Date().toISOString(),
+        timer_paused: false,
+        timer_paused_remaining_seconds: null
+      })
+      .eq('id', auctionId)
 
     return NextResponse.json({ success: true, bid: rpcResult?.bid, current_bid: rpcResult?.current_bid, message: 'Bid placed successfully' })
   } catch (error) {
@@ -346,6 +357,16 @@ async function deleteHandler(
         logger.error('Error updating previous bid:', updatePrevBidError)
       }
     }
+
+    // Reset timer on undo bid
+    await supabase
+      .from('auctions')
+      .update({
+        timer_last_reset_at: new Date().toISOString(),
+        timer_paused: false,
+        timer_paused_remaining_seconds: null
+      })
+      .eq('id', auctionId)
 
     return NextResponse.json({ 
       success: true, 
