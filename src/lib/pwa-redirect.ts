@@ -36,7 +36,14 @@ export class PWARedirectService {
    */
   isPWAInstalled(): boolean {
     if (typeof window === 'undefined') return false;
-    return localStorage.getItem('pwa-installed') === 'true';
+    
+    // Check if user has ever opened the app in standalone mode
+    const hasOpenedInStandalone = localStorage.getItem('pwa-opened-standalone') === 'true';
+    
+    // Check if explicitly marked as installed (Android install prompt)
+    const markedAsInstalled = localStorage.getItem('pwa-installed') === 'true';
+    
+    return hasOpenedInStandalone || markedAsInstalled;
   }
 
   /**

@@ -37,8 +37,9 @@ export default function PWANotification() {
     const isPWAMode = pwaRedirect.isInPWA();
     setIsPWA(isPWAMode);
     
-    // If already in PWA, don't show any notifications
+    // If in PWA mode, mark as opened in standalone and don't show notifications
     if (isPWAMode) {
+      localStorage.setItem('pwa-opened-standalone', 'true');
       return;
     }
     
@@ -117,6 +118,14 @@ export default function PWANotification() {
     setNotificationType(null);
     sessionStorage.setItem('pwa-notification-dismissed', 'true');
     pwaRedirect.dismissPrompt();
+  };
+  
+  const handleGotIt = () => {
+    // Mark as "will install" so next time we show "Open in App"
+    if (isIOS) {
+      localStorage.setItem('pwa-opened-standalone', 'true');
+    }
+    handleDismiss();
   };
 
   // Don't show if no notification type or already in PWA
@@ -226,7 +235,7 @@ export default function PWANotification() {
                     </button>
                   )}
                   <button
-                    onClick={handleDismiss}
+                    onClick={isIOS ? handleGotIt : handleDismiss}
                     className={`text-xs px-3 py-2 rounded-lg transition-all ${
                       deferredPrompt && !isIOS
                         ? 'text-[#DBD0C0] hover:text-white hover:bg-[#CEA17A]/20 border border-[#CEA17A]/30'
