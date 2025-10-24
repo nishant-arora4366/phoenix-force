@@ -33,21 +33,12 @@ export default function PWAInstallPrompt() {
       return;
     }
 
-    // For iOS, show custom prompt after a delay
-    if (iOS) {
-      const timer = setTimeout(() => {
-        setShowInstallPrompt(true);
-      }, 3000); // Show after 3 seconds
-      return () => clearTimeout(timer);
-    }
-
-    // For Android/Desktop, show manual install option if no automatic prompt
-    if (!iOS && !isStandaloneMode) {
-      const timer = setTimeout(() => {
-        setShowManualInstall(true);
-      }, 5000); // Show manual install after 5 seconds
-      return () => clearTimeout(timer);
-    }
+    // Show instruction prompt for both iOS and Android after a delay
+    const timer = setTimeout(() => {
+      setShowInstallPrompt(true);
+    }, 3000); // Show after 3 seconds
+    
+    return () => clearTimeout(timer);
 
     // Listen for the beforeinstallprompt event (Android/Desktop)
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -99,18 +90,8 @@ export default function PWAInstallPrompt() {
   };
 
   const handleManualInstall = () => {
-    if (isIOS) {
-      // For iOS, show instructions
-      setShowInstallPrompt(true);
-    } else {
-      // For Android/Desktop, try to trigger install
-      if (deferredPrompt) {
-        handleInstallClick();
-      } else {
-        // Show instructions for manual install
-        alert('To install this app:\n\n1. Look for the install icon in your browser address bar\n2. Or go to Chrome menu → "Install Phoenix Force Cricket"\n3. Or add to home screen from browser menu');
-      }
-    }
+    // Show instruction prompt for both iOS and Android
+    setShowInstallPrompt(true);
   };
 
   // Don't show if already installed
@@ -118,7 +99,7 @@ export default function PWAInstallPrompt() {
     return null;
   }
 
-  // Show manual install button if no automatic prompt is available
+  // Show manual install button if no instruction prompt is available
   if (showManualInstall && !showInstallPrompt) {
     return (
       <div className="fixed bottom-4 right-4 z-50">
@@ -135,13 +116,8 @@ export default function PWAInstallPrompt() {
     );
   }
 
-  // Don't show if no prompt available (for non-iOS)
-  if (!isIOS && (!showInstallPrompt || !deferredPrompt)) {
-    return null;
-  }
-
-  // Don't show if iOS and no prompt
-  if (isIOS && !showInstallPrompt) {
+  // Don't show if no instruction prompt available
+  if (!showInstallPrompt) {
     return null;
   }
 
@@ -195,14 +171,19 @@ export default function PWAInstallPrompt() {
                   Install Phoenix Force Cricket
                 </h3>
                 <p className="text-xs text-gray-300 mt-1">
-                  Get quick access to tournaments, auctions, and player management.
+                  To install this app on your Android device:
                 </p>
+                <div className="text-xs text-gray-400 mt-2 space-y-1">
+                  <div>1. Look for the install icon <span className="text-white">⊕</span> in your browser address bar</div>
+                  <div>2. Or tap the Chrome menu (⋮) → "Install Phoenix Force Cricket"</div>
+                  <div>3. Or go to Chrome menu → "Add to Home Screen"</div>
+                </div>
                 <div className="flex space-x-2 mt-3">
                   <button
-                    onClick={handleInstallClick}
+                    onClick={handleDismiss}
                     className="bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs px-3 py-1.5 rounded-md font-medium transition-colors shadow-lg"
                   >
-                    Install
+                    Got it
                   </button>
                   <button
                     onClick={handleDismiss}
