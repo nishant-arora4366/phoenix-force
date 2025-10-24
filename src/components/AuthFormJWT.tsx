@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { authAPI } from '@/lib/auth-api'
 
 interface AuthFormProps {
@@ -10,6 +10,7 @@ interface AuthFormProps {
 
 export default function AuthFormJWT({ onAuthChange }: AuthFormProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstname, setFirstname] = useState('')
@@ -18,6 +19,25 @@ export default function AuthFormJWT({ onAuthChange }: AuthFormProps) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
+  const [returnUrl, setReturnUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Get return URL from query params or store current URL
+    const returnTo = searchParams.get('returnTo')
+    if (returnTo) {
+      setReturnUrl(returnTo)
+    } else if (typeof window !== 'undefined') {
+      // Store the referring page if not on signin page
+      const referrer = document.referrer
+      const currentPath = window.location.pathname
+      if (currentPath !== '/signin' && currentPath !== '/signup') {
+        setReturnUrl(currentPath)
+      } else if (referrer && !referrer.includes('/signin') && !referrer.includes('/signup')) {
+        const url = new URL(referrer)
+        setReturnUrl(url.pathname)
+      }
+    }
+  }, [searchParams])
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,17 +82,22 @@ export default function AuthFormJWT({ onAuthChange }: AuthFormProps) {
             onAuthChange(result.user)
           }
 
-          // Redirect based on user role
+          // Redirect to return URL or based on user role
           setTimeout(() => {
-            switch (result.user.role) {
-              case 'admin':
-                router.push('/admin')
-                break
-              case 'host':
-                router.push('/auctions')
-                break
-              default:
-                router.push('/tournaments')
+            if (returnUrl && returnUrl !== '/signin' && returnUrl !== '/signup') {
+              router.push(returnUrl)
+            } else {
+              // Default redirect based on user role
+              switch (result.user.role) {
+                case 'admin':
+                  router.push('/admin')
+                  break
+                case 'host':
+                  router.push('/auctions')
+                  break
+                default:
+                  router.push('/tournaments')
+              }
             }
           }, 1000)
         } else {

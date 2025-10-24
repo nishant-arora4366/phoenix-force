@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { verifyToken } from '@/src/lib/jwt'
+import { AuthenticatedUser } from '@/src/lib/auth-middleware'
+import { logger } from '@/lib/logger'
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching auctions:', error)
+      logger.error('Error fetching auctions:', error)
       return NextResponse.json(
         { success: false, error: 'Failed to fetch auctions' },
         { status: 500 }
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error in auctions API:', error)
+    logger.error('Error in auctions API:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+async function patchHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
     const { searchParams } = new URL(request.url)
     const auctionId = searchParams.get('id')
@@ -69,26 +70,8 @@ export async function PATCH(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Verify authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    }
-
-    const token = authHeader.split(' ')[1]
-    const decoded = verifyToken(token)
-    if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    // Check user role
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', decoded.userId)
-      .single()
-
-    if (userError || !user || (user.role !== 'admin' && user.role !== 'host')) {
+    // User already authenticated via middleware
+    if (user.role !== 'admin' && user.role !== 'host') {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
@@ -293,12 +276,12 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
 
   } catch (error) {
-    console.error('Error in PATCH /api/auctions:', error)
+    logger.error('Error in PATCH /api/auctions:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -306,39 +289,7 @@ export async function POST(request: NextRequest) {
     )
     const body = await request.json()
 
-    // Get authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    // Verify JWT token
-    const token = authHeader.substring(7)
-    const decoded = verifyToken(token)
-    if (!decoded || !decoded.userId) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid token' },
-        { status: 401 }
-      )
-    }
-
-    // Verify user has permission to create auctions (host or admin)
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, role')
-      .eq('id', decoded.userId)
-      .single()
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'User not found' },
-        { status: 404 }
-      )
-    }
-
+    // User already authenticated via middleware
     if (!['host', 'admin'].includes(user.role)) {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions. Only hosts and admins can create auctions.' },
@@ -371,7 +322,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is tournament host or admin
-    if (user.role !== 'admin' && tournament.host_id !== decoded.userId) {
+    if (user.role !== 'admin' && tournament.host_id !== user.id) {
       return NextResponse.json(
         { success: false, error: 'You can only create auctions for tournaments you host' },
         { status: 403 }
@@ -389,14 +340,14 @@ export async function POST(request: NextRequest) {
       min_increment: body.min_increment || 20,
       use_fixed_increments: body.use_fixed_increments !== false,
       player_order_type: body.player_order_type || 'base_price_desc',
-      created_by: decoded.userId,
+      created_by: user.id,
       auction_config: {
         custom_increment_ranges: body.custom_increment_ranges || null,
         additional_settings: body.additional_settings || {}
       }
     }
 
-    console.log('Creating auction with data:', auctionData)
+    logger.debug('Creating auction with data:', auctionData)
 
     const { data: auction, error } = await supabase
       .from('auctions')
@@ -405,7 +356,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Error creating auction:', error)
+      logger.error('Error creating auction:', error)
       return NextResponse.json(
         { success: false, error: 'Failed to create auction' },
         { status: 500 }
@@ -567,10 +518,38 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error in auctions POST API:', error)
+    logger.error('Error in auctions POST API:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
     )
   }
+}
+
+// Export with middleware
+// GET is public - no authentication required
+export async function GET(request: NextRequest) {
+  return getHandler(request)
+}
+
+export async function PATCH(request: NextRequest) {
+  const user = await import('@/src/lib/auth-middleware').then(m => m.authenticateRequest(request))
+  if (!user) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+  }
+  if (user.role !== 'admin' && user.role !== 'host') {
+    return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+  }
+  return patchHandler(request, user)
+}
+
+export async function POST(request: NextRequest) {
+  const user = await import('@/src/lib/auth-middleware').then(m => m.authenticateRequest(request))
+  if (!user) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+  }
+  if (!['host', 'admin'].includes(user.role)) {
+    return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+  }
+  return postHandler(request, user)
 }

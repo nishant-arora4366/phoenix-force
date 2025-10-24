@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { secureSessionManager } from '@/src/lib/secure-session'
+import { getRoleEmoji } from '@/lib/utils'
 
 interface Tournament {
   id: string
@@ -93,30 +94,7 @@ export default function TournamentAuctionCreatePage() {
   const [currentPage, setCurrentPage] = useState(1)
   const playersPerPage = 10
 
-  // Simple role emoji mapping for Batter, Bowler, Wicket Keeper combinations
-  const getRoleEmoji = (role: string | string[] | undefined) => {
-    if (!role) return "❓";
-    
-    // Handle array of roles
-    if (Array.isArray(role)) {
-      const roles = role.map(r => r.toLowerCase());
-      let emoji = "";
-      
-      if (roles.includes('batter')) emoji += "🏏";
-      if (roles.includes('bowler')) emoji += "⚾";
-      if (roles.includes('wicket keeper')) emoji += "🧤";
-      
-      return emoji || "❓";
-    }
-    
-    // Handle string role (fallback)
-    const lowerRole = role.toLowerCase();
-    if (lowerRole.includes('batter')) return "🏏";
-    if (lowerRole.includes('bowler')) return "⚾";
-    if (lowerRole.includes('wicket')) return "🧤";
-    
-    return "❓";
-  };
+  // Using centralized getRoleEmoji from lib/utils
 
   const { data: tournaments, error, isLoading: tournamentsLoading, mutate } = useSWR<Tournament[]>('/api/tournaments', fetcher)
 

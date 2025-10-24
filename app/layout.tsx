@@ -6,6 +6,7 @@ import Navbar from '@/src/components/Navbar'
 import PWANotification from '@/src/components/PWANotification'
 import PWAStatus from '@/src/components/PWAStatus'
 import NotificationProvider from '@/components/providers/NotificationProvider'
+import { RealtimeProvider } from '@/contexts/RealtimeProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -99,18 +100,20 @@ export default function RootLayout({
         <meta name="theme-color" content="#19171b" />
       </head>
       <body className={`${inter.className} bg-[#19171b]`}>
-        <NotificationProvider>
-          <ClientLayout>
-            <div className="min-h-screen bg-[#19171b]">
-              <Navbar />
-              <PWAStatus />
-              <PWANotification />
-              <main>
-                {children}
-              </main>
-            </div>
-          </ClientLayout>
-        </NotificationProvider>
+        <RealtimeProvider>
+          <NotificationProvider>
+            <ClientLayout>
+              <div className="min-h-screen bg-[#19171b]">
+                <Navbar />
+                <PWAStatus />
+                <PWANotification />
+                <main>
+                  {children}
+                </main>
+              </div>
+            </ClientLayout>
+          </NotificationProvider>
+        </RealtimeProvider>
       </body>
     </html>
   )

@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { verifyToken } from '@/src/lib/jwt'
+import { withAuth, AuthenticatedUser } from '@/src/lib/auth-middleware'
+import { logger } from '@/lib/logger'
+import { withAnalytics } from '@/src/lib/api-analytics'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function GET(
+async function getHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -23,7 +26,7 @@ export async function GET(
       .eq('auction_id', auctionId)
 
     if (teamsError) {
-      console.error('Error fetching auction teams:', teamsError)
+      logger.error('Error fetching auction teams:', teamsError)
       return NextResponse.json({ error: 'Failed to fetch auction teams' }, { status: 500 })
     }
 
@@ -57,7 +60,7 @@ export async function GET(
     const { data: bids, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching bids:', error)
+      logger.error('Error fetching bids:', error)
       return NextResponse.json({ error: 'Failed to fetch bids' }, { status: 500 })
     }
 
@@ -77,13 +80,14 @@ export async function GET(
 
     return NextResponse.json(transformedBids)
   } catch (error) {
-    console.error('Error in GET /api/auctions/[id]/bids:', error)
+    logger.error('Error in GET /api/auctions/[id]/bids:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-export async function POST(
+async function postHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -91,36 +95,13 @@ export async function POST(
     const body = await request.json()
     const { team_id, bid_amount } = body
 
-    // Verify authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    }
-
-    const token = authHeader.split(' ')[1]
-    const decoded = verifyToken(token)
-    if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    // Fetch user role
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', decoded.userId)
-      .single()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
+    // User is already authenticated via middleware
 
     // Authorization rules:
     // 1. Admin: always
     // 2. Host: only if host created this auction
     // 3. Captain (or viewer) who owns the captain player for the team may bid for that team
-    // (role string may be 'viewer' but still linked via players.user_id)
 
-    // Fetch auction creator for host check
     const { data: auctionRow } = await supabase
       .from('auctions')
       .select('created_by')
@@ -130,10 +111,9 @@ export async function POST(
     let isAuthorized = false
     if (user.role === 'admin') {
       isAuthorized = true
-    } else if (user.role === 'host' && auctionRow && auctionRow.created_by === decoded.userId) {
+    } else if (user.role === 'host' && auctionRow && auctionRow.created_by === user.id) {
       isAuthorized = true
     } else {
-      // Derive captain ownership from team_id->captain_id->players.user_id
       const { data: teamRecord } = await supabase
         .from('auction_teams')
         .select('id, captain_id')
@@ -146,7 +126,7 @@ export async function POST(
           .select('id, user_id')
           .eq('id', teamRecord.captain_id)
           .single()
-        if (captainPlayer && captainPlayer.user_id === decoded.userId) {
+        if (captainPlayer && captainPlayer.user_id === user.id) {
           isAuthorized = true
         }
       }
@@ -162,7 +142,7 @@ export async function POST(
       .maybeSingle()
 
     if (!existingCurrent) {
-      console.log(`[BID ${auctionId}] No current player found during bid, setting fallback...`)
+      logger.debug(`[BID ${auctionId}] No current player found during bid, setting fallback...`)
       
       // Gather captain ids to exclude
       const { data: capRows } = await supabase
@@ -184,19 +164,19 @@ export async function POST(
       const { data: firstAvail, error: queryErr } = await firstQuery.maybeSingle()
       
       if (queryErr) {
-        console.error(`[BID ${auctionId}] Error finding first available player:`, queryErr)
+        logger.error(`[BID ${auctionId}] Error finding first available player:`, queryErr)
       } else if (firstAvail) {
-        console.log(`[BID ${auctionId}] Setting fallback current player:`, firstAvail.player_id)
+        logger.debug(`[BID ${auctionId}] Setting fallback current player:`, firstAvail.player_id)
         const { error: setErr } = await supabase
           .from('auction_players')
           .update({ current_player: true })
           .eq('auction_id', auctionId)
           .eq('player_id', firstAvail.player_id)
         if (setErr) {
-          console.error(`[BID ${auctionId}] Error setting fallback current player:`, setErr)
+          logger.error(`[BID ${auctionId}] Error setting fallback current player:`, setErr)
         }
       } else {
-        console.log(`[BID ${auctionId}] No available players found for fallback`)
+        logger.debug(`[BID ${auctionId}] No available players found for fallback`)
       }
     }
 
@@ -207,7 +187,7 @@ export async function POST(
         p_auction_id: auctionId,
         p_team_id: team_id, 
         p_bid_amount: bid_amount,
-        p_user_id: decoded.userId
+        p_user_id: user.id
       })
 
     if (rpcError) {
@@ -236,13 +216,14 @@ export async function POST(
 
     return NextResponse.json({ success: true, bid: rpcResult?.bid, current_bid: rpcResult?.current_bid, message: 'Bid placed successfully' })
   } catch (error) {
-    console.error('Error in POST /api/auctions/[id]/bids:', error)
+    logger.error('Error in POST /api/auctions/[id]/bids:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-export async function DELETE(
+async function deleteHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -256,25 +237,8 @@ export async function DELETE(
       
       if (body.action === 'reset_player_bids' && body.player_id) {
         // Handle bid reset for player navigation
-        const authHeader = request.headers.get('authorization')
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-        }
-
-        const token = authHeader.split(' ')[1]
-        const decoded = verifyToken(token)
-        if (!decoded || !decoded.userId) {
-          return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-        }
-
-        // Check user role (only hosts and admins can reset bids)
-        const { data: user, error: userError } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', decoded.userId)
-          .single()
-
-        if (userError || !user || (user.role !== 'admin' && user.role !== 'host')) {
+        // User already authenticated, check role
+        if (user.role !== 'admin' && user.role !== 'host') {
           return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
         }
 
@@ -284,14 +248,14 @@ export async function DELETE(
           .update({ 
             is_undone: true,
             undone_at: new Date().toISOString(),
-            undone_by: decoded.userId
+            undone_by: user.id
           })
           .eq('auction_id', auctionId)
           .eq('player_id', body.player_id)
           .eq('is_undone', false)
 
         if (resetError) {
-          console.error('Error resetting player bids:', resetError)
+          logger.error('Error resetting player bids:', resetError)
           return NextResponse.json({ error: 'Failed to reset player bids' }, { status: 500 })
         }
 
@@ -304,26 +268,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Bid ID is required' }, { status: 400 })
     }
 
-    // Verify authentication
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    }
-
-    const token = authHeader.split(' ')[1]
-    const decoded = verifyToken(token)
-    if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    // Check user role
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', decoded.userId)
-      .single()
-
-    if (userError || !user || (user.role !== 'admin' && user.role !== 'host')) {
+    // User already authenticated via middleware
+    // Check role
+    if (user.role !== 'admin' && user.role !== 'host') {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
@@ -356,7 +303,7 @@ export async function DELETE(
       .single()
 
     if (bidError || !bid) {
-      console.error('Bid not found:', bidError)
+      logger.error('Bid not found:', bidError)
       return NextResponse.json({ error: 'Bid not found or already undone' }, { status: 404 })
     }
 
@@ -366,12 +313,12 @@ export async function DELETE(
       .update({ 
         is_undone: true,
         undone_at: new Date().toISOString(),
-        undone_by: decoded.userId
+        undone_by: user.id
       })
       .eq('id', bidId)
 
     if (undoError) {
-      console.error('Error undoing bid:', undoError)
+      logger.error('Error undoing bid:', undoError)
       return NextResponse.json({ error: 'Failed to undo bid' }, { status: 500 })
     }
 
@@ -388,7 +335,7 @@ export async function DELETE(
       .limit(1)
 
     if (prevBidsError) {
-      console.error('Error finding previous bids:', prevBidsError)
+      logger.error('Error finding previous bids:', prevBidsError)
     } else if (previousBids && previousBids.length > 0) {
       // Make the previous bid winning
       const { error: updatePrevBidError } = await supabase
@@ -397,7 +344,7 @@ export async function DELETE(
         .eq('id', previousBids[0].id)
 
       if (updatePrevBidError) {
-        console.error('Error updating previous bid:', updatePrevBidError)
+        logger.error('Error updating previous bid:', updatePrevBidError)
       }
     }
 
@@ -406,7 +353,35 @@ export async function DELETE(
       message: 'Bid undone successfully' 
     })
   } catch (error) {
-    console.error('Error in DELETE /api/auctions/[id]/bids:', error)
+    logger.error('Error in DELETE /api/auctions/[id]/bids:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+// Export with middleware - wrap to handle params
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const user = await import('@/src/lib/auth-middleware').then(m => m.authenticateRequest(request))
+  if (!user) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+  }
+  return getHandler(request, user, context)
+}
+
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const user = await import('@/src/lib/auth-middleware').then(m => m.authenticateRequest(request))
+  if (!user) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+  }
+  return postHandler(request, user, context)
+}
+
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const user = await import('@/src/lib/auth-middleware').then(m => m.authenticateRequest(request))
+  if (!user) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+  }
+  if (user.role !== 'admin' && user.role !== 'host') {
+    return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+  }
+  return deleteHandler(request, user, context)
 }

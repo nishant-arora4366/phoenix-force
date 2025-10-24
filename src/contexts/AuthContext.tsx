@@ -10,7 +10,8 @@ interface AuthContextType {
   isSigningOut: boolean
   expirationWarning: string | null
   isRefreshingToken: boolean
-  signOut: () => void
+  // signOut may optionally receive a boolean (internal use) but external callers should call with no args.
+  signOut: (isSessionExpired?: boolean) => void
   extendSession: () => Promise<void>
 }
 
@@ -29,8 +30,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsMounted(true)
   }, [])
 
-  const signOut = () => {
+  // Accept either a boolean or an event (if mistakenly passed directly as an onClick handler)
+  const signOut = (maybeExpired?: boolean | React.MouseEvent) => {
+    const isSessionExpired = typeof maybeExpired === 'boolean' ? maybeExpired : false
+    // IMMEDIATELY clear any existing warnings if user manually signed out
+    // This prevents showing "session expiring soon" when user clicks sign out
+    if (!isSessionExpired) {
+      setExpirationWarning(null)
+    }
+    
     setIsSigningOut(true)
+    
+    // Show session expired message ONLY if it was due to automatic expiration
+    if (isSessionExpired) {
+      setExpirationWarning('Session expired. Please login again.')
+    }
     
     // Prevent body scroll during sign-out
     if (typeof document !== 'undefined') {
@@ -38,6 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     
     try {
+      // Stop expiration monitoring
+      secureSessionManager.stopExpirationMonitoring()
+      
       // Clear session
       secureSessionManager.clearUser()
       setUser(null)
@@ -48,15 +65,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Keep overlay visible for 2 seconds to cover any flashes
       setTimeout(() => {
         setIsSigningOut(false)
-        // Clear any remaining warnings after sign-out
-        setExpirationWarning(null)
+        // Keep the expiration warning visible if session expired, otherwise ensure it's cleared
+        if (!isSessionExpired) {
+          setExpirationWarning(null)
+        }
         if (typeof document !== 'undefined') {
           document.body.style.overflow = 'unset'
         }
       }, 2000)
     } catch (error) {
       setIsSigningOut(false)
-      setExpirationWarning(null) // Clear warning on error too
+      setExpirationWarning(null) // Clear warning on error
       if (typeof document !== 'undefined') {
         document.body.style.overflow = 'unset'
       }
@@ -79,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Restart monitoring with new token
         secureSessionManager.startExpirationMonitoring(
           () => {
-            signOut()
+            signOut(true) // Pass true to indicate session expired
           },
           (minutesLeft) => {
             setExpirationWarning(`Your session will expire in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}. Please save your work.`)
@@ -104,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (currentUser) {
       secureSessionManager.startExpirationMonitoring(
         () => {
-          signOut()
+          signOut(true) // Pass true to indicate session expired
         },
         (minutesLeft) => {
           setExpirationWarning(`Your session will expire in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}. Please save your work.`)
@@ -121,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (sessionUser) {
           secureSessionManager.startExpirationMonitoring(
             () => {
-              signOut()
+              signOut(true) // Pass true to indicate session expired
             },
             (minutesLeft) => {
               setExpirationWarning(`Your session will expire in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}. Please save your work.`)

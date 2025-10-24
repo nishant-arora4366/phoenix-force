@@ -2,22 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { authenticateRequest, AuthenticatedUser } from '@/src/lib/auth-middleware';
 import { processProfileImage, validateImageFile, generateProfilePictureFilename, getFileExtension, calculateCompressionRatio } from '@/src/lib/image-utils';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Profile picture upload request received');
+    logger.debug('Profile picture upload request received');
     
     // Authenticate user
     const user = await authenticateRequest(request);
     if (!user) {
-      console.log('Authentication failed');
+      logger.warn('Authentication failed');
       return NextResponse.json({ 
         success: false, 
         error: 'Authentication required' 
       }, { status: 401 });
     }
 
-    console.log('User authenticated:', user.id);
+    logger.debug('User authenticated:', user.id);
 
     // Initialize Supabase client with service role key
     const supabase = createClient(
@@ -43,10 +44,10 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('profilePicture') as File;
 
-    console.log('Form data received, file:', file ? `${file.name} (${file.size} bytes)` : 'none');
+    logger.debug('Form data received, file:', file ? `${file.name} (${file.size} bytes)` : 'none');
 
     if (!file) {
-      console.log('No file provided in form data');
+      logger.warn('No file provided in form data');
       return NextResponse.json({
         success: false,
         error: 'No file provided'

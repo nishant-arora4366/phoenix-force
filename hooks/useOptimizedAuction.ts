@@ -3,6 +3,7 @@ import { useAuctionStore, auctionWebSocketManager } from '@/lib/auction-state-ma
 import { auctionCache, cacheKeys, cachedQuery } from '@/lib/auction-cache'
 import { secureSessionManager } from '@/src/lib/secure-session'
 import { interpretError } from '@/src/lib/error-codes'
+import { logger } from '@/lib/logger'
 
 interface UseOptimizedAuctionOptions {
   auctionId: string
@@ -69,7 +70,7 @@ export function useOptimizedAuction({
       setError(null)
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        console.error('Error fetching auction data:', err)
+        logger.error('Error fetching auction data:', err)
         setError(err.message || 'Failed to load auction')
         setIsInitializing(false)
       }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { secureSessionManager } from '@/src/lib/secure-session'
+import { getStatusColor, getRoleColor } from '@/lib/utils'
 
 interface User {
   id: string
@@ -645,43 +646,10 @@ export default function UserManagementPage() {
     setExpandedSkills(newExpanded)
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
-      case 'approved':
-        return 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
-      case 'rejected':
-        return 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40'
-      default:
-        return 'bg-[#3E4E5A]/25 text-[#DBD0C0] border border-[#CEA17A]/40'
-    }
-  }
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
-      case 'host':
-        return 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
-      case 'viewer':
-        return 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
-      default:
-        return 'bg-[#3E4E5A]/25 text-[#DBD0C0] border border-[#CEA17A]/40'
-    }
-  }
-
+  // Using centralized utility functions from lib/utils.ts
+  // Keep player profile status color specific to this page
   const getPlayerProfileStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
-      case 'pending':
-        return 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40'
-      case 'rejected':
-        return 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40'
-      default:
-        return 'bg-[#3E4E5A]/25 text-[#DBD0C0] border border-[#CEA17A]/40'
-    }
+    return getStatusColor(status)
   }
 
   const filteredUsers = users.filter(user => {

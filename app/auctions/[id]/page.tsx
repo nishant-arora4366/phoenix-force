@@ -8,6 +8,7 @@ import html2canvas from 'html2canvas'
 import { secureSessionManager } from '@/src/lib/secure-session'
 import { interpretError } from '@/src/lib/error-codes'
 import { usePlayerSoldNotification } from '@/hooks/usePlayerSoldNotification'
+import { getRoleEmoji } from '@/lib/utils'
 
 // Reusable player image with graceful fallback
 function PlayerImage({ src, name }: { src?: string | null; name: string }) {
@@ -1813,21 +1814,10 @@ export default function AuctionPage() {
     }
   }
 
-  // Helper: unified role -> emoji mapping
-  const mapRoleToEmoji = (role: string) => {
-    const r = role.toLowerCase()
-    if (r.includes('batter') || r.includes('batsman')) return '🏏'
-    if (r.includes('bowler')) return '⚾'
-    if (r.includes('wicket')) return '🧤'
-    if (r.includes('all')) return '🎯'
-    return '👤'
-  }
-
+  // Using centralized getRoleEmoji from lib/utils
   const getPlayerRoleEmojis = (player: any): string => {
     if (!player?.skills?.Role) return ''
-    const val = player.skills.Role
-    if (Array.isArray(val)) return val.map(mapRoleToEmoji).join('')
-    return mapRoleToEmoji(String(val))
+    return getRoleEmoji(player.skills.Role)
   }
 
   // Authorization helpers (computed once per render after auction & user are known)
@@ -2983,14 +2973,7 @@ export default function AuctionPage() {
                   const role = player.skills?.Role;
                   const basePrice = player.skills?.["Base Price"];
                   
-                  // Get role emoji using the same function as mobile
-                  const getRoleEmoji = (role: string | string[] | undefined) => {
-                    if (!role) return "👤";
-                    if (Array.isArray(role)) {
-                      return role.map(mapRoleToEmoji).join('');
-                    }
-                    return mapRoleToEmoji(String(role));
-                  };
+                  // Using centralized getRoleEmoji from lib/utils
 
                   return (
                     <div key={player.id} className={`grid grid-cols-12 gap-4 p-4 items-center ${index % 2 === 0 ? 'bg-[#1a1a1a]/20' : 'bg-[#1a1a1a]/10'}`}>

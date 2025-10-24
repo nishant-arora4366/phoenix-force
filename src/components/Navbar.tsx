@@ -385,7 +385,10 @@ export default function Navbar() {
                           <span>Edit Profile</span>
                         </Link>
                         <button
-                          onClick={signOut}
+                          // Wrap signOut to avoid React passing the click event as the first argument.
+                          // Previously onClick={signOut} caused the MouseEvent to be treated as a truthy
+                          // isSessionExpired flag, triggering the "session expiring" popup on manual sign out.
+                          onClick={() => signOut()}
                           className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-gray-200 hover:bg-[#75020f]/10 hover:text-[#75020f] transition-all duration-300"
                         >
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

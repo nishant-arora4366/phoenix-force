@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import useSWR from 'swr'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/src/lib/supabaseClient'
+import Link from 'next/link'
+import { getRoleEmoji } from '@/lib/utils'
 import { secureSessionManager } from '@/src/lib/secure-session'
 
 interface Player {
@@ -887,30 +888,9 @@ export default function PlayersPage() {
                     {/* Role Icons */}
                     {player.skills?.Role && (
                       <div className="flex flex-wrap gap-1 sm:gap-1.5">
-                        {Array.isArray(player.skills.Role) ? (
-                          player.skills.Role.map((role, index) => {
-                            const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                            role.toLowerCase().includes('bowler') ? '🎾' : 
-                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
-                      return (
-                              <span key={index} className="text-sm sm:text-base">
-                                {roleEmoji}
-                      </span>
-                            )
-                          })
-                        ) : (
-                          (() => {
-                            const role = player.skills.Role
-                            const roleEmoji = role.toLowerCase().includes('batter') ? '🏏' : 
-                                            role.toLowerCase().includes('bowler') ? '🎾' : 
-                                            role.toLowerCase().includes('wicket') || role.toLowerCase().includes('wk') ? '🧤' : '🧤'
-                      return (
-                              <span className="text-sm sm:text-base">
-                                {roleEmoji}
+                        <span className="text-sm sm:text-base">
+                          {getRoleEmoji(player.skills.Role)}
                         </span>
-                            )
-                          })()
-                      )}
                       </div>
                     )}
                           </div>

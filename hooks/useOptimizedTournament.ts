@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
-import { realtimeManager } from '@/lib/realtime-manager'
+import { useEffect, useCallback, useRef, useState } from 'react'
+import { useTournamentStore } from '@/lib/tournament-state-manager'
+import { tournamentCache, cacheKeys, cachedQuery } from '@/lib/tournament-cache'
+import { useTournamentRealtime } from '@/lib/realtime-utils-optimized'
 import { secureSessionManager } from '@/src/lib/secure-session'
-import { getSupabaseClient } from '@/src/lib/supabaseClient'
+import { interpretError } from '@/src/lib/error-codes'
 import { logger } from '@/lib/logger'
 
 interface Tournament {
@@ -218,7 +220,7 @@ export function useOptimizedTournament({
           })
         },
         onError: (error) => {
-          console.error('Realtime subscription error:', error)
+          logger.error('Realtime subscription error:', error)
         }
       }
     )
