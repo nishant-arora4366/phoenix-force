@@ -1378,7 +1378,7 @@ export default function AdminPanel() {
           )}
 
           {/* Tab Navigation */}
-          <div className="border-b border-[#CEA17A]/20 mb-6">
+          <div className="border-b border-[#CEA17A]/20 mb-6 sticky top-0 z-30 bg-[#09171F]/70 backdrop-blur-md">
             {/* Desktop Tab Navigation */}
             <nav className="hidden sm:flex -mb-px space-x-8">
               <button
@@ -1637,7 +1637,8 @@ export default function AdminPanel() {
                     ➕ Create User
                   </button>
                 </div>
-              <div className="overflow-x-auto">
+              {/* Desktop Table */}
+              <div className="overflow-x-auto hidden md:block">
                 <table className="min-w-full divide-y divide-[#CEA17A]/20">
                   <thead className="bg-[#3E4E5A]/15">
                     <tr>
@@ -1779,7 +1780,7 @@ export default function AdminPanel() {
                   </table>
                 </div>
                 
-                {/* User Table Pagination */}
+                {/* User Table Pagination (Desktop) */}
                 {(() => {
                   const filteredUsers = users.filter(user => filter === 'all' || user.status === filter)
                   const totalPages = Math.ceil(filteredUsers.length / usersPerTablePage)
@@ -1813,12 +1814,154 @@ export default function AdminPanel() {
                     </div>
                   )
                 })()}
+
+                {/* Mobile Card List */}
+                <div className="md:hidden space-y-3">
+                  {(() => {
+                    const filteredUsers = users.filter(user => filter === 'all' || user.status === filter)
+                    const totalPages = Math.ceil(filteredUsers.length / usersPerTablePage)
+                    const startIndex = (userTablePage - 1) * usersPerTablePage
+                    const endIndex = startIndex + usersPerTablePage
+                    const paginatedUsers = filteredUsers.slice(startIndex, endIndex)
+                    return (
+                      <>
+                        {paginatedUsers.map(user => (
+                          <div key={user.id} className="bg-[#09171F]/50 rounded-lg border border-[#CEA17A]/20 p-4 space-y-3">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="text-base font-semibold text-[#DBD0C0]">{user.firstname} {user.lastname}</h3>
+                                <p className="text-xs text-[#CEA17A] break-all">{user.email}</p>
+                              </div>
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                user.status === 'approved' ? 'bg-[#3E4E5A]/25 text-[#CEA17A] border border-[#CEA17A]/40' :
+                                user.status === 'pending' ? 'bg-[#CEA17A]/25 text-[#CEA17A] border border-[#CEA17A]/40' :
+                                user.status === 'rejected' ? 'bg-[#75020f]/25 text-[#75020f] border border-[#75020f]/40' :
+                                'bg-[#3E4E5A]/25 text-[#DBD0C0] border border-[#CEA17A]/40'
+                              }`}>
+                                {user.status}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2 items-center">
+                              <div className="flex items-center gap-2">
+                                <label className="text-xs text-[#CEA17A]">Role:</label>
+                                <select
+                                  value={user.role}
+                                  onChange={(e) => updateUserRoleFromTable(user.id, e.target.value)}
+                                  className="text-xs bg-[#3E4E5A]/15 text-[#DBD0C0] border border-[#CEA17A]/25 rounded px-2 py-1 focus:ring-2 focus:ring-[#CEA17A]/50 focus:border-[#CEA17A]/50"
+                                >
+                                  <option value="viewer">Viewer</option>
+                                  <option value="host">Host</option>
+                                  <option value="captain">Captain</option>
+                                  <option value="admin">Admin</option>
+                                </select>
+                              </div>
+                              <div className="flex items-center gap-2 text-xs">
+                                <span className="text-[#CEA17A]">Created:</span>
+                                <span className="text-[#DBD0C0]">{new Date(user.created_at).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {user.player_profile ? (
+                                <div className="flex items-center gap-2 text-xs text-[#DBD0C0]">
+                                  <span className="font-medium">Player:</span>
+                                  <span>{user.player_profile.display_name}</span>
+                                  <button
+                                    onClick={() => unlinkPlayerFromUser(user.id)}
+                                    className="text-[#75020f] hover:text-[#75020f]/80"
+                                    title="Unlink Player"
+                                  >
+                                    🔗❌
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setLinkingUserId(user.id)
+                                    setIsLinkingPlayer(true)
+                                    setPlayerSearchTerm('')
+                                  }}
+                                  className="text-[#CEA17A] hover:text-[#CEA17A]/80 text-xs underline"
+                                >
+                                  Link Player
+                                </button>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {user.status === 'pending' && (
+                                <>
+                                  <button
+                                    onClick={() => updateUserStatus(user.id, 'approved')}
+                                    className="flex-1 min-w-[90px] text-center text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded text-xs hover:bg-[#3E4E5A]/25 transition-colors"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => updateUserStatus(user.id, 'rejected')}
+                                    className="flex-1 min-w-[90px] text-center text-[#75020f] hover:text-[#75020f]/80 bg-[#75020f]/15 border border-[#75020f]/25 px-2 py-1 rounded text-xs hover:bg-[#75020f]/25 transition-colors"
+                                  >
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              <button
+                                onClick={() => resetUserPassword(user.id, user.email)}
+                                className="flex-1 min-w-[90px] text-center text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded text-xs hover:bg-[#3E4E5A]/25 transition-colors"
+                              >
+                                Reset Pass
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingUser(user)
+                                  setIsEditingUser(true)
+                                }}
+                                className="flex-1 min-w-[90px] text-center text-[#CEA17A] hover:text-[#CEA17A]/80 bg-[#3E4E5A]/15 border border-[#CEA17A]/25 px-2 py-1 rounded text-xs hover:bg-[#3E4E5A]/25 transition-colors"
+                              >
+                                ✏️ Edit
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setDeletingUserId(user.id)
+                                  setShowDeleteConfirm(true)
+                                }}
+                                className="flex-1 min-w-[90px] text-center text-[#75020f] hover:text-[#75020f]/80 bg-[#75020f]/15 border border-[#75020f]/25 px-2 py-1 rounded text-xs hover:bg-[#75020f]/25 transition-colors"
+                              >
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        {/* Mobile Pagination */}
+                        {totalPages > 1 && (
+                          <div className="flex flex-col items-center gap-2 mt-2">
+                            <div className="text-xs text-[#CEA17A]/60">Page {userTablePage} of {totalPages}</div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setUserTablePage(prev => Math.max(1, prev - 1))}
+                                disabled={userTablePage === 1}
+                                className="px-3 py-1 text-xs bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50"
+                              >
+                                Prev
+                              </button>
+                              <button
+                                onClick={() => setUserTablePage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={userTablePage === totalPages}
+                                className="px-3 py-1 text-xs bg-[#3E4E5A]/15 text-[#CEA17A] border border-[#CEA17A]/25 rounded hover:bg-[#3E4E5A]/25 disabled:opacity-50"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )
+                  })()}
+                </div>
               </div>
 
               {/* Create User Modal */}
               {isCreatingUser && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                  <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                  <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
                     <h3 className="text-xl font-semibold text-[#CEA17A] mb-4">Create New User</h3>
                     
                     <div className="space-y-4">
@@ -2023,7 +2166,7 @@ export default function AdminPanel() {
                 
                 return (
                   <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                    <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
                       <h3 className="text-xl font-semibold text-[#CEA17A] mb-4">Link Player to User</h3>
                       
                       <div className="space-y-4">
@@ -2118,7 +2261,7 @@ export default function AdminPanel() {
               {/* Delete Confirmation Modal */}
               {showDeleteConfirm && deletingUserId && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                  <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#75020f]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                  <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#75020f]/30 rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
                     <h3 className="text-xl font-semibold text-[#75020f] mb-4">⚠️ Confirm Deletion</h3>
                     <p className="text-[#DBD0C0] mb-6">
                       Are you sure you want to delete this user? This action cannot be undone.
@@ -2147,7 +2290,7 @@ export default function AdminPanel() {
               {/* Success Message Modal */}
               {showSuccessMessage && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                  <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                  <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
                     <div className="text-center">
                       <div className="text-4xl mb-3">✅</div>
                       <h3 className="text-xl font-semibold text-[#CEA17A] mb-2">Success!</h3>
@@ -2432,7 +2575,7 @@ export default function AdminPanel() {
                 
                 return (
                   <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full">
+                    <div className="bg-gradient-to-br from-[#09171F] to-[#1a2332] border border-[#CEA17A]/30 rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
                       <h3 className="text-xl font-semibold text-[#CEA17A] mb-4">Link User to Player</h3>
                       
                       <div className="space-y-4">
