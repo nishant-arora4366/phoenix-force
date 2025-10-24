@@ -90,20 +90,18 @@ export class PWARedirectService {
       // Mobile: If PWA is installed, try to redirect
       if (this.isPWAInstalled()) {
         if (isIOS) {
-          // iOS: Use universal link approach
-          // Try to open with custom scheme first
-          const customUrl = this.convertToCustomScheme(targetUrl);
-          window.location.href = customUrl;
+          // iOS: Show instructions instead of trying custom scheme
+          // Custom schemes don't work reliably on iOS for PWAs
+          const appName = 'Phoenix Force Cricket';
+          const message = `To open in the ${appName} app:\n\n1. Open the ${appName} app from your home screen\n2. Or tap and hold this page, then select "Open in ${appName}"\n\nNote: Direct opening from browser is not supported on iOS.`;
           
-          // Fallback: If custom scheme doesn't work, show instructions
-          setTimeout(() => {
-            if (document.visibilityState === 'visible') {
-              // Still on the page, custom scheme didn't work
-              alert('To open in the Phoenix Force app:\n\n1. Long press this link\n2. Select "Open in Phoenix Force Cricket"\n\nOr open the app directly from your home screen.');
-            }
-          }, 1500);
-          
-          return true;
+          // Show a more user-friendly alert
+          if (confirm(message + '\n\nWould you like to continue in browser?')) {
+            return false; // User wants to stay in browser
+          } else {
+            // User wants to open app - show them how
+            return true;
+          }
         } else if (isAndroid) {
           // Android: Use intent URL
           const intentUrl = `intent://${targetUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.phoenixforce.cricket;end`;
@@ -112,9 +110,8 @@ export class PWARedirectService {
             window.location.href = intentUrl;
             return true;
           } catch (e) {
-            // Fallback to custom scheme
-            const customUrl = this.convertToCustomScheme(targetUrl);
-            window.location.href = customUrl;
+            // Fallback: show instructions
+            alert('To open in the Phoenix Force app:\n\n1. Open the Phoenix Force Cricket app from your home screen\n2. Or use the "Open in app" option from your browser menu');
             return true;
           }
         }
