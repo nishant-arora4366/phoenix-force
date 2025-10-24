@@ -146,7 +146,7 @@ export default function PWAInstallPrompt() {
                   To install this app on your iPhone:
                 </p>
                 <div className="text-xs text-gray-400 mt-2 space-y-1">
-                  <div>1. Tap the Share button <span className="text-white">⎋</span></div>
+                  <div>1. Tap the Share button (square with arrow up)</div>
                   <div>2. Scroll down and tap "Add to Home Screen"</div>
                   <div>3. Tap "Add" to install</div>
                 </div>
