@@ -184,10 +184,14 @@ export class PWARedirectService {
     // Don't show if already in PWA
     if (this.isInPWA()) return false;
     
+    // Don't show on desktop (where custom schemes don't work)
+    const isDesktop = !/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isDesktop) return false;
+    
     // Don't show if user dismissed in this session
     if (sessionStorage.getItem('pwa-prompt-dismissed') === 'true') return false;
     
-    // Show if PWA is installed or can be installed
+    // Show if PWA is installed or can be installed (mobile only)
     return this.isPWAInstalled() || this.isPWAInstallable();
   }
 

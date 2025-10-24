@@ -11,6 +11,7 @@ export default function PWADetection({ onOpenInApp }: PWADetectionProps) {
   const [isPWA, setIsPWA] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     // Check if running in PWA mode
@@ -18,13 +19,20 @@ export default function PWADetection({ onOpenInApp }: PWADetectionProps) {
       const isPWAContext = pwaRedirect.isInPWA();
       setIsPWA(isPWAContext);
       
+      // Check if we're on desktop
+      const isDesktopDevice = !/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsDesktop(isDesktopDevice);
+      
       // Check if PWA is installed
       const isPWAInstalled = pwaRedirect.isPWAInstalled();
       setIsInstalled(isPWAInstalled);
       
-      // Show prompt if in browser and PWA is available
+      // Show prompt if in browser and PWA is available (mobile only)
       if (pwaRedirect.shouldShowOpenInAppPrompt()) {
         setShowPrompt(true);
+      } else if (isDesktopDevice) {
+        // Debug: Log that we're hiding the prompt on desktop
+        console.log('PWA Detection: Hiding "Open in App" prompt on desktop (custom schemes not supported)');
       }
     };
 
@@ -70,8 +78,8 @@ export default function PWADetection({ onOpenInApp }: PWADetectionProps) {
     pwaRedirect.dismissPrompt();
   };
 
-  // Don't show if already in PWA or user dismissed
-  if (isPWA || !showPrompt || (typeof window !== 'undefined' && sessionStorage.getItem('pwa-prompt-dismissed') === 'true')) {
+  // Don't show if already in PWA, user dismissed, or on desktop (where custom schemes don't work)
+  if (isPWA || !showPrompt || isDesktop || (typeof window !== 'undefined' && sessionStorage.getItem('pwa-prompt-dismissed') === 'true')) {
     return null;
   }
 
