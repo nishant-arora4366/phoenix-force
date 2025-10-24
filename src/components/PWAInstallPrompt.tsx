@@ -146,7 +146,7 @@ export default function PWAInstallPrompt() {
                   To install this app on your iPhone:
                 </p>
                 <div className="text-xs text-gray-400 mt-2 space-y-1">
-                  <div>1. Tap the Share button (square with arrow up)</div>
+                  <div>1. Tap the Share button (Address bar in Chrome or Menu Button in Safari)</div>
                   <div>2. Scroll down and tap "Add to Home Screen"</div>
                   <div>3. Tap "Add" to install</div>
                 </div>
@@ -174,9 +174,7 @@ export default function PWAInstallPrompt() {
                   To install this app on your Android device:
                 </p>
                 <div className="text-xs text-gray-400 mt-2 space-y-1">
-                  <div>1. Look for the install icon <span className="text-white">⊕</span> in your browser address bar</div>
-                  <div>2. Or tap the Chrome menu (⋮) → "Install Phoenix Force Cricket"</div>
-                  <div>3. Or go to Chrome menu → "Add to Home Screen"</div>
+                   <div>Tap the Chrome menu (⋮) → "Add to Home Screen"</div>
                 </div>
                 <div className="flex space-x-2 mt-3">
                   <button
